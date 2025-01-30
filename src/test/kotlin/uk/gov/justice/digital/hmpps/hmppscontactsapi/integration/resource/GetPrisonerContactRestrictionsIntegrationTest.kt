@@ -4,43 +4,20 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.User
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class GetPrisonerContactRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
+class GetPrisonerContactRestrictionsIntegrationTest : SecureAPIIntegrationTestBase() {
 
-  @Test
-  fun `should return unauthorized if no token`() {
-    webTestClient.get()
-      .uri("/prisoner-contact/1/restriction")
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
+  override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
-  @Test
-  fun `should return forbidden if no role`() {
-    webTestClient.get()
-      .uri("/prisoner-contact/1/restriction")
-      .headers(setAuthorisation())
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `should return forbidden if wrong role`() {
-    webTestClient.get()
-      .uri("/prisoner-contact/1/restriction")
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
+  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()
+    .uri("/prisoner-contact/1/restriction")
 
   @Test
   fun `should return not found if the prisoner contact relationship is not found`() {

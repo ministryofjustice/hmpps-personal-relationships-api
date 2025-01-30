@@ -8,7 +8,8 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
+import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactInfo
@@ -19,47 +20,15 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
-const val LOCAL_CONTACT_ID_SEQUENCE_MIN: Long = 20000000L
+class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
-class CreateContactIntegrationTest : PostgresIntegrationTestBase() {
+  override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
-  @Test
-  fun `should return unauthorized if no token`() {
-    webTestClient.post()
-      .uri("/contact")
-      .accept(MediaType.APPLICATION_JSON)
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(aMinimalCreateContactRequest())
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
-
-  @Test
-  fun `should return forbidden if no role`() {
-    webTestClient.post()
-      .uri("/contact")
-      .accept(MediaType.APPLICATION_JSON)
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(aMinimalCreateContactRequest())
-      .headers(setAuthorisation())
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `should return forbidden if wrong role`() {
-    webTestClient.post()
-      .uri("/contact")
-      .accept(MediaType.APPLICATION_JSON)
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(aMinimalCreateContactRequest())
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
+  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.post()
+    .uri("/contact")
+    .accept(MediaType.APPLICATION_JSON)
+    .contentType(MediaType.APPLICATION_JSON)
+    .bodyValue(aMinimalCreateContactRequest())
 
   @ParameterizedTest
   @CsvSource(
@@ -228,5 +197,7 @@ class CreateContactIntegrationTest : PostgresIntegrationTestBase() {
       firstName = "first",
       createdBy = "created",
     )
+
+    private const val LOCAL_CONTACT_ID_SEQUENCE_MIN: Long = 20000000L
   }
 }

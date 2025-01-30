@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource.OrganisationIntegrationTest.Companion.createValidOrganisationRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource.CreateOrganisationIntegrationTest.Companion.createValidOrganisationRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateEmploymentRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdateEmploymentRequest

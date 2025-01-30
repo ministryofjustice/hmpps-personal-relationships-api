@@ -10,7 +10,8 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.openapitools.jackson.nullable.JsonNullable
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
+import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactAddressRequest
@@ -21,9 +22,11 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 
-class PatchContactAddressIntegrationTest : PostgresIntegrationTestBase() {
+class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
   private var savedContactId = 0L
   private var savedContactAddressId = 0L
+
+  override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
   @BeforeEach
   fun initialiseData() {
@@ -53,43 +56,11 @@ class PatchContactAddressIntegrationTest : PostgresIntegrationTestBase() {
     ).contactAddressId
   }
 
-  @Test
-  fun `should return unauthorized if no token`() {
-    webTestClient.patch()
-      .uri("/contact/$savedContactId/address/$savedContactAddressId")
-      .accept(MediaType.APPLICATION_JSON)
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(aMinimalPatchAddressRequest())
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
-
-  @Test
-  fun `should return forbidden if no role`() {
-    webTestClient.patch()
-      .uri("/contact/$savedContactId/address/$savedContactAddressId")
-      .accept(MediaType.APPLICATION_JSON)
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(aMinimalPatchAddressRequest())
-      .headers(setAuthorisation())
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `should return forbidden if wrong role`() {
-    webTestClient.patch()
-      .uri("/contact/$savedContactId/address/$savedContactAddressId")
-      .accept(MediaType.APPLICATION_JSON)
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(aMinimalPatchAddressRequest())
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
+  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.patch()
+    .uri("/contact/$savedContactId/address/$savedContactAddressId")
+    .accept(MediaType.APPLICATION_JSON)
+    .contentType(MediaType.APPLICATION_JSON)
+    .bodyValue(aMinimalPatchAddressRequest())
 
   @ParameterizedTest
   @CsvSource(

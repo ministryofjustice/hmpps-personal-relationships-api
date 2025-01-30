@@ -9,8 +9,9 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.User
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePrisonerContactRestrictionRequest
@@ -21,10 +22,12 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 
-class CreatePrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
+class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
   private var savedPrisonerContactId = 0L
   private var savedContactId = 0L
   private val prisonerNumberCreatedAgainst = "A1234AA"
+
+  override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
   @BeforeEach
   fun initialiseData() {
@@ -48,43 +51,11 @@ class CreatePrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestB
     savedContactId = created.createdContact.id
   }
 
-  @Test
-  fun `should return unauthorized if no token`() {
-    webTestClient.post()
-      .uri("/prisoner-contact/$savedPrisonerContactId/restriction")
-      .accept(MediaType.APPLICATION_JSON)
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(aMinimalRequest())
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
-
-  @Test
-  fun `should return forbidden if no role`() {
-    webTestClient.post()
-      .uri("/prisoner-contact/$savedPrisonerContactId/restriction")
-      .accept(MediaType.APPLICATION_JSON)
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(aMinimalRequest())
-      .headers(setAuthorisation())
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `should return forbidden if wrong role`() {
-    webTestClient.post()
-      .uri("/prisoner-contact/$savedPrisonerContactId/restriction")
-      .accept(MediaType.APPLICATION_JSON)
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(aMinimalRequest())
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
+  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.post()
+    .uri("/prisoner-contact/$savedPrisonerContactId/restriction")
+    .accept(MediaType.APPLICATION_JSON)
+    .contentType(MediaType.APPLICATION_JSON)
+    .bodyValue(aMinimalRequest())
 
   @ParameterizedTest
   @CsvSource(

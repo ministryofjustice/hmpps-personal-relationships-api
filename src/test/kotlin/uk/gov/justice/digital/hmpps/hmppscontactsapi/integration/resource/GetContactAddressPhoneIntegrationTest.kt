@@ -6,7 +6,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
+import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
@@ -14,10 +15,12 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddre
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 
-class GetContactAddressPhoneIntegrationTest : PostgresIntegrationTestBase() {
+class GetContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   private var savedContactId = 0L
   private var savedAddressId = 0L
   private var savedAddressPhoneId = 0L
+
+  override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
   @BeforeEach
   fun initialiseData() {
@@ -56,37 +59,9 @@ class GetContactAddressPhoneIntegrationTest : PostgresIntegrationTestBase() {
     ).contactAddressPhoneId
   }
 
-  @Test
-  fun `should return unauthorized if no token`() {
-    webTestClient.get()
-      .uri("/contact/$savedContactId/address/$savedAddressId/phone/$savedAddressPhoneId")
-      .accept(MediaType.APPLICATION_JSON)
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
-
-  @Test
-  fun `should return forbidden if no role`() {
-    webTestClient.get()
-      .uri("/contact/$savedContactId/address/$savedAddressId/phone/$savedAddressPhoneId")
-      .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation())
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `should return forbidden if wrong role`() {
-    webTestClient.get()
-      .uri("/contact/$savedContactId/address/$savedAddressId/phone/$savedAddressPhoneId")
-      .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
+  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()
+    .uri("/contact/$savedContactId/address/$savedAddressId/phone/$savedAddressPhoneId")
+    .accept(MediaType.APPLICATION_JSON)
 
   @Test
   fun `should return not found if wrong ID provided`() {

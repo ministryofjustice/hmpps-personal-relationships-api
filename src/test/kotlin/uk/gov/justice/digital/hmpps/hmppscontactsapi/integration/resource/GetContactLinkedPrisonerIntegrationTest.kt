@@ -3,10 +3,10 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.prisoner
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
@@ -14,8 +14,10 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.LinkedPrison
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.LinkedPrisonerRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 
-class GetContactLinkedPrisonerIntegrationTest : PostgresIntegrationTestBase() {
+class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
   private var savedContactId = 0L
+
+  override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
   val prisoner1 = prisoner(
     prisonerNumber = "A1234BC",
@@ -44,37 +46,8 @@ class GetContactLinkedPrisonerIntegrationTest : PostgresIntegrationTestBase() {
     ).id
   }
 
-  @Test
-  fun `should return unauthorized if no token`() {
-    webTestClient.get()
-      .uri("/contact/1/linked-prisoners")
-      .accept(MediaType.APPLICATION_JSON)
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
-
-  @Test
-  fun `should return forbidden if no role`() {
-    webTestClient.get()
-      .uri("/contact/1/linked-prisoners")
-      .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation())
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `should return forbidden if wrong role`() {
-    webTestClient.get()
-      .uri("/contact/1/linked-prisoners")
-      .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
+  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()
+    .uri("/contact/1/linked-prisoners")
 
   @Test
   fun `should get linked prisoners`() {

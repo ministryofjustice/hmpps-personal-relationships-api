@@ -5,42 +5,19 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
+import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 
-class GetPrisonerContactsRelationshipIntegrationTest : PostgresIntegrationTestBase() {
+class GetPrisonerContactsRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
   companion object {
     private const val GET_PRISONER_CONTACT_RELATIONSHIP = "/prisoner-contact/1"
   }
 
-  @Test
-  fun `should return unauthorized if no token`() {
-    webTestClient.get()
-      .uri("/prisoner-contact/1")
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
+  override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
-  @Test
-  fun `should return forbidden if no role`() {
-    webTestClient.get()
-      .uri("/prisoner-contact/1")
-      .headers(setAuthorisation())
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `should return forbidden if wrong role`() {
-    webTestClient.get()
-      .uri("/prisoner-contact/1")
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
+  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()
+    .uri("/prisoner-contact/1")
 
   @Test
   fun `should return not found if no prisoner contact relationship found`() {

@@ -8,51 +8,26 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
+import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.OrganisationSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigrateOrganisationAddress
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigrateOrganisationPhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigrateOrganisationRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.OrganisationSummary
 
-class OrganisationSearchIntegrationTest : PostgresIntegrationTestBase() {
+class OrganisationSearchIntegrationTest : SecureAPIIntegrationTestBase() {
+
+  override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
   @BeforeEach
   fun setUp() {
     createOrg(minimalRequest().copy(organisationName = "ZZZ No Match Company"))
   }
 
-  @Test
-  fun `should return unauthorized if no token`() {
-    webTestClient.get()
-      .uri("/organisation/search?name=foo")
-      .accept(MediaType.APPLICATION_JSON)
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
-
-  @Test
-  fun `should return forbidden if no role`() {
-    webTestClient.get()
-      .uri("/organisation/search?name=foo")
-      .headers(setAuthorisation())
-      .accept(MediaType.APPLICATION_JSON)
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `should return forbidden if wrong role`() {
-    webTestClient.get()
-      .uri("/organisation/search?name=foo")
-      .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
+  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()
+    .uri("/organisation/search?name=foo")
+    .accept(MediaType.APPLICATION_JSON)
 
   @Test
   fun `Should return bad request if no name is specified`() {

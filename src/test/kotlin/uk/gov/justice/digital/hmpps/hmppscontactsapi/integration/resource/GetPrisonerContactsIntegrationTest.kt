@@ -6,42 +6,19 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
+import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.helper.TestAPIClient.PrisonerContactSummaryResponse
 
-class GetPrisonerContactsIntegrationTest : PostgresIntegrationTestBase() {
+class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   companion object {
     private const val GET_PRISONER_CONTACT = "/prisoner/A4385DZ/contact"
   }
 
-  @Test
-  fun `should return unauthorized if no token`() {
-    webTestClient.get()
-      .uri("/prisoner-contacts/prisoner/P001")
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
+  override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
-  @Test
-  fun `should return forbidden if no role`() {
-    webTestClient.get()
-      .uri("/prisoner/P001/contact")
-      .headers(setAuthorisation())
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `should return forbidden if wrong role`() {
-    webTestClient.get()
-      .uri("/prisoner/P001/contact")
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
+  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()
+    .uri("/prisoner/P001/contact")
 
   @Test
   fun `should return not found if no prisoner found`() {
@@ -137,7 +114,7 @@ class GetPrisonerContactsIntegrationTest : PostgresIntegrationTestBase() {
     stubPrisonSearchWithResponse("A4385DZ")
 
     val firstPage = webTestClient.get()
-      .uri("$GET_PRISONER_CONTACT?size=2&page=0")
+      .uri("$GET_PRISONER_CONTACT?size=2&page=0&sort=contactId")
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
       .exchange()
       .expectStatus()
@@ -155,7 +132,7 @@ class GetPrisonerContactsIntegrationTest : PostgresIntegrationTestBase() {
     assertThat(firstPage.content[1].contactId).isEqualTo(10)
 
     val contacts = webTestClient.get()
-      .uri("$GET_PRISONER_CONTACT?size=2&page=1")
+      .uri("$GET_PRISONER_CONTACT?size=2&page=1&sort=contactId")
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
       .exchange()
       .expectStatus()

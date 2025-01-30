@@ -7,44 +7,21 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Sort
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
+import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.helper.hasSize
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ReferenceCodeRepository
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-class ReferenceCodesResourceIntegrationTest : PostgresIntegrationTestBase() {
+class GetReferenceCodesByGroupIntegrationTest : SecureAPIIntegrationTestBase() {
   @Autowired
   private lateinit var referenceCodeRepository: ReferenceCodeRepository
 
-  @Test
-  fun `should return unauthorized if no token`() {
-    webTestClient.get()
-      .uri("/reference-codes/group/PHONE_TYPE")
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
+  override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
-  @Test
-  fun `should return forbidden if no role`() {
-    webTestClient.get()
-      .uri("/reference-codes/group/PHONE_TYPE")
-      .headers(setAuthorisation())
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `should return forbidden if wrong role`() {
-    webTestClient.get()
-      .uri("/reference-codes/group/PHONE_TYPE")
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
+  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()
+    .uri("/reference-codes/group/PHONE_TYPE")
 
   @Test
   fun `should return bad request if no matching code found`() {

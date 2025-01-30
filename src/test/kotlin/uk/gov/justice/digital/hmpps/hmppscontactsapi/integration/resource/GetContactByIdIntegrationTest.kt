@@ -8,8 +8,9 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.EmploymentEntity
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigrateOrganisationAddress
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigrateOrganisationPhoneNumber
@@ -18,41 +19,16 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.EmploymentReposi
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class GetContactByIdIntegrationTest : PostgresIntegrationTestBase() {
+class GetContactByIdIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @Autowired
   private lateinit var employmentRepository: EmploymentRepository
 
-  @Test
-  fun `should return unauthorized if no token`() {
-    webTestClient.get()
-      .uri("/contact/123456")
-      .accept(MediaType.APPLICATION_JSON)
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
+  override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
-  @Test
-  fun `should return forbidden if no role`() {
-    webTestClient.get()
-      .uri("/contact/123456")
-      .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation())
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `should return forbidden if wrong role`() {
-    webTestClient.get()
-      .uri("/contact/123456")
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
+  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()
+    .uri("/contact/123456")
+    .accept(MediaType.APPLICATION_JSON)
 
   @Test
   fun `should return 404 if the contact doesn't exist`() {

@@ -9,7 +9,8 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
+import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
@@ -19,10 +20,12 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEven
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-class UpdateContactAddressPhoneIntegrationTest : PostgresIntegrationTestBase() {
+class UpdateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   private var savedContactId = 0L
   private var savedAddressId = 0L
   private var savedAddressPhoneId = 0L
+
+  override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
   @BeforeEach
   fun initialiseData() {
@@ -61,49 +64,11 @@ class UpdateContactAddressPhoneIntegrationTest : PostgresIntegrationTestBase() {
     ).contactAddressPhoneId
   }
 
-  @Test
-  fun `should return unauthorized if no token`() {
-    val request = aMinimalRequest()
-
-    webTestClient.put()
-      .uri("/contact/$savedContactId/address/$savedAddressId/phone/$savedAddressPhoneId")
-      .accept(MediaType.APPLICATION_JSON)
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(request)
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
-
-  @Test
-  fun `should return forbidden if no role`() {
-    val request = aMinimalRequest()
-
-    webTestClient.put()
-      .uri("/contact/$savedContactId/address/$savedAddressId/phone/$savedAddressPhoneId")
-      .accept(MediaType.APPLICATION_JSON)
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(request)
-      .headers(setAuthorisation())
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
-
-  @Test
-  fun `should return forbidden if wrong role`() {
-    val request = aMinimalRequest()
-
-    webTestClient.put()
-      .uri("/contact/$savedContactId/address/$savedAddressId/phone/$savedAddressPhoneId")
-      .accept(MediaType.APPLICATION_JSON)
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(request)
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
+  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.put()
+    .uri("/contact/$savedContactId/address/$savedAddressId/phone/$savedAddressPhoneId")
+    .accept(MediaType.APPLICATION_JSON)
+    .contentType(MediaType.APPLICATION_JSON)
+    .bodyValue(aMinimalRequest())
 
   @Test
   fun `should not update if the contact is not found`() {
@@ -172,7 +137,10 @@ class UpdateContactAddressPhoneIntegrationTest : PostgresIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Validation failure: $expectedMessage")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED, ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId))
+    stubEvents.assertHasNoEvents(
+      OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED,
+      ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId),
+    )
   }
 
   @ParameterizedTest
@@ -192,7 +160,10 @@ class UpdateContactAddressPhoneIntegrationTest : PostgresIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Validation failure(s): $expectedMessage")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED, ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId))
+    stubEvents.assertHasNoEvents(
+      OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED,
+      ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId),
+    )
   }
 
   @ParameterizedTest
@@ -221,7 +192,10 @@ class UpdateContactAddressPhoneIntegrationTest : PostgresIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Validation failure: Phone number invalid, it can only contain numbers, () and whitespace with an optional + at the start")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED, ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId))
+    stubEvents.assertHasNoEvents(
+      OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED,
+      ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId),
+    )
   }
 
   @Test
@@ -246,7 +220,10 @@ class UpdateContactAddressPhoneIntegrationTest : PostgresIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported phone type (SATELLITE)")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED, ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId))
+    stubEvents.assertHasNoEvents(
+      OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED,
+      ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId),
+    )
   }
 
   @ParameterizedTest
