@@ -29,7 +29,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_CREATED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_CREATED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact.created",
+      expectedEventType = "personal-relationships-api.contact.created",
       expectedAdditionalInformation = ContactInfo(contactId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact has been created",
@@ -41,7 +41,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_UPDATED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_UPDATED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact.updated",
+      expectedEventType = "personal-relationships-api.contact.updated",
       expectedAdditionalInformation = ContactInfo(contactId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact has been updated",
@@ -53,7 +53,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_DELETED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_DELETED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact.deleted",
+      expectedEventType = "personal-relationships-api.contact.deleted",
       expectedAdditionalInformation = ContactInfo(contactId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact has been deleted",
@@ -65,7 +65,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_ADDRESS_CREATED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_ADDRESS_CREATED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact-address.created",
+      expectedEventType = "personal-relationships-api.contact-address.created",
       expectedAdditionalInformation = ContactAddressInfo(contactAddressId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact address has been created",
@@ -77,7 +77,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_ADDRESS_UPDATED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_ADDRESS_UPDATED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact-address.updated",
+      expectedEventType = "personal-relationships-api.contact-address.updated",
       expectedAdditionalInformation = ContactAddressInfo(contactAddressId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact address has been updated",
@@ -89,7 +89,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_ADDRESS_DELETED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_ADDRESS_DELETED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact-address.deleted",
+      expectedEventType = "personal-relationships-api.contact-address.deleted",
       expectedAdditionalInformation = ContactAddressInfo(contactAddressId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact address has been deleted",
@@ -101,7 +101,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_EMAIL_CREATED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_EMAIL_CREATED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact-email.created",
+      expectedEventType = "personal-relationships-api.contact-email.created",
       expectedAdditionalInformation = ContactEmailInfo(contactEmailId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact email address has been created",
@@ -113,7 +113,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_EMAIL_UPDATED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_EMAIL_UPDATED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact-email.updated",
+      expectedEventType = "personal-relationships-api.contact-email.updated",
       expectedAdditionalInformation = ContactEmailInfo(contactEmailId = 1, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact email address has been updated",
@@ -125,7 +125,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_EMAIL_DELETED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_EMAIL_DELETED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact-email.deleted",
+      expectedEventType = "personal-relationships-api.contact-email.deleted",
       expectedAdditionalInformation = ContactEmailInfo(contactEmailId = 1, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact email address has been deleted",
@@ -137,7 +137,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_PHONE_CREATED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_PHONE_CREATED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact-phone.created",
+      expectedEventType = "personal-relationships-api.contact-phone.created",
       expectedAdditionalInformation = ContactPhoneInfo(contactPhoneId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact phone number has been created",
@@ -149,7 +149,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_PHONE_UPDATED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_PHONE_UPDATED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact-phone.updated",
+      expectedEventType = "personal-relationships-api.contact-phone.updated",
       expectedAdditionalInformation = ContactPhoneInfo(contactPhoneId = 1, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact phone number has been updated",
@@ -161,7 +161,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_PHONE_DELETED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_PHONE_DELETED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact-phone.deleted",
+      expectedEventType = "personal-relationships-api.contact-phone.deleted",
       expectedAdditionalInformation = ContactPhoneInfo(contactPhoneId = 1, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact phone number has been deleted",
@@ -173,7 +173,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_IDENTITY_CREATED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_IDENTITY_CREATED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact-identity.created",
+      expectedEventType = "personal-relationships-api.contact-identity.created",
       expectedAdditionalInformation = ContactIdentityInfo(contactIdentityId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact proof of identity has been created",
@@ -185,7 +185,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_IDENTITY_UPDATED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_IDENTITY_UPDATED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact-identity.updated",
+      expectedEventType = "personal-relationships-api.contact-identity.updated",
       expectedAdditionalInformation = ContactIdentityInfo(contactIdentityId = 1, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact proof of identity has been updated",
@@ -197,7 +197,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_IDENTITY_DELETED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_IDENTITY_DELETED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact-identity.deleted",
+      expectedEventType = "personal-relationships-api.contact-identity.deleted",
       expectedAdditionalInformation = ContactIdentityInfo(contactIdentityId = 1, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact proof of identity has been deleted",
@@ -209,7 +209,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_RESTRICTION_CREATED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_RESTRICTION_CREATED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact-restriction.created",
+      expectedEventType = "personal-relationships-api.contact-restriction.created",
       expectedAdditionalInformation = ContactRestrictionInfo(contactRestrictionId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact restriction has been created",
@@ -221,7 +221,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_RESTRICTION_UPDATED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_RESTRICTION_UPDATED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact-restriction.updated",
+      expectedEventType = "personal-relationships-api.contact-restriction.updated",
       expectedAdditionalInformation = ContactRestrictionInfo(contactRestrictionId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact restriction has been updated",
@@ -233,7 +233,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_RESTRICTION_DELETED) } doReturn true }
     outboundEventsService.send(OutboundEvent.CONTACT_RESTRICTION_DELETED, 1L, 1L)
     verify(
-      expectedEventType = "contacts-api.contact-restriction.deleted",
+      expectedEventType = "personal-relationships-api.contact-restriction.deleted",
       expectedAdditionalInformation = ContactRestrictionInfo(contactRestrictionId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact restriction has been deleted",
@@ -245,7 +245,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_CREATED) } doReturn true }
     outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_CREATED, 1L, 1L, "A1234AA")
     verify(
-      expectedEventType = "contacts-api.prisoner-contact.created",
+      expectedEventType = "personal-relationships-api.prisoner-contact.created",
       expectedAdditionalInformation = PrisonerContactInfo(prisonerContactId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact has been created",
@@ -257,7 +257,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_UPDATED) } doReturn true }
     outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_UPDATED, 1L, 1L, "A1234AA")
     verify(
-      expectedEventType = "contacts-api.prisoner-contact.updated",
+      expectedEventType = "personal-relationships-api.prisoner-contact.updated",
       expectedAdditionalInformation = PrisonerContactInfo(prisonerContactId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact has been updated",
@@ -269,7 +269,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_DELETED) } doReturn true }
     outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_DELETED, 1L, 1L, "A1234AA")
     verify(
-      expectedEventType = "contacts-api.prisoner-contact.deleted",
+      expectedEventType = "personal-relationships-api.prisoner-contact.deleted",
       expectedAdditionalInformation = PrisonerContactInfo(prisonerContactId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact has been deleted",
@@ -281,7 +281,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED) } doReturn true }
     outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED, 1L, 1L, "A1234AA")
     verify(
-      expectedEventType = "contacts-api.prisoner-contact-restriction.created",
+      expectedEventType = "personal-relationships-api.prisoner-contact-restriction.created",
       expectedAdditionalInformation = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact restriction has been created",
@@ -293,7 +293,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED) } doReturn true }
     outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED, 1L, 1L, "A1234AA")
     verify(
-      expectedEventType = "contacts-api.prisoner-contact-restriction.updated",
+      expectedEventType = "personal-relationships-api.prisoner-contact-restriction.updated",
       expectedAdditionalInformation = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact restriction has been updated",
@@ -305,7 +305,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED) } doReturn true }
     outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED, 1L, 1L, "A1234AA")
     verify(
-      expectedEventType = "contacts-api.prisoner-contact-restriction.deleted",
+      expectedEventType = "personal-relationships-api.prisoner-contact-restriction.deleted",
       expectedAdditionalInformation = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = 1L, source = Source.DPS),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact restriction has been deleted",

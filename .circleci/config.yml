@@ -8,10 +8,10 @@ parameters:
     type: string
     # Normally team specific alert channel e.g. hmpps_tech_alerts, syscon-alerts, dps_sed_alerts
     # This is to avoid a general alert dumping ground that no-one then monitors
-    default: managing-contacts-alerts-prod
+    default: managing-personal-relationships-alerts-prod
   slack-channel-non-prod-alerts:
     type: string
-    default: managing-contacts-alerts-non-prod
+    default: managing-personal-relationships-alerts-non-prod
   java-version:
     type: string
     default: "21.0"
@@ -25,7 +25,7 @@ jobs:
       name: hmpps/java_postgres
       jdk_tag: << pipeline.parameters.java-version >>
       postgres_tag: << pipeline.parameters.postgres-tag >>
-      postgres_db: "contacts-db"
+      postgres_db: "personal-relationships-db"
       postgres_username: "contacts"
       postgres_password: "contacts"
     steps:
@@ -92,7 +92,7 @@ workflows:
           slack_channel_name: << pipeline.parameters.slack-channel-non-prod-alerts >>
           context:
             - hmpps-common-vars
-            - hmpps-contacts-preprod
+            - hmpps-personal-relationships-preprod
           requires:
             - request-preprod-approval
           helm_timeout: 5m
@@ -111,7 +111,7 @@ workflows:
           slack_channel_name: << pipeline.parameters.slack-channel-prod-alerts >>
           context:
             - hmpps-common-vars
-            - hmpps-contacts-prod
+            - hmpps-personal-relationships-prod
           requires:
             - request-prod-approval
           helm_timeout: 5m

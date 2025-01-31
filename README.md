@@ -1,10 +1,10 @@
-# hmpps-contacts-api
-[![repo standards badge](https://img.shields.io/badge/dynamic/json?color=blue&style=flat&logo=github&label=MoJ%20Compliant&query=%24.result&url=https%3A%2F%2Foperations-engineering-reports.cloud-platform.service.justice.gov.uk%2Fapi%2Fv1%2Fcompliant_public_repositories%2Fhmpps-contacts-api)](https://operations-engineering-reports.cloud-platform.service.justice.gov.uk/public-github-repositories.html#hmpps-contacts-api "Link to report")
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/ministryofjustice/hmpps-contacts-api/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/ministryofjustice/hmpps-contacts-api/tree/main)
-[![Docker Repository on Quay](https://quay.io/repository/hmpps/hmpps-contacts-api/status "Docker Repository on Quay")](https://quay.io/repository/hmpps/hmpps-contacts-api)
-[![API docs](https://img.shields.io/badge/API_docs-view-85EA2D.svg?logo=swagger)](https://contacts-api-dev.hmpps.service.justice.gov.uk/swagger-ui/index.html#/)
+# hmpps-personal-relationships-api
+[![repo standards badge](https://img.shields.io/badge/dynamic/json?color=blue&style=flat&logo=github&label=MoJ%20Compliant&query=%24.result&url=https%3A%2F%2Foperations-engineering-reports.cloud-platform.service.justice.gov.uk%2Fapi%2Fv1%2Fcompliant_public_repositories%2Fhmpps-personal-relationships-api)](https://operations-engineering-reports.cloud-platform.service.justice.gov.uk/public-github-repositories.html#hmpps-personal-relationships-api "Link to report")
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/ministryofjustice/hmpps-personal-relationships-api/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/ministryofjustice/hmpps-personal-relationships-api/tree/main)
+[![Docker Repository on Quay](https://quay.io/repository/hmpps/hmpps-personal-relationships-api/status "Docker Repository on Quay")](https://quay.io/repository/hmpps/hmpps-personal-relationships-api)
+[![API docs](https://img.shields.io/badge/API_docs-view-85EA2D.svg?logo=swagger)](https://personal-relationships-api-dev.hmpps.service.justice.gov.uk/swagger-ui/index.html#/)
 
-API to support the front end service allowing court and probation users to manage contacts for the people in prison.
+API to support the front end service allowing court and probation users to manage personal relationships for the people in prison.
 
 ## Building the project
 
@@ -46,13 +46,13 @@ SYSTEM_CLIENT_SECRET=<system.client.secret>
 HMPPS_AUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth
 PRISON_SEARCH_API_URL=https://prisoner-search-dev.prison.service.justice.gov.uk
 DB_SERVER=localhost
-DB_NAME=contacts-db
+DB_NAME=personal-relationships-db
 DB_USER=contacts
 DB_PASS=contacts
 DB_SSL_MODE=prefer
 ```
 
-Start up the docker dependencies using the docker-compose file in the `hmpps-contacts-api` service.
+Start up the docker dependencies using the docker-compose file in the `hmpps-personal-relationships-api` service.
 
 ```
 docker-compose up --remove-orphans

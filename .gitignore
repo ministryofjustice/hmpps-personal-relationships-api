@@ -72,5 +72,5 @@ sonar-project.properties
 #Helm
 **/Chart.lock
 
-#hmpps-contacts-api specific
+#hmpps-personal-relationships-api specific
 .env

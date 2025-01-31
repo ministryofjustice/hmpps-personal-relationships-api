@@ -7,7 +7,7 @@ import java.time.LocalDateTime
  * Each can tailor its own AdditionalInformation and PersonReference content.
  */
 enum class OutboundEvent(val eventType: String) {
-  CONTACT_CREATED("contacts-api.contact.created") {
+  CONTACT_CREATED("personal-relationships-api.contact.created") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -15,7 +15,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact has been created",
     )
   },
-  CONTACT_UPDATED("contacts-api.contact.updated") {
+  CONTACT_UPDATED("personal-relationships-api.contact.updated") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -23,7 +23,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact has been updated",
     )
   },
-  CONTACT_DELETED("contacts-api.contact.deleted") {
+  CONTACT_DELETED("personal-relationships-api.contact.deleted") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -31,7 +31,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact has been deleted",
     )
   },
-  CONTACT_ADDRESS_CREATED("contacts-api.contact-address.created") {
+  CONTACT_ADDRESS_CREATED("personal-relationships-api.contact-address.created") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -39,7 +39,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact address has been created",
     )
   },
-  CONTACT_ADDRESS_UPDATED("contacts-api.contact-address.updated") {
+  CONTACT_ADDRESS_UPDATED("personal-relationships-api.contact-address.updated") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -47,7 +47,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact address has been updated",
     )
   },
-  CONTACT_ADDRESS_DELETED("contacts-api.contact-address.deleted") {
+  CONTACT_ADDRESS_DELETED("personal-relationships-api.contact-address.deleted") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -55,7 +55,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact address has been deleted",
     )
   },
-  CONTACT_ADDRESS_PHONE_CREATED("contacts-api.contact-address-phone.created") {
+  CONTACT_ADDRESS_PHONE_CREATED("personal-relationships-api.contact-address-phone.created") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -63,7 +63,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact address phone number has been created",
     )
   },
-  CONTACT_ADDRESS_PHONE_UPDATED("contacts-api.contact-address-phone.updated") {
+  CONTACT_ADDRESS_PHONE_UPDATED("personal-relationships-api.contact-address-phone.updated") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -71,7 +71,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact address phone number has been updated",
     )
   },
-  CONTACT_ADDRESS_PHONE_DELETED("contacts-api.contact-address-phone.deleted") {
+  CONTACT_ADDRESS_PHONE_DELETED("personal-relationships-api.contact-address-phone.deleted") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -79,7 +79,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact address phone number has been deleted",
     )
   },
-  CONTACT_PHONE_CREATED("contacts-api.contact-phone.created") {
+  CONTACT_PHONE_CREATED("personal-relationships-api.contact-phone.created") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -87,7 +87,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact phone number has been created",
     )
   },
-  CONTACT_PHONE_UPDATED("contacts-api.contact-phone.updated") {
+  CONTACT_PHONE_UPDATED("personal-relationships-api.contact-phone.updated") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -95,7 +95,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact phone number has been updated",
     )
   },
-  CONTACT_PHONE_DELETED("contacts-api.contact-phone.deleted") {
+  CONTACT_PHONE_DELETED("personal-relationships-api.contact-phone.deleted") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -103,7 +103,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact phone number has been deleted",
     )
   },
-  CONTACT_EMAIL_CREATED("contacts-api.contact-email.created") {
+  CONTACT_EMAIL_CREATED("personal-relationships-api.contact-email.created") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -111,7 +111,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact email address has been created",
     )
   },
-  CONTACT_EMAIL_UPDATED("contacts-api.contact-email.updated") {
+  CONTACT_EMAIL_UPDATED("personal-relationships-api.contact-email.updated") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -119,7 +119,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact email address has been updated",
     )
   },
-  CONTACT_EMAIL_DELETED("contacts-api.contact-email.deleted") {
+  CONTACT_EMAIL_DELETED("personal-relationships-api.contact-email.deleted") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -127,7 +127,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact email address has been deleted",
     )
   },
-  CONTACT_IDENTITY_CREATED("contacts-api.contact-identity.created") {
+  CONTACT_IDENTITY_CREATED("personal-relationships-api.contact-identity.created") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -135,7 +135,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact proof of identity has been created",
     )
   },
-  CONTACT_IDENTITY_UPDATED("contacts-api.contact-identity.updated") {
+  CONTACT_IDENTITY_UPDATED("personal-relationships-api.contact-identity.updated") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -143,7 +143,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact proof of identity has been updated",
     )
   },
-  CONTACT_IDENTITY_DELETED("contacts-api.contact-identity.deleted") {
+  CONTACT_IDENTITY_DELETED("personal-relationships-api.contact-identity.deleted") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -151,7 +151,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact proof of identity has been deleted",
     )
   },
-  CONTACT_RESTRICTION_CREATED("contacts-api.contact-restriction.created") {
+  CONTACT_RESTRICTION_CREATED("personal-relationships-api.contact-restriction.created") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -159,7 +159,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact restriction has been created",
     )
   },
-  CONTACT_RESTRICTION_UPDATED("contacts-api.contact-restriction.updated") {
+  CONTACT_RESTRICTION_UPDATED("personal-relationships-api.contact-restriction.updated") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -167,7 +167,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact restriction has been updated",
     )
   },
-  CONTACT_RESTRICTION_DELETED("contacts-api.contact-restriction.deleted") {
+  CONTACT_RESTRICTION_DELETED("personal-relationships-api.contact-restriction.deleted") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -175,7 +175,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A contact restriction has been deleted",
     )
   },
-  PRISONER_CONTACT_CREATED("contacts-api.prisoner-contact.created") {
+  PRISONER_CONTACT_CREATED("personal-relationships-api.prisoner-contact.created") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -183,7 +183,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A prisoner contact has been created",
     )
   },
-  PRISONER_CONTACT_UPDATED("contacts-api.prisoner-contact.updated") {
+  PRISONER_CONTACT_UPDATED("personal-relationships-api.prisoner-contact.updated") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -191,7 +191,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A prisoner contact has been updated",
     )
   },
-  PRISONER_CONTACT_DELETED("contacts-api.prisoner-contact.deleted") {
+  PRISONER_CONTACT_DELETED("personal-relationships-api.prisoner-contact.deleted") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -199,7 +199,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A prisoner contact has been deleted",
     )
   },
-  PRISONER_CONTACT_RESTRICTION_CREATED("contacts-api.prisoner-contact-restriction.created") {
+  PRISONER_CONTACT_RESTRICTION_CREATED("personal-relationships-api.prisoner-contact-restriction.created") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -207,7 +207,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A prisoner contact restriction has been created",
     )
   },
-  PRISONER_CONTACT_RESTRICTION_UPDATED("contacts-api.prisoner-contact-restriction.updated") {
+  PRISONER_CONTACT_RESTRICTION_UPDATED("personal-relationships-api.prisoner-contact-restriction.updated") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -215,7 +215,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A prisoner contact restriction has been updated",
     )
   },
-  PRISONER_CONTACT_RESTRICTION_DELETED("contacts-api.prisoner-contact-restriction.deleted") {
+  PRISONER_CONTACT_RESTRICTION_DELETED("personal-relationships-api.prisoner-contact-restriction.deleted") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -223,14 +223,14 @@ enum class OutboundEvent(val eventType: String) {
       description = "A prisoner contact restriction has been deleted",
     )
   },
-  ORGANISATION_CREATED("contacts-api.organisation.created") {
+  ORGANISATION_CREATED("personal-relationships-api.organisation.created") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
       description = "An organisation has been created",
     )
   },
-  EMPLOYMENT_CREATED("contacts-api.employment.created") {
+  EMPLOYMENT_CREATED("personal-relationships-api.employment.created") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -238,7 +238,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "An employment has been created",
     )
   },
-  EMPLOYMENT_UPDATED("contacts-api.employment.updated") {
+  EMPLOYMENT_UPDATED("personal-relationships-api.employment.updated") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -246,7 +246,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "An employment has been updated",
     )
   },
-  EMPLOYMENT_DELETED("contacts-api.employment.deleted") {
+  EMPLOYMENT_DELETED("personal-relationships-api.employment.deleted") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,

@@ -1,9 +1,9 @@
 ---
-# Per environment values which override defaults in hmpps-contacts-api/values.yaml
+# Per environment values which override defaults in hmpps-personal-relationships-api/values.yaml
 
 generic-service:
   ingress:
-    host: contacts-api.hmpps.service.justice.gov.uk
+    host: personal-relationships-api.hmpps.service.justice.gov.uk
 
   env:
     API_BASE_URL_HMPPS_AUTH: "https://sign-in.hmpps.service.justice.gov.uk/auth"
@@ -14,4 +14,4 @@ generic-service:
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:
-  alertSeverity: hmmps-contacts-data-prod
+  alertSeverity: hmmps-personal-relationships-data-prod

@@ -1,10 +1,10 @@
 info.app:
-  name: Hmpps Contacts Api
+  name: Hmpps Personal Relationships Api
   version: 1.0
 
 spring:
   application:
-    name: hmpps-contacts-api
+    name: hmpps-personal-relationships-api
   codec:
     max-in-memory-size: 10MB
 
@@ -95,5 +95,5 @@ management:
 
 hmpps:
   sqs:
-    queueAdminRole: CONTACTS_ADMIN
+    queueAdminRole: PERSONAL_RELATIONSHIPS_ADMIN
 
