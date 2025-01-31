@@ -8,10 +8,10 @@ parameters:
     type: string
     # Normally team specific alert channel e.g. hmpps_tech_alerts, syscon-alerts, dps_sed_alerts
     # This is to avoid a general alert dumping ground that no-one then monitors
-    default: managing-personal-relationships-alerts-prod
+    default: managing-contacts-alerts-prod
   slack-channel-non-prod-alerts:
     type: string
-    default: managing-personal-relationships-alerts-non-prod
+    default: managing-contacts-alerts-non-prod
   java-version:
     type: string
     default: "21.0"

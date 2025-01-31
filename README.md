@@ -47,7 +47,7 @@ HMPPS_AUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth
 PRISON_SEARCH_API_URL=https://prisoner-search-dev.prison.service.justice.gov.uk
 DB_SERVER=localhost
 DB_NAME=personal-relationships-db
-DB_USER=contacts
+DB_USER=personal-relationships
 DB_PASS=contacts
 DB_SSL_MODE=prefer
 ```

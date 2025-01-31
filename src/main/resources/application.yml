@@ -95,5 +95,5 @@ management:
 
 hmpps:
   sqs:
-    queueAdminRole: PERSONAL_RELATIONSHIPS_ADMIN
+    queueAdminRole: CONTACTS_ADMIN
 
