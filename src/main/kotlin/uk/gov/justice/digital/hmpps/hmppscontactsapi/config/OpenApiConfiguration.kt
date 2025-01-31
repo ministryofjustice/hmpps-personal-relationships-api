@@ -39,7 +39,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
     )
     .info(
       Info()
-        .title("Contacts API")
+        .title("Personal Relationships API")
         .version(version)
         .description("API for management of contacts and their relationships to prisoners including restrictions that apply to the contact or relationship specifically.")
         .contact(

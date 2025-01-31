@@ -4,8 +4,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-class HmppsContactsApi
+class HmppsPersonalRelationshipsApi
 
 fun main(args: Array<String>) {
-  runApplication<HmppsContactsApi>(*args)
+  runApplication<HmppsPersonalRelationshipsApi>(*args)
 }
