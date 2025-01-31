@@ -39,7 +39,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
     )
     .info(
       Info()
-        .title("Contacts API")
+        .title("Personal Relationships API")
         .version(version)
         .description("API for management of contacts and their relationships to prisoners including restrictions that apply to the contact or relationship specifically.")
         .contact(
@@ -93,15 +93,15 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
           description("Default - This environment")
         },
         Server().apply {
-          url("https://contacts-api-dev.hmpps.service.justice.gov.uk")
+          url("https://personal-relationships-api-dev.hmpps.service.justice.gov.uk")
           description("Development")
         },
         Server().apply {
-          url("https://contacts-api-preprod.hmpps.service.justice.gov.uk")
+          url("https://personal-relationships-api-preprod.hmpps.service.justice.gov.uk")
           description("Pre-production")
         },
         Server().apply {
-          url("https://contacts-api.hmpps.service.justice.gov.uk")
+          url("https://personal-relationships-api.hmpps.service.justice.gov.uk")
           description("Production")
         },
       ),

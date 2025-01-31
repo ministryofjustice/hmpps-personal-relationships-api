@@ -25,7 +25,7 @@ jobs:
       name: hmpps/java_postgres
       jdk_tag: << pipeline.parameters.java-version >>
       postgres_tag: << pipeline.parameters.postgres-tag >>
-      postgres_db: "contacts-db"
+      postgres_db: "personal-relationships-db"
       postgres_username: "contacts"
       postgres_password: "contacts"
     steps:
@@ -92,7 +92,7 @@ workflows:
           slack_channel_name: << pipeline.parameters.slack-channel-non-prod-alerts >>
           context:
             - hmpps-common-vars
-            - hmpps-contacts-preprod
+            - hmpps-personal-relationships-preprod
           requires:
             - request-preprod-approval
           helm_timeout: 5m
@@ -111,7 +111,7 @@ workflows:
           slack_channel_name: << pipeline.parameters.slack-channel-prod-alerts >>
           context:
             - hmpps-common-vars
-            - hmpps-contacts-prod
+            - hmpps-personal-relationships-prod
           requires:
             - request-prod-approval
           helm_timeout: 5m

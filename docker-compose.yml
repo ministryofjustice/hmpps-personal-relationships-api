@@ -1,15 +1,14 @@
-version: "3"
 services:
   db:
     image: postgres:latest
     networks:
       - hmpps
-    container_name: contacts-db
+    container_name: personal-relationships-db
     restart: always
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: contacts-db
+      POSTGRES_DB: personal-relationships-db
       POSTGRES_USER: contacts
       POSTGRES_PASSWORD: contacts
 

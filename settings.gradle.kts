@@ -1,1 +1,1 @@
-rootProject.name = "hmpps-contacts-api"
+rootProject.name = "hmpps-personal-relationships-api"
