@@ -22,7 +22,7 @@ api:
 
 feature:
   event:
-    personal-relationships-api:
+    contacts-api:
       contact-phone:
         created: true
         updated: true
