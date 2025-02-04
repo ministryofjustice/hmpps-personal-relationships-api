@@ -138,6 +138,10 @@ class ContactService(
       referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.GENDER, it)?.description
     }
 
+    val titleDescription = contactEntity.title?.let {
+      referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.TITLE, it)?.description
+    }
+
     // Filter address-specific phone numbers out of the "global" phone number list
     val globalPhoneNumbers = phoneNumbers.filterNot { phone ->
       addressPhoneNumbers.any { addressPhone -> addressPhone.contactPhoneId == phone.contactPhoneId }
@@ -146,6 +150,7 @@ class ContactService(
     return ContactDetails(
       id = contactEntity.id(),
       title = contactEntity.title,
+      titleDescription = titleDescription,
       lastName = contactEntity.lastName,
       firstName = contactEntity.firstName,
       middleNames = contactEntity.middleNames,
