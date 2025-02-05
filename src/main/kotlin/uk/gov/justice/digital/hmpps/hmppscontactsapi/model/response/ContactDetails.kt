@@ -22,6 +22,13 @@ data class ContactDetails(
   )
   val title: String? = null,
 
+  @Schema(
+    description = "The description of the title code, if present",
+    example = "Mr",
+    nullable = true,
+  )
+  val titleDescription: String? = null,
+
   @Schema(description = "The last name of the contact", example = "Doe")
   val lastName: String,
 

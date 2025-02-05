@@ -492,6 +492,24 @@ class ContactServiceTest {
     }
 
     @Test
+    fun `should get a contact with a title code`() {
+      val titleReference = ReferenceCode(1, ReferenceCodeGroup.TITLE, "MR", "Mr", 1, true)
+      whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.TITLE, "MR")).thenReturn(titleReference)
+
+      val entity = createContactEntity().copy(title = "MR")
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(entity))
+
+      val contact = service.getContact(contactId)
+
+      assertNotNull(contact)
+      with(contact!!) {
+        assertThat(id).isEqualTo(entity.contactId)
+        assertThat(title).isEqualTo("MR")
+        assertThat(titleDescription).isEqualTo("Mr")
+      }
+    }
+
+    @Test
     fun `should get a contact if language code null and not lookup the null`() {
       val entity = createContactEntity().copy(languageCode = null)
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(entity))
@@ -1329,7 +1347,7 @@ class ContactServiceTest {
 
   private fun createContactEntity() = ContactEntity(
     contactId = 123456L,
-    title = "Mr",
+    title = null,
     lastName = "last",
     middleNames = "middle",
     firstName = "first",
