@@ -2,7 +2,7 @@
 -- Creates a view over the organisation_type and reference_codes tables to return a list of all org types with descriptions
 -- for all codes.
 -- Note: the view is only dropped if the checksum of this migration changes
--- Internal version to bump if you need to force recreation: 1
+-- Internal version to bump if you need to force recreation: 2
 --
 DROP VIEW IF EXISTS v_organisation_types;
 CREATE VIEW v_organisation_types

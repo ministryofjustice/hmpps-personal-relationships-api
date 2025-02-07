@@ -3,7 +3,7 @@
 -- to return a list of active or inactive contacts, and their primary addresses,
 -- for a prisoner.
 -- Note: the view is only dropped if the checksum of this migration changes
--- Internal version to bump if you need to force recreation: 1
+-- Internal version to bump if you need to force recreation: 2
 --
 DROP VIEW IF EXISTS v_contacts_with_primary_address;
 CREATE VIEW v_contacts_with_primary_address
