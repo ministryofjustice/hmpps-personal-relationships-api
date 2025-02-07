@@ -1,7 +1,7 @@
 --
 -- Creates a view over the organisation, organisation_address and other associated tables to create a summary of an
 -- organisation. This is intended to be used in search results and other places where only high level information is required.
--- Internal version to bump if you need to force recreation: 1
+-- Internal version to bump if you need to force recreation: 2
 --
 DROP VIEW IF EXISTS v_organisation_summary;
 CREATE VIEW v_organisation_summary

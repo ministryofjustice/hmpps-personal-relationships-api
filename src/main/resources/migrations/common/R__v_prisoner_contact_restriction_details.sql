@@ -2,7 +2,7 @@
 -- Creates a view over the prisoner_contact_restriction and reference data tables to return a list of prisoner-contact restrictions by
 -- contact_id
 -- Note: the view is only dropped if the checksum of this migration changes
--- Internal version to bump if you need to force recreation: 1
+-- Internal version to bump if you need to force recreation: 2
 --
 DROP VIEW IF EXISTS v_prisoner_contact_restriction_details;
 CREATE VIEW v_prisoner_contact_restriction_details
