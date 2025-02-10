@@ -49,7 +49,7 @@ class MigrateOrganisationController(val migrationService: OrganisationMigrationS
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('ROLE_CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun migrateOrganisation(
     @Valid @RequestBody request: MigrateOrganisationRequest,
   ): MigrateOrganisationResponse = migrationService.migrateOrganisation(request)

@@ -35,7 +35,7 @@ class ContactRestrictionSyncController(
   @Operation(
     summary = "Returns the data for a contact restriction by contactRestrictionId",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to get the details for one contact restriction.
       """,
   )
@@ -57,7 +57,7 @@ class ContactRestrictionSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncGetContactRestrictionById(
     @Parameter(description = "The internal ID for a contact restriction.", required = true)
     @PathVariable contactRestrictionId: Long,
@@ -67,7 +67,7 @@ class ContactRestrictionSyncController(
   @Operation(
     summary = "Deletes one contact restriction by internal ID",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to delete a contact restriction.
       """,
   )
@@ -83,7 +83,7 @@ class ContactRestrictionSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncDeleteContactRestrictionById(
     @Parameter(description = "The internal ID for the contact restriction.", required = true)
     @PathVariable contactRestrictionId: Long,
@@ -94,7 +94,7 @@ class ContactRestrictionSyncController(
   @Operation(
     summary = "Creates a new contact restriction",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to create a contact restriction and associate it with a contact.
       """,
   )
@@ -117,7 +117,7 @@ class ContactRestrictionSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncCreateContactRestriction(
     @Valid @RequestBody request: SyncCreateContactRestrictionRequest,
   ) = syncFacade.createContactRestriction(request)
@@ -127,7 +127,7 @@ class ContactRestrictionSyncController(
   @Operation(
     summary = "Updates a contact restriction with new or extra detail",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to update a contact restriction.
       """,
   )
@@ -153,7 +153,7 @@ class ContactRestrictionSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncUpdateContactRestriction(
     @Parameter(description = "The internal ID for the contact restriction.", required = true)
     @PathVariable contactRestrictionId: Long,

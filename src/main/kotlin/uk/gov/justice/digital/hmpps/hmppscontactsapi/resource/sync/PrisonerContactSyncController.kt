@@ -37,7 +37,7 @@ class PrisonerContactSyncController(
   @Operation(
     summary = "Returns the data for a prisoner contact by prisonerContactId",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to get the details for one prisoner contact.
       """,
   )
@@ -59,7 +59,7 @@ class PrisonerContactSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncGetPrisonerContactById(
     @Parameter(description = "The internal ID for a prisoner contact.", required = true)
     @PathVariable prisonerContactId: Long,
@@ -69,7 +69,7 @@ class PrisonerContactSyncController(
   @Operation(
     summary = "Deletes one prisoner contact by internal ID",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to delete a prisoner contact.
       """,
   )
@@ -85,7 +85,7 @@ class PrisonerContactSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncDeletePrisonerContactById(
     @Parameter(description = "The internal ID for the prisoner contact.", required = true)
     @PathVariable prisonerContactId: Long,
@@ -96,7 +96,7 @@ class PrisonerContactSyncController(
   @Operation(
     summary = "Creates a new prisoner contact",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to create a prisoner contact.
       """,
   )
@@ -119,7 +119,7 @@ class PrisonerContactSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncCreatePrisonerContact(
     @Valid @RequestBody createPrisonerContactRequest: SyncCreatePrisonerContactRequest,
   ) = syncFacade.createPrisonerContact(createPrisonerContactRequest)
@@ -129,7 +129,7 @@ class PrisonerContactSyncController(
   @Operation(
     summary = "Updates a prisoner contact with new or extra detail",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to update a prisoner contact.
       """,
   )
@@ -155,7 +155,7 @@ class PrisonerContactSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncUpdatePrisonerContact(
     @Parameter(description = "The internal ID for the prisoner contact.", required = true)
     @PathVariable prisonerContactId: Long,
