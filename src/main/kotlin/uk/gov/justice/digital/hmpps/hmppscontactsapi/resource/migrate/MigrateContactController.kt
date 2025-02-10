@@ -54,7 +54,7 @@ class MigrateContactController(val migrationService: ContactMigrationService) {
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('ROLE_CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun migrateContact(
     @Valid @RequestBody migrateContactRequest: MigrateContactRequest,
   ) = migrationService.migrateContact(migrateContactRequest)

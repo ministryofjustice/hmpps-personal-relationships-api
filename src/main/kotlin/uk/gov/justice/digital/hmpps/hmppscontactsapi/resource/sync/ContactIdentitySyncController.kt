@@ -35,7 +35,7 @@ class ContactIdentitySyncController(
   @Operation(
     summary = "Returns the data for a contact identity by contactIdentityId",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to get the details for one contact identity.
       """,
   )
@@ -57,7 +57,7 @@ class ContactIdentitySyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncGetContactIdentityById(
     @Parameter(description = "The internal ID for a contact identity.", required = true)
     @PathVariable contactIdentityId: Long,
@@ -67,7 +67,7 @@ class ContactIdentitySyncController(
   @Operation(
     summary = "Deletes one contact identity by internal ID",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to delete a contact identity.
       """,
   )
@@ -83,7 +83,7 @@ class ContactIdentitySyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncDeleteContactIdentityById(
     @Parameter(description = "The internal ID for the contact identity.", required = true)
     @PathVariable contactIdentityId: Long,
@@ -94,7 +94,7 @@ class ContactIdentitySyncController(
   @Operation(
     summary = "Creates a new contact identity",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to create a contact identity and associate it with a contact.
       """,
   )
@@ -117,7 +117,7 @@ class ContactIdentitySyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncCreateContactIdentity(
     @Valid @RequestBody createContactIdentityRequest: SyncCreateContactIdentityRequest,
   ) = syncFacade.createContactIdentity(createContactIdentityRequest)
@@ -127,7 +127,7 @@ class ContactIdentitySyncController(
   @Operation(
     summary = "Updates a contact identity with new or extra detail",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to update a contact identity.
       """,
   )
@@ -153,7 +153,7 @@ class ContactIdentitySyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncUpdateContactIdentity(
     @Parameter(description = "The internal ID for the contact identity.", required = true)
     @PathVariable contactIdentityId: Long,

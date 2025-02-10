@@ -35,7 +35,7 @@ class ContactAddressSyncController(
   @Operation(
     summary = "Returns the data for a contact address by contactAddressId",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to get the details for one contact address.
       """,
   )
@@ -57,7 +57,7 @@ class ContactAddressSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncGetContactAddressById(
     @Parameter(description = "The internal ID for a contact address.", required = true)
     @PathVariable contactAddressId: Long,
@@ -67,7 +67,7 @@ class ContactAddressSyncController(
   @Operation(
     summary = "Deletes a contact address by internal ID",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to delete a contact address.
       """,
   )
@@ -83,7 +83,7 @@ class ContactAddressSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncDeleteContactAddressById(
     @Parameter(description = "The internal ID for the contact address.", required = true)
     @PathVariable contactAddressId: Long,
@@ -94,7 +94,7 @@ class ContactAddressSyncController(
   @Operation(
     summary = "Creates a new contact address",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to create a contact address and associate it with a contact.
       """,
   )
@@ -117,7 +117,7 @@ class ContactAddressSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncCreateContactAddress(
     @Valid @RequestBody createContactAddressRequest: SyncCreateContactAddressRequest,
   ) = syncFacade.createContactAddress(createContactAddressRequest)
@@ -127,7 +127,7 @@ class ContactAddressSyncController(
   @Operation(
     summary = "Updates a contact address with new or extra detail",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to update a contact address.
       """,
   )
@@ -153,7 +153,7 @@ class ContactAddressSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncUpdateContactAddress(
     @Parameter(description = "The internal ID for the contact address.", required = true)
     @PathVariable contactAddressId: Long,

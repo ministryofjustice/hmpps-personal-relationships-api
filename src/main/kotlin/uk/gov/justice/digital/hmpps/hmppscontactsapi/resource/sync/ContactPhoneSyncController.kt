@@ -35,7 +35,7 @@ class ContactPhoneSyncController(
   @Operation(
     summary = "Returns the data for a contact phone by contactPhoneId",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to get the details for one contact phone.
       """,
   )
@@ -57,7 +57,7 @@ class ContactPhoneSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncGetContactPhoneById(
     @Parameter(description = "The internal ID for a contact phone.", required = true)
     @PathVariable contactPhoneId: Long,
@@ -67,7 +67,7 @@ class ContactPhoneSyncController(
   @Operation(
     summary = "Deletes one contact phone by internal ID",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to delete a contact phone.
       """,
   )
@@ -83,7 +83,7 @@ class ContactPhoneSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncDeleteContactPhoneById(
     @Parameter(description = "The internal ID for the contact phone.", required = true)
     @PathVariable contactPhoneId: Long,
@@ -94,7 +94,7 @@ class ContactPhoneSyncController(
   @Operation(
     summary = "Creates a new contact phone",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to create a contact phone and associate it with a contact.
       """,
   )
@@ -117,7 +117,7 @@ class ContactPhoneSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncCreateContactPhone(
     @Valid @RequestBody request: SyncCreateContactPhoneRequest,
   ) = syncFacade.createContactPhone(request)
@@ -127,7 +127,7 @@ class ContactPhoneSyncController(
   @Operation(
     summary = "Updates a phone number for a contact",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to update a contact's phone number.
       """,
   )
@@ -153,7 +153,7 @@ class ContactPhoneSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncUpdateContactPhone(
     @Parameter(description = "The internal ID for the contact phone.", required = true)
     @PathVariable contactPhoneId: Long,

@@ -35,7 +35,7 @@ class ContactEmailSyncController(
   @Operation(
     summary = "Returns the data for a contact email by contactEmailId",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to get the details for one contact email.
       """,
   )
@@ -57,7 +57,7 @@ class ContactEmailSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncGetContactEmailById(
     @Parameter(description = "The internal ID for a contact email.", required = true)
     @PathVariable contactEmailId: Long,
@@ -67,7 +67,7 @@ class ContactEmailSyncController(
   @Operation(
     summary = "Deletes one contact email by internal ID",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to delete a contact email.
       """,
   )
@@ -83,7 +83,7 @@ class ContactEmailSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncDeleteContactEmailById(
     @Parameter(description = "The internal ID for the contact email.", required = true)
     @PathVariable contactEmailId: Long,
@@ -94,7 +94,7 @@ class ContactEmailSyncController(
   @Operation(
     summary = "Creates a new contact email",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to create a contact email and associate it with a contact.
       """,
   )
@@ -117,7 +117,7 @@ class ContactEmailSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncCreateContactEmail(
     @Valid @RequestBody request: SyncCreateContactEmailRequest,
   ) = syncFacade.createContactEmail(request)
@@ -127,7 +127,7 @@ class ContactEmailSyncController(
   @Operation(
     summary = "Updates a contact email with new or extra detail",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to update a contact email.
       """,
   )
@@ -153,7 +153,7 @@ class ContactEmailSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncUpdateContactEmail(
     @Parameter(description = "The internal ID for the contact email.", required = true)
     @PathVariable contactEmailId: Long,

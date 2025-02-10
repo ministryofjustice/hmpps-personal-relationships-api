@@ -35,7 +35,7 @@ class ContactAddressPhoneSyncController(
   @Operation(
     summary = "Returns the data for an address-soecific phone number by contactAddressPhoneId",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to get the details for one address-specific phone number.
       """,
   )
@@ -57,7 +57,7 @@ class ContactAddressPhoneSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncGetContactPhoneById(
     @Parameter(description = "The internal ID for an address-specific phone number", required = true)
     @PathVariable contactAddressPhoneId: Long,
@@ -67,7 +67,7 @@ class ContactAddressPhoneSyncController(
   @Operation(
     summary = "Deletes an addres-specific phone number by internal ID",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Delete an address-specific phone number by internal ID.
       """,
   )
@@ -83,7 +83,7 @@ class ContactAddressPhoneSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncDeleteContactAddressPhoneById(
     @Parameter(description = "The internal ID for the address-specific phone number", required = true)
     @PathVariable contactAddressPhoneId: Long,
@@ -94,7 +94,7 @@ class ContactAddressPhoneSyncController(
   @Operation(
     summary = "Creates a new address-specific phone number",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to create an address-specific phone number.
       """,
   )
@@ -122,7 +122,7 @@ class ContactAddressPhoneSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncCreateContactAddressPhone(
     @Valid @RequestBody request: SyncCreateContactAddressPhoneRequest,
   ) = syncFacade.createContactAddressPhone(request)
@@ -132,7 +132,7 @@ class ContactAddressPhoneSyncController(
   @Operation(
     summary = "Updates an address-specific phone number",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to update an address-specific phone number for a contact.
       """,
   )
@@ -158,7 +158,7 @@ class ContactAddressPhoneSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncUpdateContactAddressPhone(
     @Parameter(description = "The internal ID for an address-specific phone number", required = true)
     @PathVariable contactAddressPhoneId: Long,
