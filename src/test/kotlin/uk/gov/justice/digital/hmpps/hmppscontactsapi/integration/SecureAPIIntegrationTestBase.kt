@@ -11,7 +11,7 @@ abstract class SecureAPIIntegrationTestBase : PostgresIntegrationTestBase() {
     "ROLE_CONTACTS_ADMIN",
     "ROLE_CONTACTS__R",
     "ROLE_CONTACTS__RW",
-    "ROLE_CONTACTS_MIGRATION",
+    "PERSONAL_RELATIONSHIPS_MIGRATION",
     "ROLE_WRONG",
   )
 

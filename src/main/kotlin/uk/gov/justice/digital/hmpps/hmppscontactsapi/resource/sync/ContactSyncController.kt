@@ -37,7 +37,7 @@ class ContactSyncController(
   @Operation(
     summary = "Returns the data for a contact by contactId",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to get the details for one contact.
       """,
   )
@@ -59,7 +59,7 @@ class ContactSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncGetContactById(
     @Parameter(description = "The internal ID for a contact.", required = true)
     @PathVariable contactId: Long,
@@ -69,7 +69,7 @@ class ContactSyncController(
   @Operation(
     summary = "Deletes one contact by internal ID",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to delete a contact.
       """,
   )
@@ -85,7 +85,7 @@ class ContactSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncDeleteContactById(
     @Parameter(description = "The internal ID for the contact.", required = true)
     @PathVariable contactId: Long,
@@ -96,7 +96,7 @@ class ContactSyncController(
   @Operation(
     summary = "Creates a new contact",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to create a contact and associate it with a contact.
       """,
   )
@@ -124,7 +124,7 @@ class ContactSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncCreateContact(
     @Valid @RequestBody createContactRequest: SyncCreateContactRequest,
   ) = syncFacade.createContact(createContactRequest)
@@ -134,7 +134,7 @@ class ContactSyncController(
   @Operation(
     summary = "Updates a contact with new or extra detail",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to update a contact.
       """,
   )
@@ -160,7 +160,7 @@ class ContactSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncUpdateContact(
     @Parameter(description = "The internal ID for the contact.", required = true)
     @PathVariable contactId: Long,

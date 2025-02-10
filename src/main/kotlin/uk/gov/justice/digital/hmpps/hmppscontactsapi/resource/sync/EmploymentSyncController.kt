@@ -34,7 +34,7 @@ class EmploymentSyncController(
   @GetMapping(path = ["/employment/{employmentId}"], produces = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
     summary = "Returns the data for an employment record by employmentId",
-    description = "Requires role: ROLE_CONTACTS_MIGRATION. Used to get the details for one employment record.",
+    description = "Requires role: PERSONAL_RELATIONSHIPS_MIGRATION. Used to get the details for one employment record.",
   )
   @ApiResponses(
     value = [
@@ -50,13 +50,13 @@ class EmploymentSyncController(
     ],
   )
   @AuthApiResponses
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncGetEmploymentById(@PathVariable employmentId: Long): SyncEmployment = syncFacade.getEmploymentById(employmentId)
 
   @DeleteMapping(path = ["/employment/{employmentId}"], produces = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
     summary = "Deletes an employment record by internal ID",
-    description = "Requires role: ROLE_CONTACTS_MIGRATION. Delete an employment record by internal ID.",
+    description = "Requires role: PERSONAL_RELATIONSHIPS_MIGRATION. Delete an employment record by internal ID.",
   )
   @ApiResponses(
     value = [
@@ -71,7 +71,7 @@ class EmploymentSyncController(
     ],
   )
   @AuthApiResponses
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncDeleteEmploymentById(@PathVariable employmentId: Long) {
     syncFacade.deleteEmployment(employmentId)
   }
@@ -80,7 +80,7 @@ class EmploymentSyncController(
   @ResponseBody
   @Operation(
     summary = "Creates a new employment record",
-    description = "Requires role: ROLE_CONTACTS_MIGRATION. Used to create a new employment record.",
+    description = "Requires role: PERSONAL_RELATIONSHIPS_MIGRATION. Used to create a new employment record.",
   )
   @ApiResponses(
     value = [
@@ -97,7 +97,7 @@ class EmploymentSyncController(
     ],
   )
   @AuthApiResponses
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncCreateEmployment(
     @RequestBody employmentRequest: SyncCreateEmploymentRequest,
   ): SyncEmployment = syncFacade.createEmployment(employmentRequest)
@@ -106,7 +106,7 @@ class EmploymentSyncController(
   @ResponseBody
   @Operation(
     summary = "Updates an employment record",
-    description = "Requires role: ROLE_CONTACTS_MIGRATION. Used to update an employment record.",
+    description = "Requires role: PERSONAL_RELATIONSHIPS_MIGRATION. Used to update an employment record.",
   )
   @ApiResponses(
     value = [
@@ -127,7 +127,7 @@ class EmploymentSyncController(
     ],
   )
   @AuthApiResponses
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncUpdateEmployment(
     @PathVariable employmentId: Long,
     @RequestBody employment: SyncUpdateEmploymentRequest,
