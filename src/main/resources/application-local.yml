@@ -28,3 +28,4 @@ api:
       hmpps-auth: https://sign-in-dev.hmpps.service.justice.gov.uk/auth
       prisoner-search: https://prisoner-search-dev.prison.service.justice.gov.uk
       manage-users: https://manage-users-api-dev.hmpps.service.justice.gov.uk
+      organisations: https://organisations-api-preprod.hmpps.service.justice.gov.uk

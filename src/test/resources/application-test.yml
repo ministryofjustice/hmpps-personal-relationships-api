@@ -19,6 +19,7 @@ api:
       hmpps-auth: http://localhost:8090/auth
       prisoner-search: http://localhost:8092
       manage-users: http://localhost:8093
+      organisations: http://localhost:8094
 
 feature:
   event:

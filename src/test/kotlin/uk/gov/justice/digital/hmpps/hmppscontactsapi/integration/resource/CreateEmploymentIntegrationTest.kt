@@ -31,7 +31,7 @@ class CreateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
         createdBy = "created",
       ),
     ).id
-    stubOrganisation(999)
+    stubOrganisationSummary(999)
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.post()

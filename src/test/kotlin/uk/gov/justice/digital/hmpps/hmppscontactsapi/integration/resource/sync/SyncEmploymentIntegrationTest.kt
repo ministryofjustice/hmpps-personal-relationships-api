@@ -1,16 +1,15 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource.sync
 
+import org.apache.commons.lang3.RandomUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource.CreateOrganisationIntegrationTest.Companion.createValidOrganisationRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateEmploymentRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdateEmploymentRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.OrganisationDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncEmployment
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.EmploymentInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
@@ -266,35 +265,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
     return employment
   }
 
-  private fun createOrganisation(): Long {
-    val request = createValidOrganisationRequest()
-
-    val response = webTestClient.post()
-      .uri("/organisation")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
-      .bodyValue(request)
-      .exchange()
-      .expectStatus()
-      .isCreated
-      .expectBody(OrganisationDetails::class.java)
-      .returnResult()
-      .responseBody
-
-    assertThat(response).isNotNull
-    with(response!!) {
-      assertThat(organisationName).isEqualTo(request.organisationName)
-      assertThat(programmeNumber).isEqualTo(request.programmeNumber)
-      assertThat(vatNumber).isEqualTo(request.vatNumber)
-      assertThat(caseloadId).isEqualTo(request.caseloadId)
-      assertThat(comments).isEqualTo(request.comments)
-      assertThat(active).isEqualTo(request.active)
-      assertThat(deactivatedDate).isEqualTo(request.deactivatedDate)
-      assertThat(createdBy).isEqualTo(request.createdBy)
-      assertThat(createdTime).isNotNull()
-      assertThat(organisationId).isNotNull()
-    }
-    return response.organisationId
-  }
+  private fun createOrganisation(): Long = stubOrganisationSummary(RandomUtils.secure().randomLong(10000, 99999)).organisationId
 
   private fun createContact(): Long {
     val request = CreateContactRequest(

@@ -27,7 +27,7 @@ class GetEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
         createdBy = "created",
       ),
     ).id
-    stubOrganisation(999)
+    stubOrganisationSummary(999)
     savedEmploymentId = testAPIClient.createAnEmployment(
       savedContactId,
       CreateEmploymentRequest(

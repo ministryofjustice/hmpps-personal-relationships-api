@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateEmploym
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateIdentityRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePrisonerContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.OrganisationSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchEmploymentsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateContactAddressPhoneRequest
@@ -27,7 +26,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePhoneRe
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigrateContactRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigrateOrganisationRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
@@ -39,8 +37,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactRestr
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.EmploymentDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.LinkedPrisonerDetails
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.OrganisationDetails
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.OrganisationSummary
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PatchContactResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionDetails
@@ -48,7 +44,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerCont
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.MigrateContactResponse
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.MigrateOrganisationResponse
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 import java.net.URI
@@ -93,28 +88,6 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .isOk
     .expectHeader().contentType(MediaType.APPLICATION_JSON)
     .expectBody(ContactDetails::class.java)
-    .returnResult().responseBody!!
-
-  fun getOrganisation(id: Long, role: String = "ROLE_CONTACTS_ADMIN"): OrganisationDetails = webTestClient.get()
-    .uri("/organisation/$id")
-    .accept(MediaType.APPLICATION_JSON)
-    .headers(setAuthorisation(roles = listOf(role)))
-    .exchange()
-    .expectStatus()
-    .isOk
-    .expectHeader().contentType(MediaType.APPLICATION_JSON)
-    .expectBody(OrganisationDetails::class.java)
-    .returnResult().responseBody!!
-
-  fun searchOrganisations(request: OrganisationSearchRequest, page: Long? = null, size: Long? = null, sort: List<String> = emptyList(), role: String = "ROLE_CONTACTS_ADMIN"): OrganisationSearchResponse = webTestClient.get()
-    .uri("/organisation/search?name=${request.name}${page?.let {"&page=$page"} ?: "" }${size?.let {"&size=$size"} ?: "" }${sort.joinToString("") { "&sort=$it" }}")
-    .accept(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
-    .exchange()
-    .expectStatus()
-    .isOk
-    .expectHeader().contentType(MediaType.APPLICATION_JSON)
-    .expectBody(OrganisationSearchResponse::class.java)
     .returnResult().responseBody!!
 
   fun getPrisonerContacts(prisonerNumber: String): PrisonerContactSummaryResponse = webTestClient.get()
@@ -372,19 +345,6 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(MigrateContactResponse::class.java)
     .returnResult().responseBody!!
 
-  fun migrateAnOrganisation(request: MigrateOrganisationRequest, authRole: String = "ROLE_CONTACTS_MIGRATION") = webTestClient.post()
-    .uri("/migrate/organisation")
-    .accept(MediaType.APPLICATION_JSON)
-    .contentType(MediaType.APPLICATION_JSON)
-    .headers(setAuthorisation(roles = listOf(authRole)))
-    .bodyValue(request)
-    .exchange()
-    .expectStatus()
-    .isOk
-    .expectHeader().contentType(MediaType.APPLICATION_JSON)
-    .expectBody(MigrateOrganisationResponse::class.java)
-    .returnResult().responseBody!!
-
   fun getContactGlobalRestrictions(contactId: Long, role: String = "ROLE_CONTACTS_ADMIN"): List<ContactRestrictionDetails> = webTestClient.get()
     .uri("/contact/$contactId/restriction")
     .accept(MediaType.APPLICATION_JSON)
@@ -603,20 +563,6 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
 
   data class PrisonerContactSummaryResponse(
     val content: List<PrisonerContactSummary>,
-    val pageable: ReturnedPageable,
-    val last: Boolean,
-    val totalPages: Int,
-    val totalElements: Int,
-    val first: Boolean,
-    val size: Int,
-    val number: Int,
-    val sort: ReturnedSort,
-    val numberOfElements: Int,
-    val empty: Boolean,
-  )
-
-  data class OrganisationSearchResponse(
-    val content: List<OrganisationSummary>,
     val pageable: ReturnedPageable,
     val last: Boolean,
     val totalPages: Int,

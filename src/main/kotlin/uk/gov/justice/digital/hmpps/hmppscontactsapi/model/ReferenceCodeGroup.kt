@@ -18,7 +18,5 @@ enum class ReferenceCodeGroup(val displayName: String, val isDocumented: Boolean
   PHONE_TYPE("phone type", true),
   RESTRICTION("restriction type", true),
   TITLE("title", true),
-  ORGANISATION_TYPE("organisation type", true),
-  ORG_ADDRESS_SPECIAL_NEEDS("organisation address special needs code", true),
   TEST_TYPE("test type", false),
 }
