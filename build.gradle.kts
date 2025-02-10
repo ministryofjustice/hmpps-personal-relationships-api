@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "7.0.0"
@@ -57,12 +58,46 @@ dependencies {
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.1.1")
 }
 
-kotlin {
-  jvmToolchain(21)
-}
-
 tasks {
   withType<KotlinCompile> {
+    dependsOn("buildOrganisationApiModel")
     compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+  }
+}
+
+val configValues = mapOf(
+  "dateLibrary" to "java8-localdatetime",
+  "serializationLibrary" to "jackson",
+  "useBeanValidation" to "false",
+  "enumPropertyNaming" to "UPPERCASE",
+)
+
+val buildDirectory: Directory = layout.buildDirectory.get()
+
+tasks.register("buildOrganisationApiModel", GenerateTask::class) {
+  generatorName.set("kotlin")
+  inputSpec.set("openapi-specs/hmpps-organisations-api.json")
+  outputDir.set("$buildDirectory/generated/organisationsapi")
+  modelPackage.set("uk.gov.justice.digital.hmpps.hmppscontactsapi.client.organisationsapi.model")
+  configOptions.set(configValues)
+  globalProperties.set(mapOf("models" to ""))
+}
+
+tasks.named("runKtlintCheckOverMainSourceSet") {
+  dependsOn("buildOrganisationApiModel")
+}
+
+kotlin {
+  jvmToolchain(21)
+  sourceSets["main"].apply {
+    kotlin.srcDir("$buildDirectory/generated/organisationsapi/src/main/kotlin")
+  }
+}
+
+ktlint {
+  filter {
+    exclude {
+      it.file.path.contains("organisationsapi/model/")
+    }
   }
 }

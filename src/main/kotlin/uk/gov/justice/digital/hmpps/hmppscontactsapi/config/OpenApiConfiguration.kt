@@ -72,10 +72,6 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
           )
         },
         Tag().apply {
-          name("Organisation")
-          description("APIs relating to creating and managing a organisation")
-        },
-        Tag().apply {
           name("Reference Data")
           description("APIs relating to reference data used in the service")
         },

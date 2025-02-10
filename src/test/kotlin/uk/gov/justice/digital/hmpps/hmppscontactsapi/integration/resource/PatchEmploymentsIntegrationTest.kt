@@ -43,11 +43,11 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
         createdBy = "created",
       ),
     ).id
-    stubOrganisation(123)
-    stubOrganisation(456)
-    stubOrganisation(789)
-    stubOrganisation(555)
-    stubOrganisation(999)
+    stubOrganisationSummary(123)
+    stubOrganisationSummary(456)
+    stubOrganisationSummary(789)
+    stubOrganisationSummary(555)
+    stubOrganisationSummary(999)
     employmentToRemainUntouched = employmentRepository.saveAndFlush(
       EmploymentEntity(
         employmentId = 0,
@@ -247,6 +247,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @Test
   fun `Should not be able to add employment for org that doesn't exist`() {
+    stubOrganisationSummaryNotFound(987654321)
     val request = aMinimalRequest().copy(
       createEmployments = listOf(PatchEmploymentsNewEmployment(organisationId = 987654321, isActive = false)),
     )

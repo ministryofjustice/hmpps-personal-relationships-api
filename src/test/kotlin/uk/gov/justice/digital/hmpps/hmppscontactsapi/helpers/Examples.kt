@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers
 
 import org.openapitools.jackson.nullable.JsonNullable
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.organisationsapi.model.OrganisationSummary
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEmailEntity
@@ -8,7 +9,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactIdentityDetai
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactPhoneDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactRestrictionDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.EmploymentEntity
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.OrganisationSummaryEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactRestrictionDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactIdent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.EmploymentDetails
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.OrganisationSummary
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionDetails
 import java.time.LocalDate
@@ -629,41 +628,6 @@ fun createEmploymentDetails(
   updatedTime = updatedTime,
 )
 
-fun createOrganisationSummaryEntity(
-  id: Long = 1,
-  organisationName: String = "Some name limited",
-  organisationActive: Boolean = true,
-  flat: String? = "Flat",
-  property: String? = "Property",
-  street: String? = "Street",
-  area: String? = "Area",
-  cityCode: String? = "123",
-  cityDescription: String? = "City",
-  countyCode: String? = "C.OUNTY",
-  countyDescription: String? = "County",
-  postCode: String? = "AB12 3CD",
-  countryCode: String? = "COU",
-  countryDescription: String? = "Country",
-  businessPhoneNumber: String? = "0123456",
-  businessPhoneNumberExtension: String? = "789",
-) = OrganisationSummaryEntity(
-  id,
-  organisationName,
-  organisationActive,
-  flat,
-  property,
-  street,
-  area,
-  cityCode,
-  cityDescription,
-  countyCode,
-  countyDescription,
-  postCode,
-  countryCode,
-  countryDescription,
-  businessPhoneNumber,
-  businessPhoneNumberExtension,
-)
 fun createOrganisationSummary(
   id: Long = 1,
   organisationName: String = "Some name limited",

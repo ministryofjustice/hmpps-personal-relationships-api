@@ -135,11 +135,6 @@ class OutboundEventsService(
             contactId?.let { PersonReference(it) },
           )
         }
-
-        OutboundEvent.ORGANISATION_CREATED,
-        -> {
-          sendSafely(outboundEvent, OrganisationInfo(identifier, source))
-        }
       }
     } else {
       log.warn("Outbound event type $outboundEvent feature is configured off.")

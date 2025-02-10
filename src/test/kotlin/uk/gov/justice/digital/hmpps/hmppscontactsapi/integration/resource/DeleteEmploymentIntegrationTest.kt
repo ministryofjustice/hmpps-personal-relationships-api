@@ -31,8 +31,8 @@ class DeleteEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
         createdBy = "created",
       ),
     ).id
-    stubOrganisation(999)
-    stubOrganisation(666)
+    stubOrganisationSummary(999)
+    stubOrganisationSummary(666)
     savedEmploymentId = testAPIClient.createAnEmployment(
       savedContactId,
       CreateEmploymentRequest(
