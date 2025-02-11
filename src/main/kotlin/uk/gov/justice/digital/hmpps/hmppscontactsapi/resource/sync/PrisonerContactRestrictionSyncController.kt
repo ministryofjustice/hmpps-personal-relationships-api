@@ -40,7 +40,7 @@ class PrisonerContactRestrictionSyncController(
   @Operation(
     summary = "Returns the data for a prisoner contact restriction by id",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to get the details for one prisoner contact restriction.
       """,
   )
@@ -62,7 +62,7 @@ class PrisonerContactRestrictionSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncGetPrisonerContactRestrictionById(
     @Parameter(description = "The internal ID for a prisoner contact restriction.", required = true)
     @PathVariable prisonerContactRestrictionId: Long,
@@ -75,7 +75,7 @@ class PrisonerContactRestrictionSyncController(
   @Operation(
     summary = "Deletes one prisoner contact restriction by internal ID",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to delete a prisoner contact restriction.
       """,
   )
@@ -91,7 +91,7 @@ class PrisonerContactRestrictionSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncDeletePrisonerContactRestrictionById(
     @Parameter(description = "The internal ID for the prisoner contact restriction.", required = true)
     @PathVariable prisonerContactRestrictionId: Long,
@@ -102,7 +102,7 @@ class PrisonerContactRestrictionSyncController(
   @Operation(
     summary = "Creates a new prisoner contact restriction",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to create a prisoner contact restriction.
       """,
   )
@@ -125,7 +125,7 @@ class PrisonerContactRestrictionSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncCreatePrisonerContactRestriction(
     @Valid @RequestBody createPrisonerContactRestrictionRequest: SyncCreatePrisonerContactRestrictionRequest,
   ) = syncFacade.createPrisonerContactRestriction(createPrisonerContactRestrictionRequest)
@@ -138,7 +138,7 @@ class PrisonerContactRestrictionSyncController(
   @Operation(
     summary = "Updates a prisoner contact restriction with new or extra detail",
     description = """
-      Requires role: ROLE_CONTACTS_MIGRATION.
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to update a prisoner contact restriction.
       """,
   )
@@ -164,7 +164,7 @@ class PrisonerContactRestrictionSyncController(
       ),
     ],
   )
-  @PreAuthorize("hasAnyRole('CONTACTS_MIGRATION')")
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncUpdatePrisonerContactRestriction(
     @Parameter(description = "The internal ID for the prisoner contact restriction.", required = true)
     @PathVariable prisonerContactRestrictionId: Long,

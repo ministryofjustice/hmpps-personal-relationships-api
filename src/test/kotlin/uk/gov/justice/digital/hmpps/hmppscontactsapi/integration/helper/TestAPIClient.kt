@@ -332,7 +332,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     scopes: List<String> = listOf("read"),
   ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisationHeader(username = username, scope = scopes, roles = roles)
 
-  fun migrateAContact(request: MigrateContactRequest, authRole: String = "ROLE_CONTACTS_MIGRATION") = webTestClient.post()
+  fun migrateAContact(request: MigrateContactRequest, authRole: String = "PERSONAL_RELATIONSHIPS_MIGRATION") = webTestClient.post()
     .uri("/migrate/contact")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
