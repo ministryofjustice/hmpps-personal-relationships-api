@@ -545,6 +545,30 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
       .isNoContent
   }
 
+  fun getPrisonerDomesticStatus(prisonerNumber: String, role: String = "ROLE_CONTACTS_ADMIN"): PrisonerContactSummaryResponse = webTestClient.get()
+    .uri("/prisoner/$prisonerNumber/domestic-status/")
+    .accept(MediaType.APPLICATION_JSON)
+    .headers(setAuthorisation(roles = listOf(role)))
+    .exchange()
+    .expectStatus().isOk
+    .expectHeader().contentType(MediaType.APPLICATION_JSON)
+    .expectBody(PrisonerContactSummaryResponse::class.java)
+    .returnResult().responseBody!!
+
+  fun createPrisonerDomesticStatus(prisonerNumber: String, request: CreateEmploymentRequest, role: String = "ROLE_CONTACTS_ADMIN"): EmploymentDetails = webTestClient.post()
+    .uri("/prisoner/$prisonerNumber/domestic-status")
+    .accept(MediaType.APPLICATION_JSON)
+    .contentType(MediaType.APPLICATION_JSON)
+    .headers(authorised(role))
+    .bodyValue(request)
+    .exchange()
+    .expectStatus()
+    .isCreated
+    .expectHeader().contentType(MediaType.APPLICATION_JSON)
+    .expectHeader().valuesMatch("Location", "/contact/$prisonerNumber/employment/(\\d)+")
+    .expectBody(EmploymentDetails::class.java)
+    .returnResult().responseBody!!
+
   private fun authorised(role: String = "ROLE_CONTACTS_ADMIN") = setAuthorisation(roles = listOf(role))
 
   data class ContactSearchResponse(

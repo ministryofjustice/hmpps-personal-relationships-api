@@ -64,3 +64,5 @@ feature:
         created: true
         updated: true
         deleted: true
+      domestic-status:
+        created: true

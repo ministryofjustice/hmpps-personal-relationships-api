@@ -135,6 +135,17 @@ class OutboundEventsService(
             contactId?.let { PersonReference(it) },
           )
         }
+
+        OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
+        OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
+        OutboundEvent.PRISONER_DOMESTIC_STATUS_DELETED,
+        -> {
+          sendSafely(
+            outboundEvent,
+            EmploymentInfo(identifier, source),
+            contactId?.let { PersonReference(it) },
+          )
+        }
       }
     } else {
       log.warn("Outbound event type $outboundEvent feature is configured off.")
