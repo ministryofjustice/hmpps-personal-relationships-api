@@ -34,7 +34,7 @@ class SyncPrisonerDomesticStatusServiceTest {
     // Given
     val prisonerNumber = "A1234BC"
     val domesticStatus = PrisonerDomesticStatus(
-      id = 1L,
+      prisonerDomesticStatusId = 1L,
       prisonerNumber = prisonerNumber,
       domesticStatusCode = "D",
       createdBy = "user",
@@ -77,7 +77,7 @@ class SyncPrisonerDomesticStatusServiceTest {
     // Given
     val prisonerNumber = "A1234BC"
     val existingStatus = PrisonerDomesticStatus(
-      id = 1L,
+      prisonerDomesticStatusId = 1L,
       prisonerNumber = prisonerNumber,
       domesticStatusCode = "D",
       createdBy = "user",

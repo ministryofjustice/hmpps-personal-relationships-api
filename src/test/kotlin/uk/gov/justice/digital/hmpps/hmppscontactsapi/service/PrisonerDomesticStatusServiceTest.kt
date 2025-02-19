@@ -40,7 +40,7 @@ class PrisonerDomesticStatusServiceTest {
   fun `getDomesticStatus returns correct response when status exists`() {
     // Given
     val domesticStatus = PrisonerDomesticStatus(
-      id = 1,
+      prisonerDomesticStatusId = 1,
       prisonerNumber = prisonerNumber,
       domesticStatusCode = "CODE1",
       active = true,
@@ -94,7 +94,7 @@ class PrisonerDomesticStatusServiceTest {
     ).thenReturn(ReferenceCodeEntity(1L, ReferenceCodeGroup.DOMESTIC_STS, "S", "Single", 0, true, "name"))
 
     val newStatus = PrisonerDomesticStatus(
-      id = 1,
+      prisonerDomesticStatusId = 1,
       prisonerNumber = prisonerNumber,
       domesticStatusCode = "CODE1",
       active = true,
@@ -124,7 +124,7 @@ class PrisonerDomesticStatusServiceTest {
   fun `createOrUpdateDomesticStatus deactivates existing status and creates new one`() {
     // Given
     val existingStatus = PrisonerDomesticStatus(
-      id = 1,
+      prisonerDomesticStatusId = 1,
       prisonerNumber = prisonerNumber,
       domesticStatusCode = "OLD_CODE",
       active = true,
@@ -149,7 +149,7 @@ class PrisonerDomesticStatusServiceTest {
     ).thenReturn(ReferenceCodeEntity(1L, ReferenceCodeGroup.DOMESTIC_STS, "FRIEND", "Friend", 0, true, "name"))
 
     val newStatus = PrisonerDomesticStatus(
-      id = 1,
+      prisonerDomesticStatusId = 1,
       prisonerNumber = prisonerNumber,
       domesticStatusCode = "NEW_CODE",
       active = true,

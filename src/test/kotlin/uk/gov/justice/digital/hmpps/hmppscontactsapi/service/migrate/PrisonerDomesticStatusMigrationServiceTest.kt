@@ -46,7 +46,7 @@ class PrisonerDomesticStatusMigrationServiceTest {
     )
 
     val savedEntity1 = PrisonerDomesticStatus(
-      id = 1L,
+      prisonerDomesticStatusId = 1L,
       prisonerNumber = prisonerNumber,
       domesticStatusCode = historyItem1.domesticStatusCode,
       createdBy = historyItem1.createdBy,
@@ -55,7 +55,7 @@ class PrisonerDomesticStatusMigrationServiceTest {
     )
 
     val savedEntity2 = PrisonerDomesticStatus(
-      id = 2L,
+      prisonerDomesticStatusId = 2L,
       prisonerNumber = prisonerNumber,
       domesticStatusCode = historyItem2.domesticStatusCode,
       createdBy = historyItem2.createdBy,
@@ -97,7 +97,7 @@ class PrisonerDomesticStatusMigrationServiceTest {
     )
 
     val savedEntity = PrisonerDomesticStatus(
-      id = 2L,
+      prisonerDomesticStatusId = 2L,
       prisonerNumber = request.prisonerNumber,
       domesticStatusCode = "D",
       createdBy = "USER1",
@@ -132,7 +132,7 @@ class PrisonerDomesticStatusMigrationServiceTest {
     )
 
     val savedEntity = PrisonerDomesticStatus(
-      id = 1L,
+      prisonerDomesticStatusId = 1L,
       prisonerNumber = prisonerNumber,
       domesticStatusCode = historyItem.domesticStatusCode,
       createdBy = historyItem.createdBy,

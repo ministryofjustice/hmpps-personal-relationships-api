@@ -25,7 +25,7 @@ data class SyncPrisonerDomesticStatusResponse(
 ) {
   companion object {
     fun from(domesticStatus: PrisonerDomesticStatus) = SyncPrisonerDomesticStatusResponse(
-      id = domesticStatus.id,
+      id = domesticStatus.prisonerDomesticStatusId,
       prisonerNumber = domesticStatus.prisonerNumber,
       domesticStatusCode = domesticStatus.domesticStatusCode,
       createdTime = domesticStatus.createdTime,

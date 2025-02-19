@@ -12,7 +12,7 @@ import java.time.LocalDateTime
 data class PrisonerDomesticStatus(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  val id: Long = 0,
+  val prisonerDomesticStatusId: Long = 0,
 
   val prisonerNumber: String,
 
@@ -24,4 +24,4 @@ data class PrisonerDomesticStatus(
 
   val createdTime: LocalDateTime,
 
-)
+  )

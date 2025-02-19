@@ -57,7 +57,7 @@ class PrisonerDomesticStatusService(
   }
 
   private fun mapToResponse(entity: PrisonerDomesticStatus): PrisonerDomesticStatusResponse = PrisonerDomesticStatusResponse(
-    id = entity.id,
+    id = entity.prisonerDomesticStatusId,
     prisonerNumber = entity.prisonerNumber,
     domesticStatusValue = entity.domesticStatusCode,
     domesticStatusDescription = referenceCodeRepository.findByGroupCodeAndCode(

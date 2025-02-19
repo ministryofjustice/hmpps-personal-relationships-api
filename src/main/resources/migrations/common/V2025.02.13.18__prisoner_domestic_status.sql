@@ -3,7 +3,7 @@
 --
 create table prisoner_domestic_status
 (
-    id                   bigserial  NOT NULL
+    prisoner_domestic_status_id                   bigserial  NOT NULL
         CONSTRAINT prisoner_domestic_status_id_pk PRIMARY KEY,
     prisoner_number      varchar(7) NOT NULL,
     domestic_status_code char(1),
