@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -28,7 +29,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 class PrisonerDomesticStatusSyncController(
   private val prisonerDomesticStatusSyncFacade: PrisonerDomesticStatusSyncFacade,
 ) {
-  @GetMapping(path = ["/domestic-status/{prisonerNumber}"], produces = [MediaType.APPLICATION_JSON_VALUE])
+  @GetMapping(path = ["/{prisonerNumber}/domestic-status"], produces = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
     summary = "Returns the domestic status for a prisoner by prisonerNumber",
     description = """
@@ -59,10 +60,18 @@ class PrisonerDomesticStatusSyncController(
     @PathVariable prisonerNumber: String,
   ) = prisonerDomesticStatusSyncFacade.getDomesticStatusByPrisonerNumber(prisonerNumber)
 
-  @PutMapping(path = ["/domestic-status/{prisonerNumber}"], produces = [MediaType.APPLICATION_JSON_VALUE])
+  /**
+   * Creates a domestic status record from NOMIS.
+   * If a record already exists, it will be moved to history for auditability before creating the new record.
+   *
+   * Updates an existing domestic status record from NOMIS.
+   * The existing record will be moved to history for auditability before creating the new updated record.
+   */
+
+  @PutMapping(path = ["/{prisonerNumber}/domestic-status"], produces = [MediaType.APPLICATION_JSON_VALUE])
   @ResponseBody
   @Operation(
-    summary = "Updates the domestic status for a prisoner",
+    summary = "Create or Updates the domestic status for a prisoner",
     description = """
       Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
       Used to update a prisoner's domestic status.
@@ -72,7 +81,7 @@ class PrisonerDomesticStatusSyncController(
     value = [
       ApiResponse(
         responseCode = "200",
-        description = "Successfully updated domestic status",
+        description = "Successfully created/updated domestic status",
         content = [
           Content(
             mediaType = "application/json",
@@ -87,7 +96,12 @@ class PrisonerDomesticStatusSyncController(
       ApiResponse(
         responseCode = "400",
         description = "Invalid data provided in the request",
-        content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = ErrorResponse::class),
+          ),
+        ],
       ),
     ],
   )
@@ -95,19 +109,18 @@ class PrisonerDomesticStatusSyncController(
   @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncUpdateDomesticStatus(
     @PathVariable prisonerNumber: String,
-    @RequestBody request: SyncUpdatePrisonerDomesticStatusRequest,
+    @Valid @RequestBody request: SyncUpdatePrisonerDomesticStatusRequest,
   ) = prisonerDomesticStatusSyncFacade.updateDomesticStatus(prisonerNumber, request)
 
-  // TODO create domestic status from NOMIS will create a record, if we have a record we will move it to history for auditability, then add a new record.
+  /**
+   * When deleting a record in NOMIS, the record will be moved to inactive status rather than being deleted.
+   * This preserves the record history while marking it as no longer active.
+   */
 
-  // TODO update domestic status, when updating a record on NOMIS we will move existing record to history and create a new record
-
-  // TODO when deleting a record in NOMIS we will move that to inactive status - do not delete the record.
-
-  @DeleteMapping(path = ["/domestic-status/{prisonerNumber}"], produces = [MediaType.APPLICATION_JSON_VALUE])
+  @DeleteMapping(path = ["/{prisonerNumber}/domestic-status"], produces = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
     summary = "Deletes an domestic status record by prisoner number",
-    description = "Requires role: PERSONAL_RELATIONSHIPS_MIGRATION. Delete an employment record by internal ID.",
+    description = "Delete prisoner's domestic status record by internal ID.",
   )
   @ApiResponses(
     value = [

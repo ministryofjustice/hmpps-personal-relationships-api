@@ -25,191 +25,190 @@ import java.time.LocalDateTime
 @ExtendWith(MockitoExtension::class)
 class PrisonerDomesticStatusServiceTest {
 
-    @Mock
-    private lateinit var prisonerDomesticStatusRepository: PrisonerDomesticStatusRepository
+  @Mock
+  private lateinit var prisonerDomesticStatusRepository: PrisonerDomesticStatusRepository
 
-    @Mock
-    private lateinit var referenceCodeRepository: ReferenceCodeRepository
+  @Mock
+  private lateinit var referenceCodeRepository: ReferenceCodeRepository
 
-    @InjectMocks
-    private lateinit var prisonerDomesticStatusService: PrisonerDomesticStatusService
+  @InjectMocks
+  private lateinit var prisonerDomesticStatusService: PrisonerDomesticStatusService
 
-    private val prisonerNumber = "A1234BC"
+  private val prisonerNumber = "A1234BC"
 
-    @Test
-    fun `getDomesticStatus returns correct response when status exists`() {
-        // Given
-        val domesticStatus = PrisonerDomesticStatus(
-            id = 1,
-            prisonerNumber = prisonerNumber,
-            domesticStatusCode = "CODE1",
-            active = true,
-            createdBy = "USER1",
-            createdTime = LocalDateTime.now(),
-        )
+  @Test
+  fun `getDomesticStatus returns correct response when status exists`() {
+    // Given
+    val domesticStatus = PrisonerDomesticStatus(
+      id = 1,
+      prisonerNumber = prisonerNumber,
+      domesticStatusCode = "CODE1",
+      active = true,
+      createdBy = "USER1",
+      createdTime = LocalDateTime.now(),
+    )
 
-        whenever(prisonerDomesticStatusRepository.findByPrisonerNumber(prisonerNumber))
-            .thenReturn(domesticStatus)
+    whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      .thenReturn(domesticStatus)
 
-        // When
-        val result = prisonerDomesticStatusService.getDomesticStatus(prisonerNumber)
+    // When
+    val result = prisonerDomesticStatusService.getDomesticStatus(prisonerNumber)
 
-        // Then
-        with(result) {
-            assertThat(prisonerNumber).isEqualTo(prisonerNumber)
-            assertThat(domesticStatusValue).isEqualTo("CODE1")
-            assertThat(active).isTrue
-        }
+    // Then
+    with(result) {
+      assertThat(prisonerNumber).isEqualTo(prisonerNumber)
+      assertThat(domesticStatusValue).isEqualTo("CODE1")
+      assertThat(active).isTrue
     }
+  }
 
-    @Test
-    fun `getDomesticStatus throws EntityNotFoundException when status does not exist`() {
-        // Given
-        whenever(prisonerDomesticStatusRepository.findByPrisonerNumber(prisonerNumber))
-            .thenReturn(null)
+  @Test
+  fun `getDomesticStatus throws EntityNotFoundException when status does not exist`() {
+    // Given
+    whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      .thenReturn(null)
 
-        // When/Then
-        assertThrows<EntityNotFoundException> {
-            prisonerDomesticStatusService.getDomesticStatus(prisonerNumber)
-        }.message isEqualTo ("No domestic status found for prisoner number: $prisonerNumber")
+    // When/Then
+    assertThrows<EntityNotFoundException> {
+      prisonerDomesticStatusService.getDomesticStatus(prisonerNumber)
+    }.message isEqualTo ("No domestic status found for prisoner number: $prisonerNumber")
+  }
+
+  @Test
+  fun `createOrUpdateDomesticStatus creates new status when none exists`() {
+    // Given
+    val request = UpdatePrisonerDomesticStatusRequest(
+      prisonerNumber = prisonerNumber,
+      domesticStatusCode = "CODE1",
+      updatedBy = "USER1",
+    )
+
+    whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      .thenReturn(null)
+
+    whenever(
+      referenceCodeRepository.findByGroupCodeAndCode(
+        ReferenceCodeGroup.DOMESTIC_STS,
+        request.domesticStatusCode,
+      ),
+    ).thenReturn(ReferenceCodeEntity(1L, ReferenceCodeGroup.DOMESTIC_STS, "S", "Single", 0, true, "name"))
+
+    val newStatus = PrisonerDomesticStatus(
+      id = 1,
+      prisonerNumber = prisonerNumber,
+      domesticStatusCode = "CODE1",
+      active = true,
+      createdBy = "USER1",
+      createdTime = LocalDateTime.now(),
+    )
+
+    whenever(prisonerDomesticStatusRepository.save(any()))
+      .thenReturn(newStatus)
+
+    // When
+    val result = prisonerDomesticStatusService.createOrUpdateDomesticStatus(
+      prisonerNumber,
+      request,
+    )
+
+    // Then
+    with(result) {
+      assertThat(prisonerNumber).isEqualTo(prisonerNumber)
+      assertThat(domesticStatusValue).isEqualTo("CODE1")
+      assertThat(active).isTrue
     }
+    verify(prisonerDomesticStatusRepository, times(1)).save(any())
+  }
 
-    @Test
-    fun `createOrUpdateDomesticStatus creates new status when none exists`() {
-        // Given
-        val request = UpdatePrisonerDomesticStatusRequest(
-            prisonerNumber = prisonerNumber,
-            domesticStatusCode = "CODE1",
-            updatedBy = "USER1",
-        )
+  @Test
+  fun `createOrUpdateDomesticStatus deactivates existing status and creates new one`() {
+    // Given
+    val existingStatus = PrisonerDomesticStatus(
+      id = 1,
+      prisonerNumber = prisonerNumber,
+      domesticStatusCode = "OLD_CODE",
+      active = true,
+      createdBy = "USER1",
+      createdTime = LocalDateTime.now(),
+    )
 
-        whenever(prisonerDomesticStatusRepository.findByPrisonerNumber(prisonerNumber))
-            .thenReturn(null)
+    val request = UpdatePrisonerDomesticStatusRequest(
+      prisonerNumber = prisonerNumber,
+      domesticStatusCode = "NEW_CODE",
+      updatedBy = "USER1",
+    )
 
-        whenever(
-            referenceCodeRepository.findByGroupCodeAndCode(
-                ReferenceCodeGroup.DOMESTIC_STS,
-                request.domesticStatusCode,
-            ),
-        ).thenReturn(ReferenceCodeEntity(1L, ReferenceCodeGroup.DOMESTIC_STS, "S", "Single", 0, true, "name"))
+    whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      .thenReturn(existingStatus)
 
-        val newStatus = PrisonerDomesticStatus(
-            id = 1,
-            prisonerNumber = prisonerNumber,
-            domesticStatusCode = "CODE1",
-            active = true,
-            createdBy = "USER1",
-            createdTime = LocalDateTime.now(),
-        )
+    whenever(
+      referenceCodeRepository.findByGroupCodeAndCode(
+        ReferenceCodeGroup.DOMESTIC_STS,
+        request.domesticStatusCode,
+      ),
+    ).thenReturn(ReferenceCodeEntity(1L, ReferenceCodeGroup.DOMESTIC_STS, "FRIEND", "Friend", 0, true, "name"))
 
-        whenever(prisonerDomesticStatusRepository.save(any()))
-            .thenReturn(newStatus)
+    val newStatus = PrisonerDomesticStatus(
+      id = 1,
+      prisonerNumber = prisonerNumber,
+      domesticStatusCode = "NEW_CODE",
+      active = true,
+      createdBy = "USER1",
+      createdTime = LocalDateTime.now(),
+    )
 
-        // When
-        val result = prisonerDomesticStatusService.createOrUpdateDomesticStatus(
-            prisonerNumber,
-            request,
-        )
+    whenever(prisonerDomesticStatusRepository.save(any()))
+      .thenReturn(existingStatus).thenReturn(newStatus)
 
-        // Then
-        with(result) {
-            assertThat(prisonerNumber).isEqualTo(prisonerNumber)
-            assertThat(domesticStatusValue).isEqualTo("CODE1")
-            assertThat(active).isTrue
-        }
-        verify(prisonerDomesticStatusRepository, times(1)).save(any())
-    }
-
-    @Test
-    fun `createOrUpdateDomesticStatus deactivates existing status and creates new one`() {
-        // Given
-        val existingStatus = PrisonerDomesticStatus(
-            id = 1,
-            prisonerNumber = prisonerNumber,
-            domesticStatusCode = "OLD_CODE",
-            active = true,
-            createdBy = "USER1",
-            createdTime = LocalDateTime.now(),
-        )
-
-        val request = UpdatePrisonerDomesticStatusRequest(
-            prisonerNumber = prisonerNumber,
-            domesticStatusCode = "NEW_CODE",
-            updatedBy = "USER1",
-        )
-
-        whenever(prisonerDomesticStatusRepository.findByPrisonerNumber(prisonerNumber))
-            .thenReturn(existingStatus)
-
-        whenever(
-            referenceCodeRepository.findByGroupCodeAndCode(
-                ReferenceCodeGroup.DOMESTIC_STS,
-                request.domesticStatusCode,
-            ),
-        ).thenReturn(ReferenceCodeEntity(1L, ReferenceCodeGroup.DOMESTIC_STS, "FRIEND", "Friend", 0, true, "name"))
-
-
-        val newStatus = PrisonerDomesticStatus(
-            id = 1,
-            prisonerNumber = prisonerNumber,
-            domesticStatusCode = "NEW_CODE",
-            active = true,
-            createdBy = "USER1",
-            createdTime = LocalDateTime.now(),
-        )
-
-        whenever(prisonerDomesticStatusRepository.save(any()))
-            .thenReturn(existingStatus).thenReturn(newStatus)
-
-        // When
-        val result = prisonerDomesticStatusService.createOrUpdateDomesticStatus(
-            prisonerNumber,
-            request,
-        )
-
-    verify(prisonerDomesticStatusRepository, times(1)).save(
-        check { savedStatus ->
-            assertThat(savedStatus.active).isFalse()
-            assertThat(savedStatus.domesticStatusCode).isEqualTo("OLD_CODE")
-        }
+    // When
+    val result = prisonerDomesticStatusService.createOrUpdateDomesticStatus(
+      prisonerNumber,
+      request,
     )
 
     verify(prisonerDomesticStatusRepository, times(1)).save(
-        check { savedStatus ->
-            assertThat(savedStatus.active).isTrue()
-            assertThat(savedStatus.domesticStatusCode).isEqualTo("NEW_CODE")
-        }
+      check { savedStatus ->
+        assertThat(savedStatus.active).isFalse()
+        assertThat(savedStatus.domesticStatusCode).isEqualTo("OLD_CODE")
+      },
     )
-        //new code is returned
-        with(result) {
-            assertThat(prisonerNumber).isEqualTo(prisonerNumber)
-            assertThat(domesticStatusValue).isEqualTo("NEW_CODE")
-            assertThat(active).isTrue
-        }
+
+    verify(prisonerDomesticStatusRepository, times(1)).save(
+      check { savedStatus ->
+        assertThat(savedStatus.active).isTrue()
+        assertThat(savedStatus.domesticStatusCode).isEqualTo("NEW_CODE")
+      },
+    )
+    // new code is returned
+    with(result) {
+      assertThat(prisonerNumber).isEqualTo(prisonerNumber)
+      assertThat(domesticStatusValue).isEqualTo("NEW_CODE")
+      assertThat(active).isTrue
     }
+  }
 
-    @Test
-    fun `createOrUpdateDomesticStatus throws exception when reference code doesn't exist`() {
-        // Given
-        val request = UpdatePrisonerDomesticStatusRequest(
-            domesticStatusCode = "MARRIED",
-            prisonerNumber = prisonerNumber,
-            updatedBy = "test-user",
-        )
+  @Test
+  fun `createOrUpdateDomesticStatus throws exception when reference code doesn't exist`() {
+    // Given
+    val request = UpdatePrisonerDomesticStatusRequest(
+      domesticStatusCode = "MARRIED",
+      prisonerNumber = prisonerNumber,
+      updatedBy = "test-user",
+    )
 
-        whenever(
-            referenceCodeRepository.findByGroupCodeAndCode(
-                ReferenceCodeGroup.DOMESTIC_STS,
-                request.domesticStatusCode,
-            ),
-        ).thenReturn(null)
+    whenever(
+      referenceCodeRepository.findByGroupCodeAndCode(
+        ReferenceCodeGroup.DOMESTIC_STS,
+        request.domesticStatusCode,
+      ),
+    ).thenReturn(null)
 
-        // When/Then
-        assertThrows<EntityNotFoundException> {
-            prisonerDomesticStatusService.createOrUpdateDomesticStatus(
-                prisonerNumber,
-                request,
-            )
-        }.message isEqualTo "No reference data found for groupCode: DOMESTIC_STS and code: MARRIED"
-    }
+    // When/Then
+    assertThrows<EntityNotFoundException> {
+      prisonerDomesticStatusService.createOrUpdateDomesticStatus(
+        prisonerNumber,
+        request,
+      )
+    }.message isEqualTo "No reference data found for groupCode: DOMESTIC_STS and code: MARRIED"
+  }
 }

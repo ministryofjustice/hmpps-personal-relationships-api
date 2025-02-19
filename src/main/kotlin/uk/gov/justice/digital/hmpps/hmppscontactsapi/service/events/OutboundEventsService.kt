@@ -136,16 +136,34 @@ class OutboundEventsService(
           )
         }
 
+        else -> {}
+      }
+    } else {
+      log.warn("Outbound event type $outboundEvent feature is configured off.")
+    }
+  }
+
+  fun send(
+    outboundEvent: OutboundEvent,
+    identifier: Long,
+    source: Source = Source.DPS,
+    additionalInformation: AdditionalInformation,
+  ) {
+    if (featureSwitches.isEnabled(outboundEvent)) {
+      log.info("Sending outbound event $outboundEvent with source $source for identifier $identifier additionalInformation $additionalInformation")
+
+      when (outboundEvent) {
         OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
         OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
         OutboundEvent.PRISONER_DOMESTIC_STATUS_DELETED,
         -> {
           sendSafely(
             outboundEvent,
-            EmploymentInfo(identifier, source),
-            contactId?.let { PersonReference(it) },
+            additionalInformation
           )
         }
+
+        else -> {}
       }
     } else {
       log.warn("Outbound event type $outboundEvent feature is configured off.")

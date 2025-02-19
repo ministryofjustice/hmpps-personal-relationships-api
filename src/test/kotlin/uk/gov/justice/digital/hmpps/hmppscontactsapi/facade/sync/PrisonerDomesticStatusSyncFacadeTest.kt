@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpda
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerDomesticStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncPrisonerDomesticStatusService
 import java.time.LocalDateTime
@@ -75,10 +76,13 @@ class PrisonerDomesticStatusSyncFacadeTest {
 
       verify(syncDomesticStatusService).createOrUpdateDomesticStatus(prisonerNumber, request)
       verify(outboundEventsService).send(
-        outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
+        outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
         identifier = updatedStatus.id,
-        noms = updatedStatus.prisonerNumber,
-        source = Source.NOMIS,
+        additionalInformation = PrisonerDomesticStatus(
+          domesticStatusId = updatedStatus.id,
+          domesticStatusCode = updatedStatus.domesticStatusCode,
+          source = Source.NOMIS,
+        ),
       )
       assert(result == updatedStatus)
     }
@@ -106,8 +110,11 @@ class PrisonerDomesticStatusSyncFacadeTest {
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_DELETED,
         identifier = deletedStatus.id,
-        noms = deletedStatus.prisonerNumber,
-        source = Source.NOMIS,
+        additionalInformation = PrisonerDomesticStatus(
+          domesticStatusId = deletedStatus.id,
+          domesticStatusCode = deletedStatus.domesticStatusCode,
+          source = Source.NOMIS,
+        ),
       )
     }
   }

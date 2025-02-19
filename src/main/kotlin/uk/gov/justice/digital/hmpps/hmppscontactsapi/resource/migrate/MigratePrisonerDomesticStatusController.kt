@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PostMapping
@@ -56,6 +57,6 @@ class MigratePrisonerDomesticStatusController(
   )
   @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun migrateDomesticStatus(
-    @RequestBody request: MigratePrisonerDomesticStatusRequest,
+    @Valid @RequestBody request: MigratePrisonerDomesticStatusRequest,
   ): PrisonerDomesticStatusMigrationResponse = migrationService.migrateDomesticStatus(request)
 }

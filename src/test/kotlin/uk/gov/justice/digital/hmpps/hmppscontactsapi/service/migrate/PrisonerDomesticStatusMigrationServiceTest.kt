@@ -7,7 +7,6 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
-import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -90,13 +89,30 @@ class PrisonerDomesticStatusMigrationServiceTest {
     val request = MigratePrisonerDomesticStatusRequest(
       prisonerNumber = "A1234BC",
       history = emptyList(),
+      current = DomesticStatusDetailsRequest(
+        domesticStatusCode = "D",
+        createdBy = "USER1",
+        createdTime = LocalDateTime.now(),
+      ),
     )
+
+    val savedEntity = PrisonerDomesticStatus(
+      id = 2L,
+      prisonerNumber = request.prisonerNumber,
+      domesticStatusCode = "D",
+      createdBy = "USER1",
+      createdTime = LocalDateTime.now(),
+      active = false,
+    )
+
+    // When
+    whenever(prisonerDomesticStatusRepository.save(any())).thenReturn(savedEntity).thenReturn(savedEntity)
 
     // When
     val result = domesticStatusMigrationService.migrateDomesticStatus(request)
 
     // Then
-    verify(prisonerDomesticStatusRepository, never()).save(any())
+    verify(prisonerDomesticStatusRepository, times(1)).save(any())
     assertThat(result.history).isEmpty()
   }
 

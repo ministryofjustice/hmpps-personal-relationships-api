@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpda
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerDomesticStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncPrisonerDomesticStatusService
 
@@ -15,13 +16,19 @@ class PrisonerDomesticStatusSyncFacade(
 ) {
   fun getDomesticStatusByPrisonerNumber(prisonerNumber: String): SyncPrisonerDomesticStatusResponse = syncDomesticStatusService.getDomesticStatusByPrisonerNumber(prisonerNumber)
 
-  fun updateDomesticStatus(prisonerNumber: String, request: SyncUpdatePrisonerDomesticStatusRequest): SyncPrisonerDomesticStatusResponse = syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request)
+  fun updateDomesticStatus(
+    prisonerNumber: String,
+    request: SyncUpdatePrisonerDomesticStatusRequest,
+  ): SyncPrisonerDomesticStatusResponse = syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request)
     .also {
       outboundEventsService.send(
-        outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
+        outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
         identifier = it.id,
-        noms = it.prisonerNumber,
-        source = Source.NOMIS,
+        additionalInformation = PrisonerDomesticStatus(
+          domesticStatusId = it.id,
+          domesticStatusCode = it.domesticStatusCode,
+          source = Source.NOMIS,
+        ),
       )
     }
 
@@ -30,8 +37,11 @@ class PrisonerDomesticStatusSyncFacade(
       outboundEventsService.send(
         outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_DELETED,
         identifier = it.id,
-        noms = it.prisonerNumber,
-        source = Source.NOMIS,
+        additionalInformation = PrisonerDomesticStatus(
+          domesticStatusId = it.id,
+          domesticStatusCode = it.domesticStatusCode,
+          source = Source.NOMIS,
+        ),
       )
     }
 }

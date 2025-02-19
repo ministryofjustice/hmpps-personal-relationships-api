@@ -7,5 +7,5 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerDomesticStat
 @Repository
 interface PrisonerDomesticStatusRepository : JpaRepository<PrisonerDomesticStatus, Long> {
   fun findByPrisonerNumber(prisonerNumber: String): PrisonerDomesticStatus?
-  fun findByPrisonerNumberAndActive(prisonerNumber: String, active:Boolean): PrisonerDomesticStatus?
+  fun findByPrisonerNumberAndActive(prisonerNumber: String, active: Boolean): PrisonerDomesticStatus?
 }

@@ -26,7 +26,6 @@ class PrisonerDomesticStatusControllerTest {
   @Nested
   inner class GetDomesticStatus {
 
-
     @Test
     fun `should return domestic status when prisoner domestic status exists`() {
       // Given

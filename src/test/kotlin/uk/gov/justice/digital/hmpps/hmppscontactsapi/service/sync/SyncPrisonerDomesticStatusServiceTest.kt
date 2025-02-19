@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync
 
 import jakarta.persistence.EntityNotFoundException
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.jupiter.api.Test
@@ -10,7 +11,8 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
-import org.mockito.kotlin.never
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerDomesticStatus
@@ -102,12 +104,12 @@ class SyncPrisonerDomesticStatusServiceTest {
 
     // Then
     verify(domesticStatusRepository).findByPrisonerNumber(prisonerNumber)
-       /* verify(domesticStatusRepository).save(
-            check { savedStatus ->
-                assertFalse(savedStatus.active)
-                assertEquals(prisonerNumber, savedStatus.prisonerNumber)
-            }
-        )*/
+        /* verify(domesticStatusRepository).save(
+             check { savedStatus ->
+                 assertFalse(savedStatus.active)
+                 assertEquals(prisonerNumber, savedStatus.prisonerNumber)
+             }
+         )*/
   }
 
   @Test
@@ -125,11 +127,27 @@ class SyncPrisonerDomesticStatusServiceTest {
     whenever(domesticStatusRepository.findByPrisonerNumber(prisonerNumber))
       .thenReturn(null)
 
+    whenever(domesticStatusRepository.save(any())).thenReturn(
+      PrisonerDomesticStatus(
+        prisonerNumber = prisonerNumber,
+        domesticStatusCode = "D",
+        createdBy = "user",
+        createdTime = LocalDateTime.now(),
+        active = true,
+      ),
+    )
+
     // When
     syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, updateRequest)
 
     // Then
     verify(domesticStatusRepository).findByPrisonerNumber(prisonerNumber)
-    verify(domesticStatusRepository, never()).save(any())
+    val domesticStatusCaptor = argumentCaptor<PrisonerDomesticStatus>()
+    verify(domesticStatusRepository, times(1)).save(domesticStatusCaptor.capture())
+    val savedDomesticStatus = domesticStatusCaptor.firstValue
+    assertThat(savedDomesticStatus.prisonerNumber).isEqualTo(prisonerNumber)
+    assertThat(savedDomesticStatus.domesticStatusCode).isEqualTo("D")
+    assertThat(savedDomesticStatus.createdBy).isEqualTo("user")
+    assertThat(savedDomesticStatus.createdTime).isNotNull()
   }
 }
