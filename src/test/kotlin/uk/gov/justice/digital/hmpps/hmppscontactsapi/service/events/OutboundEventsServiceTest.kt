@@ -326,7 +326,8 @@ class OutboundEventsServiceTest {
     names = [
       "PRISONER_DOMESTIC_STATUS_CREATED",
       "PRISONER_DOMESTIC_STATUS_UPDATED",
-      "PRISONER_DOMESTIC_STATUS_DELETED"]
+      "PRISONER_DOMESTIC_STATUS_DELETED",
+    ],
   )
   fun `should trap exception sending event`(event: OutboundEvent) {
     featureSwitches.stub { on { isEnabled(event) } doReturn true }
@@ -358,7 +359,6 @@ class OutboundEventsServiceTest {
     verifyNoMoreInteractions(eventsPublisher)
   }
 
-
   @ParameterizedTest
   @EnumSource(
     value = OutboundEvent::class,
@@ -366,13 +366,15 @@ class OutboundEventsServiceTest {
     names = [
       "PRISONER_DOMESTIC_STATUS_CREATED",
       "PRISONER_DOMESTIC_STATUS_UPDATED",
-      "PRISONER_DOMESTIC_STATUS_DELETED"]
+      "PRISONER_DOMESTIC_STATUS_DELETED",
+    ],
   )
   fun `should trap exception sending event for given`(event: OutboundEvent) {
     featureSwitches.stub { on { isEnabled(event) } doReturn true }
     whenever(eventsPublisher.send(any())).thenThrow(RuntimeException("Boom!"))
 
-    outboundEventsService.send(outboundEvent = event,
+    outboundEventsService.send(
+      outboundEvent = event,
       identifier = 1L,
       additionalInformation = PrisonerDomesticStatus(
         domesticStatusId = 1L,
@@ -380,6 +382,6 @@ class OutboundEventsServiceTest {
         source = Source.NOMIS,
       ),
     )
-      verify(eventsPublisher).send(any())
+    verify(eventsPublisher).send(any())
   }
 }

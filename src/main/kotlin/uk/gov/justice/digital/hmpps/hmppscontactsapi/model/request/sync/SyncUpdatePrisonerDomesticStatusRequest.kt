@@ -20,6 +20,4 @@ data class SyncUpdatePrisonerDomesticStatusRequest(
   @Schema(description = "Timestamp when the record was created")
   val createdTime: LocalDateTime,
 
-  @Schema(description = "Is the record active", example = "true")
-  val active: Boolean = false,
 )

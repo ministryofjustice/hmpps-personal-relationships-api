@@ -97,7 +97,6 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
       domesticStatusCode = "D",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
-      active = true,
     )
 
     // When
@@ -139,7 +138,6 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
       domesticStatusCode = "D",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
-      active = true,
     )
 
     // When
@@ -156,8 +154,17 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
 
     assertThat(response).isNotNull
     assertThat(response).usingRecursiveComparison()
-      .ignoringFields("id", "createdBy", "createdTime")
-      .isEqualTo(domesticStatusToSync)
+      .ignoringFields("id", "createdTime")
+      .isEqualTo(
+        SyncPrisonerDomesticStatusResponse(
+          id = 1L,
+          prisonerNumber = prisonerNumber,
+          domesticStatusCode = "D",
+          active = true,
+          createdBy = "user",
+          createdTime = LocalDateTime.now(),
+        ),
+      )
 
     // Verify database state
     val savedDomesticStatus = domesticStatusRepository.findByPrisonerNumber(prisonerNumber)
@@ -173,7 +180,6 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
       domesticStatusCode = "D",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
-      active = true,
     )
     val existingResponse = webTestClient.put()
       .uri("/sync/$prisonerNumber/domestic-status")
@@ -193,7 +199,6 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
       domesticStatusCode = "M",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
-      active = true,
     )
 
     // When
@@ -239,7 +244,6 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
       domesticStatusCode = "DOM",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
-      active = true,
     )
 
     // When
@@ -262,7 +266,6 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
       domesticStatusCode = "D",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
-      active = true,
     )
 
     // When
@@ -306,7 +309,6 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
       domesticStatusCode = "D",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
-      active = true,
     )
 
     // When
@@ -344,6 +346,5 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
     domesticStatusCode = "D",
     createdBy = "user",
     createdTime = LocalDateTime.now(),
-    active = true,
   )
 }

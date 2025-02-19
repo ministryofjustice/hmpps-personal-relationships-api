@@ -33,7 +33,6 @@ class PrisonerDomesticStatusSyncControllerTest {
       domesticStatusCode = "G",
       createdBy = "Admin",
       createdTime = LocalDateTime.now(),
-      active = true,
     )
 
     // When
@@ -79,7 +78,6 @@ class PrisonerDomesticStatusSyncControllerTest {
       domesticStatusCode = "G",
       createdBy = "Admin",
       createdTime = LocalDateTime.now(),
-      active = true,
     )
     doThrow(ValidationException("Invalid request"))
       .`when`(prisonerDomesticStatusSyncFacade).updateDomesticStatus(prisonerNumber, request)

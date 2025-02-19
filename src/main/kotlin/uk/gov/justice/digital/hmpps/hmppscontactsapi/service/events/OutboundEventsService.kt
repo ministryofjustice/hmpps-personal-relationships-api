@@ -159,7 +159,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            additionalInformation
+            additionalInformation,
           )
         }
 

@@ -90,7 +90,6 @@ class SyncPrisonerDomesticStatusServiceTest {
       domesticStatusCode = "D",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
-      active = true,
     )
 
     whenever(domesticStatusRepository.findByPrisonerNumber(prisonerNumber))
@@ -121,7 +120,6 @@ class SyncPrisonerDomesticStatusServiceTest {
       domesticStatusCode = "D",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
-      active = true,
     )
 
     whenever(domesticStatusRepository.findByPrisonerNumber(prisonerNumber))

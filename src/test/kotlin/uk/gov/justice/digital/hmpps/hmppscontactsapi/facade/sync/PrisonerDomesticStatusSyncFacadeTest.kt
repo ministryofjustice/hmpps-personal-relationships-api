@@ -59,7 +59,6 @@ class PrisonerDomesticStatusSyncFacadeTest {
         domesticStatusCode = "ABC",
         createdBy = "User",
         createdTime = LocalDateTime.now(),
-        active = true,
       )
       val updatedStatus = SyncPrisonerDomesticStatusResponse(
         id = 1L,
