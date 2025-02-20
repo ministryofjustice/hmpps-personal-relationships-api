@@ -17,7 +17,7 @@ data class MigratePrisonerDomesticStatusRequest(
 
   @Schema(description = "Historical domestic status records")
   @field:Valid
-  val history: List<DomesticStatusDetailsRequest>,
+  val history: List<DomesticStatusDetailsRequest> = emptyList(),
 )
 
 @Schema(description = "Details of a domestic status record")

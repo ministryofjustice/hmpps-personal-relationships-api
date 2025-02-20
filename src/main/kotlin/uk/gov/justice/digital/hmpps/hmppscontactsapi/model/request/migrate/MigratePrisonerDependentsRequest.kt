@@ -10,7 +10,7 @@ data class MigratePrisonerDependentsRequest(
   val current: DependentsDetailsRequest? = null,
 
   @Schema(description = "Historical dependents records")
-  val history: List<DependentsDetailsRequest>,
+  val history: List<DependentsDetailsRequest> = emptyList(),
 )
 
 @Schema(description = "Details of a dependents record")
