@@ -9,16 +9,8 @@ data class PrisonerDomesticStatusMigrationResponse(
   val prisonerNumber: String,
 
   @Schema(description = "The current domestic status")
-  val current: DomesticStatusDetailsResponse,
+  val current: Long,
 
   @Schema(description = "Historical domestic status records")
-  val history: List<DomesticStatusDetailsResponse>,
-)
-
-@Schema(description = "Details of a prisoner's domestic status record")
-data class DomesticStatusDetailsResponse(
-
-  @Schema(description = "The unique identifier of the prisoner's domestic status", example = "1")
-  val id: Long,
-
+  val history: List<Long> = emptyList(),
 )

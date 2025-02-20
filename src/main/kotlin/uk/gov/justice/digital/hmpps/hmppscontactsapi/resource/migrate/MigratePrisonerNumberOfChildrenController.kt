@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerNumberOfChildrenRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.NumberOfChildrenDetailsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerNumberOfChildrenMigrationResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 
@@ -47,9 +46,6 @@ class MigratePrisonerNumberOfChildrenController {
     @Valid @RequestBody request: MigratePrisonerNumberOfChildrenRequest,
   ): PrisonerNumberOfChildrenMigrationResponse = PrisonerNumberOfChildrenMigrationResponse(
     prisonerNumber = "A1234BC",
-    current = NumberOfChildrenDetailsResponse(
-      id = 1L,
-    ),
-    history = emptyList(),
+    current = 1L,
   )
 }

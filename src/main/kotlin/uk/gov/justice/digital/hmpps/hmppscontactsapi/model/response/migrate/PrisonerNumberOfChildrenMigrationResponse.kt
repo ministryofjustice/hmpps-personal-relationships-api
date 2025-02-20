@@ -9,16 +9,8 @@ data class PrisonerNumberOfChildrenMigrationResponse(
   val prisonerNumber: String,
 
   @Schema(description = "The current number of children")
-  val current: NumberOfChildrenDetailsResponse,
+  val current: Long,
 
   @Schema(description = "Historical number of children records")
-  val history: List<NumberOfChildrenDetailsResponse>,
-)
-
-@Schema(description = "Details of a prisoner's number of children record")
-data class NumberOfChildrenDetailsResponse(
-
-  @Schema(description = "The unique identifier of the prisoner's number of children record", example = "1")
-  val id: Long,
-
+  val history: List<Long> = emptyList(),
 )

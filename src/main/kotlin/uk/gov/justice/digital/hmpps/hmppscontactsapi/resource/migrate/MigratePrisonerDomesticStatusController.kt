@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerDomesticStatusRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.DomesticStatusDetailsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerDomesticStatusMigrationResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
@@ -55,7 +54,6 @@ class MigratePrisonerDomesticStatusController(
     @Valid @RequestBody request: MigratePrisonerDomesticStatusRequest,
   ): PrisonerDomesticStatusMigrationResponse = PrisonerDomesticStatusMigrationResponse(
     prisonerNumber = request.prisonerNumber,
-    current = DomesticStatusDetailsResponse(1L),
-    history = emptyList(),
+    current = 1L,
   )
 }
