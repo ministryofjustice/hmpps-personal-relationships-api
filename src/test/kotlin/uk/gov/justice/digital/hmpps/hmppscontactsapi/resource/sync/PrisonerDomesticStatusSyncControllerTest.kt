@@ -29,7 +29,6 @@ class PrisonerDomesticStatusSyncControllerTest {
     // Given
     val prisonerNumber = "A1234BC"
     val request = SyncUpdatePrisonerDomesticStatusRequest(
-      prisonerNumber = prisonerNumber,
       domesticStatusCode = "G",
       createdBy = "Admin",
       createdTime = LocalDateTime.now(),
@@ -74,7 +73,6 @@ class PrisonerDomesticStatusSyncControllerTest {
     // Given
     val prisonerNumber = "A1234BC"
     val request = SyncUpdatePrisonerDomesticStatusRequest(
-      prisonerNumber = prisonerNumber,
       domesticStatusCode = "G",
       createdBy = "Admin",
       createdTime = LocalDateTime.now(),

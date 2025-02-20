@@ -16,7 +16,7 @@ data class PrisonerDomesticStatus(
 
   val prisonerNumber: String,
 
-  val domesticStatusCode: String,
+  val domesticStatusCode: String?,
 
   val active: Boolean,
 
@@ -24,4 +24,4 @@ data class PrisonerDomesticStatus(
 
   val createdTime: LocalDateTime,
 
-  )
+)

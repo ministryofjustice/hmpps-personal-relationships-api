@@ -12,7 +12,7 @@ data class PrisonerDomesticStatusResponse(
   val prisonerNumber: String,
 
   @Schema(description = "The domestic status value of the prisoner")
-  val domesticStatusValue: String,
+  val domesticStatusValue: String?,
 
   @Schema(description = "The domestic status description of the prisoner")
   val domesticStatusDescription: String? = null,

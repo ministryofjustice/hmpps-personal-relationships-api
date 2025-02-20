@@ -2,8 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync
 
 import jakarta.persistence.EntityNotFoundException
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
@@ -42,7 +41,7 @@ class SyncPrisonerDomesticStatusServiceTest {
       active = true,
     )
 
-    whenever(domesticStatusRepository.findByPrisonerNumber(prisonerNumber))
+    whenever(domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
       .thenReturn(domesticStatus)
 
     // When
@@ -50,24 +49,23 @@ class SyncPrisonerDomesticStatusServiceTest {
 
     // Then
     assertNotNull(result)
-    assertEquals(prisonerNumber, result.prisonerNumber)
-    verify(domesticStatusRepository).findByPrisonerNumber(prisonerNumber)
+    assertThat(domesticStatus.prisonerNumber).isEqualTo(result.prisonerNumber)
+    verify(domesticStatusRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
   }
 
   @Test
   fun `getDomesticStatusByPrisonerNumber throws EntityNotFoundException when not found`() {
     // Given
     val prisonerNumber = "A1234BC"
-    whenever(domesticStatusRepository.findByPrisonerNumber(prisonerNumber))
+    whenever(domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
       .thenReturn(null)
 
     // When/Then
     assertThrows<EntityNotFoundException> {
       syncDomesticStatusService.getDomesticStatusByPrisonerNumber(prisonerNumber)
     }.also {
-      assertEquals(
-        String.format(SyncPrisonerDomesticStatusService.NOT_FOUND_MESSAGE, prisonerNumber),
-        it.message,
+      assertThat(it).hasMessage(
+        String.format(SyncPrisonerDomesticStatusService.NOT_FOUND_MESSAGE, prisonerNumber)
       )
     }
   }
@@ -86,13 +84,12 @@ class SyncPrisonerDomesticStatusServiceTest {
     )
 
     val updateRequest = SyncUpdatePrisonerDomesticStatusRequest(
-      prisonerNumber = prisonerNumber,
       domesticStatusCode = "D",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
     )
 
-    whenever(domesticStatusRepository.findByPrisonerNumber(prisonerNumber))
+    whenever(domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
       .thenReturn(existingStatus)
 
     val deactivatedStatus = existingStatus.copy(active = false)
@@ -102,7 +99,7 @@ class SyncPrisonerDomesticStatusServiceTest {
     syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, updateRequest)
 
     // Then
-    verify(domesticStatusRepository).findByPrisonerNumber(prisonerNumber)
+    verify(domesticStatusRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
         /* verify(domesticStatusRepository).save(
              check { savedStatus ->
                  assertFalse(savedStatus.active)
@@ -116,13 +113,12 @@ class SyncPrisonerDomesticStatusServiceTest {
     // Given
     val prisonerNumber = "A1234BC"
     val updateRequest = SyncUpdatePrisonerDomesticStatusRequest(
-      prisonerNumber = prisonerNumber,
       domesticStatusCode = "D",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
     )
 
-    whenever(domesticStatusRepository.findByPrisonerNumber(prisonerNumber))
+    whenever(domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
       .thenReturn(null)
 
     whenever(domesticStatusRepository.save(any())).thenReturn(
@@ -139,7 +135,7 @@ class SyncPrisonerDomesticStatusServiceTest {
     syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, updateRequest)
 
     // Then
-    verify(domesticStatusRepository).findByPrisonerNumber(prisonerNumber)
+    verify(domesticStatusRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
     val domesticStatusCaptor = argumentCaptor<PrisonerDomesticStatus>()
     verify(domesticStatusRepository, times(1)).save(domesticStatusCaptor.capture())
     val savedDomesticStatus = domesticStatusCaptor.firstValue

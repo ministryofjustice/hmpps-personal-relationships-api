@@ -68,7 +68,6 @@ class PrisonerDomesticStatusFacadeTest {
     val prisonerNumber = "A1234BC"
     val request = UpdatePrisonerDomesticStatusRequest(
       domesticStatusCode = "MARRIED",
-      prisonerNumber = prisonerNumber,
       updatedBy = "test-user",
     )
     val updatedResponse = PrisonerDomesticStatusResponse(
@@ -101,7 +100,6 @@ class PrisonerDomesticStatusFacadeTest {
     val request = UpdatePrisonerDomesticStatusRequest(
 
       domesticStatusCode = "MARRIED",
-      prisonerNumber = prisonerNumber,
       updatedBy = "test-user",
     )
 

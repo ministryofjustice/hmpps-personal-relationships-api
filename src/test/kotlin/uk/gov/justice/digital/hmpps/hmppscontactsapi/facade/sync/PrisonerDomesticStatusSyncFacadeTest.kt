@@ -55,7 +55,6 @@ class PrisonerDomesticStatusSyncFacadeTest {
     fun `should update domestic status and send event`() {
       val prisonerNumber = "A1234BC"
       val request = SyncUpdatePrisonerDomesticStatusRequest(
-        prisonerNumber = prisonerNumber,
         domesticStatusCode = "ABC",
         createdBy = "User",
         createdTime = LocalDateTime.now(),

@@ -89,7 +89,6 @@ class GetPrisonerDomesticStatusIntegrationTest : SecureAPIIntegrationTestBase() 
 
   private fun createRequest() = UpdatePrisonerDomesticStatusRequest(
     domesticStatusCode = "M",
-    prisonerNumber = prisonerNumber,
     updatedBy = "test-user",
   )
 }

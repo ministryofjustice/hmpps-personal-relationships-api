@@ -93,14 +93,13 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
   @Test
   fun `should get an existing prisoner domestic status`() {
     val domesticStatusToSync = SyncUpdatePrisonerDomesticStatusRequest(
-      prisonerNumber = prisonerNumber,
       domesticStatusCode = "D",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
     )
 
     // When
-    val response = webTestClient.put()
+    webTestClient.put()
       .uri("/sync/$prisonerNumber/domestic-status")
       .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
       .contentType(MediaType.APPLICATION_JSON)
@@ -134,7 +133,6 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
   fun `sync domestic status - create new record`() {
     // Given
     val domesticStatusToSync = SyncUpdatePrisonerDomesticStatusRequest(
-      prisonerNumber = prisonerNumber,
       domesticStatusCode = "D",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
@@ -167,7 +165,7 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
       )
 
     // Verify database state
-    val savedDomesticStatus = domesticStatusRepository.findByPrisonerNumber(prisonerNumber)
+    val savedDomesticStatus = domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
     assertThat(savedDomesticStatus?.domesticStatusCode).isEqualTo("D")
     assertThat(savedDomesticStatus?.createdBy).isEqualTo("user")
   }
@@ -176,7 +174,6 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
   fun `sync domestic status - updates existing record as inactive and create new record`() {
     // Given
     val existingDomesticStatus = SyncUpdatePrisonerDomesticStatusRequest(
-      prisonerNumber = prisonerNumber,
       domesticStatusCode = "D",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
@@ -195,7 +192,6 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
     assertThat(existingResponse).isNotNull
 
     val updatedDomesticStatus = SyncUpdatePrisonerDomesticStatusRequest(
-      prisonerNumber = prisonerNumber,
       domesticStatusCode = "M",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
@@ -240,7 +236,6 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
   fun `sync domestic status - bad request when invalid data`() {
     // Given
     val invalidDomesticStatus = SyncUpdatePrisonerDomesticStatusRequest(
-      prisonerNumber = prisonerNumber,
       domesticStatusCode = "DOM",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
@@ -262,7 +257,6 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
   fun `sync multiple domestic statuses - success`() {
     // Given
     val domesticStatusesToSync = SyncUpdatePrisonerDomesticStatusRequest(
-      prisonerNumber = prisonerNumber,
       domesticStatusCode = "D",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
@@ -305,7 +299,6 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
   @Test
   fun `should set to inactive when deleting an existing domestic status`() {
     val domesticStatusesToSync = SyncUpdatePrisonerDomesticStatusRequest(
-      prisonerNumber = prisonerNumber,
       domesticStatusCode = "D",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
@@ -342,7 +335,6 @@ class PrisonerDomesticStatusSyncIntegrationTest : PostgresIntegrationTestBase() 
   }
 
   private fun aMinimalRequest() = SyncUpdatePrisonerDomesticStatusRequest(
-    prisonerNumber = prisonerNumber,
     domesticStatusCode = "D",
     createdBy = "user",
     createdTime = LocalDateTime.now(),

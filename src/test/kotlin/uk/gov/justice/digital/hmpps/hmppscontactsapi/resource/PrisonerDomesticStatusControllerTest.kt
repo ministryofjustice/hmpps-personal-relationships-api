@@ -69,7 +69,6 @@ class PrisonerDomesticStatusControllerTest {
       val prisonerNumber = "A1234BC"
       val request = UpdatePrisonerDomesticStatusRequest(
         domesticStatusCode = "MARRIED",
-        prisonerNumber = prisonerNumber,
         updatedBy = "test-user",
       )
       val expectedResponse = PrisonerDomesticStatusResponse(
@@ -96,7 +95,6 @@ class PrisonerDomesticStatusControllerTest {
       val prisonerNumber = "A1234BC"
       val request = UpdatePrisonerDomesticStatusRequest(
         domesticStatusCode = "MARRIED",
-        prisonerNumber = prisonerNumber,
         updatedBy = "test-user",
       )
       whenever(

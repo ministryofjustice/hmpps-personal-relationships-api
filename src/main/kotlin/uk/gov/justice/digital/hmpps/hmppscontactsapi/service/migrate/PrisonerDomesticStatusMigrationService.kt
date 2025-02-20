@@ -28,9 +28,6 @@ class PrisonerDomesticStatusMigrationService(
       )
       DomesticStatusDetailsResponse(
         id = savedEntity.prisonerDomesticStatusId,
-        domesticStatusCode = it.domesticStatusCode,
-        createdBy = it.createdBy,
-        createdTime = it.createdTime,
       ).also { details -> current = details }
     }
 
@@ -47,9 +44,6 @@ class PrisonerDomesticStatusMigrationService(
       )
       current = DomesticStatusDetailsResponse(
         id = savedEntity.prisonerDomesticStatusId,
-        domesticStatusCode = it.domesticStatusCode,
-        createdBy = it.createdBy,
-        createdTime = it.createdTime,
       )
     }
 

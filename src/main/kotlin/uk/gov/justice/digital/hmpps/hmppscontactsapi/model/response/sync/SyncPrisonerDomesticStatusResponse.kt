@@ -12,7 +12,7 @@ data class SyncPrisonerDomesticStatusResponse(
   val prisonerNumber: String,
 
   @Schema(description = "The domestic status value of the prisoner")
-  val domesticStatusCode: String,
+  val domesticStatusCode: String?,
 
   @Schema(description = "Is this the active domestic status code of the prisoner")
   val active: Boolean,

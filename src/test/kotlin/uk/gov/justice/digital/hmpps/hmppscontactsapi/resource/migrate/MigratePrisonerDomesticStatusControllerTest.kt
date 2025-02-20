@@ -58,16 +58,10 @@ class MigratePrisonerDomesticStatusControllerTest {
         prisonerNumber = "A1234BC",
         current = DomesticStatusDetailsResponse(
           id = 1,
-          domesticStatusCode = "MARRIED",
-          createdBy = "XXXXX",
-          createdTime = LocalDateTime.now(),
         ),
         history = listOf(
           DomesticStatusDetailsResponse(
             id = 1,
-            domesticStatusCode = "DIVORCED",
-            createdBy = "XXXXX",
-            createdTime = LocalDateTime.now(),
           ),
         ),
 
@@ -107,16 +101,10 @@ class MigratePrisonerDomesticStatusControllerTest {
         prisonerNumber = "A1234BC",
         current = DomesticStatusDetailsResponse(
           id = 1,
-          domesticStatusCode = "MARRIED",
-          createdBy = "XXXXX",
-          createdTime = LocalDateTime.now(),
         ),
         history = listOf(
           DomesticStatusDetailsResponse(
             id = 1,
-            domesticStatusCode = "DIVORCED",
-            createdBy = "XXXXX",
-            createdTime = LocalDateTime.now(),
           ),
         ),
 

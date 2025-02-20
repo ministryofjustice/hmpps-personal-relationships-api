@@ -73,14 +73,8 @@ class PrisonerDomesticStatusMigrationServiceTest {
 
     assertThat(result.history).hasSize(2)
     assertThat(result.history[0].id).isEqualTo(1L)
-    assertThat(result.history[0].domesticStatusCode).isEqualTo(historyItem1.domesticStatusCode)
-    assertThat(result.history[0].createdBy).isEqualTo(historyItem1.createdBy)
-    assertThat(result.history[0].createdTime).isEqualTo(historyItem1.createdTime)
 
     assertThat(result.current.id).isEqualTo(2L)
-    assertThat(result.current.domesticStatusCode).isEqualTo(historyItem2.domesticStatusCode)
-    assertThat(result.current.createdBy).isEqualTo(historyItem2.createdBy)
-    assertThat(result.current.createdTime).isEqualTo(historyItem2.createdTime)
   }
 
   @Test
@@ -149,6 +143,5 @@ class PrisonerDomesticStatusMigrationServiceTest {
     verify(prisonerDomesticStatusRepository, times(1)).save(any())
     assertThat(result.history).hasSize(1)
     assertThat(result.current.id).isEqualTo(1L)
-    assertThat(result.current.domesticStatusCode).isEqualTo(historyItem.domesticStatusCode)
   }
 }

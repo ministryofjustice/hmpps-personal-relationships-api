@@ -60,10 +60,12 @@ class PrisonerDomesticStatusService(
     id = entity.prisonerDomesticStatusId,
     prisonerNumber = entity.prisonerNumber,
     domesticStatusValue = entity.domesticStatusCode,
-    domesticStatusDescription = referenceCodeRepository.findByGroupCodeAndCode(
-      ReferenceCodeGroup.DOMESTIC_STS,
-      entity.domesticStatusCode,
-    )?.description,
+    domesticStatusDescription = entity.domesticStatusCode?.let {
+      referenceCodeRepository.findByGroupCodeAndCode(
+        ReferenceCodeGroup.DOMESTIC_STS,
+        it,
+      )?.description
+    },
     active = entity.active,
     createdTime = entity.createdTime,
     createdBy = entity.createdBy,

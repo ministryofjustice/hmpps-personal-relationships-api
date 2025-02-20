@@ -40,10 +40,6 @@ class MigratePrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase
     // Then
     response.expectBody()
       .jsonPath("$.prisonerNumber").isEqualTo("A1234BC")
-      .jsonPath("$.current.domesticStatusCode").isEqualTo("M")
-      .jsonPath("$.current.createdBy").isEqualTo("Admin")
-      .jsonPath("$.history[0].domesticStatusCode").isEqualTo("D")
-      .jsonPath("$.history[0].createdBy").isEqualTo("Admin")
   }
 
   @Test

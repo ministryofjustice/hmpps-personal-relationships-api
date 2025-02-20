@@ -314,7 +314,7 @@ data class ContactRestrictionInfo(val contactRestrictionId: Long, override val s
 data class PrisonerContactInfo(val prisonerContactId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)
 data class PrisonerContactRestrictionInfo(val prisonerContactRestrictionId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)
 data class EmploymentInfo(val employmentId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)
-data class PrisonerDomesticStatus(val domesticStatusId: Long, val domesticStatusCode: String, override val source: Source = Source.DPS) : AdditionalInformation(source)
+data class PrisonerDomesticStatus(val domesticStatusId: Long, val domesticStatusCode: String?, override val source: Source = Source.DPS) : AdditionalInformation(source)
 
 /**
  * The event source.

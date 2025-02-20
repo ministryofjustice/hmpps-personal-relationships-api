@@ -18,7 +18,7 @@ class SyncPrisonerDomesticStatusService(
     const val NOT_FOUND_MESSAGE = "Domestic status not found for prisoner: %s"
   }
 
-  fun getDomesticStatusByPrisonerNumber(prisonerNumber: String): SyncPrisonerDomesticStatusResponse = domesticStatusRepository.findByPrisonerNumber(prisonerNumber)
+  fun getDomesticStatusByPrisonerNumber(prisonerNumber: String): SyncPrisonerDomesticStatusResponse = domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
     ?.let { SyncPrisonerDomesticStatusResponse.from(it) }
     ?: throw EntityNotFoundException(String.format(NOT_FOUND_MESSAGE, prisonerNumber))
 
@@ -28,7 +28,7 @@ class SyncPrisonerDomesticStatusService(
     request: SyncUpdatePrisonerDomesticStatusRequest,
   ): SyncPrisonerDomesticStatusResponse {
     // Find existing status
-    val existingStatus = domesticStatusRepository.findByPrisonerNumber(prisonerNumber)
+    val existingStatus = domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
 
     // If exists, deactivate it
     existingStatus?.let {
@@ -52,7 +52,7 @@ class SyncPrisonerDomesticStatusService(
 
   @Transactional
   fun deactivateDomesticStatus(prisonerNumber: String): SyncPrisonerDomesticStatusResponse {
-    val rowToDeactivate = domesticStatusRepository.findByPrisonerNumber(prisonerNumber)
+    val rowToDeactivate = domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
       ?: throw EntityNotFoundException(String.format(NOT_FOUND_MESSAGE, prisonerNumber))
 
     // If exists, deactivate it

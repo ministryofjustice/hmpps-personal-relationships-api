@@ -101,7 +101,6 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
       .bodyValue(
         UpdatePrisonerDomesticStatusRequest(
           domesticStatusCode = "AB",
-          prisonerNumber = prisonerNumber,
           updatedBy = "test-user",
         ),
       )
@@ -121,7 +120,6 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
       .bodyValue(
         UpdatePrisonerDomesticStatusRequest(
           domesticStatusCode = "",
-          prisonerNumber = prisonerNumber,
           updatedBy = "test-user",
         ),
       )
@@ -141,7 +139,6 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
       .bodyValue(
         UpdatePrisonerDomesticStatusRequest(
           domesticStatusCode = "Q",
-          prisonerNumber = prisonerNumber,
           updatedBy = "test-user",
         ),
       )
@@ -154,7 +151,6 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
 
   private fun createRequest() = UpdatePrisonerDomesticStatusRequest(
     domesticStatusCode = "M",
-    prisonerNumber = prisonerNumber,
     updatedBy = "test-user",
   )
 }

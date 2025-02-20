@@ -5,9 +5,6 @@ import jakarta.validation.constraints.Size
 
 @Schema(description = "Request to update prisoner domestic status")
 data class UpdatePrisonerDomesticStatusRequest(
-  // todo - prisonerNumber here is redundant as its available as a path variable
-  @Schema(description = "The prisoner number", example = "A1234BC")
-  val prisonerNumber: String,
 
   @Schema(description = "The domestic status code", example = "M")
   @field:Size(min = 1, max = 1, message = "domesticStatusCode must be exactly 1 character")

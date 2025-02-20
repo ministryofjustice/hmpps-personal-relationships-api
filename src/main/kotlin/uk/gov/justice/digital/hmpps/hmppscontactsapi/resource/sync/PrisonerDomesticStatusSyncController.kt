@@ -51,7 +51,7 @@ class PrisonerDomesticStatusSyncController(
       ),
       ApiResponse(
         responseCode = "404",
-        description = "No domestic status for that prisoner could be found",
+        description = "No active domestic status found for the requested prisoner.",
       ),
     ],
   )

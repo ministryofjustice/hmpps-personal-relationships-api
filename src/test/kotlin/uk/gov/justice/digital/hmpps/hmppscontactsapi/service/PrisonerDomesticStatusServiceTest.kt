@@ -78,7 +78,6 @@ class PrisonerDomesticStatusServiceTest {
   fun `createOrUpdateDomesticStatus creates new status when none exists`() {
     // Given
     val request = UpdatePrisonerDomesticStatusRequest(
-      prisonerNumber = prisonerNumber,
       domesticStatusCode = "CODE1",
       updatedBy = "USER1",
     )
@@ -133,7 +132,6 @@ class PrisonerDomesticStatusServiceTest {
     )
 
     val request = UpdatePrisonerDomesticStatusRequest(
-      prisonerNumber = prisonerNumber,
       domesticStatusCode = "NEW_CODE",
       updatedBy = "USER1",
     )
@@ -192,7 +190,6 @@ class PrisonerDomesticStatusServiceTest {
     // Given
     val request = UpdatePrisonerDomesticStatusRequest(
       domesticStatusCode = "MARRIED",
-      prisonerNumber = prisonerNumber,
       updatedBy = "test-user",
     )
 
