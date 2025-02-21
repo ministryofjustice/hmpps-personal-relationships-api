@@ -5,7 +5,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -150,6 +152,28 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
   }
 
+  @ParameterizedTest
+  @MethodSource("allFieldConstraintViolations")
+  fun `should enforce field constraints`(expectedMessage: String, relationship: ContactRelationship) {
+    stubPrisonSearchWithResponse("A1234BC")
+
+    val errors = webTestClient.post()
+      .uri("/prisoner-contact")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(aMinimalRequest().copy(relationship = relationship))
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Validation failure(s): $expectedMessage")
+    stubEvents.assertHasNoEvents(event = OutboundEvent.PRISONER_CONTACT_CREATED)
+  }
+
   @Test
   fun `should create the contact with all fields`() {
     stubPrisonSearchWithResponse("A1234BC")
@@ -179,6 +203,26 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = PrisonerContactInfo(createdRelationship.prisonerContactId, source = Source.DPS),
       personReference = PersonReference(dpsContactId = contact.id, nomsNumber = request.relationship.prisonerNumber),
     )
+  }
+
+  companion object {
+    @JvmStatic
+    fun allFieldConstraintViolations(): List<Arguments> {
+      val relationship = ContactRelationship(
+        prisonerNumber = "A1234AB",
+        relationshipType = "S",
+        relationshipToPrisoner = "FRI",
+        isNextOfKin = false,
+        isEmergencyContact = false,
+        comments = null,
+      )
+      return listOf(
+        Arguments.of(
+          "comments must be <= 240 characters",
+          relationship.copy(comments = "".padStart(241, 'X')),
+        ),
+      )
+    }
   }
 
   private fun aMinimalRequest() = AddContactRelationshipRequest(

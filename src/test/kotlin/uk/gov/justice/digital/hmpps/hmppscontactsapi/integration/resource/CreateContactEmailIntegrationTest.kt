@@ -167,10 +167,10 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
   companion object {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
-      Arguments.of("emailAddress must be <= 240 characters", aMinimalRequest().copy(emailAddress = "".padStart(241))),
+      Arguments.of("emailAddress must be <= 240 characters", aMinimalRequest().copy(emailAddress = "".padStart(241, 'X'))),
       Arguments.of(
         "createdBy must be <= 100 characters",
-        aMinimalRequest().copy(createdBy = "".padStart(101)),
+        aMinimalRequest().copy(createdBy = "".padStart(101, 'X')),
       ),
     )
 

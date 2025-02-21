@@ -173,22 +173,22 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
   companion object {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
-      Arguments.of("title must be <= 12 characters", aMinimalCreateContactRequest().copy(title = "".padStart(13))),
+      Arguments.of("title must be <= 12 characters", aMinimalCreateContactRequest().copy(title = "".padStart(13, 'X'))),
       Arguments.of(
         "lastName must be <= 35 characters",
-        aMinimalCreateContactRequest().copy(lastName = "".padStart(36)),
+        aMinimalCreateContactRequest().copy(lastName = "".padStart(36, 'X')),
       ),
       Arguments.of(
         "firstName must be <= 35 characters",
-        aMinimalCreateContactRequest().copy(firstName = "".padStart(36)),
+        aMinimalCreateContactRequest().copy(firstName = "".padStart(36, 'X')),
       ),
       Arguments.of(
         "middleNames must be <= 35 characters",
-        aMinimalCreateContactRequest().copy(middleNames = "".padStart(36)),
+        aMinimalCreateContactRequest().copy(middleNames = "".padStart(36, 'X')),
       ),
       Arguments.of(
         "createdBy must be <= 100 characters",
-        aMinimalCreateContactRequest().copy(createdBy = "".padStart(101)),
+        aMinimalCreateContactRequest().copy(createdBy = "".padStart(101, 'X')),
       ),
     )
 

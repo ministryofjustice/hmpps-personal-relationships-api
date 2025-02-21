@@ -440,30 +440,37 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
   companion object {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
+      Arguments.of("flat must be <= 30 characters", aMinimalUpdateAddressRequest().copy(flat = "".padStart(31, 'X'))),
       Arguments.of(
-        "addressType must be <= 12 characters",
-        aMinimalUpdateAddressRequest().copy(addressType = "".padStart(13)),
+        "property must be <= 50 characters",
+        aMinimalUpdateAddressRequest().copy(property = "".padStart(51, 'X')),
       ),
       Arguments.of(
-        "cityCode must be <= 12 characters",
-        aMinimalUpdateAddressRequest().copy(cityCode = "".padStart(13)),
+        "street must be <= 160 characters",
+        aMinimalUpdateAddressRequest().copy(street = "".padStart(161, 'X')),
+      ),
+      Arguments.of("area must be <= 70 characters", aMinimalUpdateAddressRequest().copy(area = "".padStart(71, 'X'))),
+      Arguments.of(
+        "postcode must be <= 12 characters",
+        aMinimalUpdateAddressRequest().copy(postcode = "".padStart(13, 'X')),
       ),
       Arguments.of(
-        "countyCode must be <= 12 characters",
-        aMinimalUpdateAddressRequest().copy(countyCode = "".padStart(13)),
+        "comments must be <= 240 characters",
+        aMinimalUpdateAddressRequest().copy(comments = "".padStart(241, 'X')),
       ),
-      Arguments.of(
-        "countryCode must be <= 12 characters",
-        aMinimalUpdateAddressRequest().copy(countryCode = "".padStart(13)),
-      ),
+
       Arguments.of(
         "updatedBy must be <= 100 characters",
-        aMinimalUpdateAddressRequest().copy(updatedBy = "".padStart(101)),
+        aMinimalUpdateAddressRequest().copy(updatedBy = "".padStart(101, 'X')),
       ),
     )
 
     @JvmStatic
     fun referenceTypeNotFound(): List<Arguments> = listOf(
+      Arguments.of(
+        "No reference data found for groupCode: ADDRESS_TYPE and code: INVALID",
+        aMinimalUpdateAddressRequest().copy(addressType = "INVALID"),
+      ),
       Arguments.of(
         "No reference data found for groupCode: CITY and code: INVALID",
         aMinimalUpdateAddressRequest().copy(cityCode = "INVALID"),
@@ -486,6 +493,7 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       street = "Hello Road",
       updatedBy = "updated",
     )
+
     private fun aMinimalCreateAddressRequest() = CreateContactAddressRequest(
       addressType = "HOME",
       primaryAddress = false,

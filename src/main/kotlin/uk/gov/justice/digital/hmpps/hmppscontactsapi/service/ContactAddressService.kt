@@ -46,6 +46,7 @@ class ContactAddressService(
 
   fun create(contactId: Long, request: CreateContactAddressRequest): CreateAddressResponse {
     validateContactExists(contactId)
+    validateAddressType(request.addressType)
     validateCityCode(request.cityCode)
     validateCountyCode(request.countyCode)
     validateCountryCode(request.countryCode)
@@ -63,6 +64,7 @@ class ContactAddressService(
   fun update(contactId: Long, contactAddressId: Long, request: UpdateContactAddressRequest): UpdateAddressResponse {
     val contact = validateContactExists(contactId)
     val existing = validateExistingAddress(contactAddressId)
+    validateAddressType(request.addressType)
     validateCityCode(request.cityCode)
     validateCountyCode(request.countyCode)
     validateCountryCode(request.countryCode)
@@ -114,6 +116,7 @@ class ContactAddressService(
       logger.error("Contact address update specified for a contact not linked to this address")
       throw ValidationException("Contact ID ${contact.contactId} is not linked to the address ${existing.contactAddressId}")
     }
+    request.addressType.ifPresent { validateAddressType(it) }
     request.cityCode.ifPresent { validateCityCode(it) }
     request.countyCode.ifPresent { validateCountyCode(it) }
     request.countryCode.ifPresent { validateCountryCode(it) }
@@ -197,6 +200,10 @@ class ContactAddressService(
 
   private fun validateCityCode(cityCode: String?) {
     cityCode?.let { validateReferenceDataExists(it, ReferenceCodeGroup.CITY) }
+  }
+
+  private fun validateAddressType(addressType: String?) {
+    addressType?.let { validateReferenceDataExists(it, ReferenceCodeGroup.ADDRESS_TYPE) }
   }
 
   private fun validateReferenceDataExists(code: String, groupCode: ReferenceCodeGroup) = referenceCodeRepository

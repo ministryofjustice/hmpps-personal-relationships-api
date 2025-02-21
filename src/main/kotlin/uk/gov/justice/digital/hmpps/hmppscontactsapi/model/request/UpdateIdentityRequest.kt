@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size
 @Schema(description = "Request to update an existing contact identity")
 data class UpdateIdentityRequest(
   @Schema(description = "Type of identity", example = "DL")
-  @field:Size(max = 20, message = "identityType must be <= 20 characters")
+  @field:Size(max = 12, message = "identityType must be <= 12 characters")
   val identityType: String,
 
   @Schema(description = "The identity value such as driving licence number", example = "DL123456789")

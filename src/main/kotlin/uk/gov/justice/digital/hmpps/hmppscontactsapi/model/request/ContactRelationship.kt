@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.constraints.Size
 
 data class ContactRelationship(
 
@@ -23,6 +24,7 @@ data class ContactRelationship(
   val isEmergencyContact: Boolean,
 
   @Schema(description = "Comments about the contacts relationship with the prisoner", example = "Some additional information", nullable = true)
+  @field:Size(max = 240, message = "comments must be <= 240 characters")
   val comments: String? = null,
 
 )

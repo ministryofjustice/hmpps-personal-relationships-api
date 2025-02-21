@@ -4,7 +4,9 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.openapitools.jackson.nullable.JsonNullable
 import org.springframework.http.MediaType
@@ -63,6 +65,32 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Validation failure: $expectedMessage")
+    stubEvents.assertHasNoEvents(event = OutboundEvent.PRISONER_CONTACT_UPDATED)
+  }
+
+  @ParameterizedTest
+  @MethodSource("allFieldConstraintViolations")
+  fun `should check all field constraints`(expectedMessage: String, request: UpdateRelationshipRequest) {
+    val prisonerNumber = getRandomPrisonerCode()
+    stubPrisonSearchWithResponse(prisonerNumber)
+    val prisonerContact = cretePrisonerContact(prisonerNumber)
+
+    val prisonerContactId = prisonerContact.prisonerContactId
+
+    val errors = webTestClient.patch()
+      .uri("/prisoner-contact/$prisonerContactId")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Validation failure(s): $expectedMessage")
     stubEvents.assertHasNoEvents(event = OutboundEvent.PRISONER_CONTACT_UPDATED)
   }
 
@@ -353,6 +381,25 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
       assertThat(nextOfKin).isEqualTo(relationship.isNextOfKin)
       assertThat(emergencyContact).isEqualTo(relationship.isEmergencyContact)
       assertThat(comments).isEqualTo(relationship.comments)
+    }
+  }
+
+  companion object {
+    @JvmStatic
+    fun allFieldConstraintViolations(): List<Arguments> {
+      val relationship = UpdateRelationshipRequest(
+        relationshipToPrisoner = JsonNullable.of("FRI"),
+        isNextOfKin = JsonNullable.of(true),
+        isApprovedVisitor = JsonNullable.of(true),
+        isEmergencyContact = JsonNullable.of(true),
+        isRelationshipActive = JsonNullable.of(true),
+        comments = JsonNullable.of("comments added"),
+        updatedBy = "Admin",
+      )
+      return listOf(
+        Arguments.of("comments must be <= 240 characters", relationship.copy(comments = JsonNullable.of("".padStart(241, 'X')))),
+        Arguments.of("updatedBy must be <= 100 characters", relationship.copy(updatedBy = "".padStart(101, 'X'))),
+      )
     }
   }
 }

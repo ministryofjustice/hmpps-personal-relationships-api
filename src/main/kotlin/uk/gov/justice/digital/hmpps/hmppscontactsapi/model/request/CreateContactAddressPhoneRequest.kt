@@ -13,7 +13,7 @@ data class CreateContactAddressPhoneRequest(
   val phoneType: String,
 
   @Schema(description = "Phone number", example = "+1234567890")
-  @field:Size(max = 240, message = "phoneNumber must be <= 240 characters")
+  @field:Size(max = 40, message = "phoneNumber must be <= 40 characters")
   val phoneNumber: String,
 
   @Schema(description = "Extension number", example = "123")

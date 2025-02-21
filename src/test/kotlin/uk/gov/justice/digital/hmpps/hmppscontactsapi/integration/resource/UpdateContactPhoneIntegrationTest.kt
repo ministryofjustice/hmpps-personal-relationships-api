@@ -259,15 +259,15 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   companion object {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
-      Arguments.of("phoneType must be <= 12 characters", aMinimalRequest().copy(phoneType = "".padStart(13))),
-      Arguments.of("phoneNumber must be <= 240 characters", aMinimalRequest().copy(phoneNumber = "".padStart(241))),
+      Arguments.of("phoneType must be <= 12 characters", aMinimalRequest().copy(phoneType = "".padStart(13, 'X'))),
+      Arguments.of("phoneNumber must be <= 40 characters", aMinimalRequest().copy(phoneNumber = "".padStart(41, '9'))),
       Arguments.of(
         "extNumber must be <= 7 characters",
-        aMinimalRequest().copy(extNumber = "".padStart(8)),
+        aMinimalRequest().copy(extNumber = "".padStart(8, 'X')),
       ),
       Arguments.of(
         "updatedBy must be <= 100 characters",
-        aMinimalRequest().copy(updatedBy = "".padStart(101)),
+        aMinimalRequest().copy(updatedBy = "".padStart(101, 'X')),
       ),
     )
 
