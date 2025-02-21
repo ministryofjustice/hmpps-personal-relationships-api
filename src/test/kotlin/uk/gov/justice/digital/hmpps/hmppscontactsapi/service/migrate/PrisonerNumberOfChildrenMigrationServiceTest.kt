@@ -26,15 +26,15 @@ class PrisonerNumberOfChildrenMigrationServiceTest {
   private lateinit var numberOfChildrenMigrationService: PrisonerNumberOfChildrenMigrationService
 
   @Test
-  fun `migrateNumberOfChildren should save historical records and return correct response`() {
+  fun `migrateNumberOfChildren should save current and historical records and return correct response`() {
     // Given
     val prisonerNumber = "A1234BC"
-    val historyItem1 = NumberOfChildrenDetailsRequest(
+    val current = NumberOfChildrenDetailsRequest(
       numberOfChildren = "1",
       createdBy = "USER1",
       createdTime = LocalDateTime.now().minusDays(2),
     )
-    val historyItem2 = NumberOfChildrenDetailsRequest(
+    val historical = NumberOfChildrenDetailsRequest(
       numberOfChildren = "1",
       createdBy = "USER2",
       createdTime = LocalDateTime.now().minusDays(1),
@@ -42,72 +42,99 @@ class PrisonerNumberOfChildrenMigrationServiceTest {
 
     val request = MigratePrisonerNumberOfChildrenRequest(
       prisonerNumber = prisonerNumber,
-      history = listOf(historyItem1, historyItem2),
+      current = current,
+      history = listOf(historical),
     )
 
     val savedEntity1 = PrisonerNumberOfChildren(
       prisonerNumberOfChildrenId = 1L,
       prisonerNumber = prisonerNumber,
-      numberOfChildren = historyItem1.numberOfChildren,
-      createdBy = historyItem1.createdBy,
-      createdTime = historyItem1.createdTime,
-      active = false,
+      numberOfChildren = current.numberOfChildren,
+      createdBy = current.createdBy,
+      createdTime = current.createdTime,
+      active = true,
     )
 
     val savedEntity2 = PrisonerNumberOfChildren(
       prisonerNumberOfChildrenId = 2L,
       prisonerNumber = prisonerNumber,
-      numberOfChildren = historyItem2.numberOfChildren,
-      createdBy = historyItem2.createdBy,
-      createdTime = historyItem2.createdTime,
+      numberOfChildren = historical.numberOfChildren,
+      createdBy = historical.createdBy,
+      createdTime = historical.createdTime,
       active = false,
     )
 
     // When
-    whenever(prisonerNumberOfChildrenRepository.save(any())).thenReturn(savedEntity1, savedEntity2)
+    whenever(prisonerNumberOfChildrenRepository.saveAll<PrisonerNumberOfChildren>(any())).thenReturn(listOf(savedEntity1, savedEntity2))
 
     val result = numberOfChildrenMigrationService.migrateNumberOfChildren(request)
 
     // Then
-    verify(prisonerNumberOfChildrenRepository, times(2)).save(any())
+    verify(prisonerNumberOfChildrenRepository).saveAll(
+      org.mockito.kotlin.check<List<PrisonerNumberOfChildren>> { items ->
+        assertThat(items).hasSize(2)
+        assertThat(items[0].prisonerNumber).isEqualTo(prisonerNumber)
+        assertThat(items[0].numberOfChildren).isEqualTo(historical.numberOfChildren)
+        assertThat(items[0].createdBy).isEqualTo(historical.createdBy)
+        assertThat(items[0].createdTime).isEqualTo(historical.createdTime)
+        assertThat(items[0].active).isFalse()
+        assertThat(items[1].prisonerNumber).isEqualTo(prisonerNumber)
+        assertThat(items[1].numberOfChildren).isEqualTo(current.numberOfChildren)
+        assertThat(items[1].createdBy).isEqualTo(current.createdBy)
+        assertThat(items[1].createdTime).isEqualTo(current.createdTime)
+        assertThat(items[1].active).isTrue()
+      },
+    )
 
-    assertThat(result.history).hasSize(2)
-    assertThat(result.history[0]).isEqualTo(1L)
+    assertThat(result.history).hasSize(1)
+    assertThat(result.history[0]).isEqualTo(2L)
 
-    assertThat(result.current).isEqualTo(2L)
+    assertThat(result.current).isEqualTo(1L)
   }
 
   @Test
   fun `migrateNumberOfChildren should handle empty history`() {
     // Given
+    val prisonerNumber = "A1234BC"
+    val createdTime = LocalDateTime.now()
     val request = MigratePrisonerNumberOfChildrenRequest(
-      prisonerNumber = "A1234BC",
+      prisonerNumber = prisonerNumber,
       history = emptyList(),
       current = NumberOfChildrenDetailsRequest(
         numberOfChildren = "1",
         createdBy = "USER1",
-        createdTime = LocalDateTime.now(),
+        createdTime = createdTime,
       ),
     )
 
     val savedEntity = PrisonerNumberOfChildren(
       prisonerNumberOfChildrenId = 2L,
-      prisonerNumber = request.prisonerNumber,
+      prisonerNumber = prisonerNumber,
       numberOfChildren = "1",
       createdBy = "USER1",
-      createdTime = LocalDateTime.now(),
-      active = false,
+      createdTime = createdTime,
+      active = true,
     )
 
     // When
-    whenever(prisonerNumberOfChildrenRepository.save(any())).thenReturn(savedEntity).thenReturn(savedEntity)
+    whenever(prisonerNumberOfChildrenRepository.saveAll<PrisonerNumberOfChildren>(any())).thenReturn(listOf(savedEntity))
 
     // When
     val result = numberOfChildrenMigrationService.migrateNumberOfChildren(request)
 
     // Then
-    verify(prisonerNumberOfChildrenRepository, times(1)).save(any())
+    verify(prisonerNumberOfChildrenRepository).saveAll(
+      org.mockito.kotlin.check<List<PrisonerNumberOfChildren>> { items ->
+        assertThat(items).hasSize(1)
+        assertThat(items[0].prisonerNumber).isEqualTo(prisonerNumber)
+        assertThat(items[0].numberOfChildren).isEqualTo(savedEntity.numberOfChildren)
+        assertThat(items[0].createdBy).isEqualTo(savedEntity.createdBy)
+        assertThat(items[0].createdTime).isEqualTo(createdTime)
+        assertThat(items[0].active).isTrue()
+      },
+    )
     assertThat(result.history).isEmpty()
+    assertThat(result.current).isEqualTo(2L)
   }
 
   @Test
@@ -135,13 +162,14 @@ class PrisonerNumberOfChildrenMigrationServiceTest {
     )
 
     // When
-    whenever(prisonerNumberOfChildrenRepository.save(any())).thenReturn(savedEntity)
+    whenever(prisonerNumberOfChildrenRepository.saveAll<PrisonerNumberOfChildren>(any()))
+      .thenReturn(listOf(savedEntity))
 
     val result = numberOfChildrenMigrationService.migrateNumberOfChildren(request)
 
     // Then
-    verify(prisonerNumberOfChildrenRepository, times(1)).save(any())
+    verify(prisonerNumberOfChildrenRepository).saveAll<PrisonerNumberOfChildren>(any())
     assertThat(result.history).hasSize(1)
-    assertThat(result.current).isEqualTo(1L)
+    assertThat(result.current).isNull()
   }
 }
