@@ -5,6 +5,14 @@
 -- as per NOMIS. This prevents us adding a code that is not usable in practice.
 --
 
+DROP VIEW IF EXISTS v_contact_addresses;
+DROP VIEW IF EXISTS v_contact_identities;
+DROP VIEW IF EXISTS v_contact_phone_numbers;
+DROP VIEW IF EXISTS v_contact_restriction_details;
+DROP VIEW IF EXISTS v_contacts_with_primary_address;
+DROP VIEW IF EXISTS v_prisoner_contact_restriction_details;
+DROP VIEW IF EXISTS v_prisoner_contacts;
+
 ALTER TABLE contact_identity ALTER COLUMN identity_value TYPE VARCHAR(20);
 ALTER TABLE contact_identity ALTER COLUMN issuing_authority TYPE VARCHAR(40);
 
