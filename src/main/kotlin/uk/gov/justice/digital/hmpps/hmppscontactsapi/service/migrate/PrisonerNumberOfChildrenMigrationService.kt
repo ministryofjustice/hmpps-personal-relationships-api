@@ -12,40 +12,39 @@ class PrisonerNumberOfChildrenMigrationService(
 ) {
 
   fun migrateNumberOfChildren(request: MigratePrisonerNumberOfChildrenRequest): PrisonerNumberOfChildrenMigrationResponse {
-    var current: Long = 1L
-
     // Save historical records and map them to details
-    val history = request.history.map {
-      val savedEntity = prisonerNumberOfChildrenRepository.save(
-        PrisonerNumberOfChildren(
-          numberOfChildren = it.numberOfChildren,
-          prisonerNumber = request.prisonerNumber,
-          createdBy = it.createdBy,
-          createdTime = it.createdTime,
-          active = false,
-        ),
+    val entitiesToSave = buildList {
+      addAll(
+        request.history.map {
+          PrisonerNumberOfChildren(
+            prisonerNumber = request.prisonerNumber,
+            numberOfChildren = it.numberOfChildren,
+            createdBy = it.createdBy,
+            createdTime = it.createdTime,
+            active = false,
+          )
+        },
       )
-      savedEntity.prisonerNumberOfChildrenId.also { details -> current = details }
-    }
 
-    // Save current numberOfChildren if provided
-    request.current?.let {
-      val savedEntity = prisonerNumberOfChildrenRepository.save(
-        PrisonerNumberOfChildren(
-          prisonerNumber = request.prisonerNumber,
-          numberOfChildren = it.numberOfChildren,
-          createdBy = it.createdBy,
-          createdTime = it.createdTime,
-          active = true,
-        ),
-      )
-      current = savedEntity.prisonerNumberOfChildrenId
+      // Save current numberOfChildren if provided
+      request.current?.let {
+        add(
+          PrisonerNumberOfChildren(
+            prisonerNumber = request.prisonerNumber,
+            numberOfChildren = it.numberOfChildren,
+            createdBy = it.createdBy,
+            createdTime = it.createdTime,
+            active = true,
+          ),
+        )
+      }
     }
+    val savedEntities = prisonerNumberOfChildrenRepository.saveAll(entitiesToSave)
 
     return PrisonerNumberOfChildrenMigrationResponse(
       prisonerNumber = request.prisonerNumber,
-      current = current,
-      history = history,
+      current = savedEntities.find { it.active }?.prisonerNumberOfChildrenId,
+      history = savedEntities.filter { !it.active }.map { it.prisonerNumberOfChildrenId },
     )
   }
 }

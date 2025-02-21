@@ -9,7 +9,7 @@ data class PrisonerDomesticStatusMigrationResponse(
   val prisonerNumber: String,
 
   @Schema(description = "The current domestic status")
-  val current: Long,
+  val current: Long?,
 
   @Schema(description = "Historical domestic status records")
   val history: List<Long> = emptyList(),

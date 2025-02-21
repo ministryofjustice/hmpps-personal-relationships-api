@@ -7,7 +7,7 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
-import org.mockito.kotlin.times
+import org.mockito.kotlin.check
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerDomesticStatus
@@ -26,67 +26,84 @@ class PrisonerDomesticStatusMigrationServiceTest {
   private lateinit var domesticStatusMigrationService: PrisonerDomesticStatusMigrationService
 
   @Test
-  fun `migrateDomesticStatus should save historical records and return correct response`() {
+  fun `migrateDomesticStatus should save current and historical records and return correct response`() {
     // Given
     val prisonerNumber = "A1234BC"
-    val historyItem1 = DomesticStatusDetailsRequest(
-      domesticStatusCode = "MARRIED",
+    val current = DomesticStatusDetailsRequest(
+      domesticStatusCode = "M",
       createdBy = "USER1",
       createdTime = LocalDateTime.now().minusDays(2),
     )
-    val historyItem2 = DomesticStatusDetailsRequest(
-      domesticStatusCode = "SINGLE",
+    val historical = DomesticStatusDetailsRequest(
+      domesticStatusCode = "S",
       createdBy = "USER2",
       createdTime = LocalDateTime.now().minusDays(1),
     )
 
     val request = MigratePrisonerDomesticStatusRequest(
       prisonerNumber = prisonerNumber,
-      history = listOf(historyItem1, historyItem2),
+      current = current,
+      history = listOf(historical),
     )
 
     val savedEntity1 = PrisonerDomesticStatus(
       prisonerDomesticStatusId = 1L,
       prisonerNumber = prisonerNumber,
-      domesticStatusCode = historyItem1.domesticStatusCode,
-      createdBy = historyItem1.createdBy,
-      createdTime = historyItem1.createdTime,
-      active = false,
+      domesticStatusCode = current.domesticStatusCode,
+      createdBy = current.createdBy,
+      createdTime = current.createdTime,
+      active = true,
     )
 
     val savedEntity2 = PrisonerDomesticStatus(
       prisonerDomesticStatusId = 2L,
       prisonerNumber = prisonerNumber,
-      domesticStatusCode = historyItem2.domesticStatusCode,
-      createdBy = historyItem2.createdBy,
-      createdTime = historyItem2.createdTime,
+      domesticStatusCode = historical.domesticStatusCode,
+      createdBy = historical.createdBy,
+      createdTime = historical.createdTime,
       active = false,
     )
 
     // When
-    whenever(prisonerDomesticStatusRepository.save(any())).thenReturn(savedEntity1, savedEntity2)
+    whenever(prisonerDomesticStatusRepository.saveAll<PrisonerDomesticStatus>(any())).thenReturn(listOf(savedEntity1, savedEntity2))
 
     val result = domesticStatusMigrationService.migrateDomesticStatus(request)
 
     // Then
-    verify(prisonerDomesticStatusRepository, times(2)).save(any())
+    verify(prisonerDomesticStatusRepository).saveAll(
+      check<List<PrisonerDomesticStatus>> { items ->
+        assertThat(items).hasSize(2)
+        assertThat(items[0].prisonerNumber).isEqualTo(prisonerNumber)
+        assertThat(items[0].domesticStatusCode).isEqualTo(historical.domesticStatusCode)
+        assertThat(items[0].createdBy).isEqualTo(historical.createdBy)
+        assertThat(items[0].createdTime).isEqualTo(historical.createdTime)
+        assertThat(items[0].active).isFalse()
+        assertThat(items[1].prisonerNumber).isEqualTo(prisonerNumber)
+        assertThat(items[1].domesticStatusCode).isEqualTo(current.domesticStatusCode)
+        assertThat(items[1].createdBy).isEqualTo(current.createdBy)
+        assertThat(items[1].createdTime).isEqualTo(current.createdTime)
+        assertThat(items[1].active).isTrue()
+      },
+    )
 
-    assertThat(result.history).hasSize(2)
-    assertThat(result.history[0]).isEqualTo(1L)
+    assertThat(result.history).hasSize(1)
+    assertThat(result.history[0]).isEqualTo(2L)
 
-    assertThat(result.current).isEqualTo(2L)
+    assertThat(result.current).isEqualTo(1L)
   }
 
   @Test
   fun `migrateDomesticStatus should handle empty history`() {
     // Given
+    val prisonerNumber = "A1234BC"
+    val createdTime = LocalDateTime.now()
     val request = MigratePrisonerDomesticStatusRequest(
-      prisonerNumber = "A1234BC",
+      prisonerNumber = prisonerNumber,
       history = emptyList(),
       current = DomesticStatusDetailsRequest(
         domesticStatusCode = "D",
         createdBy = "USER1",
-        createdTime = LocalDateTime.now(),
+        createdTime = createdTime,
       ),
     )
 
@@ -95,19 +112,30 @@ class PrisonerDomesticStatusMigrationServiceTest {
       prisonerNumber = request.prisonerNumber,
       domesticStatusCode = "D",
       createdBy = "USER1",
-      createdTime = LocalDateTime.now(),
-      active = false,
+      createdTime = createdTime,
+      active = true,
     )
 
     // When
-    whenever(prisonerDomesticStatusRepository.save(any())).thenReturn(savedEntity).thenReturn(savedEntity)
+    whenever(prisonerDomesticStatusRepository.saveAll<PrisonerDomesticStatus>(any()))
+      .thenReturn(listOf(savedEntity))
 
     // When
     val result = domesticStatusMigrationService.migrateDomesticStatus(request)
 
     // Then
-    verify(prisonerDomesticStatusRepository, times(1)).save(any())
+    verify(prisonerDomesticStatusRepository).saveAll(
+      check<List<PrisonerDomesticStatus>> { items ->
+        assertThat(items).hasSize(1)
+        assertThat(items[0].prisonerNumber).isEqualTo(prisonerNumber)
+        assertThat(items[0].domesticStatusCode).isEqualTo(savedEntity.domesticStatusCode)
+        assertThat(items[0].createdBy).isEqualTo(savedEntity.createdBy)
+        assertThat(items[0].createdTime).isEqualTo(createdTime)
+        assertThat(items[0].active).isTrue()
+      },
+    )
     assertThat(result.history).isEmpty()
+    assertThat(result.current).isEqualTo(2L)
   }
 
   @Test
@@ -115,7 +143,7 @@ class PrisonerDomesticStatusMigrationServiceTest {
     // Given
     val prisonerNumber = "A1234BC"
     val historyItem = DomesticStatusDetailsRequest(
-      domesticStatusCode = "MARRIED",
+      domesticStatusCode = "M",
       createdBy = "USER1",
       createdTime = LocalDateTime.now(),
     )
@@ -135,13 +163,14 @@ class PrisonerDomesticStatusMigrationServiceTest {
     )
 
     // When
-    whenever(prisonerDomesticStatusRepository.save(any())).thenReturn(savedEntity)
+    whenever(prisonerDomesticStatusRepository.saveAll<PrisonerDomesticStatus>(any()))
+      .thenReturn(listOf(savedEntity))
 
     val result = domesticStatusMigrationService.migrateDomesticStatus(request)
 
     // Then
-    verify(prisonerDomesticStatusRepository, times(1)).save(any())
+    verify(prisonerDomesticStatusRepository).saveAll<PrisonerDomesticStatus>(any())
     assertThat(result.history).hasSize(1)
-    assertThat(result.current).isEqualTo(1L)
+    assertThat(result.current).isNull()
   }
 }

@@ -12,40 +12,41 @@ class PrisonerDomesticStatusMigrationService(
 ) {
 
   fun migrateDomesticStatus(request: MigratePrisonerDomesticStatusRequest): PrisonerDomesticStatusMigrationResponse {
-    var current: Long = 0 // todo fix this initialisation
-
-    // Save historical records and map them to details
-    val history = request.history.map {
-      val savedEntity = prisonerDomesticStatusRepository.save(
-        PrisonerDomesticStatus(
-          prisonerNumber = request.prisonerNumber,
-          domesticStatusCode = it.domesticStatusCode,
-          createdBy = it.createdBy,
-          createdTime = it.createdTime,
-          active = false,
-        ),
+    // Create list of entities to save
+    val entitiesToSave = buildList {
+      addAll(
+        request.history.map {
+          PrisonerDomesticStatus(
+            prisonerNumber = request.prisonerNumber,
+            domesticStatusCode = it.domesticStatusCode,
+            createdBy = it.createdBy,
+            createdTime = it.createdTime,
+            active = false,
+          )
+        },
       )
-      savedEntity.prisonerDomesticStatusId.also { details -> current = details }
+
+      // Add current status if provided
+      request.current?.let {
+        add(
+          PrisonerDomesticStatus(
+            prisonerNumber = request.prisonerNumber,
+            domesticStatusCode = it.domesticStatusCode,
+            createdBy = it.createdBy,
+            createdTime = it.createdTime,
+            active = true,
+          ),
+        )
+      }
     }
 
-    // Save current status if provided
-    request.current?.let {
-      val savedEntity = prisonerDomesticStatusRepository.save(
-        PrisonerDomesticStatus(
-          prisonerNumber = request.prisonerNumber,
-          domesticStatusCode = it.domesticStatusCode,
-          createdBy = it.createdBy,
-          createdTime = it.createdTime,
-          active = true,
-        ),
-      )
-      current = savedEntity.prisonerDomesticStatusId
-    }
+    // Batch save all entities
+    val savedEntities = prisonerDomesticStatusRepository.saveAll(entitiesToSave)
 
     return PrisonerDomesticStatusMigrationResponse(
       prisonerNumber = request.prisonerNumber,
-      current = current,
-      history = history,
+      current = savedEntities.find { it.active }?.prisonerDomesticStatusId,
+      history = savedEntities.filter { !it.active }.map { it.prisonerDomesticStatusId },
     )
   }
 }
