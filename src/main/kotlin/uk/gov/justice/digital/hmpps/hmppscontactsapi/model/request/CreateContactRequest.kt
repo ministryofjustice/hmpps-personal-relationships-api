@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request
 
 import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
 import org.springframework.format.annotation.DateTimeFormat
 import java.time.LocalDate
@@ -39,6 +40,7 @@ data class CreateContactRequest(
   val dateOfBirth: LocalDate? = null,
 
   @Schema(description = "A description of the relationship if the contact should be linked to a prisoner", nullable = true, exampleClasses = [ContactRelationship::class])
+  @field:Valid
   val relationship: ContactRelationship? = null,
 
   @Schema(description = "The id of the user creating the contact", example = "JD000001", maxLength = 100)

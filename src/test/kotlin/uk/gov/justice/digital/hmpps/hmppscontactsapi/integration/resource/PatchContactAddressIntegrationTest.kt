@@ -461,29 +461,41 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
       Arguments.of(
-        "addressType must be <= 12 characters",
-        aMinimalPatchAddressRequest().copy(addressType = JsonNullable.of("".padStart(13))),
+        "flat must be <= 30 characters",
+        aMinimalPatchAddressRequest().copy(flat = JsonNullable.of("".padStart(31, 'X'))),
       ),
       Arguments.of(
-        "cityCode must be <= 12 characters",
-        aMinimalPatchAddressRequest().copy(cityCode = JsonNullable.of("".padStart(13))),
+        "property must be <= 50 characters",
+        aMinimalPatchAddressRequest().copy(property = JsonNullable.of("".padStart(51, 'X'))),
       ),
       Arguments.of(
-        "countyCode must be <= 12 characters",
-        aMinimalPatchAddressRequest().copy(countyCode = JsonNullable.of("".padStart(13))),
+        "street must be <= 160 characters",
+        aMinimalPatchAddressRequest().copy(street = JsonNullable.of("".padStart(161, 'X'))),
       ),
       Arguments.of(
-        "countryCode must be <= 12 characters",
-        aMinimalPatchAddressRequest().copy(countryCode = JsonNullable.of("".padStart(13))),
+        "area must be <= 70 characters",
+        aMinimalPatchAddressRequest().copy(area = JsonNullable.of("".padStart(71, 'X'))),
+      ),
+      Arguments.of(
+        "postcode must be <= 12 characters",
+        aMinimalPatchAddressRequest().copy(postcode = JsonNullable.of("".padStart(13, 'X'))),
+      ),
+      Arguments.of(
+        "comments must be <= 240 characters",
+        aMinimalPatchAddressRequest().copy(comments = JsonNullable.of("".padStart(241, 'X'))),
       ),
       Arguments.of(
         "updatedBy must be <= 100 characters",
-        aMinimalPatchAddressRequest().copy(updatedBy = "".padStart(101)),
+        aMinimalPatchAddressRequest().copy(updatedBy = "".padStart(101, 'X')),
       ),
     )
 
     @JvmStatic
     fun referenceTypeNotFound(): List<Arguments> = listOf(
+      Arguments.of(
+        "No reference data found for groupCode: ADDRESS_TYPE and code: INVALID",
+        aMinimalPatchAddressRequest().copy(addressType = JsonNullable.of("INVALID")),
+      ),
       Arguments.of(
         "No reference data found for groupCode: CITY and code: INVALID",
         aMinimalPatchAddressRequest().copy(cityCode = JsonNullable.of("INVALID")),

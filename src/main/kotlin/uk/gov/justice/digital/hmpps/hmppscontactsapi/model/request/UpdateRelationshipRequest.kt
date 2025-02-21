@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.constraints.Size
 import org.openapitools.jackson.nullable.JsonNullable
 
 @Schema(description = "Request to update an existing relationship details")
@@ -30,9 +31,11 @@ data class UpdateRelationshipRequest(
   val isRelationshipActive: JsonNullable<Boolean> = JsonNullable.undefined(),
 
   @Schema(description = "Comments about the contacts relationship with the prisoner", example = "Some additional information", nullable = true, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @field:Size(max = 240, message = "comments must be <= 240 characters")
   val comments: JsonNullable<String?> = JsonNullable.undefined(),
 
   @Schema(description = "The id of the user who updated the contact", example = "JD000001", nullable = false, requiredMode = Schema.RequiredMode.REQUIRED)
+  @field:Size(max = 100, message = "updatedBy must be <= 100 characters")
   val updatedBy: String,
 
 )

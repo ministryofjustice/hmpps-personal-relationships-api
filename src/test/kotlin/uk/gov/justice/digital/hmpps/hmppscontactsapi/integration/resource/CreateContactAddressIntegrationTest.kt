@@ -104,6 +104,30 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     )
   }
 
+  @ParameterizedTest
+  @MethodSource("allFieldConstraintViolations")
+  fun `should enforce field constraints`(expectedMessage: String, request: CreateContactAddressRequest) {
+    val errors = webTestClient.post()
+      .uri("/contact/$savedContactId/address")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Validation failure(s): $expectedMessage")
+
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.CONTACT_ADDRESS_CREATED,
+      additionalInfo = ContactAddressInfo(savedContactId, Source.DPS),
+    )
+  }
+
   @Test
   fun `should not create the address if the contact is not found`() {
     val request = aMinimalAddressRequest()
@@ -313,9 +337,14 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }
+
   companion object {
     @JvmStatic
     fun referenceTypeNotFound(): List<Arguments> = listOf(
+      Arguments.of(
+        "No reference data found for groupCode: ADDRESS_TYPE and code: INVALID",
+        aMinimalAddressRequest().copy(addressType = "INVALID"),
+      ),
       Arguments.of(
         "No reference data found for groupCode: CITY and code: INVALID",
         aMinimalAddressRequest().copy(cityCode = "INVALID"),
@@ -328,6 +357,17 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
         "No reference data found for groupCode: COUNTRY and code: INVALID",
         aMinimalAddressRequest().copy(countryCode = "INVALID"),
       ),
+    )
+
+    @JvmStatic
+    fun allFieldConstraintViolations(): List<Arguments> = listOf(
+      Arguments.of("flat must be <= 30 characters", aMinimalAddressRequest().copy(flat = "".padStart(31, 'X'))),
+      Arguments.of("property must be <= 50 characters", aMinimalAddressRequest().copy(property = "".padStart(51, 'X'))),
+      Arguments.of("street must be <= 160 characters", aMinimalAddressRequest().copy(street = "".padStart(161, 'X'))),
+      Arguments.of("area must be <= 70 characters", aMinimalAddressRequest().copy(area = "".padStart(71, 'X'))),
+      Arguments.of("postcode must be <= 12 characters", aMinimalAddressRequest().copy(postcode = "".padStart(13, 'X'))),
+      Arguments.of("comments must be <= 240 characters", aMinimalAddressRequest().copy(comments = "".padStart(241, 'X'))),
+      Arguments.of("createdBy must be <= 100 characters", aMinimalAddressRequest().copy(createdBy = "".padStart(101, 'X'))),
     )
 
     private fun assertEqualsExcludingTimestamps(address: ContactAddressResponse, request: CreateContactAddressRequest) {

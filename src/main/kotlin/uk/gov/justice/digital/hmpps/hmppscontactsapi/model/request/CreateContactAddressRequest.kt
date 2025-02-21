@@ -23,15 +23,19 @@ data class CreateContactAddressRequest(
   val primaryAddress: Boolean = false,
 
   @Schema(description = "Flat number or name", example = "Flat 2B", nullable = true)
+  @field:Size(max = 30, message = "flat must be <= 30 characters")
   val flat: String? = null,
 
   @Schema(description = "Building or house number or name", example = "Mansion House", nullable = true)
+  @field:Size(max = 50, message = "property must be <= 50 characters")
   val property: String? = null,
 
   @Schema(description = "Street or road name", example = "Acacia Avenue", nullable = true)
+  @field:Size(max = 160, message = "street must be <= 160 characters")
   val street: String? = null,
 
   @Schema(description = "Area", example = "Morton Heights", nullable = true)
+  @field:Size(max = 70, message = "area must be <= 70 characters")
   val area: String? = null,
 
   @Schema(description = "City code - from NOMIS", example = "13232", nullable = true)
@@ -43,6 +47,7 @@ data class CreateContactAddressRequest(
   val countyCode: String? = null,
 
   @Schema(description = "Postcode", example = "S13 4FH", nullable = true)
+  @field:Size(max = 12, message = "postcode must be <= 12 characters")
   val postcode: String? = null,
 
   @Schema(description = "Country code - from NOMIS", example = "UK", nullable = true)
@@ -65,6 +70,7 @@ data class CreateContactAddressRequest(
   val noFixedAddress: Boolean? = false,
 
   @Schema(description = "Any additional information or comments about the address", example = "Some additional information", nullable = true)
+  @field:Size(max = 240, message = "comments must be <= 240 characters")
   val comments: String? = null,
 
   @Schema(description = "The id of the user who created the contact", example = "JD000001")

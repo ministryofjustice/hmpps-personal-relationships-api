@@ -282,10 +282,10 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
   companion object {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
-      Arguments.of("comments must be <= 240 characters", aMinimalRequest().copy(comments = "".padStart(241))),
+      Arguments.of("comments must be <= 240 characters", aMinimalRequest().copy(comments = "".padStart(241, 'X'))),
       Arguments.of(
         "updatedBy must be <= 100 characters",
-        aMinimalRequest().copy(updatedBy = "".padStart(101)),
+        aMinimalRequest().copy(updatedBy = "".padStart(101, 'X')),
       ),
     )
 

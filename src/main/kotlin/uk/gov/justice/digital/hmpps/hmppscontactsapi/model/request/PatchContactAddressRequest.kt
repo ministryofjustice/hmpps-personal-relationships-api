@@ -25,15 +25,19 @@ data class PatchContactAddressRequest(
   val primaryAddress: JsonNullable<Boolean> = JsonNullable.undefined(),
 
   @Schema(description = "Flat number or name", example = "Flat 2B", nullable = true, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @field:Size(max = 30, message = "flat must be <= 30 characters")
   val flat: JsonNullable<String?> = JsonNullable.undefined(),
 
   @Schema(description = "Building or house number or name", example = "Mansion House", nullable = true, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @field:Size(max = 50, message = "property must be <= 50 characters")
   val property: JsonNullable<String?> = JsonNullable.undefined(),
 
   @Schema(description = "Street or road name", example = "Acacia Avenue", nullable = true, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @field:Size(max = 160, message = "street must be <= 160 characters")
   val street: JsonNullable<String?> = JsonNullable.undefined(),
 
   @Schema(description = "Area", example = "Morton Heights", nullable = true, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @field:Size(max = 70, message = "area must be <= 70 characters")
   val area: JsonNullable<String?> = JsonNullable.undefined(),
 
   @Schema(description = "City code - from NOMIS reference data", example = "BIRM", nullable = true, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
@@ -45,6 +49,7 @@ data class PatchContactAddressRequest(
   val countyCode: JsonNullable<String?> = JsonNullable.undefined(),
 
   @Schema(description = "Postcode", example = "S13 4FH", nullable = true, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @field:Size(max = 12, message = "postcode must be <= 12 characters")
   val postcode: JsonNullable<String?> = JsonNullable.undefined(),
 
   @Schema(description = "Country code - from NOMIS reference data", example = "UK", nullable = true, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
@@ -67,6 +72,7 @@ data class PatchContactAddressRequest(
   val noFixedAddress: JsonNullable<Boolean> = JsonNullable.undefined(),
 
   @Schema(description = "Any additional information or comments about the address", example = "Some additional information", nullable = true, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @field:Size(max = 240, message = "comments must be <= 240 characters")
   val comments: JsonNullable<String?> = JsonNullable.undefined(),
 
   @Schema(description = "The id of the user who updated the address", example = "JD000001", nullable = false, requiredMode = Schema.RequiredMode.REQUIRED)

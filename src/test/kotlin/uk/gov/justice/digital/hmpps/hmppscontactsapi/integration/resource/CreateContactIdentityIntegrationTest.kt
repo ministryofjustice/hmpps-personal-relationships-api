@@ -245,15 +245,15 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
   companion object {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
-      Arguments.of("identityType must be <= 20 characters", aMinimalRequest().copy(identityType = "".padStart(21))),
-      Arguments.of("identityValue must be <= 20 characters", aMinimalRequest().copy(identityValue = "".padStart(21))),
+      Arguments.of("identityType must be <= 12 characters", aMinimalRequest().copy(identityType = "".padStart(13, 'X'))),
+      Arguments.of("identityValue must be <= 20 characters", aMinimalRequest().copy(identityValue = "".padStart(21, 'X'))),
       Arguments.of(
         "issuingAuthority must be <= 40 characters",
-        aMinimalRequest().copy(issuingAuthority = "".padStart(41)),
+        aMinimalRequest().copy(issuingAuthority = "".padStart(41, 'X')),
       ),
       Arguments.of(
         "createdBy must be <= 100 characters",
-        aMinimalRequest().copy(createdBy = "".padStart(101)),
+        aMinimalRequest().copy(createdBy = "".padStart(101, 'X')),
       ),
     )
 

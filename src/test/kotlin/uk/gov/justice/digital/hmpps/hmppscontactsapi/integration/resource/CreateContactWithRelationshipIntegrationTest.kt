@@ -4,7 +4,9 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
@@ -57,12 +59,34 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
     stubEvents.assertHasNoEvents(event = OutboundEvent.PRISONER_CONTACT_CREATED)
   }
 
+  @ParameterizedTest
+  @MethodSource("allFieldConstraintViolations")
+  fun `should enforce field constraints`(expectedMessage: String, request: CreateContactRequest) {
+    stubPrisonSearchWithResponse(request.relationship!!.prisonerNumber)
+    val errors = webTestClient.post()
+      .uri("/contact")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Validation failure(s): $expectedMessage")
+    stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_CREATED)
+    stubEvents.assertHasNoEvents(event = OutboundEvent.PRISONER_CONTACT_CREATED)
+  }
+
   @Test
   fun `should return a 404 if the prisoner can not be found`() {
     val prisonerNumber = "A1234AB"
     stubPrisonSearchWithNotFoundResponse(prisonerNumber)
     val request = CreateContactRequest(
-      lastName = RandomStringUtils.secure().next(35),
+      lastName = RandomStringUtils.secure().nextAlphabetic(35),
       firstName = "a new guy",
       createdBy = "created",
       relationship = ContactRelationship(
@@ -106,7 +130,7 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
       comments = null,
     )
     val request = CreateContactRequest(
-      lastName = RandomStringUtils.secure().next(35),
+      lastName = RandomStringUtils.secure().nextAlphabetic(35),
       firstName = "a new guy",
       createdBy = "created",
       relationship = requestedRelationship,
@@ -147,7 +171,7 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
       comments = null,
     )
     val request = CreateContactRequest(
-      lastName = RandomStringUtils.secure().next(35),
+      lastName = RandomStringUtils.secure().nextAlphabetic(35),
       firstName = "a new guy",
       createdBy = "created",
       relationship = requestedRelationship,
@@ -185,7 +209,7 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
       comments = "Some comments",
     )
     val request = CreateContactRequest(
-      lastName = RandomStringUtils.secure().next(35),
+      lastName = RandomStringUtils.secure().nextAlphabetic(35),
       firstName = "a new guy",
       createdBy = "created",
       relationship = requestedRelationship,
@@ -218,6 +242,31 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
       assertThat(nextOfKin).isEqualTo(relationship.isNextOfKin)
       assertThat(emergencyContact).isEqualTo(relationship.isEmergencyContact)
       assertThat(comments).isEqualTo(relationship.comments)
+    }
+  }
+
+  companion object {
+    @JvmStatic
+    fun allFieldConstraintViolations(): List<Arguments> {
+      val relationship = ContactRelationship(
+        prisonerNumber = "A1234AB",
+        relationshipType = "S",
+        relationshipToPrisoner = "FRI",
+        isNextOfKin = false,
+        isEmergencyContact = false,
+        comments = null,
+      )
+      return listOf(
+        Arguments.of(
+          "comments must be <= 240 characters",
+          CreateContactRequest(
+            lastName = RandomStringUtils.secure().nextAlphabetic(35),
+            firstName = "a new guy",
+            createdBy = "created",
+            relationship = relationship.copy(comments = "".padStart(241, 'X')),
+          ),
+        ),
+      )
     }
   }
 }
