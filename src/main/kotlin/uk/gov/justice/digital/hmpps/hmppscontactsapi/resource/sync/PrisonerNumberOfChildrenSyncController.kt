@@ -25,7 +25,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 @RestController
 @RequestMapping(value = ["/sync"], produces = [MediaType.APPLICATION_JSON_VALUE])
 class PrisonerNumberOfChildrenSyncController {
-  @GetMapping(path = ["/{prisonerNumber}/number of children"], produces = [MediaType.APPLICATION_JSON_VALUE])
+  @GetMapping(path = ["/{prisonerNumber}/number-of-children"], produces = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
     summary = "Returns the number of children for a prisoner by prisonerNumber",
     description = """
@@ -56,10 +56,6 @@ class PrisonerNumberOfChildrenSyncController {
     @PathVariable prisonerNumber: String,
   ): SyncPrisonerNumberOfChildrenResponse = SyncPrisonerNumberOfChildrenResponse(
     id = 1L,
-    prisonerNumber = prisonerNumber,
-    numberOfChildren = "1",
-    createdBy = "User",
-    active = true,
   )
 
   /**
@@ -70,7 +66,7 @@ class PrisonerNumberOfChildrenSyncController {
    * The existing record will be moved to history for auditability before creating the new updated record.
    */
 
-  @PutMapping(path = ["/{prisonerNumber}/number of children"], produces = [MediaType.APPLICATION_JSON_VALUE])
+  @PutMapping(path = ["/{prisonerNumber}/number-of-children"], produces = [MediaType.APPLICATION_JSON_VALUE])
   @ResponseBody
   @Operation(
     summary = "Create or Updates the number of children for a prisoner",
@@ -104,10 +100,6 @@ class PrisonerNumberOfChildrenSyncController {
     @Valid @RequestBody request: SyncUpdatePrisonerNumberOfChildrenRequest,
   ): SyncPrisonerNumberOfChildrenResponse = SyncPrisonerNumberOfChildrenResponse(
     id = 1L,
-    prisonerNumber = prisonerNumber,
-    numberOfChildren = request.numberOfChildren,
-    createdBy = "User",
-    active = true,
   )
 
   /**
@@ -115,7 +107,7 @@ class PrisonerNumberOfChildrenSyncController {
    * This preserves the record history while marking it as no longer active.
    */
 
-  @DeleteMapping(path = ["/{prisonerNumber}/number of children"], produces = [MediaType.APPLICATION_JSON_VALUE])
+  @DeleteMapping(path = ["/{prisonerNumber}/number-of-children"], produces = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
     summary = "Deletes an Prisoner's number of children",
     description = "Delete prisoner's number of children record by prisoner number.",

@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 
 @Tag(name = "Sync & Migrate")
 @RestController
-@RequestMapping(value = ["migrate/number of children"], produces = [MediaType.APPLICATION_JSON_VALUE])
+@RequestMapping(value = ["migrate/number-of-children"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @AuthApiResponses
 class MigratePrisonerNumberOfChildrenController {
   @PostMapping(consumes = [MediaType.APPLICATION_JSON_VALUE])
