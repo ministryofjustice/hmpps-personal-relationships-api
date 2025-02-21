@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 data class SyncUpdatePrisonerNumberOfChildrenRequest(
 
   @Schema(description = "The number of children", example = "1")
-  val numberOfChildren: String,
+  val numberOfChildren: String?,
 
   @Schema(description = "Username of the person who created the record", example = "JSMITH_ADM")
   val createdBy: String,

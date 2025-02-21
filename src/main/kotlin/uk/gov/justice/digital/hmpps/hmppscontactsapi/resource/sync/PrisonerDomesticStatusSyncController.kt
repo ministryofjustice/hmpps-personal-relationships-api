@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpda
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
-import java.time.LocalDateTime
 
 @Tag(name = "Sync & Migrate")
 @RestController
@@ -60,11 +59,6 @@ class PrisonerDomesticStatusSyncController(
     @PathVariable prisonerNumber: String,
   ): SyncPrisonerDomesticStatusResponse = SyncPrisonerDomesticStatusResponse(
     id = 1L,
-    prisonerNumber = prisonerNumber,
-    domesticStatusCode = "A",
-    active = true,
-    createdTime = LocalDateTime.now(),
-    createdBy = "SYSTEM",
   )
 
   /**
@@ -119,11 +113,6 @@ class PrisonerDomesticStatusSyncController(
     @Valid @RequestBody request: SyncUpdatePrisonerDomesticStatusRequest,
   ): SyncPrisonerDomesticStatusResponse = SyncPrisonerDomesticStatusResponse(
     id = 1L,
-    prisonerNumber = prisonerNumber,
-    domesticStatusCode = "A",
-    active = true,
-    createdTime = LocalDateTime.now(),
-    createdBy = "SYSTEM",
   )
 
   /**
