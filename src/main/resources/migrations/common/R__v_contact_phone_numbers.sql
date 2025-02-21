@@ -2,7 +2,7 @@
 -- Creates a view over the contact_phone and reference_codes tables to return a list of all phone numbers with descriptions
 -- for all codes.
 -- Note: the view is only dropped if the checksum of this migration changes
--- Internal version to bump if you need to force recreation: 2
+-- Internal version to bump if you need to force recreation: 3
 --
 DROP VIEW IF EXISTS v_contact_phone_numbers;
 CREATE VIEW v_contact_phone_numbers
