@@ -6,6 +6,9 @@ import java.time.LocalDateTime
 @Schema(description = "Request to migrate a prisoner's number of children")
 data class MigratePrisonerNumberOfChildrenRequest(
 
+  @Schema(description = "The prisoner number")
+  val prisonerNumber: String,
+
   @Schema(description = "Current number of children details")
   val current: NumberOfChildrenDetailsRequest? = null,
 
