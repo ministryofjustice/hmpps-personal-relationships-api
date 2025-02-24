@@ -44,9 +44,6 @@ data class ContactDetails(
   @Schema(description = "Whether the contact is a staff member", example = "false", nullable = false)
   var isStaff: Boolean = false,
 
-  @Schema(description = "The date the contact deceased, if known", example = "1980-01-01")
-  val isDeceased: Boolean,
-
   @Schema(description = "The date the contact deceased, if known", example = "1980-01-01", nullable = true)
   val deceasedDate: LocalDate? = null,
 

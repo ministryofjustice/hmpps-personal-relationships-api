@@ -51,6 +51,9 @@ data class PatchContactRequest(
   )
   var gender: JsonNullable<String?> = JsonNullable.undefined(),
 
+  @Schema(description = "The date the contact deceased, if known", example = "1980-01-01", type = "string", nullable = true, requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  var deceasedDate: JsonNullable<LocalDate?> = JsonNullable.undefined(),
+
   @Schema(description = "The id of the user who updated the contact", example = "JD000001", nullable = false, requiredMode = Schema.RequiredMode.REQUIRED)
   val updatedBy: String,
 )

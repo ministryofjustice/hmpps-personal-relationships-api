@@ -156,7 +156,6 @@ class ContactService(
       middleNames = contactEntity.middleNames,
       dateOfBirth = contactEntity.dateOfBirth,
       isStaff = contactEntity.staffFlag,
-      isDeceased = contactEntity.isDeceased,
       deceasedDate = contactEntity.deceasedDate,
       languageCode = contactEntity.languageCode,
       languageDescription = languageDescription,

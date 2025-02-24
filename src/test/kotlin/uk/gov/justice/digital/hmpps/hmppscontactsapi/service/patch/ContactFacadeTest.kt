@@ -166,7 +166,6 @@ class ContactFacadeTest {
     id = 99,
     lastName = "Last",
     firstName = "First",
-    isDeceased = false,
     deceasedDate = null,
     languageCode = null,
     languageDescription = null,

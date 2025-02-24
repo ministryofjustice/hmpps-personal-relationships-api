@@ -37,9 +37,6 @@ data class PatchContactResponse(
   @Schema(description = "Whether the contact is a staff member", example = "false", nullable = false)
   var isStaff: Boolean = false,
 
-  @Schema(description = "Whether the contact is deceased", example = "false", nullable = true)
-  var deceasedFlag: Boolean? = false,
-
   @Schema(description = "The date the contact was deceased, if applicable", example = "2023-05-01", nullable = true)
   var deceasedDate: LocalDate? = null,
 
