@@ -92,10 +92,11 @@ class SyncPrisonerNumberOfChildrenServiceTest {
     whenever(numberOfChildrenRepository.save(any())).thenReturn(deactivatedNumberOfChildrenCount)
 
     // When
-    syncNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, updateRequest)
+    val response = syncNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, updateRequest)
 
     // Then
     verify(numberOfChildrenRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
+    assertThat(response.id).isEqualTo(1L)
   }
 
   @Test
@@ -151,9 +152,6 @@ class SyncPrisonerNumberOfChildrenServiceTest {
     whenever(numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
       .thenReturn(existingNumberOfChildrenCount)
 
-    val deactivatedStatus = existingNumberOfChildrenCount.copy(active = false)
-    whenever(numberOfChildrenRepository.save(any())).thenReturn(deactivatedStatus)
-
     // When
     syncNumberOfChildrenService.deactivateNumberOfChildren(prisonerNumber)
 
@@ -163,5 +161,19 @@ class SyncPrisonerNumberOfChildrenServiceTest {
     val savedDomesticStatus = nocCaptor.firstValue
     assertThat(savedDomesticStatus.active).isFalse()
     assertThat(savedDomesticStatus.prisonerNumber).isEqualTo(prisonerNumber)
+  }
+
+  @Test
+  fun `deactivateNumberOfChildren throws EntityNotFoundException when not found`() {
+    // Given
+    val prisonerNumber = "A1234BC"
+    whenever(numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      .thenReturn(null)
+
+    // When/Then
+    val exception = assertThrows<EntityNotFoundException> {
+      syncNumberOfChildrenService.deactivateNumberOfChildren(prisonerNumber)
+    }
+    assertThat(exception.message).isEqualTo("NumberOfChildren not found for prisoner: A1234BC")
   }
 }
