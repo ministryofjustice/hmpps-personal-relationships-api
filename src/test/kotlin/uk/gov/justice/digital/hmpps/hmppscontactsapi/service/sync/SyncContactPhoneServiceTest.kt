@@ -186,7 +186,6 @@ class SyncContactPhoneServiceTest {
     middleNames = null,
     lastName = "Smith",
     dateOfBirth = null,
-    isDeceased = false,
     deceasedDate = null,
     createdBy = "TEST",
     createdTime = LocalDateTime.now(),

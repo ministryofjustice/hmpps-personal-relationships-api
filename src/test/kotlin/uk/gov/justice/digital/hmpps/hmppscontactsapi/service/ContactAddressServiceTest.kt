@@ -993,7 +993,6 @@ private fun contactEntity(contactId: Long = 1L) = ContactEntity(
   middleNames = null,
   lastName = "Smith",
   dateOfBirth = null,
-  isDeceased = false,
   deceasedDate = null,
   createdBy = "TEST",
 )

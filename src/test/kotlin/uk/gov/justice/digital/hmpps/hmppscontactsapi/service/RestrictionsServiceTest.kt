@@ -51,7 +51,6 @@ class RestrictionsServiceTest {
     middleNames = "middle",
     firstName = "first",
     dateOfBirth = null,
-    isDeceased = false,
     deceasedDate = null,
     createdBy = "user",
     createdTime = now(),

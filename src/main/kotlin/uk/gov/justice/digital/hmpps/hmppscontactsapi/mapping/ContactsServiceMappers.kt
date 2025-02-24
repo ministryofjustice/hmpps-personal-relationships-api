@@ -75,7 +75,6 @@ private fun newContact(
   lastName = lastName,
   middleNames = middleNames,
   dateOfBirth = dateOfBirth,
-  isDeceased = false,
   deceasedDate = null,
   createdBy = createdBy,
   createdTime = LocalDateTime.now(),

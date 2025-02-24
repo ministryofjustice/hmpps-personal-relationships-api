@@ -804,7 +804,6 @@ class ContactMigrationServiceTest {
     middleNames = null,
     lastName = "Smith",
     dateOfBirth = null,
-    isDeceased = false,
     deceasedDate = null,
     createdBy = aUsername,
     createdTime = aDateTime,

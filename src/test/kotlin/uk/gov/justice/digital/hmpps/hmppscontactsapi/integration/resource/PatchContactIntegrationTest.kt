@@ -696,4 +696,84 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactWithAGender, Source.DPS))
     }
   }
+
+  @Nested
+  inner class DeceasedDate {
+    private var contactWithDeceasedDate = 0L
+    private val originalDeceasedDate = LocalDate.of(2000, 6, 15)
+
+    @BeforeEach
+    fun createContactWithDeceasedDate() {
+      contactWithDeceasedDate = testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "Date of death",
+          firstName = "Has",
+          createdBy = "created",
+        ),
+      ).id
+      testAPIClient.patchAContact(
+        PatchContactRequest(
+          deceasedDate = JsonNullable.of(originalDeceasedDate),
+          updatedBy = "INITIAL",
+        ),
+        "/contact/$contactWithDeceasedDate",
+      )
+    }
+
+    @Test
+    fun `should not patch the deceased date when not provided`() {
+      val res = testAPIClient.patchAContact(
+        PatchContactRequest(updatedBy = updatedByUser),
+        "/contact/$contactWithDeceasedDate",
+      )
+
+      assertThat(res.deceasedDate).isEqualTo(originalDeceasedDate)
+      assertThat(res.updatedBy).isEqualTo(updatedByUser)
+
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.CONTACT_UPDATED,
+        additionalInfo = ContactInfo(contactWithDeceasedDate, Source.DPS),
+        personReference = PersonReference(dpsContactId = contactWithDeceasedDate),
+      )
+    }
+
+    @Test
+    fun `should successfully patch the deceased date with null value`() {
+      val res = testAPIClient.patchAContact(
+        PatchContactRequest(
+          deceasedDate = JsonNullable.of(null),
+          updatedBy = updatedByUser,
+        ),
+        "/contact/$contactWithDeceasedDate",
+      )
+
+      assertThat(res.deceasedDate).isNull()
+      assertThat(res.updatedBy).isEqualTo(updatedByUser)
+
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.CONTACT_UPDATED,
+        additionalInfo = ContactInfo(contactWithDeceasedDate, Source.DPS),
+        personReference = PersonReference(dpsContactId = contactWithDeceasedDate),
+      )
+    }
+
+    @Test
+    fun `should successfully patch the deceased date with a value`() {
+      val req = PatchContactRequest(
+        deceasedDate = JsonNullable.of(LocalDate.of(2000, 12, 25)),
+        updatedBy = updatedByUser,
+      )
+
+      val res = testAPIClient.patchAContact(req, "/contact/$contactWithDeceasedDate")
+
+      assertThat(res.deceasedDate).isEqualTo(LocalDate.of(2000, 12, 25))
+      assertThat(res.updatedBy).isEqualTo(updatedByUser)
+
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.CONTACT_UPDATED,
+        additionalInfo = ContactInfo(contactWithDeceasedDate, Source.DPS),
+        personReference = PersonReference(dpsContactId = contactWithDeceasedDate),
+      )
+    }
+  }
 }

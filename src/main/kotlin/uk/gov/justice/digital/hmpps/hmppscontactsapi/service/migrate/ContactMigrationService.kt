@@ -121,7 +121,6 @@ class ContactMigrationService(
           firstName = req.firstName,
           dateOfBirth = req.dateOfBirth,
           deceasedDate = req.deceasedDate,
-          isDeceased = req.deceasedDate != null,
           createdBy = req.createUsername ?: "MIGRATION",
           createdTime = req.createDateTime ?: LocalDateTime.now(),
           staffFlag = req.staff,

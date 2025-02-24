@@ -18,9 +18,6 @@ abstract class BaseContactEntity(
 
   open val dateOfBirth: LocalDate?,
 
-  @Column(name = "deceased_flag")
-  open val isDeceased: Boolean,
-
   open val deceasedDate: LocalDate?,
 
   @Column(updatable = false)

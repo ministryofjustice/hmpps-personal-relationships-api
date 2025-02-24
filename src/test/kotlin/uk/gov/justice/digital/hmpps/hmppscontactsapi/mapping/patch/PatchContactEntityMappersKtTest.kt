@@ -23,7 +23,6 @@ class PatchContactEntityMappersKtTest {
     assertThat(response.createdBy).isEqualTo(contactEntity.createdBy)
     assertThat(response.createdTime).isEqualTo(contactEntity.createdTime)
     assertThat(response.isStaff).isEqualTo(contactEntity.staffFlag)
-    assertThat(response.deceasedFlag).isEqualTo(contactEntity.isDeceased)
     assertThat(response.deceasedDate).isEqualTo(contactEntity.deceasedDate)
     assertThat(response.gender).isEqualTo(contactEntity.gender)
     assertThat(response.domesticStatus).isEqualTo(contactEntity.domesticStatus)
@@ -41,7 +40,6 @@ class PatchContactEntityMappersKtTest {
     middleNames = "A B",
     dateOfBirth = LocalDate.of(1980, 1, 1),
     createdBy = "system",
-    isDeceased = false,
     deceasedDate = null,
     createdTime = LocalDateTime.now(),
     staffFlag = false,

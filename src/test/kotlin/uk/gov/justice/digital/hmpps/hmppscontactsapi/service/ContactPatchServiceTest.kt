@@ -589,7 +589,6 @@ class ContactPatchServiceTest {
     lastName = "Doe",
     middleNames = "A",
     dateOfBirth = LocalDate.of(1990, 1, 1),
-    isDeceased = false,
     deceasedDate = null,
     createdBy = "Admin",
     createdTime = LocalDateTime.of(2024, 1, 22, 0, 0, 0),

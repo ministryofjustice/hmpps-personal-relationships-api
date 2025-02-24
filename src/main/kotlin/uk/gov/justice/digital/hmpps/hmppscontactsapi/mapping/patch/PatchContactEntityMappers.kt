@@ -13,7 +13,6 @@ fun ContactEntity.mapToResponse(): PatchContactResponse = PatchContactResponse(
   createdBy = this.createdBy,
   createdTime = this.createdTime,
   isStaff = this.staffFlag,
-  deceasedFlag = this.isDeceased,
   deceasedDate = this.deceasedDate,
   gender = this.gender,
   domesticStatus = this.domesticStatus,
