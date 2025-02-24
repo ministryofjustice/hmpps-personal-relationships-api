@@ -137,7 +137,7 @@ class SyncPrisonerNumberOfChildrenServiceTest {
   }
 
   @Test
-  fun `deactivateDomesticStatus deactivates existing status`() {
+  fun `deactivateNumberOfChildren deactivates existing status`() {
     // Given
     val prisonerNumber = "A1234BC"
     val existingNumberOfChildrenCount = PrisonerNumberOfChildren(
