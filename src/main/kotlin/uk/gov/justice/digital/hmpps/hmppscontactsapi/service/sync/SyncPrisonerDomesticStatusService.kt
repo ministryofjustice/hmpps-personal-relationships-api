@@ -24,7 +24,7 @@ class SyncPrisonerDomesticStatusService(
     )
   }
 
-  fun getDomesticStatusByPrisonerNumber(prisonerNumber: String): SyncPrisonerDomesticStatusResponse = domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
+  fun getDomesticStatusByPrisonerNumber(prisonerNumber: String): SyncPrisonerDomesticStatusResponse = getPrisonerDomesticStatusActive(prisonerNumber)
     ?.let { from(it) }
     ?: throw EntityNotFoundException(String.format(NOT_FOUND_MESSAGE, prisonerNumber))
 
@@ -37,7 +37,7 @@ class SyncPrisonerDomesticStatusService(
 
     request.domesticStatusCode?.let { validateReferenceDataExists(it) }
 
-    val existingStatus = domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
+    val existingStatus = getPrisonerDomesticStatusActive(prisonerNumber)
 
     // If exists, deactivate it
     existingStatus?.let {
@@ -65,7 +65,7 @@ class SyncPrisonerDomesticStatusService(
 
   @Transactional
   fun deactivateDomesticStatus(prisonerNumber: String): SyncPrisonerDomesticStatusResponse {
-    val rowToDeactivate = domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
+    val rowToDeactivate = getPrisonerDomesticStatusActive(prisonerNumber)
       ?: throw EntityNotFoundException(String.format(NOT_FOUND_MESSAGE, prisonerNumber))
 
     // If exists, deactivate it
@@ -77,6 +77,8 @@ class SyncPrisonerDomesticStatusService(
     }
     return SyncPrisonerDomesticStatusResponse(rowToDeactivate.prisonerDomesticStatusId)
   }
+
+  fun getPrisonerDomesticStatusActive(prisonerNumber: String) = domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
 
   private fun validateReferenceDataExists(code: String) = referenceCodeRepository
     .findByGroupCodeAndCode(ReferenceCodeGroup.DOMESTIC_STS, code)

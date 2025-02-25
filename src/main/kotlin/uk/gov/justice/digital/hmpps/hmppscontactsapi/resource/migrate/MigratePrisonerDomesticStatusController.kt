@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerDomesticStatusMigrationResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate.PrisonerDomesticStatusMigrationService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
@@ -23,7 +24,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 @RequestMapping(value = ["migrate/domestic-status"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @AuthApiResponses
 class MigratePrisonerDomesticStatusController(
-  // private val migrationService: PrisonerDomesticStatusMigrationService,
+  private val migrationService: PrisonerDomesticStatusMigrationService,
 ) {
   @PostMapping(consumes = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
@@ -52,8 +53,5 @@ class MigratePrisonerDomesticStatusController(
   @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun migrateDomesticStatus(
     @Valid @RequestBody request: MigratePrisonerDomesticStatusRequest,
-  ): PrisonerDomesticStatusMigrationResponse = PrisonerDomesticStatusMigrationResponse(
-    prisonerNumber = request.prisonerNumber,
-    current = 1L,
-  )
+  ): PrisonerDomesticStatusMigrationResponse = migrationService.migrateDomesticStatus(request)
 }

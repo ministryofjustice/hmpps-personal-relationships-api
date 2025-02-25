@@ -171,7 +171,7 @@ class SyncPrisonerDomesticStatusServiceTest {
   }
 
   @Test
-  fun `deactivateDomesticStatus deactivates existing status`() {
+  fun `should deactivates existing status`() {
     // Given
     val prisonerNumber = "A1234BC"
     val existingStatus = PrisonerDomesticStatus(
@@ -198,5 +198,44 @@ class SyncPrisonerDomesticStatusServiceTest {
     val savedDomesticStatus = domesticStatusCaptor.firstValue
     assertThat(savedDomesticStatus.active).isFalse()
     assertThat(savedDomesticStatus.prisonerNumber).isEqualTo(prisonerNumber)
+  }
+
+  @Test
+  fun `should return active existing status`() {
+    // Given
+    val prisonerNumber = "A1234BC"
+    val domesticStatus = PrisonerDomesticStatus(
+      prisonerDomesticStatusId = 1L,
+      prisonerNumber = prisonerNumber,
+      domesticStatusCode = "D",
+      createdBy = "user",
+      createdTime = LocalDateTime.now(),
+      active = true,
+    )
+
+    whenever(domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      .thenReturn(domesticStatus)
+
+    // When
+    val result = syncDomesticStatusService.getPrisonerDomesticStatusActive(prisonerNumber)
+
+    // Then
+    assertThat(result?.prisonerDomesticStatusId).isEqualTo(domesticStatus.prisonerDomesticStatusId)
+    verify(domesticStatusRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
+  }
+
+  @Test
+  fun `should not return active existing status`() {
+    // Given
+    val prisonerNumber = "A1234BC"
+    whenever(domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      .thenReturn(null)
+
+    // When
+    val result = syncDomesticStatusService.getPrisonerDomesticStatusActive(prisonerNumber)
+
+    // Then
+    assertThat(result).isNull()
+    verify(domesticStatusRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
   }
 }
