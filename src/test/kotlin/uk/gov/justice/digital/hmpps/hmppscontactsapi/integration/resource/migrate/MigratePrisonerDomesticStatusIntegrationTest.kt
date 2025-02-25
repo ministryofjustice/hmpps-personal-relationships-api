@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
-import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.DomesticStatusDetailsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerDomesticStatusRequest
@@ -49,7 +48,7 @@ class MigratePrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase
       .uri("/migrate/domestic-status")
       .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
       .contentType(MediaType.APPLICATION_JSON)
-      .body(BodyInserters.fromValue(domesticStatusToMigrate))
+      .bodyValue(domesticStatusToMigrate)
       .exchange()
       .expectStatus()
       .isOk
@@ -90,7 +89,7 @@ class MigratePrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase
       .uri("/migrate/domestic-status")
       .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
       .contentType(MediaType.APPLICATION_JSON)
-      .body(BodyInserters.fromValue(invalidDomesticStatus))
+      .bodyValue(invalidDomesticStatus)
       .exchange()
       .expectStatus()
       .isBadRequest

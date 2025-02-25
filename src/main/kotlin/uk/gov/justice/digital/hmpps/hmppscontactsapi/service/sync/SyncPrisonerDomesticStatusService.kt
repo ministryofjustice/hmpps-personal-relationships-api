@@ -21,6 +21,10 @@ class SyncPrisonerDomesticStatusService(
     const val NOT_FOUND_MESSAGE = "Domestic status not found for prisoner: %s"
     fun from(numberOfChildren: PrisonerDomesticStatus) = SyncPrisonerDomesticStatusResponse(
       id = numberOfChildren.prisonerDomesticStatusId,
+      domesticStatusCode = numberOfChildren.domesticStatusCode,
+      createdBy = numberOfChildren.createdBy,
+      createdTime = numberOfChildren.createdTime,
+      active = numberOfChildren.active,
     )
   }
 
@@ -60,22 +64,13 @@ class SyncPrisonerDomesticStatusService(
 
     val saved = newDomesticStatus?.let { domesticStatusRepository.save(it) }
       ?: throw IllegalArgumentException("Cannot save number of children for prisoner")
-    return SyncPrisonerDomesticStatusResponse(saved.prisonerDomesticStatusId)
-  }
-
-  @Transactional
-  fun deactivateDomesticStatus(prisonerNumber: String): SyncPrisonerDomesticStatusResponse {
-    val rowToDeactivate = getPrisonerDomesticStatusActive(prisonerNumber)
-      ?: throw EntityNotFoundException(String.format(NOT_FOUND_MESSAGE, prisonerNumber))
-
-    // If exists, deactivate it
-    rowToDeactivate.let {
-      val deactivatedStatus = it.copy(
-        active = false,
-      )
-      domesticStatusRepository.save(deactivatedStatus)
-    }
-    return SyncPrisonerDomesticStatusResponse(rowToDeactivate.prisonerDomesticStatusId)
+    return SyncPrisonerDomesticStatusResponse(
+      id = saved.prisonerDomesticStatusId,
+      domesticStatusCode = saved.domesticStatusCode,
+      createdBy = saved.createdBy,
+      createdTime = saved.createdTime,
+      active = saved.active,
+    )
   }
 
   fun getPrisonerDomesticStatusActive(prisonerNumber: String) = domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true)

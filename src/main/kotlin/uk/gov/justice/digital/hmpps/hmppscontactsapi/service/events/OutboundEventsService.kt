@@ -138,7 +138,6 @@ class OutboundEventsService(
 
         OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
         OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
-        OutboundEvent.PRISONER_DOMESTIC_STATUS_DELETED,
         -> {
           sendSafely(
             outboundEvent,

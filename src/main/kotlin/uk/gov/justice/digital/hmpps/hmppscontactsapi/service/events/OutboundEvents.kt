@@ -264,14 +264,6 @@ enum class OutboundEvent(val eventType: String) {
       description = "A domestic status record has been updated",
     )
   },
-  PRISONER_DOMESTIC_STATUS_DELETED("personal-relationships-api.domestic-status.deleted") {
-    override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
-      eventType = eventType,
-      additionalInformation = additionalInformation,
-      personReference = personReference,
-      description = "A domestic status record has been deleted",
-    )
-  },
   ;
 
   abstract fun event(

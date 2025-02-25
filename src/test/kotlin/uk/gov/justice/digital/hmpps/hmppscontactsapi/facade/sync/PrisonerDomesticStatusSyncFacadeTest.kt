@@ -2,13 +2,11 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync
 
 import jakarta.persistence.EntityNotFoundException
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
-import org.mockito.kotlin.any
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.whenever
@@ -25,12 +23,7 @@ class PrisonerDomesticStatusSyncFacadeTest {
 
   private val syncDomesticStatusService: SyncPrisonerDomesticStatusService = mock()
   private val outboundEventsService: OutboundEventsService = mock()
-  private lateinit var facade: PrisonerDomesticStatusSyncFacade
-
-  @BeforeEach
-  fun setUp() {
-    facade = PrisonerDomesticStatusSyncFacade(syncDomesticStatusService, outboundEventsService)
-  }
+  private val facade = PrisonerDomesticStatusSyncFacade(syncDomesticStatusService, outboundEventsService)
 
   @Nested
   inner class GetDomesticStatusByPrisonerNumber {
@@ -39,6 +32,10 @@ class PrisonerDomesticStatusSyncFacadeTest {
       val prisonerNumber = "A1234BC"
       val expectedStatus = SyncPrisonerDomesticStatusResponse(
         id = 1L,
+        domesticStatusCode = "S",
+        createdBy = "User",
+        createdTime = LocalDateTime.now(),
+        active = true,
       )
 
       whenever(syncDomesticStatusService.getDomesticStatusByPrisonerNumber(prisonerNumber))
@@ -65,6 +62,10 @@ class PrisonerDomesticStatusSyncFacadeTest {
       )
       val response = SyncPrisonerDomesticStatusResponse(
         id = 1L,
+        domesticStatusCode = "S",
+        createdBy = "User",
+        createdTime = LocalDateTime.now(),
+        active = true,
       )
 
       whenever(syncDomesticStatusService.getPrisonerDomesticStatusActive(prisonerNumber))
@@ -103,6 +104,10 @@ class PrisonerDomesticStatusSyncFacadeTest {
       )
       val response = SyncPrisonerDomesticStatusResponse(
         id = 1L,
+        domesticStatusCode = "S",
+        createdBy = "User",
+        createdTime = LocalDateTime.now(),
+        active = true,
       )
       val existingRecord = PrisonerDomesticStatus(
         prisonerDomesticStatusId = 2L,
@@ -149,6 +154,10 @@ class PrisonerDomesticStatusSyncFacadeTest {
       )
       val response = SyncPrisonerDomesticStatusResponse(
         id = 1L,
+        domesticStatusCode = "S",
+        createdBy = "User",
+        createdTime = LocalDateTime.now(),
+        active = true,
       )
       val existingRecord = PrisonerDomesticStatus(
         prisonerDomesticStatusId = 2L,
@@ -183,55 +192,6 @@ class PrisonerDomesticStatusSyncFacadeTest {
         noms = prisonerNumber,
         source = Source.NOMIS,
       )
-    }
-  }
-
-  @Nested
-  inner class DeleteDomesticStatus {
-
-    @Test
-    fun `should deactivate status and send event`() {
-      // Given
-      val prisonerNumber = "A1234BC"
-      val existingRecord = SyncPrisonerDomesticStatusResponse(
-        id = 123L,
-      )
-
-      whenever(syncDomesticStatusService.getDomesticStatusByPrisonerNumber(prisonerNumber))
-        .thenReturn(existingRecord)
-      whenever(syncDomesticStatusService.deactivateDomesticStatus(prisonerNumber))
-        .thenReturn(existingRecord)
-
-      // When
-      val result = facade.deleteDomesticStatus(prisonerNumber)
-
-      // Then
-      assertThat(result).isEqualTo(existingRecord)
-      verify(syncDomesticStatusService).getDomesticStatusByPrisonerNumber(prisonerNumber)
-      verify(syncDomesticStatusService).deactivateDomesticStatus(prisonerNumber)
-      verify(outboundEventsService).send(
-        outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_DELETED,
-        identifier = existingRecord.id,
-        noms = prisonerNumber,
-        source = Source.NOMIS,
-      )
-    }
-
-    @Test
-    fun `should throw exception when no existing record found`() {
-      // Given
-      val prisonerNumber = "A1234BC"
-
-      whenever(syncDomesticStatusService.getDomesticStatusByPrisonerNumber(prisonerNumber))
-        .thenThrow(EntityNotFoundException("Domestic status not found"))
-
-      // Then
-      assertThrows<EntityNotFoundException> {
-        facade.deleteDomesticStatus(prisonerNumber)
-      }
-
-      verify(syncDomesticStatusService).getDomesticStatusByPrisonerNumber(prisonerNumber)
-      verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any())
     }
   }
 }

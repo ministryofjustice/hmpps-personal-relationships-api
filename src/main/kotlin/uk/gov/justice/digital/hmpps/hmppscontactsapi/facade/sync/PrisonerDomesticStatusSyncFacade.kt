@@ -40,18 +40,4 @@ class PrisonerDomesticStatusSyncFacade(
         )
       }
   }
-
-  fun deleteDomesticStatus(prisonerNumber: String): SyncPrisonerDomesticStatusResponse {
-    val existingRecord = syncDomesticStatusService.getDomesticStatusByPrisonerNumber(prisonerNumber)
-
-    return syncDomesticStatusService.deactivateDomesticStatus(prisonerNumber)
-      .also {
-        outboundEventsService.send(
-          outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_DELETED,
-          identifier = existingRecord.id,
-          noms = prisonerNumber,
-          source = Source.NOMIS,
-        )
-      }
-  }
 }

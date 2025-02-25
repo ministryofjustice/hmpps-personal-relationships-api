@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
@@ -111,31 +110,4 @@ class PrisonerDomesticStatusSyncController(
     @PathVariable prisonerNumber: String,
     @Valid @RequestBody request: SyncUpdatePrisonerDomesticStatusRequest,
   ) = prisonerDomesticStatusSyncFacade.createOrUpdateDomesticStatus(prisonerNumber, request)
-
-  /**
-   * When deleting a record in NOMIS, the record will be moved to inactive status rather than being deleted.
-   * This preserves the record history while marking it as no longer active.
-   */
-  @DeleteMapping(path = ["/{prisonerNumber}/domestic-status"], produces = [MediaType.APPLICATION_JSON_VALUE])
-  @Operation(
-    summary = "Deletes an domestic status record",
-    description = "Delete prisoner's domestic status by prisoner number.",
-  )
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "204",
-        description = "Successfully deleted the domestic status for the requested prisoner",
-      ),
-      ApiResponse(
-        responseCode = "404",
-        description = "No active domestic status found for the requested prisoner.",
-      ),
-    ],
-  )
-  @AuthApiResponses
-  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
-  fun syncDeleteDomesticStatusById(@PathVariable prisonerNumber: String) {
-    prisonerDomesticStatusSyncFacade.deleteDomesticStatus(prisonerNumber)
-  }
 }

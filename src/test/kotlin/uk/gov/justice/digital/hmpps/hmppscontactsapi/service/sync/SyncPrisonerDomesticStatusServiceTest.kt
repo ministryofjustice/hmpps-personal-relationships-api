@@ -61,6 +61,11 @@ class SyncPrisonerDomesticStatusServiceTest {
     // Then
     assertNotNull(result)
     assertThat(result.id).isEqualTo(domesticStatus.prisonerDomesticStatusId)
+    assertThat(result.domesticStatusCode).isEqualTo(domesticStatus.domesticStatusCode)
+    assertThat(result.createdBy).isEqualTo(domesticStatus.createdBy)
+    assertThat(result.active).isEqualTo(domesticStatus.active)
+    assertThat(result.createdTime).isInThePast()
+
     verify(domesticStatusRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
   }
 
@@ -168,36 +173,6 @@ class SyncPrisonerDomesticStatusServiceTest {
 
     verify(referenceCodeRepository).findByGroupCodeAndCode(any(), any())
     verify(domesticStatusRepository, never()).save(any())
-  }
-
-  @Test
-  fun `should deactivates existing status`() {
-    // Given
-    val prisonerNumber = "A1234BC"
-    val existingStatus = PrisonerDomesticStatus(
-      prisonerDomesticStatusId = 1L,
-      prisonerNumber = prisonerNumber,
-      domesticStatusCode = "D",
-      createdBy = "user",
-      createdTime = LocalDateTime.now(),
-      active = true,
-    )
-
-    whenever(domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
-      .thenReturn(existingStatus)
-
-    val deactivatedStatus = existingStatus.copy(active = false)
-    whenever(domesticStatusRepository.save(any())).thenReturn(deactivatedStatus)
-
-    // When
-    syncDomesticStatusService.deactivateDomesticStatus(prisonerNumber)
-
-    // Then
-    val domesticStatusCaptor = argumentCaptor<PrisonerDomesticStatus>()
-    verify(domesticStatusRepository).save(domesticStatusCaptor.capture())
-    val savedDomesticStatus = domesticStatusCaptor.firstValue
-    assertThat(savedDomesticStatus.active).isFalse()
-    assertThat(savedDomesticStatus.prisonerNumber).isEqualTo(prisonerNumber)
   }
 
   @Test
