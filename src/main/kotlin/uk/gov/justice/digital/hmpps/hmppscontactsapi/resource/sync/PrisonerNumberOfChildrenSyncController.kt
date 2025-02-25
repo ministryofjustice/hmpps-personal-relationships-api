@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
@@ -17,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync.PrisonerNumberOfChildrenSyncFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerNumberOfChildrenRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerNumberOfChildrenResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 @Tag(name = "Sync & Migrate")
 @RestController
 @RequestMapping(value = ["/sync"], produces = [MediaType.APPLICATION_JSON_VALUE])
-class PrisonerNumberOfChildrenSyncController {
+class PrisonerNumberOfChildrenSyncController(val prisonerNumberOfChildrenSyncFacade: PrisonerNumberOfChildrenSyncFacade) {
   @GetMapping(path = ["/{prisonerNumber}/number-of-children"], produces = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
     summary = "Returns the number of children for a prisoner by prisonerNumber",
@@ -46,6 +46,10 @@ class PrisonerNumberOfChildrenSyncController {
         ],
       ),
       ApiResponse(
+        responseCode = "400",
+        description = "Invalid input data",
+      ),
+      ApiResponse(
         responseCode = "404",
         description = "No number of children for that prisoner could be found",
       ),
@@ -54,9 +58,7 @@ class PrisonerNumberOfChildrenSyncController {
   @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncGetNumberOfChildrenByPrisonerNumber(
     @PathVariable prisonerNumber: String,
-  ): SyncPrisonerNumberOfChildrenResponse = SyncPrisonerNumberOfChildrenResponse(
-    id = 1L,
-  )
+  ): SyncPrisonerNumberOfChildrenResponse = prisonerNumberOfChildrenSyncFacade.getNumberOfChildrenByPrisonerNumber(prisonerNumber)
 
   /**
    * Creates a number of children record from NOMIS.
@@ -88,6 +90,10 @@ class PrisonerNumberOfChildrenSyncController {
         ],
       ),
       ApiResponse(
+        responseCode = "400",
+        description = "Invalid input data",
+      ),
+      ApiResponse(
         responseCode = "404",
         description = "Prisoner's number of children not found",
       ),
@@ -98,34 +104,5 @@ class PrisonerNumberOfChildrenSyncController {
   fun syncUpdateNumberOfChildren(
     @PathVariable prisonerNumber: String,
     @Valid @RequestBody request: SyncUpdatePrisonerNumberOfChildrenRequest,
-  ): SyncPrisonerNumberOfChildrenResponse = SyncPrisonerNumberOfChildrenResponse(
-    id = 1L,
-  )
-
-  /**
-   * When deleting a record in NOMIS, the record will be moved to inactive number of children rather than being deleted.
-   * This preserves the record history while marking it as no longer active.
-   */
-
-  @DeleteMapping(path = ["/{prisonerNumber}/number-of-children"], produces = [MediaType.APPLICATION_JSON_VALUE])
-  @Operation(
-    summary = "Deletes an Prisoner's number of children",
-    description = "Delete prisoner's number of children record by prisoner number.",
-  )
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "204",
-        description = "Successfully deleted the number of children for the requested prisoner.",
-      ),
-      ApiResponse(
-        responseCode = "404",
-        description = "No active number of children found for the requested prisoner.",
-      ),
-    ],
-  )
-  @AuthApiResponses
-  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
-  fun syncDeleteNumberOfChildrenById(@PathVariable prisonerNumber: String) {
-  }
+  ): SyncPrisonerNumberOfChildrenResponse = prisonerNumberOfChildrenSyncFacade.createOrUpdateNumberOfChildren(prisonerNumber, request)
 }

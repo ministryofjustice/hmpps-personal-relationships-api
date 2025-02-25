@@ -145,6 +145,16 @@ class OutboundEventsService(
             PersonReference(noms),
           )
         }
+
+        OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
+        OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_UPDATED,
+        -> {
+          sendSafely(
+            outboundEvent,
+            PrisonerNumberOfChildren(identifier, source),
+            PersonReference(noms),
+          )
+        }
       }
     } else {
       log.warn("Outbound event type $outboundEvent feature is configured off.")

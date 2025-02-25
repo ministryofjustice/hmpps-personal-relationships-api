@@ -65,6 +65,9 @@ feature:
         updated: true
         deleted: true
     personal-relationships-api:
+      number-of-children:
+        created: true
+        updated: true
       domestic-status:
         created: true
         updated: true

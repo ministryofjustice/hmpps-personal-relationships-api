@@ -15,13 +15,14 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerNumberOfChildrenRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerNumberOfChildrenMigrationResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate.PrisonerNumberOfChildrenMigrationService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 
 @Tag(name = "Sync & Migrate")
 @RestController
 @RequestMapping(value = ["migrate/number-of-children"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @AuthApiResponses
-class MigratePrisonerNumberOfChildrenController {
+class MigratePrisonerNumberOfChildrenController(val migrationService: PrisonerNumberOfChildrenMigrationService) {
   @PostMapping(consumes = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
     summary = "Migrate number of children for prisoner",
@@ -44,8 +45,5 @@ class MigratePrisonerNumberOfChildrenController {
   @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun migrateNumberOfChildren(
     @Valid @RequestBody request: MigratePrisonerNumberOfChildrenRequest,
-  ): PrisonerNumberOfChildrenMigrationResponse = PrisonerNumberOfChildrenMigrationResponse(
-    prisonerNumber = "A1234BC",
-    current = 1L,
-  )
+  ): PrisonerNumberOfChildrenMigrationResponse = migrationService.migrateNumberOfChildren(request)
 }
