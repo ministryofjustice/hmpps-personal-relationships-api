@@ -247,6 +247,23 @@ enum class OutboundEvent(val eventType: String) {
       description = "An employment has been deleted",
     )
   },
+
+  PRISONER_DOMESTIC_STATUS_CREATED("personal-relationships-api.domestic-status.created") {
+    override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
+      eventType = eventType,
+      additionalInformation = additionalInformation,
+      personReference = personReference,
+      description = "A domestic status record has been created",
+    )
+  },
+  PRISONER_DOMESTIC_STATUS_UPDATED("personal-relationships-api.domestic-status.updated") {
+    override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
+      eventType = eventType,
+      additionalInformation = additionalInformation,
+      personReference = personReference,
+      description = "A domestic status record has been updated",
+    )
+  },
   ;
 
   abstract fun event(
@@ -290,6 +307,7 @@ data class ContactRestrictionInfo(val contactRestrictionId: Long, override val s
 data class PrisonerContactInfo(val prisonerContactId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)
 data class PrisonerContactRestrictionInfo(val prisonerContactRestrictionId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)
 data class EmploymentInfo(val employmentId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)
+data class PrisonerDomesticStatus(val domesticStatusId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)
 
 /**
  * The event source.
@@ -317,6 +335,12 @@ class PersonReference(personIdentifiers: List<PersonIdentifier>) {
     listOf(
       PersonIdentifier(Identifier.NOMS, nomsNumber),
       PersonIdentifier(Identifier.DPS_CONTACT_ID, dpsContactId.toString()),
+    ),
+  )
+
+  constructor(nomsNumber: String) : this(
+    listOf(
+      PersonIdentifier(Identifier.NOMS, nomsNumber),
     ),
   )
 

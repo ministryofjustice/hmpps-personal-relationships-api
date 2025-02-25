@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
@@ -17,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync.PrisonerDomesticStatusSyncFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
@@ -26,7 +26,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 @RestController
 @RequestMapping(value = ["/sync"], produces = [MediaType.APPLICATION_JSON_VALUE])
 class PrisonerDomesticStatusSyncController(
-  // private val prisonerDomesticStatusSyncFacade: PrisonerDomesticStatusSyncFacade,
+  private val prisonerDomesticStatusSyncFacade: PrisonerDomesticStatusSyncFacade,
 ) {
   @GetMapping(path = ["/{prisonerNumber}/domestic-status"], produces = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
@@ -57,9 +57,7 @@ class PrisonerDomesticStatusSyncController(
   @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun syncGetDomesticStatusByPrisonerNumber(
     @PathVariable prisonerNumber: String,
-  ): SyncPrisonerDomesticStatusResponse = SyncPrisonerDomesticStatusResponse(
-    id = 1L,
-  )
+  ) = prisonerDomesticStatusSyncFacade.getDomesticStatusByPrisonerNumber(prisonerNumber)
 
   /**
    * Creates a domestic status record from NOMIS.
@@ -111,35 +109,5 @@ class PrisonerDomesticStatusSyncController(
   fun syncUpdateDomesticStatus(
     @PathVariable prisonerNumber: String,
     @Valid @RequestBody request: SyncUpdatePrisonerDomesticStatusRequest,
-  ): SyncPrisonerDomesticStatusResponse = SyncPrisonerDomesticStatusResponse(
-    id = 1L,
-  )
-
-  /**
-   * When deleting a record in NOMIS, the record will be moved to inactive status rather than being deleted.
-   * This preserves the record history while marking it as no longer active.
-   */
-
-  @DeleteMapping(path = ["/{prisonerNumber}/domestic-status"], produces = [MediaType.APPLICATION_JSON_VALUE])
-  @Operation(
-    summary = "Deletes an domestic status record",
-    description = "Delete prisoner's domestic status by prisoner number.",
-  )
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "204",
-        description = "Successfully deleted the domestic status for the requested prisoner",
-      ),
-      ApiResponse(
-        responseCode = "404",
-        description = "No active domestic status found for the requested prisoner.",
-      ),
-    ],
-  )
-  @AuthApiResponses
-  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
-  fun syncDeleteDomesticStatusById(@PathVariable prisonerNumber: String) {
-    // prisonerDomesticStatusSyncFacade.deleteDomesticStatus(prisonerNumber)
-  }
+  ) = prisonerDomesticStatusSyncFacade.createOrUpdateDomesticStatus(prisonerNumber, request)
 }

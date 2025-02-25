@@ -61,6 +61,11 @@ class SyncPrisonerDomesticStatusServiceTest {
     // Then
     assertNotNull(result)
     assertThat(result.id).isEqualTo(domesticStatus.prisonerDomesticStatusId)
+    assertThat(result.domesticStatusCode).isEqualTo(domesticStatus.domesticStatusCode)
+    assertThat(result.createdBy).isEqualTo(domesticStatus.createdBy)
+    assertThat(result.active).isEqualTo(domesticStatus.active)
+    assertThat(result.createdTime).isInThePast()
+
     verify(domesticStatusRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
   }
 
@@ -171,10 +176,10 @@ class SyncPrisonerDomesticStatusServiceTest {
   }
 
   @Test
-  fun `deactivateDomesticStatus deactivates existing status`() {
+  fun `should return active existing status`() {
     // Given
     val prisonerNumber = "A1234BC"
-    val existingStatus = PrisonerDomesticStatus(
+    val domesticStatus = PrisonerDomesticStatus(
       prisonerDomesticStatusId = 1L,
       prisonerNumber = prisonerNumber,
       domesticStatusCode = "D",
@@ -184,19 +189,28 @@ class SyncPrisonerDomesticStatusServiceTest {
     )
 
     whenever(domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
-      .thenReturn(existingStatus)
-
-    val deactivatedStatus = existingStatus.copy(active = false)
-    whenever(domesticStatusRepository.save(any())).thenReturn(deactivatedStatus)
+      .thenReturn(domesticStatus)
 
     // When
-    syncDomesticStatusService.deactivateDomesticStatus(prisonerNumber)
+    val result = syncDomesticStatusService.getPrisonerDomesticStatusActive(prisonerNumber)
 
     // Then
-    val domesticStatusCaptor = argumentCaptor<PrisonerDomesticStatus>()
-    verify(domesticStatusRepository).save(domesticStatusCaptor.capture())
-    val savedDomesticStatus = domesticStatusCaptor.firstValue
-    assertThat(savedDomesticStatus.active).isFalse()
-    assertThat(savedDomesticStatus.prisonerNumber).isEqualTo(prisonerNumber)
+    assertThat(result?.prisonerDomesticStatusId).isEqualTo(domesticStatus.prisonerDomesticStatusId)
+    verify(domesticStatusRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
+  }
+
+  @Test
+  fun `should not return active existing status`() {
+    // Given
+    val prisonerNumber = "A1234BC"
+    whenever(domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      .thenReturn(null)
+
+    // When
+    val result = syncDomesticStatusService.getPrisonerDomesticStatusActive(prisonerNumber)
+
+    // Then
+    assertThat(result).isNull()
+    verify(domesticStatusRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
   }
 }

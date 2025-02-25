@@ -64,3 +64,7 @@ feature:
         created: true
         updated: true
         deleted: true
+    personal-relationships-api:
+      domestic-status:
+        created: true
+        updated: true
