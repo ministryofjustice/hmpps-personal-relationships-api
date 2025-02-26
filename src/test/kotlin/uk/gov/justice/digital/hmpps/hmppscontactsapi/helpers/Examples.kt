@@ -10,11 +10,11 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactPhoneDetailsE
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactRestrictionDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.EmploymentEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactRestrictionDetailsEntity
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactAddressRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateContactAddressRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateContactAddressPhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressResponse

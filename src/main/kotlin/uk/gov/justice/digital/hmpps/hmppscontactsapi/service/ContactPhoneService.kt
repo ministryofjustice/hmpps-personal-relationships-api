@@ -7,8 +7,9 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactPhoneEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePhoneRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultipleContactPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPhoneRepository
@@ -29,16 +30,50 @@ class ContactPhoneService(
   @Transactional
   fun create(contactId: Long, request: CreatePhoneRequest): ContactPhoneDetails {
     validateContactExists(contactId)
-    val type = referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, request.phoneType, allowInactive = false)
-    validatePhoneNumber(request.phoneNumber)
+    return createANewPhoneNumber(
+      contactId,
+      request.phoneType,
+      request.phoneNumber,
+      request.extNumber,
+      request.createdBy,
+    )
+  }
+
+  @Transactional
+  fun createMultiple(contactId: Long, request: CreateMultipleContactPhoneNumbersRequest): List<ContactPhoneDetails> {
+    validateContactExists(contactId)
+    return request.phoneNumbers.map {
+      createANewPhoneNumber(
+        contactId,
+        it.phoneType,
+        it.phoneNumber,
+        it.extNumber,
+        request.createdBy,
+      )
+    }
+  }
+
+  private fun createANewPhoneNumber(
+    contactId: Long,
+    phoneType: String,
+    phoneNumber: String,
+    extNumber: String?,
+    createdBy: String,
+  ): ContactPhoneDetails {
+    val type = referenceCodeService.validateReferenceCode(
+      ReferenceCodeGroup.PHONE_TYPE,
+      phoneType,
+      allowInactive = false,
+    )
+    validatePhoneNumber(phoneNumber)
     val created = contactPhoneRepository.saveAndFlush(
       ContactPhoneEntity(
         contactPhoneId = 0,
         contactId = contactId,
-        phoneType = request.phoneType,
-        phoneNumber = request.phoneNumber,
-        extNumber = request.extNumber,
-        createdBy = request.createdBy,
+        phoneType = phoneType,
+        phoneNumber = phoneNumber,
+        extNumber = extNumber,
+        createdBy = createdBy,
         createdTime = LocalDateTime.now(),
       ),
     )
@@ -51,7 +86,8 @@ class ContactPhoneService(
   fun update(contactId: Long, contactPhoneId: Long, request: UpdatePhoneRequest): ContactPhoneDetails {
     validateContactExists(contactId)
     val existing = validateExistingPhone(contactPhoneId)
-    val type = referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, request.phoneType, allowInactive = true)
+    val type =
+      referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, request.phoneType, allowInactive = true)
     validatePhoneNumber(request.phoneNumber)
 
     val updating = existing.copy(

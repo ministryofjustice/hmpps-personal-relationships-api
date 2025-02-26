@@ -12,15 +12,15 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactPhoneDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultipleContactPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactPhoneInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
+class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   private var savedContactId = 0L
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
@@ -37,7 +37,7 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.post()
-    .uri("/contact/$savedContactId/phone")
+    .uri("/contact/$savedContactId/phones")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
     .bodyValue(aMinimalRequest())
@@ -45,18 +45,18 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "phoneType must not be null;{\"phoneType\": null, \"phoneNumber\": \"0123456789\", \"createdBy\": \"created\"}",
-      "phoneType must not be null;{\"phoneNumber\": \"0123456789\", \"createdBy\": \"created\"}",
-      "phoneNumber must not be null;{\"phoneType\": \"MOB\", \"phoneNumber\": null, \"createdBy\": \"created\"}",
-      "phoneNumber must not be null;{\"phoneType\": \"MOB\", \"createdBy\": \"created\"}",
-      "createdBy must not be null;{\"phoneType\": \"MOB\", \"phoneNumber\": \"0123456789\", \"createdBy\": null}",
-      "createdBy must not be null;{\"phoneType\": \"MOB\", \"phoneNumber\": \"0123456789\"}",
+      "phoneNumbers[0].phoneType must not be null;{\"phoneNumbers\": [{ \"phoneType\": null, \"phoneNumber\": \"0123456789\"}], \"createdBy\": \"created\"}",
+      "phoneNumbers[0].phoneType must not be null;{\"phoneNumbers\": [{\"phoneNumber\": \"0123456789\"}], \"createdBy\": \"created\"}",
+      "phoneNumbers[0].phoneNumber must not be null;{\"phoneNumbers\": [{\"phoneType\": \"MOB\", \"phoneNumber\": null}], \"createdBy\": \"created\"}",
+      "phoneNumbers[0].phoneNumber must not be null;{\"phoneNumbers\": [{\"phoneType\": \"MOB\"}], \"createdBy\": \"created\"}",
+      "createdBy must not be null;{\"phoneNumbers\": [{\"phoneType\": \"MOB\", \"phoneNumber\": \"0123456789\"}], \"createdBy\": null}",
+      "createdBy must not be null;{\"phoneNumbers\": [{\"phoneType\": \"MOB\", \"phoneNumber\": \"0123456789\"}]}",
     ],
     delimiter = ';',
   )
   fun `should return bad request if required fields are null`(expectedMessage: String, json: String) {
     val errors = webTestClient.post()
-      .uri("/contact/$savedContactId/phone")
+      .uri("/contact/$savedContactId/phones")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
@@ -76,9 +76,9 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @ParameterizedTest
   @MethodSource("allFieldConstraintViolations")
-  fun `should enforce field constraints`(expectedMessage: String, request: CreatePhoneRequest) {
+  fun `should enforce field constraints`(expectedMessage: String, request: CreateMultipleContactPhoneNumbersRequest) {
     val errors = webTestClient.post()
-      .uri("/contact/$savedContactId/phone")
+      .uri("/contact/$savedContactId/phones")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
@@ -102,14 +102,18 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
     "Hash not allowed,#",
   )
   fun `should not create the phone if the phone number contains unsupported chars`(case: String, phoneNumber: String) {
-    val request = CreatePhoneRequest(
-      phoneType = "MOB",
-      phoneNumber = phoneNumber,
+    val request = CreateMultipleContactPhoneNumbersRequest(
+      phoneNumbers = listOf(
+        PhoneNumber(
+          phoneType = "MOB",
+          phoneNumber = phoneNumber,
+        ),
+      ),
       createdBy = "created",
     )
 
     val errors = webTestClient.post()
-      .uri("/contact/$savedContactId/phone")
+      .uri("/contact/$savedContactId/phones")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
@@ -129,14 +133,18 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @Test
   fun `should not create the phone if the type is not supported`() {
-    val request = CreatePhoneRequest(
-      phoneType = "SATELLITE",
-      phoneNumber = "+44777777777 (0123)",
+    val request = CreateMultipleContactPhoneNumbersRequest(
+      listOf(
+        PhoneNumber(
+          phoneType = "SATELLITE",
+          phoneNumber = "+44777777777 (0123)",
+        ),
+      ),
       createdBy = "created",
     )
 
     val errors = webTestClient.post()
-      .uri("/contact/$savedContactId/phone")
+      .uri("/contact/$savedContactId/phones")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
@@ -159,7 +167,7 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
     val request = aMinimalRequest()
 
     val errors = webTestClient.post()
-      .uri("/contact/-321/phone")
+      .uri("/contact/-321/phones")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
@@ -177,70 +185,91 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
     )
   }
 
-  @Test
-  fun `should create the phone with minimal fields`() {
-    val request = aMinimalRequest()
-
-    val created = testAPIClient.createAContactPhone(savedContactId, request)
-
-    assertEqualsExcludingTimestamps(created, request)
-
-    stubEvents.assertHasEvent(
-      event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(created.contactPhoneId, Source.DPS),
-      personReference = PersonReference(dpsContactId = created.contactId),
-    )
-  }
-
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
-  fun `should create the phone with all fields`(role: String) {
-    val request = CreatePhoneRequest(
-      phoneType = "MOB",
-      phoneNumber = "+44777777777 (0123)",
-      extNumber = "9999",
+  fun `should create multiple phones`(role: String) {
+    val request = CreateMultipleContactPhoneNumbersRequest(
+      listOf(
+        PhoneNumber(
+          phoneType = "MOB",
+          phoneNumber = "+44777777777 (0123)",
+        ),
+        PhoneNumber(
+          phoneType = "HOME",
+          phoneNumber = "01234 567890",
+          extNumber = null,
+        ),
+      ),
       createdBy = "created",
     )
 
-    val created = testAPIClient.createAContactPhone(savedContactId, request, role)
+    val created = testAPIClient.createMultipleContactPhones(savedContactId, request, role)
 
-    assertEqualsExcludingTimestamps(created, request)
-
+    val mobile = created.find { it.phoneType == "MOB" }
+    assertThat(mobile).isNotNull()
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(created.contactPhoneId, Source.DPS),
-      personReference = PersonReference(dpsContactId = created.contactId),
+      additionalInfo = ContactPhoneInfo(mobile!!.contactPhoneId, Source.DPS),
+      personReference = PersonReference(dpsContactId = savedContactId),
     )
-  }
 
-  private fun assertEqualsExcludingTimestamps(phone: ContactPhoneDetails, request: CreatePhoneRequest) {
-    with(phone) {
-      assertThat(phoneType).isEqualTo(request.phoneType)
-      assertThat(phoneNumber).isEqualTo(request.phoneNumber)
-      assertThat(extNumber).isEqualTo(request.extNumber)
-      assertThat(createdBy).isEqualTo(request.createdBy)
-      assertThat(createdTime).isNotNull()
-    }
+    val home = created.find { it.phoneType == "HOME" }
+    assertThat(home).isNotNull()
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.CONTACT_PHONE_CREATED,
+      additionalInfo = ContactPhoneInfo(home!!.contactPhoneId, Source.DPS),
+      personReference = PersonReference(dpsContactId = savedContactId),
+    )
   }
 
   companion object {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
-      Arguments.of("phoneType must be <= 12 characters", aMinimalRequest().copy(phoneType = "".padStart(13, 'X'))),
-      Arguments.of("phoneNumber must be <= 40 characters", aMinimalRequest().copy(phoneNumber = "".padStart(241, 'X'))),
       Arguments.of(
-        "extNumber must be <= 7 characters",
-        aMinimalRequest().copy(extNumber = "".padStart(8, 'X')),
+        "phoneNumbers[0].phoneType must be <= 12 characters",
+        aMinimalRequest().copy(
+          phoneNumbers = listOf(
+            PhoneNumber(
+              phoneType = "".padStart(13, 'X'),
+              phoneNumber = "123",
+            ),
+          ),
+        ),
       ),
       Arguments.of(
-        "createdBy must be <= 100 characters",
-        aMinimalRequest().copy(createdBy = "".padStart(101, 'X')),
+        "phoneNumbers[0].phoneNumber must be <= 40 characters",
+        aMinimalRequest().copy(
+          phoneNumbers = listOf(
+            PhoneNumber(
+              phoneType = "MOB",
+              phoneNumber = "".padStart(41, 'X'),
+            ),
+          ),
+        ),
       ),
+      Arguments.of(
+        "phoneNumbers[0].extNumber must be <= 7 characters",
+        aMinimalRequest().copy(
+          phoneNumbers = listOf(
+            PhoneNumber(
+              phoneType = "MOB",
+              phoneNumber = "132",
+              extNumber = "".padStart(8, 'X'),
+            ),
+          ),
+        ),
+      ),
+      Arguments.of("phoneNumbers must have at least 1 item", aMinimalRequest().copy(phoneNumbers = emptyList())),
+      Arguments.of("createdBy must be <= 100 characters", aMinimalRequest().copy(createdBy = "".padStart(101, 'X'))),
     )
 
-    private fun aMinimalRequest() = CreatePhoneRequest(
-      phoneType = "MOB",
-      phoneNumber = "+44777777777 (0123)",
+    private fun aMinimalRequest() = CreateMultipleContactPhoneNumbersRequest(
+      listOf(
+        PhoneNumber(
+          phoneType = "MOB",
+          phoneNumber = "+44777777777 (0123)",
+        ),
+      ),
       createdBy = "created",
     )
   }

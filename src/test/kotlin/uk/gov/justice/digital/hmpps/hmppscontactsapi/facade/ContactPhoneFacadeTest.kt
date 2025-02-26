@@ -9,8 +9,10 @@ import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactPhoneNumberDetails
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePhoneRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultipleContactPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactPhoneService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
@@ -66,6 +68,46 @@ class ContactPhoneFacadeTest {
     assertThat(exception).isEqualTo(exception)
     verify(phoneService).create(contactId, request)
     verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+  }
+
+  @Test
+  fun `should send events for all if creating multiple`() {
+    val expectedCreated = listOf(
+      contactPhoneDetails,
+      contactPhoneDetails.copy(contactPhoneId = 123456789),
+    )
+    whenever(phoneService.createMultiple(any(), any())).thenReturn(expectedCreated)
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    val request = CreateMultipleContactPhoneNumbersRequest(
+      listOf(
+        PhoneNumber(
+          phoneType = "MOB",
+          phoneNumber = "0777777777",
+        ),
+        PhoneNumber(
+          phoneType = "HOME",
+          phoneNumber = "01234 567890",
+        ),
+      ),
+      createdBy = "created",
+    )
+
+    val result = facade.createMultiple(contactId, request)
+
+    assertThat(result).isEqualTo(expectedCreated)
+    verify(phoneService).createMultiple(contactId, request)
+    verify(eventsService).send(
+      outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
+      identifier = contactPhoneId,
+      contactId = contactId,
+      source = Source.DPS,
+    )
+    verify(eventsService).send(
+      outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
+      identifier = 123456789,
+      contactId = contactId,
+      source = Source.DPS,
+    )
   }
 
   @Test

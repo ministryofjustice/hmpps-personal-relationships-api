@@ -1,13 +1,10 @@
-package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request
+package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone
 
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.Size
 
-@Schema(description = "Request to create a new address-linked phone number")
-data class CreateContactAddressPhoneRequest(
-  @Schema(description = "Unique identifier for the contact address", example = "123")
-  val contactAddressId: Long,
-
+@Schema(description = "Request to create a new phone number")
+data class CreatePhoneRequest(
   @Schema(description = "Type of phone", example = "MOB")
   @field:Size(max = 12, message = "phoneType must be <= 12 characters")
   val phoneType: String,
@@ -16,7 +13,7 @@ data class CreateContactAddressPhoneRequest(
   @field:Size(max = 40, message = "phoneNumber must be <= 40 characters")
   val phoneNumber: String,
 
-  @Schema(description = "Extension number", example = "123")
+  @Schema(description = "Extension number", example = "123", nullable = true)
   @field:Size(max = 7, message = "extNumber must be <= 7 characters")
   val extNumber: String? = null,
 

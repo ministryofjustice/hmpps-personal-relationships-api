@@ -7,7 +7,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
@@ -16,8 +17,10 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactPhoneDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactPhoneEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePhoneRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultipleContactPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPhoneRepository
@@ -35,7 +38,13 @@ class ContactPhoneServiceTest {
   private val contactPhoneDetailsRepository: ContactPhoneDetailsRepository = mock()
   private val referenceCodeService: ReferenceCodeService = mock()
   private val service =
-    ContactPhoneService(contactRepository, contactPhoneRepository, contactPhoneDetailsRepository, contactAddressPhoneRepository, referenceCodeService)
+    ContactPhoneService(
+      contactRepository,
+      contactPhoneRepository,
+      contactPhoneDetailsRepository,
+      contactAddressPhoneRepository,
+      referenceCodeService,
+    )
 
   private val contactId = 99L
   private val aContact = ContactEntity(
@@ -50,39 +59,9 @@ class ContactPhoneServiceTest {
     createdTime = now(),
   )
 
-  @Nested
-  inner class CreatePhone {
-    private val request = CreatePhoneRequest(
-      "MOB",
-      "+447777777777",
-      "0123",
-      "USER1",
-    )
-
-    @Test
-    fun `should throw EntityNotFoundException creating phone if contact doesn't exist`() {
-      whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
-
-      val exception = assertThrows<EntityNotFoundException> {
-        service.create(contactId, request)
-      }
-      assertThat(exception.message).isEqualTo("Contact (99) not found")
-    }
-
-    @Test
-    fun `should throw ValidationException creating phone if phone type is invalid`() {
-      val expectedException = ValidationException("Invalid")
-      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
-      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "FOO", allowInactive = false)).thenThrow(expectedException)
-
-      val exception = assertThrows<ValidationException> {
-        service.create(contactId, request.copy(phoneType = "FOO"))
-      }
-      assertThat(exception).isEqualTo(expectedException)
-    }
-
-    @ParameterizedTest
-    @CsvSource(
+  companion object {
+    @JvmStatic
+    fun invalidPhoneNumbers(): List<Arguments> = listOf(
       "!",
       "\"",
       "£",
@@ -108,8 +87,200 @@ class ContactPhoneServiceTest {
       "/",
       "\\",
       "'",
-      quoteCharacter = 'X',
+    ).map { Arguments.of(it) }
+  }
+
+  @Nested
+  inner class CreateMultiplePhones {
+    private val request = CreateMultipleContactPhoneNumbersRequest(
+      listOf(
+        PhoneNumber(
+          "MOB",
+          "+447777777777",
+          "0123",
+        ),
+        PhoneNumber(
+          phoneType = "HOME",
+          phoneNumber = "01234 567890",
+          extNumber = null,
+        ),
+      ),
+      "USER1",
     )
+
+    @Test
+    fun `should throw EntityNotFoundException creating phone numbers if contact doesn't exist`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
+
+      val exception = assertThrows<EntityNotFoundException> {
+        service.createMultiple(contactId, request)
+      }
+      assertThat(exception.message).isEqualTo("Contact (99) not found")
+    }
+
+    @Test
+    fun `should throw ValidationException creating phone numbers if phone type is invalid`() {
+      val expectedException = ValidationException("Invalid")
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
+      whenever(
+        referenceCodeService.validateReferenceCode(
+          ReferenceCodeGroup.PHONE_TYPE,
+          "FOO",
+          allowInactive = false,
+        ),
+      ).thenThrow(expectedException)
+
+      val exception = assertThrows<ValidationException> {
+        service.createMultiple(contactId, request.copy(phoneNumbers = listOf(PhoneNumber(phoneType = "FOO", phoneNumber = "123"))))
+      }
+      assertThat(exception).isEqualTo(expectedException)
+    }
+
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactPhoneServiceTest#invalidPhoneNumbers")
+    fun `should throw ValidationException creating phone if phone contains invalid chars`(phoneNumber: String) {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
+      whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.PHONE_TYPE, "MOB")).thenReturn(
+        ReferenceCode(
+          0,
+          ReferenceCodeGroup.PHONE_TYPE,
+          "MOB",
+          "Mobile",
+          90,
+          true,
+        ),
+      )
+
+      val exception = assertThrows<ValidationException> {
+        service.createMultiple(contactId, request.copy(phoneNumbers = listOf(PhoneNumber(phoneType = "MOB", phoneNumber = phoneNumber))))
+      }
+      assertThat(exception.message).isEqualTo("Phone number invalid, it can only contain numbers, () and whitespace with an optional + at the start")
+    }
+
+    @Test
+    fun `should return all created phone details including the reference data after creating successfully`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
+      whenever(
+        referenceCodeService.validateReferenceCode(
+          ReferenceCodeGroup.PHONE_TYPE,
+          "MOB",
+          allowInactive = false,
+        ),
+      ).thenReturn(
+        ReferenceCode(
+          0,
+          ReferenceCodeGroup.PHONE_TYPE,
+          "MOB",
+          "Mobile",
+          90,
+          true,
+        ),
+      )
+      whenever(
+        referenceCodeService.validateReferenceCode(
+          ReferenceCodeGroup.PHONE_TYPE,
+          "HOME",
+          allowInactive = false,
+        ),
+      ).thenReturn(
+        ReferenceCode(
+          0,
+          ReferenceCodeGroup.PHONE_TYPE,
+          "HOME",
+          "Home",
+          91,
+          true,
+        ),
+      )
+
+      whenever(contactPhoneRepository.saveAndFlush(any())).thenAnswer { i ->
+        (i.arguments[0] as ContactPhoneEntity).copy(
+          contactPhoneId = 9999,
+        )
+      }.thenAnswer { i ->
+        (i.arguments[0] as ContactPhoneEntity).copy(
+          contactPhoneId = 8888,
+        )
+      }
+
+      val allCreated = service.createMultiple(contactId, request)
+      assertThat(allCreated).hasSize(2)
+      val mobile = allCreated[0]
+      assertThat(mobile.createdTime).isNotNull()
+      assertThat(mobile).isEqualTo(
+        ContactPhoneDetails(
+          contactPhoneId = 9999,
+          contactId = contactId,
+          phoneType = "MOB",
+          phoneTypeDescription = "Mobile",
+          phoneNumber = "+447777777777",
+          extNumber = "0123",
+          createdBy = "USER1",
+          createdTime = mobile.createdTime,
+          updatedBy = null,
+          updatedTime = null,
+        ),
+      )
+      val home = allCreated[1]
+      assertThat(home.createdTime).isNotNull()
+      assertThat(home).isEqualTo(
+        ContactPhoneDetails(
+          contactPhoneId = 8888,
+          contactId = contactId,
+          phoneType = "HOME",
+          phoneTypeDescription = "Home",
+          phoneNumber = "01234 567890",
+          extNumber = null,
+          createdBy = "USER1",
+          createdTime = home.createdTime,
+          updatedBy = null,
+          updatedTime = null,
+        ),
+      )
+      verify(referenceCodeService).validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "MOB", allowInactive = false)
+      verify(referenceCodeService).validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "HOME", allowInactive = false)
+    }
+  }
+
+  @Nested
+  inner class CreatePhone {
+    private val request = CreatePhoneRequest(
+      "MOB",
+      "+447777777777",
+      "0123",
+      "USER1",
+    )
+
+    @Test
+    fun `should throw EntityNotFoundException creating phone if contact doesn't exist`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
+
+      val exception = assertThrows<EntityNotFoundException> {
+        service.create(contactId, request)
+      }
+      assertThat(exception.message).isEqualTo("Contact (99) not found")
+    }
+
+    @Test
+    fun `should throw ValidationException creating phone if phone type is invalid`() {
+      val expectedException = ValidationException("Invalid")
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
+      whenever(
+        referenceCodeService.validateReferenceCode(
+          ReferenceCodeGroup.PHONE_TYPE,
+          "FOO",
+          allowInactive = false,
+        ),
+      ).thenThrow(expectedException)
+
+      val exception = assertThrows<ValidationException> {
+        service.create(contactId, request.copy(phoneType = "FOO"))
+      }
+      assertThat(exception).isEqualTo(expectedException)
+    }
+
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactPhoneServiceTest#invalidPhoneNumbers")
     fun `should throw ValidationException creating phone if phone contains invalid chars`(phoneNumber: String) {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
       whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.PHONE_TYPE, "MOB")).thenReturn(
@@ -132,7 +303,13 @@ class ContactPhoneServiceTest {
     @Test
     fun `should return a phone details including the reference data after creating a contact successfully`() {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
-      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "MOB", allowInactive = false)).thenReturn(
+      whenever(
+        referenceCodeService.validateReferenceCode(
+          ReferenceCodeGroup.PHONE_TYPE,
+          "MOB",
+          allowInactive = false,
+        ),
+      ).thenReturn(
         ReferenceCode(
           0,
           ReferenceCodeGroup.PHONE_TYPE,
@@ -261,7 +438,13 @@ class ContactPhoneServiceTest {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
       whenever(contactPhoneRepository.findById(contactPhoneId)).thenReturn(Optional.of(existingPhone))
       val expectedException = ValidationException("Invalid")
-      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "FOO", allowInactive = true)).thenThrow(expectedException)
+      whenever(
+        referenceCodeService.validateReferenceCode(
+          ReferenceCodeGroup.PHONE_TYPE,
+          "FOO",
+          allowInactive = true,
+        ),
+      ).thenThrow(expectedException)
 
       val exception = assertThrows<ValidationException> {
         service.update(contactId, contactPhoneId, request.copy(phoneType = "FOO"))
@@ -270,34 +453,7 @@ class ContactPhoneServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource(
-      "!",
-      "\"",
-      "£",
-      "$",
-      "%",
-      "^",
-      "&",
-      "*",
-      "_",
-      "-",
-      "=",
-      // + not allowed unless at start
-      "0+",
-      ":",
-      ";",
-      "[",
-      "]",
-      "{",
-      "}",
-      "@",
-      "#",
-      "~",
-      "/",
-      "\\",
-      "'",
-      quoteCharacter = 'X',
-    )
+    @MethodSource("uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactPhoneServiceTest#invalidPhoneNumbers")
     fun `should throw ValidationException updating phone if phone contains invalid chars`(phoneNumber: String) {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
       whenever(contactPhoneRepository.findById(contactPhoneId)).thenReturn(Optional.of(existingPhone))
@@ -322,7 +478,13 @@ class ContactPhoneServiceTest {
     fun `should return a phone details including the reference data after updating a phone successfully`() {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
       whenever(contactPhoneRepository.findById(contactPhoneId)).thenReturn(Optional.of(existingPhone))
-      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "MOB", allowInactive = true)).thenReturn(
+      whenever(
+        referenceCodeService.validateReferenceCode(
+          ReferenceCodeGroup.PHONE_TYPE,
+          "MOB",
+          allowInactive = true,
+        ),
+      ).thenReturn(
         ReferenceCode(
           0,
           ReferenceCodeGroup.PHONE_TYPE,
