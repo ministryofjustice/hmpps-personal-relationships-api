@@ -180,8 +180,6 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     assertThat(savedDomesticStatus.createdTime).isNotNull
     assertThat(savedDomesticStatus.active).isTrue
 
-    // Removed duplicate assertions
-
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
       additionalInfo = PrisonerDomesticStatus(savedDomesticStatus.id, Source.NOMIS),
