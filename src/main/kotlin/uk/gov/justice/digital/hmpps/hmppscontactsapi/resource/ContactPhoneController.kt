@@ -22,19 +22,20 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactPhoneFacade
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePhoneRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultipleContactPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @Tag(name = "Contacts")
 @RestController
-@RequestMapping(value = ["contact/{contactId}/phone"], produces = [MediaType.APPLICATION_JSON_VALUE])
+@RequestMapping(value = ["contact/{contactId}"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @AuthApiResponses
 class ContactPhoneController(private val contactPhoneFacade: ContactPhoneFacade) {
 
-  @PostMapping(consumes = [MediaType.APPLICATION_JSON_VALUE])
+  @PostMapping("/phone", consumes = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
     summary = "Create new contact phone number",
     description = "Creates a new phone number for the specified contact",
@@ -78,7 +79,51 @@ class ContactPhoneController(private val contactPhoneFacade: ContactPhoneFacade)
       .body(createdPhone)
   }
 
-  @GetMapping("/{contactPhoneId}")
+  @PostMapping("/phones", consumes = [MediaType.APPLICATION_JSON_VALUE])
+  @Operation(
+    summary = "Create multiple new contact phone numbers",
+    description = "Creates one or more phone numbers for the specified contact",
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "201",
+        description = "Created all the contact phone numbers successfully",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = ContactPhoneDetails::class),
+          ),
+        ],
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "The request has invalid or missing fields",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Could not find the the contact this phone is for",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__RW')")
+  fun createMultipleContactPhoneNumber(
+    @PathVariable("contactId") @Parameter(
+      name = "contactId",
+      description = "The id of the contact",
+      example = "123456",
+    ) contactId: Long,
+    @Valid @RequestBody request: CreateMultipleContactPhoneNumbersRequest,
+  ): ResponseEntity<Any> {
+    val createdPhone = contactPhoneFacade.createMultiple(contactId, request)
+    return ResponseEntity
+      .status(HttpStatus.CREATED)
+      .body(createdPhone)
+  }
+
+  @GetMapping("/phone/{contactPhoneId}")
   @Operation(
     summary = "Get a phone number",
     description = "Gets a contacts phone number by id",
@@ -118,7 +163,7 @@ class ContactPhoneController(private val contactPhoneFacade: ContactPhoneFacade)
     ?.let { ResponseEntity.ok(it) }
     ?: throw EntityNotFoundException("Contact phone with id ($contactPhoneId) not found for contact ($contactId)")
 
-  @PutMapping("/{contactPhoneId}", consumes = [MediaType.APPLICATION_JSON_VALUE])
+  @PutMapping("/phone/{contactPhoneId}", consumes = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
     summary = "Update contact phone number",
     description = "Updates an existing contact phone by id",
@@ -165,7 +210,7 @@ class ContactPhoneController(private val contactPhoneFacade: ContactPhoneFacade)
     return ResponseEntity.ok(updatedPhone)
   }
 
-  @DeleteMapping("/{contactPhoneId}")
+  @DeleteMapping("/phone/{contactPhoneId}")
   @Operation(
     summary = "Delete contact phone number",
     description = "Deletes an existing contact phone by id",

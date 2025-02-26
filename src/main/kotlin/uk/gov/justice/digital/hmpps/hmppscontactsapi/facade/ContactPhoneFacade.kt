@@ -1,8 +1,9 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePhoneRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultipleContactPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactPhoneService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
@@ -20,6 +21,16 @@ class ContactPhoneFacade(
       identifier = it.contactPhoneId,
       contactId = contactId,
     )
+  }
+
+  fun createMultiple(contactId: Long, request: CreateMultipleContactPhoneNumbersRequest): List<ContactPhoneDetails> = contactPhoneService.createMultiple(contactId, request).also { created ->
+    created.forEach {
+      outboundEventsService.send(
+        outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
+        identifier = it.contactPhoneId,
+        contactId = contactId,
+      )
+    }
   }
 
   fun get(contactId: Long, contactPhoneId: Long): ContactPhoneDetails? = contactPhoneService.get(contactId, contactPhoneId)
