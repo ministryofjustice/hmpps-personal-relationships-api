@@ -95,7 +95,7 @@ class MigratePrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase
       .isBadRequest
       .expectBody()
       .jsonPath("$.userMessage")
-      .isEqualTo("Validation failure(s): domesticStatusCode must be exactly 1 character")
+      .isEqualTo("Validation failure(s): current.domesticStatusCode must be exactly 1 character")
   }
 
   private fun basicMigrationRequest(): MigratePrisonerDomesticStatusRequest {

@@ -218,7 +218,7 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       )
       return listOf(
         Arguments.of(
-          "comments must be <= 240 characters",
+          "relationship.comments must be <= 240 characters",
           relationship.copy(comments = "".padStart(241, 'X')),
         ),
       )

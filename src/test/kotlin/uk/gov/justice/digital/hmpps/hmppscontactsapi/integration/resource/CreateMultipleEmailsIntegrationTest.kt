@@ -167,7 +167,7 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
   companion object {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
-      Arguments.of("emailAddress must be <= 240 characters", aMinimalRequest().copy(emailAddresses = listOf(EmailAddress("".padStart(241, 'X'))))),
+      Arguments.of("emailAddresses[0].emailAddress must be <= 240 characters", aMinimalRequest().copy(emailAddresses = listOf(EmailAddress("".padStart(241, 'X'))))),
       Arguments.of("emailAddresses must have at least 1 item", aMinimalRequest().copy(emailAddresses = emptyList())),
       Arguments.of(
         "createdBy must be <= 100 characters",

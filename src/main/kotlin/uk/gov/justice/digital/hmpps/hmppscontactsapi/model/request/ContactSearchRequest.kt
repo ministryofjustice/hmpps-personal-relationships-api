@@ -10,7 +10,7 @@ import java.time.LocalDate
 data class ContactSearchRequest(
 
   @Schema(description = "Last name of the contact", example = "Jones", nullable = false, maxLength = 12)
-  @field:NotBlank(message = "Last Name cannot be blank.")
+  @field:NotBlank(message = "lastName cannot be blank.")
   val lastName: String,
 
   @Schema(description = "First name of the contact", example = "Elton", nullable = true, maxLength = 12)

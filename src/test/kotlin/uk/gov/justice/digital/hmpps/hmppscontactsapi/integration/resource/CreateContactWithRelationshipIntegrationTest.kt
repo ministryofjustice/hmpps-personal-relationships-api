@@ -258,7 +258,7 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
       )
       return listOf(
         Arguments.of(
-          "comments must be <= 240 characters",
+          "relationship.comments must be <= 240 characters",
           CreateContactRequest(
             lastName = RandomStringUtils.secure().nextAlphabetic(35),
             firstName = "a new guy",
