@@ -49,16 +49,14 @@ class SyncPrisonerNumberOfChildrenService(
     }
 
     // Create new active numberOfChildren
-    val newNumberOfChildren = request.numberOfChildren?.let {
-      PrisonerNumberOfChildren(
-        prisonerNumber = prisonerNumber,
-        numberOfChildren = it,
-        createdBy = request.createdBy,
-        createdTime = LocalDateTime.now(),
-        active = true,
-      )
-    }
-    val saved = newNumberOfChildren?.let { numberOfChildrenRepository.save(it) }
+    val newNumberOfChildren = PrisonerNumberOfChildren(
+      prisonerNumber = prisonerNumber,
+      numberOfChildren = request.numberOfChildren,
+      createdBy = request.createdBy,
+      createdTime = LocalDateTime.now(),
+      active = true,
+    )
+    val saved = newNumberOfChildren.let { numberOfChildrenRepository.save(it) }
       ?: throw IllegalArgumentException("Cannot save number of children for prisoner")
     return SyncPrisonerNumberOfChildrenResponse(
       id = saved.prisonerNumberOfChildrenId,

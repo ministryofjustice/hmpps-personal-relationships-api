@@ -9,39 +9,39 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerDomesticStatusRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponse
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerDomesticStatusRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerNumberOfChildrenRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerNumberOfChildrenResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerNumberOfChildrenRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerDomesticStatus
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerNumberOfChildren
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 
-class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() {
+class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase() {
 
   private val prisonerNumber = "A1234BC"
 
   @Autowired
-  private lateinit var domesticStatusRepository: PrisonerDomesticStatusRepository
+  private lateinit var numberOfChildrenRepository: PrisonerNumberOfChildrenRepository
 
   @BeforeEach
   fun setUp() {
-    domesticStatusRepository.deleteAll()
+    numberOfChildrenRepository.deleteAll()
   }
 
   @Test
   fun `Sync endpoints should return unauthorized if no token provided`() {
     webTestClient.get()
-      .uri("/sync/$prisonerNumber/domestic-status")
+      .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
       .exchange()
       .expectStatus()
       .isUnauthorized
 
     webTestClient.put()
-      .uri("/sync/$prisonerNumber/domestic-status")
+      .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(aMinimalRequest())
@@ -50,7 +50,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       .isUnauthorized
 
     webTestClient.post()
-      .uri("/sync/$prisonerNumber/domestic-status")
+      .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(aMinimalRequest())
@@ -59,7 +59,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       .isUnauthorized
 
     webTestClient.delete()
-      .uri("/sync/$prisonerNumber/domestic-status")
+      .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
       .exchange()
       .expectStatus()
@@ -68,9 +68,9 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
 
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
-  fun `Sync endpoints should return forbidden without an authorised role on the token`(role: String) {
+  fun `Sync endpoints should return forbidden without authorized role`(role: String) {
     webTestClient.get()
-      .uri("/sync/$prisonerNumber/domestic-status")
+      .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf(role)))
       .exchange()
@@ -78,7 +78,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       .isForbidden
 
     webTestClient.put()
-      .uri("/sync/$prisonerNumber/domestic-status")
+      .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(aMinimalRequest())
@@ -89,73 +89,74 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
   }
 
   @Test
-  fun `should get an existing prisoner domestic status`() {
-    val domesticStatusToSync = SyncUpdatePrisonerDomesticStatusRequest(
-      domesticStatusCode = "D",
-      createdBy = "user",
-      createdTime = LocalDateTime.now(),
-    )
+  fun `should get an existing prisoner number of children`() {
+    val numberOfChildrenToSync = SyncUpdatePrisonerNumberOfChildrenRequest(
 
-    // When
-    webTestClient.put()
-      .uri("/sync/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(domesticStatusToSync)
-      .exchange()
-      .expectStatus().isOk
-      .expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(SyncPrisonerDomesticStatusResponse::class.java)
-      .returnResult().responseBody
-
-    val domesticStatus = webTestClient.get()
-      .uri("/sync/$prisonerNumber/domestic-status")
-      .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(SyncPrisonerDomesticStatusResponse::class.java)
-      .returnResult().responseBody!!
-
-    assertThat(domesticStatus.id).isGreaterThan(0)
-    assertThat(domesticStatus.domesticStatusCode).isEqualTo("D")
-    assertThat(domesticStatus.createdBy).isEqualTo("user")
-    assertThat(domesticStatus.createdTime).isNotNull
-    assertThat(domesticStatus.active).isTrue
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = ["D"])
-  @NullSource
-  fun `should create a new domestic status record`(domesticStatusCode: String?) {
-    // Given
-    val domesticStatusToSync = SyncUpdatePrisonerDomesticStatusRequest(
-      domesticStatusCode = domesticStatusCode,
+      numberOfChildren = "1",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
     )
 
     // When
     val response = webTestClient.put()
-      .uri("/sync/$prisonerNumber/domestic-status")
+      .uri("/sync/$prisonerNumber/number-of-children")
       .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
       .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(domesticStatusToSync)
+      .bodyValue(numberOfChildrenToSync)
       .exchange()
       .expectStatus().isOk
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(SyncPrisonerDomesticStatusResponse::class.java)
+      .expectBody(SyncPrisonerNumberOfChildrenResponse::class.java)
+      .returnResult().responseBody
+
+    val numberOfChildrenResponse = webTestClient.get()
+      .uri("/sync/$prisonerNumber/number-of-children")
+      .accept(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(SyncPrisonerNumberOfChildrenResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(numberOfChildrenResponse.id).isGreaterThan(0)
+    assertThat(numberOfChildrenResponse.numberOfChildren).isEqualTo("1")
+    assertThat(numberOfChildrenResponse.createdBy).isEqualTo("user")
+    assertThat(numberOfChildrenResponse.createdTime).isNotNull
+    assertThat(numberOfChildrenResponse.active).isTrue
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = ["1"])
+  @NullSource
+  fun `should sync number of children record`(numberOfChildren: String?) {
+    // Given
+    val numberOfChildrenToSync = SyncUpdatePrisonerNumberOfChildrenRequest(
+      numberOfChildren = numberOfChildren,
+      createdBy = "user",
+      createdTime = LocalDateTime.now(),
+    )
+
+    // When
+    val response = webTestClient.put()
+      .uri("/sync/$prisonerNumber/number-of-children")
+      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(numberOfChildrenToSync)
+      .exchange()
+      .expectStatus().isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(SyncPrisonerNumberOfChildrenResponse::class.java)
       .returnResult().responseBody
 
     assertThat(response).isNotNull
     assertThat(response).usingRecursiveComparison()
       .ignoringFields("id", "createdTime")
       .isEqualTo(
-        SyncPrisonerDomesticStatusResponse(
+        SyncPrisonerNumberOfChildrenResponse(
           id = 1L,
-          domesticStatusCode = domesticStatusCode,
+          numberOfChildren = numberOfChildren,
           createdBy = "user",
           createdTime = LocalDateTime.now(),
           active = true,
@@ -163,171 +164,173 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       )
 
     // Verify database state
-    val savedDomesticStatus = webTestClient.get()
-      .uri("/sync/$prisonerNumber/domestic-status")
+    val savedNumberOfChildren = webTestClient.get()
+      .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
       .exchange()
       .expectStatus()
       .isOk
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(SyncPrisonerDomesticStatusResponse::class.java)
+      .expectBody(SyncPrisonerNumberOfChildrenResponse::class.java)
       .returnResult().responseBody!!
 
-    assertThat(savedDomesticStatus.id).isGreaterThan(0)
-    assertThat(savedDomesticStatus.domesticStatusCode).isEqualTo(domesticStatusCode)
-    assertThat(savedDomesticStatus.createdBy).isEqualTo("user")
-    assertThat(savedDomesticStatus.createdTime).isNotNull
-    assertThat(savedDomesticStatus.active).isTrue
+    assertThat(savedNumberOfChildren.id).isGreaterThan(0)
+    assertThat(savedNumberOfChildren.numberOfChildren).isEqualTo(numberOfChildren)
+    assertThat(savedNumberOfChildren.createdBy).isEqualTo("user")
+    assertThat(savedNumberOfChildren.createdTime).isNotNull
+    assertThat(savedNumberOfChildren.active).isTrue
 
     // Removed duplicate assertions
 
     stubEvents.assertHasEvent(
-      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(savedDomesticStatus.id, Source.NOMIS),
+      event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
+      additionalInfo = PrisonerNumberOfChildren(
+        savedNumberOfChildren.id,
+        Source.NOMIS,
+      ),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
 
   @Test
-  fun `should updates existing record as inactive and create new record`() {
+  fun `should update existing record as inactive and create new record`() {
     // Given
-    val existingDomesticStatus = SyncUpdatePrisonerDomesticStatusRequest(
-      domesticStatusCode = "D",
+    val existingNumberOfChildren = SyncUpdatePrisonerNumberOfChildrenRequest(
+      numberOfChildren = "1",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
     )
     val existingResponse = webTestClient.put()
-      .uri("/sync/$prisonerNumber/domestic-status")
+      .uri("/sync/$prisonerNumber/number-of-children")
       .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
       .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(existingDomesticStatus)
+      .bodyValue(existingNumberOfChildren)
       .exchange()
       .expectStatus().isOk
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(SyncPrisonerDomesticStatusResponse::class.java)
+      .expectBody(SyncPrisonerNumberOfChildrenResponse::class.java)
       .returnResult().responseBody
 
     assertThat(existingResponse).isNotNull
 
-    val updatedDomesticStatus = SyncUpdatePrisonerDomesticStatusRequest(
-      domesticStatusCode = "M",
+    val updatedNumberOfChildren = SyncUpdatePrisonerNumberOfChildrenRequest(
+      numberOfChildren = "1",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
     )
 
     // When
     val response = webTestClient.put()
-      .uri("/sync/$prisonerNumber/domestic-status")
+      .uri("/sync/$prisonerNumber/number-of-children")
       .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
       .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(updatedDomesticStatus)
+      .bodyValue(updatedNumberOfChildren)
       .exchange()
       .expectStatus().isOk
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(SyncPrisonerDomesticStatusResponse::class.java)
+      .expectBody(SyncPrisonerNumberOfChildrenResponse::class.java)
       .returnResult().responseBody
 
     assertThat(response).isNotNull
     assertThat(response).usingRecursiveComparison()
       .ignoringFields("id", "createdBy", "createdTime")
       .isEqualTo(
-        SyncPrisonerDomesticStatusResponse(
+        SyncPrisonerNumberOfChildrenResponse(
           id = 0,
-          domesticStatusCode = "M",
+          numberOfChildren = "1",
           createdBy = "User",
           createdTime = LocalDateTime.now(),
           active = true,
         ),
       )
 
-    val savedDomesticStatus = webTestClient.get()
-      .uri("/sync/$prisonerNumber/domestic-status")
+    val numberOfChildren = webTestClient.get()
+      .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
       .exchange()
       .expectStatus()
       .isOk
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(SyncPrisonerDomesticStatusResponse::class.java)
+      .expectBody(SyncPrisonerNumberOfChildrenResponse::class.java)
       .returnResult().responseBody!!
 
-    assertThat(savedDomesticStatus.id).isGreaterThan(0)
-    assertThat(savedDomesticStatus.domesticStatusCode).isEqualTo("M")
-    assertThat(savedDomesticStatus.createdBy).isEqualTo("user")
-    assertThat(savedDomesticStatus.createdTime).isNotNull
-    assertThat(savedDomesticStatus.active).isTrue
+    assertThat(numberOfChildren.id).isGreaterThan(0)
+    assertThat(numberOfChildren.numberOfChildren).isEqualTo("1")
+    assertThat(numberOfChildren.createdBy).isEqualTo("user")
+    assertThat(numberOfChildren.createdTime).isNotNull
+    assertThat(numberOfChildren.active).isTrue
 
-    val historicalRecord = domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, false)
-    assertThat(historicalRecord?.domesticStatusCode).isEqualTo("D")
+    val historicalRecord = numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, false)
+    assertThat(historicalRecord?.numberOfChildren).isEqualTo("1")
     assertThat(historicalRecord?.createdBy).isEqualTo("user")
     if (historicalRecord != null) {
       stubEvents.assertHasEvent(
-        event = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
-        additionalInfo = PrisonerDomesticStatus(historicalRecord.prisonerDomesticStatusId, Source.NOMIS),
+        event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_UPDATED,
+        additionalInfo = PrisonerNumberOfChildren(historicalRecord.prisonerNumberOfChildrenId, Source.NOMIS),
         personReference = PersonReference(nomsNumber = prisonerNumber),
       )
     }
 
     stubEvents.assertHasEvent(
-      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(savedDomesticStatus.id, Source.NOMIS),
+      event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
+      additionalInfo = PrisonerNumberOfChildren(numberOfChildren.id, Source.NOMIS),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
 
   @Test
-  fun `sync domestic status - bad request when invalid data`() {
+  fun `sync number of children - bad request when invalid data`() {
     // Given
-    val invalidDomesticStatus = SyncUpdatePrisonerDomesticStatusRequest(
-      domesticStatusCode = "LONGER THAN 12 CHARACTERS",
+    val numberOfChildrenToSync = SyncUpdatePrisonerNumberOfChildrenRequest(
+      numberOfChildren = "THIS TEXT IS VERY VERY LONG, LONGER THAN 50 CHARACTERS",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
     )
 
     // When
     val response = webTestClient.put()
-      .uri("/sync/$prisonerNumber/domestic-status")
+      .uri("/sync/$prisonerNumber/number-of-children")
       .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
       .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(invalidDomesticStatus)
+      .bodyValue(numberOfChildrenToSync)
       .exchange()
       .expectStatus().isBadRequest
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
       .expectBody(ErrorResponse::class.java)
-      .returnResult().responseBody!!
+      .returnResult().responseBody
 
-    assertThat(response.developerMessage).contains("domesticStatusCode must be less than or equal to 12 characters")
+    assertThat(response.developerMessage).contains("numberOfChildren must be less than or equal to 50 characters")
   }
 
   @Test
-  fun `sync domestic statuses - success`() {
-    // Given
-    val domesticStatusesToSync = SyncUpdatePrisonerDomesticStatusRequest(
-      domesticStatusCode = "D",
+  fun `sync number of children - success`() {
+    val numberOfChildrenToSync = SyncUpdatePrisonerNumberOfChildrenRequest(
+      numberOfChildren = "1",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
     )
 
     // When
     val response = webTestClient.put()
-      .uri("/sync/$prisonerNumber/domestic-status")
+      .uri("/sync/$prisonerNumber/number-of-children")
       .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
       .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(domesticStatusesToSync)
+      .bodyValue(numberOfChildrenToSync)
       .exchange()
       .expectStatus().isOk
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(SyncPrisonerDomesticStatusResponse::class.java)
+      .expectBody(SyncPrisonerNumberOfChildrenResponse::class.java)
       .returnResult().responseBody
 
     assertThat(response).isNotNull
     assertThat(response).usingRecursiveComparison()
       .ignoringFields("id", "createdBy", "createdTime")
       .isEqualTo(
-        SyncPrisonerDomesticStatusResponse(
+        SyncPrisonerNumberOfChildrenResponse(
           id = 0,
-          domesticStatusCode = "D",
+          numberOfChildren = "1",
           createdBy = "User",
           createdTime = LocalDateTime.now(),
           active = true,
@@ -335,26 +338,26 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       )
 
     // Verify database state
-    val savedDomesticStatus = webTestClient.get()
-      .uri("/sync/$prisonerNumber/domestic-status")
+    val numberOfChildrenResponse = webTestClient.get()
+      .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
       .exchange()
       .expectStatus()
       .isOk
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(SyncPrisonerDomesticStatusResponse::class.java)
+      .expectBody(SyncPrisonerNumberOfChildrenResponse::class.java)
       .returnResult().responseBody!!
 
-    assertThat(savedDomesticStatus.id).isGreaterThan(0)
-    assertThat(savedDomesticStatus.domesticStatusCode).isEqualTo("D")
-    assertThat(savedDomesticStatus.createdBy).isEqualTo("user")
-    assertThat(savedDomesticStatus.createdTime).isNotNull
-    assertThat(savedDomesticStatus.active).isTrue
+    assertThat(numberOfChildrenResponse.id).isGreaterThan(0)
+    assertThat(numberOfChildrenResponse.numberOfChildren).isEqualTo("1")
+    assertThat(numberOfChildrenResponse.createdBy).isEqualTo("user")
+    assertThat(numberOfChildrenResponse.createdTime).isNotNull
+    assertThat(numberOfChildrenResponse.active).isTrue
   }
 
-  private fun aMinimalRequest() = SyncUpdatePrisonerDomesticStatusRequest(
-    domesticStatusCode = "D",
+  private fun aMinimalRequest() = SyncUpdatePrisonerNumberOfChildrenRequest(
+    numberOfChildren = "1",
     createdBy = "user",
     createdTime = LocalDateTime.now(),
   )
