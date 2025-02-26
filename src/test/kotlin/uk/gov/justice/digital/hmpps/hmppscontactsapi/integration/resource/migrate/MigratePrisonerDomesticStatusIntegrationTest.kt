@@ -70,7 +70,7 @@ class MigratePrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase
     val invalidDomesticStatus = MigratePrisonerDomesticStatusRequest(
       prisonerNumber = "A1234BC",
       current = DomesticStatusDetailsRequest(
-        domesticStatusCode = "INVALID",
+        domesticStatusCode = "LONGER THAN 12 CHARACTERS",
         createdBy = "Admin",
         createdTime = LocalDateTime.now(),
       ),
@@ -95,7 +95,7 @@ class MigratePrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase
       .isBadRequest
       .expectBody()
       .jsonPath("$.userMessage")
-      .isEqualTo("Validation failure(s): current.domesticStatusCode must be exactly 1 character")
+      .isEqualTo("Validation failure(s): current.domesticStatusCode must be less than or equal to 12 characters")
   }
 
   private fun basicMigrationRequest(): MigratePrisonerDomesticStatusRequest {

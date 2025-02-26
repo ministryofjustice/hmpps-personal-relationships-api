@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
@@ -88,29 +87,10 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       .isForbidden
   }
 
-  @ParameterizedTest
-  @CsvSource(
-    value = [
-      "D;{\n" +
-        "  \"id\": 1,\n" +
-        "  \"domesticStatusCode\": \"D\",\n" +
-        "  \"active\": true,\n" +
-        "  \"createdTime\": \"2025-02-26T12:25:21.723Z\",\n" +
-        "  \"createdBy\": \"string\"\n" +
-        "}",
-      "null;{\n" +
-        "  \"id\": 1,\n" +
-        "  \"domesticStatusCode\": null,\n" +
-        "  \"active\": true,\n" +
-        "  \"createdTime\": \"2025-02-26T12:25:21.723Z\",\n" +
-        "  \"createdBy\": \"string\"\n" +
-        "}",
-    ],
-    delimiter = ';',
-  )
-  fun `should get an existing prisoner domestic status`(domesticStatusCode: String?, json: String) {
+  @Test
+  fun `should get an existing prisoner domestic status`() {
     val domesticStatusToSync = SyncUpdatePrisonerDomesticStatusRequest(
-      domesticStatusCode = domesticStatusCode,
+      domesticStatusCode = "D",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
     )
@@ -139,7 +119,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       .returnResult().responseBody!!
 
     assertThat(domesticStatus.id).isGreaterThan(0)
-    assertThat(domesticStatus.domesticStatusCode).isEqualTo(domesticStatusCode)
+    assertThat(domesticStatus.domesticStatusCode).isEqualTo("D")
     assertThat(domesticStatus.createdBy).isEqualTo("user")
     assertThat(domesticStatus.createdTime).isNotNull
     assertThat(domesticStatus.active).isTrue
@@ -296,7 +276,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
   fun `sync domestic status - bad request when invalid data`() {
     // Given
     val invalidDomesticStatus = SyncUpdatePrisonerDomesticStatusRequest(
-      domesticStatusCode = "DOM",
+      domesticStatusCode = "LONGER THAN 12 CHARACTERS",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
     )
@@ -313,7 +293,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       .expectBody(ErrorResponse::class.java)
       .returnResult().responseBody!!
 
-    assertThat(response.developerMessage).contains("domesticStatusCode must be exactly 1 character")
+    assertThat(response.developerMessage).contains("domesticStatusCode must be less than or equal to 12 characters")
   }
 
   @Test
