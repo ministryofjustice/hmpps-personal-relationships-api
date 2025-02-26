@@ -6,8 +6,9 @@ import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEmailEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateEmailRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateEmailRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateEmailRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateMultipleEmailsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.UpdateEmailRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactEmailDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactEmailRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
@@ -27,13 +28,27 @@ class ContactEmailService(
   @Transactional
   fun create(contactId: Long, request: CreateEmailRequest): ContactEmailDetails {
     validateContactExists(contactId)
-    validateEmailAddress(request.emailAddress)
+    return createAnEmail(request.emailAddress, request.createdBy, contactId)
+  }
+
+  @Transactional
+  fun createMultiple(contactId: Long, request: CreateMultipleEmailsRequest): List<ContactEmailDetails> {
+    validateContactExists(contactId)
+    return request.emailAddresses.map { createAnEmail(it.emailAddress, request.createdBy, contactId) }
+  }
+
+  private fun createAnEmail(
+    emailAddress: String,
+    createdBy: String,
+    contactId: Long,
+  ): ContactEmailDetails {
+    validateEmailAddress(emailAddress)
     val created = contactEmailRepository.saveAndFlush(
       ContactEmailEntity(
         contactEmailId = 0,
         contactId = contactId,
-        emailAddress = request.emailAddress,
-        createdBy = request.createdBy,
+        emailAddress = emailAddress,
+        createdBy = createdBy,
       ),
     )
     return created.toDomainWithType()

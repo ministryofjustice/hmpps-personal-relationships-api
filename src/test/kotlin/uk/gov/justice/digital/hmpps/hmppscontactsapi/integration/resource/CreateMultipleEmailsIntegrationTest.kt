@@ -12,15 +12,15 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateEmailRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactEmailDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateMultipleEmailsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.EmailAddress
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactEmailInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
+class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
   private var savedContactId = 0L
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
@@ -37,7 +37,7 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.post()
-    .uri("/contact/$savedContactId/email")
+    .uri("/contact/$savedContactId/emails")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
     .bodyValue(aMinimalRequest())
@@ -45,16 +45,16 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "emailAddress must not be null;{\"emailAddress\": null, \"createdBy\": \"created\"}",
-      "emailAddress must not be null;{\"createdBy\": \"created\"}",
-      "createdBy must not be null;{\"emailAddress\": \"test@example.com\", \"createdBy\": null}",
-      "createdBy must not be null;{\"emailAddress\": \"test@example.com\"}",
+      "emailAddresses must not be null;{\"emailAddresses\": null, \"createdBy\": \"created\"}",
+      "emailAddresses must not be null;{\"createdBy\": \"created\"}",
+      "createdBy must not be null;{\"emailAddresses\": [{ \"emailAddress\": \"test@example.com\"}], \"createdBy\": null}",
+      "createdBy must not be null;{\"emailAddresses\": [{\"emailAddress\": \"test@example.com\"}]}",
     ],
     delimiter = ';',
   )
   fun `should return bad request if required fields are null`(expectedMessage: String, json: String) {
     val errors = webTestClient.post()
-      .uri("/contact/$savedContactId/email")
+      .uri("/contact/$savedContactId/emails")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
@@ -74,9 +74,9 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @ParameterizedTest
   @MethodSource("allFieldConstraintViolations")
-  fun `should enforce field constraints`(expectedMessage: String, request: CreateEmailRequest) {
+  fun `should enforce field constraints`(expectedMessage: String, request: CreateMultipleEmailsRequest) {
     val errors = webTestClient.post()
-      .uri("/contact/$savedContactId/email")
+      .uri("/contact/$savedContactId/emails")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
@@ -95,11 +95,11 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  fun `should not create the email if the contact is not found`() {
+  fun `should not create the emails if the contact is not found`() {
     val request = aMinimalRequest()
 
     val errors = webTestClient.post()
-      .uri("/contact/-321/email")
+      .uri("/contact/-321/emails")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
@@ -118,14 +118,14 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  fun `should not create the email if the email is not valid`() {
-    val request = CreateEmailRequest(
-      emailAddress = "@example.com",
+  fun `should not create the emails if any email is not valid`() {
+    val request = CreateMultipleEmailsRequest(
+      emailAddresses = listOf(EmailAddress("@example.com"), EmailAddress("good@example.com")),
       createdBy = "created",
     )
 
     val errors = webTestClient.post()
-      .uri("/contact/$savedContactId/email")
+      .uri("/contact/$savedContactId/emails")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
@@ -138,44 +138,45 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Validation failure: Email address is invalid")
+
+    assertThat(testAPIClient.getContact(savedContactId).emailAddresses).isEmpty()
   }
 
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
-  fun `should create the email`(role: String) {
-    val request = aMinimalRequest()
-
-    val created = testAPIClient.createAContactEmail(savedContactId, request, role)
-
-    assertEqualsExcludingTimestamps(created, request)
-
-    stubEvents.assertHasEvent(
-      event = OutboundEvent.CONTACT_EMAIL_CREATED,
-      additionalInfo = ContactEmailInfo(created.contactEmailId, Source.DPS),
-      personReference = PersonReference(dpsContactId = created.contactId),
+  fun `should create the emails`(role: String) {
+    val request = CreateMultipleEmailsRequest(
+      emailAddresses = listOf(EmailAddress("test@example.com"), EmailAddress("another@example.com")),
+      createdBy = "created",
     )
-  }
 
-  private fun assertEqualsExcludingTimestamps(email: ContactEmailDetails, request: CreateEmailRequest) {
-    with(email) {
-      assertThat(emailAddress).isEqualTo(request.emailAddress)
-      assertThat(createdBy).isEqualTo(request.createdBy)
-      assertThat(createdTime).isNotNull()
+    val created = testAPIClient.createContactEmails(savedContactId, request, role)
+
+    request.emailAddresses.forEach { requestedEmailAddress ->
+      val createdEmailAddress = created.find { it.emailAddress == requestedEmailAddress.emailAddress }
+      assertThat(createdEmailAddress).isNotNull
+
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.CONTACT_EMAIL_CREATED,
+        additionalInfo = ContactEmailInfo(createdEmailAddress!!.contactEmailId, Source.DPS),
+        personReference = PersonReference(dpsContactId = savedContactId),
+      )
     }
   }
 
   companion object {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
-      Arguments.of("emailAddress must be <= 240 characters", aMinimalRequest().copy(emailAddress = "".padStart(241, 'X'))),
+      Arguments.of("emailAddress must be <= 240 characters", aMinimalRequest().copy(emailAddresses = listOf(EmailAddress("".padStart(241, 'X'))))),
+      Arguments.of("emailAddresses must have at least 1 item", aMinimalRequest().copy(emailAddresses = emptyList())),
       Arguments.of(
         "createdBy must be <= 100 characters",
         aMinimalRequest().copy(createdBy = "".padStart(101, 'X')),
       ),
     )
 
-    private fun aMinimalRequest() = CreateEmailRequest(
-      emailAddress = "test@example.com",
+    private fun aMinimalRequest() = CreateMultipleEmailsRequest(
+      emailAddresses = listOf(EmailAddress("test@example.com")),
       createdBy = "created",
     )
   }

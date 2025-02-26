@@ -11,8 +11,8 @@ import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactEmailFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactEmailDetails
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateEmailRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateEmailRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateEmailRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.UpdateEmailRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactEmailDetails
 import java.time.LocalDateTime
 

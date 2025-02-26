@@ -2,8 +2,9 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
 
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateEmailRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateEmailRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateEmailRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateMultipleEmailsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.UpdateEmailRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactEmailDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactEmailService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
@@ -21,6 +22,16 @@ class ContactEmailFacade(
       identifier = it.contactEmailId,
       contactId = contactId,
     )
+  }
+
+  fun createMultiple(contactId: Long, request: CreateMultipleEmailsRequest): List<ContactEmailDetails> = contactEmailService.createMultiple(contactId, request).also { created ->
+    created.forEach {
+      outboundEventsService.send(
+        outboundEvent = OutboundEvent.CONTACT_EMAIL_CREATED,
+        identifier = it.contactEmailId,
+        contactId = contactId,
+      )
+    }
   }
 
   fun update(contactId: Long, contactEmailId: Long, request: UpdateEmailRequest): ContactEmailDetails = contactEmailService.update(contactId, contactEmailId, request).also {
