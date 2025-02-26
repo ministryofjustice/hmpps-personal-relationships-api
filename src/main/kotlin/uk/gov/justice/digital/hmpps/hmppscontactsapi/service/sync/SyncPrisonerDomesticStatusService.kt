@@ -52,18 +52,16 @@ class SyncPrisonerDomesticStatusService(
     }
 
     // Create new active status
-    val newDomesticStatus = request.domesticStatusCode?.let {
-      PrisonerDomesticStatus(
-        prisonerNumber = prisonerNumber,
-        domesticStatusCode = request.domesticStatusCode,
-        createdBy = request.createdBy,
-        createdTime = LocalDateTime.now(),
-        active = true,
-      )
-    }
+    val newDomesticStatus = PrisonerDomesticStatus(
+      prisonerNumber = prisonerNumber,
+      domesticStatusCode = request.domesticStatusCode,
+      createdBy = request.createdBy,
+      createdTime = LocalDateTime.now(),
+      active = true,
+    )
 
-    val saved = newDomesticStatus?.let { domesticStatusRepository.save(it) }
-      ?: throw IllegalArgumentException("Cannot save number of children for prisoner")
+    val saved = domesticStatusRepository.save(newDomesticStatus)
+      ?: throw IllegalArgumentException("Cannot save domestic status for prisoner")
     return SyncPrisonerDomesticStatusResponse(
       id = saved.prisonerDomesticStatusId,
       domesticStatusCode = saved.domesticStatusCode,

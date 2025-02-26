@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
@@ -87,10 +88,29 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       .isForbidden
   }
 
-  @Test
-  fun `should get an existing prisoner domestic status`() {
+  @ParameterizedTest
+  @CsvSource(
+    value = [
+      "D;{\n" +
+        "  \"id\": 1,\n" +
+        "  \"domesticStatusCode\": \"D\",\n" +
+        "  \"active\": true,\n" +
+        "  \"createdTime\": \"2025-02-26T12:25:21.723Z\",\n" +
+        "  \"createdBy\": \"string\"\n" +
+        "}",
+      "null;{\n" +
+        "  \"id\": 1,\n" +
+        "  \"domesticStatusCode\": null,\n" +
+        "  \"active\": true,\n" +
+        "  \"createdTime\": \"2025-02-26T12:25:21.723Z\",\n" +
+        "  \"createdBy\": \"string\"\n" +
+        "}",
+    ],
+    delimiter = ';',
+  )
+  fun `should get an existing prisoner domestic status`(domesticStatusCode: String?, json: String) {
     val domesticStatusToSync = SyncUpdatePrisonerDomesticStatusRequest(
-      domesticStatusCode = "D",
+      domesticStatusCode = domesticStatusCode,
       createdBy = "user",
       createdTime = LocalDateTime.now(),
     )
@@ -119,7 +139,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       .returnResult().responseBody!!
 
     assertThat(domesticStatus.id).isGreaterThan(0)
-    assertThat(domesticStatus.domesticStatusCode).isEqualTo("D")
+    assertThat(domesticStatus.domesticStatusCode).isEqualTo(domesticStatusCode)
     assertThat(domesticStatus.createdBy).isEqualTo("user")
     assertThat(domesticStatus.createdTime).isNotNull
     assertThat(domesticStatus.active).isTrue
