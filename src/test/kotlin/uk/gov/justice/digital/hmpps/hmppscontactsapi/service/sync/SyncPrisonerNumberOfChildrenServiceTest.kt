@@ -164,7 +164,7 @@ class SyncPrisonerNumberOfChildrenServiceTest {
   }
 
   @Test
-  fun `should not return active existing number of children`() {
+  fun `should not return number of children when there are no active records`() {
     // Given
     val prisonerNumber = "A1234BC"
     whenever(numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
