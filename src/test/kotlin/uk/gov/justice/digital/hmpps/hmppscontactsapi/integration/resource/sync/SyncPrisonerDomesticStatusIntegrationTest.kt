@@ -276,7 +276,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
   fun `sync domestic status - bad request when invalid data`() {
     // Given
     val invalidDomesticStatus = SyncUpdatePrisonerDomesticStatusRequest(
-      domesticStatusCode = "DOM",
+      domesticStatusCode = "LONGER THAN 12 CHARACTERS",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
     )
@@ -293,7 +293,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       .expectBody(ErrorResponse::class.java)
       .returnResult().responseBody!!
 
-    assertThat(response.developerMessage).contains("domesticStatusCode must be exactly 1 character")
+    assertThat(response.developerMessage).contains("domesticStatusCode must be less than or equal to 12 characters")
   }
 
   @Test

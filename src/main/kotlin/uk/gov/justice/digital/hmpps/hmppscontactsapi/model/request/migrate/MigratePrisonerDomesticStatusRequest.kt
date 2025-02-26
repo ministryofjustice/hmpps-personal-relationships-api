@@ -24,7 +24,7 @@ data class MigratePrisonerDomesticStatusRequest(
 data class DomesticStatusDetailsRequest(
 
   @Schema(description = "The domestic status code", example = "M")
-  @field:Size(min = 1, max = 1, message = "domesticStatusCode must be exactly 1 character")
+  @field:Size(max = 12, message = "domesticStatusCode must be less than or equal to 12 characters")
   val domesticStatusCode: String,
 
   @Schema(description = "Username of the person who created the record", example = "JSMITH_ADM")
