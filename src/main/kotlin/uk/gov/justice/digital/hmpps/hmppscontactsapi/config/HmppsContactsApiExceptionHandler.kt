@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.security.access.AccessDeniedException
+import org.springframework.validation.FieldError
+import org.springframework.validation.ObjectError
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -123,7 +125,7 @@ class HmppsContactsApiExceptionHandler {
       ErrorResponse(
         status = BAD_REQUEST,
         userMessage = "Validation failure(s): ${
-          e.allErrors.map { it.defaultMessage }.distinct().sorted().joinToString(System.lineSeparator())
+          e.allErrors.map { formatMessage(it) }.distinct().sorted().joinToString(System.lineSeparator())
         }",
         developerMessage = e.message,
       ),
@@ -164,6 +166,19 @@ class HmppsContactsApiExceptionHandler {
       else -> "must not be null"
     }
     return "$name $problem"
+  }
+
+  private fun formatMessage(error: ObjectError): String {
+    var message = error.defaultMessage ?: ""
+    if (error is FieldError) {
+      val lastPathPart = error.field.substringAfterLast(".")
+      if (message.startsWith(lastPathPart)) {
+        message = error.field.substring(0, error.field.length - lastPathPart.length) + message
+      } else {
+        message = error.field + " " + message
+      }
+    }
+    return message
   }
 
   private companion object {

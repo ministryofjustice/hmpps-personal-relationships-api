@@ -5,6 +5,6 @@ import jakarta.validation.constraints.Size
 
 @Schema(description = "A single email address")
 data class EmailAddress(
-  @field:Size(max = 240, message = "emailAddress must be <= 240 characters")
+  @field:Size(max = 240, message = "must be <= 240 characters")
   val emailAddress: String,
 )

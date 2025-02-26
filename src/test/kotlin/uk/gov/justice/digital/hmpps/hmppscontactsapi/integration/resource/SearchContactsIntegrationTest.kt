@@ -236,7 +236,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val errors = testAPIClient.getBadResponseErrors(uri)
 
-    assertThat(errors.userMessage).isEqualTo("Validation failure(s): Last Name cannot be blank.")
+    assertThat(errors.userMessage).isEqualTo("Validation failure(s): lastName cannot be blank.")
   }
 
   @Test
@@ -249,7 +249,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val errors = testAPIClient.getBadResponseErrors(uri)
 
-    assertThat(errors.userMessage).contains("Validation failure(s): Failed to convert value of type 'java.lang.String' to required type 'java.time.LocalDate';")
+    assertThat(errors.userMessage).contains("Validation failure(s): dateOfBirth Failed to convert value of type 'java.lang.String' to required type 'java.time.LocalDate';")
   }
 
   @Test
