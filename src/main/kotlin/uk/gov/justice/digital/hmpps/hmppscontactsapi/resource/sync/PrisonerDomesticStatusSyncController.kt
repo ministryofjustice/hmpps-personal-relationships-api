@@ -51,6 +51,7 @@ class PrisonerDomesticStatusSyncController(
       ApiResponse(
         responseCode = "404",
         description = "No active domestic status found for the requested prisoner.",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
       ),
     ],
   )
@@ -91,6 +92,7 @@ class PrisonerDomesticStatusSyncController(
       ApiResponse(
         responseCode = "404",
         description = "Domestic status not found",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
       ),
       ApiResponse(
         responseCode = "400",

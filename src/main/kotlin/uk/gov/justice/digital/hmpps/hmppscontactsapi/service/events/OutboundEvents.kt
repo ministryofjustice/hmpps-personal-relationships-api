@@ -247,6 +247,22 @@ enum class OutboundEvent(val eventType: String) {
       description = "An employment has been deleted",
     )
   },
+  PRISONER_NUMBER_OF_CHILDREN_CREATED("personal-relationships-api.number-of-children.created") {
+    override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
+      eventType = eventType,
+      additionalInformation = additionalInformation,
+      personReference = personReference,
+      description = "A number of children record has been created",
+    )
+  },
+  PRISONER_NUMBER_OF_CHILDREN_UPDATED("personal-relationships-api.number-of-children.updated") {
+    override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
+      eventType = eventType,
+      additionalInformation = additionalInformation,
+      personReference = personReference,
+      description = "A number of children record has been updated",
+    )
+  },
 
   PRISONER_DOMESTIC_STATUS_CREATED("personal-relationships-api.domestic-status.created") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
@@ -308,6 +324,7 @@ data class PrisonerContactInfo(val prisonerContactId: Long, override val source:
 data class PrisonerContactRestrictionInfo(val prisonerContactRestrictionId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)
 data class EmploymentInfo(val employmentId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)
 data class PrisonerDomesticStatus(val domesticStatusId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)
+data class PrisonerNumberOfChildren(val prisonerNumberOfChildrenId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)
 
 /**
  * The event source.

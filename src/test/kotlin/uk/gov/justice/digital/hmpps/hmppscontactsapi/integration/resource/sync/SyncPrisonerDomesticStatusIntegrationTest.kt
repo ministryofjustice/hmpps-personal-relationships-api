@@ -119,7 +119,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       .returnResult().responseBody!!
 
     assertThat(domesticStatus.id).isGreaterThan(0)
-    assertThat(domesticStatus.domesticStatusCode).contains("D")
+    assertThat(domesticStatus.domesticStatusCode).isEqualTo("D")
     assertThat(domesticStatus.createdBy).isEqualTo("user")
     assertThat(domesticStatus.createdTime).isNotNull
     assertThat(domesticStatus.active).isTrue
@@ -172,11 +172,11 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       .returnResult().responseBody!!
 
     assertThat(savedDomesticStatus.id).isGreaterThan(0)
-    assertThat(savedDomesticStatus.domesticStatusCode).contains("D")
+    assertThat(savedDomesticStatus.domesticStatusCode).isEqualTo("D")
     assertThat(savedDomesticStatus.createdBy).isEqualTo("user")
     assertThat(savedDomesticStatus.createdTime).isNotNull
     assertThat(savedDomesticStatus.active).isTrue
-    assertThat(savedDomesticStatus.domesticStatusCode).contains("D")
+    assertThat(savedDomesticStatus.domesticStatusCode).isEqualTo("D")
     assertThat(savedDomesticStatus.createdBy).isEqualTo("user")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
@@ -249,13 +249,13 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       .returnResult().responseBody!!
 
     assertThat(savedDomesticStatus.id).isGreaterThan(0)
-    assertThat(savedDomesticStatus.domesticStatusCode).contains("M")
+    assertThat(savedDomesticStatus.domesticStatusCode).isEqualTo("M")
     assertThat(savedDomesticStatus.createdBy).isEqualTo("user")
     assertThat(savedDomesticStatus.createdTime).isNotNull
     assertThat(savedDomesticStatus.active).isTrue
 
     val historicalRecord = domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, false)
-    assertThat(historicalRecord?.domesticStatusCode).contains("D")
+    assertThat(historicalRecord?.domesticStatusCode).isEqualTo("D")
     assertThat(historicalRecord?.createdBy).isEqualTo("user")
     if (historicalRecord != null) {
       stubEvents.assertHasEvent(
@@ -343,7 +343,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       .returnResult().responseBody!!
 
     assertThat(savedDomesticStatus.id).isGreaterThan(0)
-    assertThat(savedDomesticStatus.domesticStatusCode).contains("D")
+    assertThat(savedDomesticStatus.domesticStatusCode).isEqualTo("D")
     assertThat(savedDomesticStatus.createdBy).isEqualTo("user")
     assertThat(savedDomesticStatus.createdTime).isNotNull
     assertThat(savedDomesticStatus.active).isTrue

@@ -49,6 +49,9 @@ class SyncPrisonerNumberOfChildrenServiceTest {
     // Then
     assertThat(result).isNotNull()
     assertThat(result.id).isEqualTo(numberOfChildren.prisonerNumberOfChildrenId)
+    assertThat(result.numberOfChildren).isEqualTo(numberOfChildren.numberOfChildren)
+    assertThat(result.createdBy).isEqualTo(numberOfChildren.createdBy)
+    assertThat(result.active).isEqualTo(numberOfChildren.active)
     verify(numberOfChildrenRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
   }
 
@@ -137,10 +140,10 @@ class SyncPrisonerNumberOfChildrenServiceTest {
   }
 
   @Test
-  fun `deactivateNumberOfChildren deactivates existing status`() {
+  fun `should return active existing number of children`() {
     // Given
     val prisonerNumber = "A1234BC"
-    val existingNumberOfChildrenCount = PrisonerNumberOfChildren(
+    val numberOfChildren = PrisonerNumberOfChildren(
       prisonerNumberOfChildrenId = 1L,
       prisonerNumber = prisonerNumber,
       numberOfChildren = "1",
@@ -150,30 +153,28 @@ class SyncPrisonerNumberOfChildrenServiceTest {
     )
 
     whenever(numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
-      .thenReturn(existingNumberOfChildrenCount)
+      .thenReturn(numberOfChildren)
 
     // When
-    syncNumberOfChildrenService.deactivateNumberOfChildren(prisonerNumber)
+    val result = syncNumberOfChildrenService.getPrisonerNumberOfChildrenActive(prisonerNumber)
 
     // Then
-    val nocCaptor = argumentCaptor<PrisonerNumberOfChildren>()
-    verify(numberOfChildrenRepository).save(nocCaptor.capture())
-    val savedDomesticStatus = nocCaptor.firstValue
-    assertThat(savedDomesticStatus.active).isFalse()
-    assertThat(savedDomesticStatus.prisonerNumber).isEqualTo(prisonerNumber)
+    assertThat(result?.prisonerNumberOfChildrenId).isEqualTo(numberOfChildren.prisonerNumberOfChildrenId)
+    verify(numberOfChildrenRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
   }
 
   @Test
-  fun `deactivateNumberOfChildren throws EntityNotFoundException when not found`() {
+  fun `should not return number of children when there are no active records`() {
     // Given
     val prisonerNumber = "A1234BC"
     whenever(numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
       .thenReturn(null)
 
-    // When/Then
-    val exception = assertThrows<EntityNotFoundException> {
-      syncNumberOfChildrenService.deactivateNumberOfChildren(prisonerNumber)
-    }
-    assertThat(exception.message).isEqualTo("NumberOfChildren not found for prisoner: A1234BC")
+    // When
+    val result = syncNumberOfChildrenService.getPrisonerNumberOfChildrenActive(prisonerNumber)
+
+    // Then
+    assertThat(result).isNull()
+    verify(numberOfChildrenRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
   }
 }

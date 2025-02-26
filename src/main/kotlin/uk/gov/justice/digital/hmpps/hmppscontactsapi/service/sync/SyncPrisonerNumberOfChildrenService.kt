@@ -19,10 +19,16 @@ class SyncPrisonerNumberOfChildrenService(
 
     fun from(numberOfChildren: PrisonerNumberOfChildren) = SyncPrisonerNumberOfChildrenResponse(
       id = numberOfChildren.prisonerNumberOfChildrenId,
+      numberOfChildren = numberOfChildren.numberOfChildren,
+      createdBy = numberOfChildren.createdBy,
+      createdTime = numberOfChildren.createdTime,
+      active = numberOfChildren.active,
     )
   }
 
-  fun getNumberOfChildrenByPrisonerNumber(prisonerNumber: String): SyncPrisonerNumberOfChildrenResponse = numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
+  fun getNumberOfChildrenByPrisonerNumber(prisonerNumber: String): SyncPrisonerNumberOfChildrenResponse = getPrisonerNumberOfChildrenActive(
+    prisonerNumber,
+  )
     ?.let { from(it) }
     ?: throw EntityNotFoundException(String.format(NOT_FOUND_MESSAGE, prisonerNumber))
 
@@ -32,7 +38,7 @@ class SyncPrisonerNumberOfChildrenService(
     request: SyncUpdatePrisonerNumberOfChildrenRequest,
   ): SyncPrisonerNumberOfChildrenResponse {
     // Find existing numberOfChildren
-    val existingCount = numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
+    val existingCount = getPrisonerNumberOfChildrenActive(prisonerNumber)
 
     // If exists, deactivate it
     existingCount?.let {
@@ -54,21 +60,14 @@ class SyncPrisonerNumberOfChildrenService(
     }
     val saved = newNumberOfChildren?.let { numberOfChildrenRepository.save(it) }
       ?: throw IllegalArgumentException("Cannot save number of children for prisoner")
-    return SyncPrisonerNumberOfChildrenResponse(saved.prisonerNumberOfChildrenId)
+    return SyncPrisonerNumberOfChildrenResponse(
+      id = saved.prisonerNumberOfChildrenId,
+      numberOfChildren = saved.numberOfChildren,
+      createdBy = saved.createdBy,
+      createdTime = saved.createdTime,
+      active = saved.active,
+    )
   }
 
-  @Transactional
-  fun deactivateNumberOfChildren(prisonerNumber: String): SyncPrisonerNumberOfChildrenResponse {
-    val rowToDeactivate = numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
-      ?: throw EntityNotFoundException(String.format(NOT_FOUND_MESSAGE, prisonerNumber))
-
-    // If exists, deactivate it
-    rowToDeactivate.let {
-      val deactivatedNumberOfChildrenCount = it.copy(
-        active = false,
-      )
-      numberOfChildrenRepository.save(deactivatedNumberOfChildrenCount)
-    }
-    return SyncPrisonerNumberOfChildrenResponse(rowToDeactivate.prisonerNumberOfChildrenId)
-  }
+  fun getPrisonerNumberOfChildrenActive(prisonerNumber: String) = numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
 }

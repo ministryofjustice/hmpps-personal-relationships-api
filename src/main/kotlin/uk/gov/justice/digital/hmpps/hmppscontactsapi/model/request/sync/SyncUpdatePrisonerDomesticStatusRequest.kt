@@ -7,6 +7,7 @@ import java.time.LocalDateTime
 @Schema(description = "Request to update a prisoner's domestic status")
 data class SyncUpdatePrisonerDomesticStatusRequest(
 
+  @Schema(description = "The domestic status code value", example = "1")
   @field:Size(min = 1, max = 1, message = "domesticStatusCode must be exactly 1 character")
   val domesticStatusCode: String?,
 
