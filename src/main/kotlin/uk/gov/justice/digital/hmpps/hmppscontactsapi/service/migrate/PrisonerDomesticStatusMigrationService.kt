@@ -20,7 +20,7 @@ class PrisonerDomesticStatusMigrationService(
     val entitiesToSave = buildList {
       addAll(
         request.history.map {
-          validateReferenceDataExists(it.domesticStatusCode)
+          it.domesticStatusCode?.let { it1 -> validateReferenceDataExists(it1) }
           PrisonerDomesticStatus(
             prisonerNumber = request.prisonerNumber,
             domesticStatusCode = it.domesticStatusCode,
@@ -33,7 +33,7 @@ class PrisonerDomesticStatusMigrationService(
 
       // Add current status if provided
       request.current?.let {
-        validateReferenceDataExists(it.domesticStatusCode)
+        it.domesticStatusCode?.let { it1 -> validateReferenceDataExists(it1) }
         add(
           PrisonerDomesticStatus(
             prisonerNumber = request.prisonerNumber,

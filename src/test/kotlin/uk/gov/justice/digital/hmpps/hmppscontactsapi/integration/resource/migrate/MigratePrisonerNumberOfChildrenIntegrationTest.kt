@@ -95,7 +95,7 @@ class MigratePrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBa
       .isBadRequest
       .expectBody()
       .jsonPath("$.userMessage")
-      .isEqualTo("Validation failure(s): current.numberOfChildren must be less than 50 characters")
+      .isEqualTo("Validation failure(s): current.numberOfChildren must be less than or equal to 50 characters")
   }
 
   private fun basicMigrationRequest() = MigratePrisonerNumberOfChildrenRequest(

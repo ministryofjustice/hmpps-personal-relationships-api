@@ -23,8 +23,8 @@ data class MigratePrisonerNumberOfChildrenRequest(
 data class NumberOfChildrenDetailsRequest(
 
   @Schema(description = "The number of children", example = "1")
-  @field:Size(min = 1, max = 50, message = "numberOfChildren must be less than 50 characters")
-  val numberOfChildren: String,
+  @field:Size(max = 50, message = "numberOfChildren must be less than or equal to 50 characters")
+  val numberOfChildren: String?,
 
   @Schema(description = "Username of the person who created the record", example = "JSMITH_ADM")
   val createdBy: String,

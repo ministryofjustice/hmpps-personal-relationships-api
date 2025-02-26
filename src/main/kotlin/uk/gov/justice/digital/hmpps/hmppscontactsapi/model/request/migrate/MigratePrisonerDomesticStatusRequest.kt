@@ -25,7 +25,7 @@ data class DomesticStatusDetailsRequest(
 
   @Schema(description = "The domestic status code", example = "M")
   @field:Size(max = 12, message = "domesticStatusCode must be less than or equal to 12 characters")
-  val domesticStatusCode: String,
+  val domesticStatusCode: String?,
 
   @Schema(description = "Username of the person who created the record", example = "JSMITH_ADM")
   val createdBy: String,
