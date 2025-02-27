@@ -2,12 +2,11 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 
 import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
-import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactPhoneEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultipleContactPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactPhoneDetails
@@ -16,6 +15,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPh
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.validatePhoneNumber
 import java.time.LocalDateTime
 
 @Service
@@ -40,7 +40,7 @@ class ContactPhoneService(
   }
 
   @Transactional
-  fun createMultiple(contactId: Long, request: CreateMultipleContactPhoneNumbersRequest): List<ContactPhoneDetails> {
+  fun createMultiple(contactId: Long, request: CreateMultiplePhoneNumbersRequest): List<ContactPhoneDetails> {
     validateContactExists(contactId)
     return request.phoneNumbers.map {
       createANewPhoneNumber(
@@ -115,12 +115,6 @@ class ContactPhoneService(
     val existing = contactPhoneRepository.findById(contactPhoneId)
       .orElseThrow { EntityNotFoundException("Contact phone ($contactPhoneId) not found") }
     return existing
-  }
-
-  private fun validatePhoneNumber(phoneNumber: String) {
-    if (!phoneNumber.matches(Regex("\\+?[\\d\\s()]+"))) {
-      throw ValidationException("Phone number invalid, it can only contain numbers, () and whitespace with an optional + at the start")
-    }
   }
 
   private fun validateContactExists(contactId: Long) {

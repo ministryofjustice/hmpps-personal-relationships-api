@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.kotlin.any
@@ -19,6 +19,8 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactPhoneEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPhoneRepository
@@ -90,34 +92,7 @@ class ContactAddressPhoneServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource(
-      "!",
-      "\"",
-      "£",
-      "$",
-      "%",
-      "^",
-      "&",
-      "*",
-      "_",
-      "-",
-      "=",
-      // + not allowed unless at start
-      "0+",
-      ":",
-      ";",
-      "[",
-      "]",
-      "{",
-      "}",
-      "@",
-      "#",
-      "~",
-      "/",
-      "\\",
-      "'",
-      quoteCharacter = 'X',
-    )
+    @MethodSource("uk.gov.justice.digital.hmpps.hmppscontactsapi.util.PhoneNumberTestUtils#invalidPhoneNumbers")
     fun `should throw ValidationException creating address-specific phone if phone number contains invalid chars`(phoneNumber: String) {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
       whenever(contactAddressRepository.findById(contactAddressId)).thenReturn(Optional.of(contactAddressEntity))
@@ -164,6 +139,157 @@ class ContactAddressPhoneServiceTest {
         assertThat(contactId).isEqualTo(contactId)
         assertThat(phoneType).isEqualTo(request.phoneType)
         assertThat(phoneNumber).isEqualTo(request.phoneNumber)
+      }
+    }
+  }
+
+  @Nested
+  inner class CreateMultipleAddressSpecificPhone {
+    private val request = CreateMultiplePhoneNumbersRequest(
+      listOf(
+        PhoneNumber(
+          "MOB",
+          "+447777777777",
+          "0123",
+        ),
+        PhoneNumber(
+          phoneType = "HOME",
+          phoneNumber = "01234 567890",
+          extNumber = null,
+        ),
+      ),
+      "USER1",
+    )
+
+    @Test
+    fun `should throw EntityNotFoundException if the contact does not exist`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
+
+      val exception = assertThrows<EntityNotFoundException> {
+        service.createMultiple(contactId, contactAddressId, request)
+      }
+      assertThat(exception.message).isEqualTo("Contact ($contactId) not found")
+    }
+
+    @Test
+    fun `should throw EntityNotFoundException if the address does not exist`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
+      whenever(contactAddressRepository.findById(contactAddressId)).thenReturn(Optional.empty())
+
+      val exception = assertThrows<EntityNotFoundException> {
+        service.createMultiple(contactId, contactAddressId, request)
+      }
+      assertThat(exception.message).isEqualTo("Contact address ($contactAddressId) not found")
+    }
+
+    @Test
+    fun `should throw ValidationException creating an address-specific phone if the phone type is invalid`() {
+      val expectedException = ValidationException("Unsupported phone type (FOO)")
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
+      whenever(contactAddressRepository.findById(contactAddressId)).thenReturn(Optional.of(contactAddressEntity))
+      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "FOO", allowInactive = false)).thenThrow(expectedException)
+
+      val exception = assertThrows<ValidationException> {
+        service.createMultiple(
+          contactId,
+          contactAddressId,
+          request.copy(
+            phoneNumbers = listOf(
+              PhoneNumber(
+                phoneType = "FOO",
+                phoneNumber = "+447777777777",
+              ),
+            ),
+          ),
+        )
+      }
+
+      assertThat(exception).isEqualTo(expectedException)
+      verify(referenceCodeService).validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "FOO", allowInactive = false)
+    }
+
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.hmppscontactsapi.util.PhoneNumberTestUtils#invalidPhoneNumbers")
+    fun `should throw ValidationException creating address-specific phone if phone number contains invalid chars`(phoneNumber: String) {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
+      whenever(contactAddressRepository.findById(contactAddressId)).thenReturn(Optional.of(contactAddressEntity))
+      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "HOME", allowInactive = false))
+        .thenReturn(ReferenceCode(0, ReferenceCodeGroup.PHONE_TYPE, "HOME", "Home", 90, true))
+
+      val exception = assertThrows<ValidationException> {
+        service.createMultiple(
+          contactId,
+          contactAddressId,
+          request.copy(
+            phoneNumbers = listOf(
+              PhoneNumber(
+                phoneType = "MOB",
+                phoneNumber = phoneNumber,
+              ),
+            ),
+          ),
+        )
+      }
+
+      assertThat(exception.message).isEqualTo("Phone number invalid, it can only contain numbers, () and whitespace with an optional + at the start")
+    }
+
+    @Test
+    fun `should return a the address-specific phone details after successful creation`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
+      whenever(contactAddressRepository.findById(contactAddressId)).thenReturn(Optional.of(contactAddressEntity))
+      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "HOME", allowInactive = false))
+        .thenReturn(ReferenceCode(0, ReferenceCodeGroup.PHONE_TYPE, "HOME", "Home", 90, true))
+
+      whenever(contactPhoneRepository.saveAndFlush(any())).thenAnswer { i ->
+        (i.arguments[0] as ContactPhoneEntity).copy(
+          contactPhoneId = 8888,
+          contactId = contactId,
+        )
+      }.thenAnswer { i ->
+        (i.arguments[0] as ContactPhoneEntity).copy(
+          contactPhoneId = 9999,
+          contactId = contactId,
+        )
+      }
+
+      whenever(contactAddressPhoneRepository.saveAndFlush(any())).thenAnswer { i ->
+        (i.arguments[0] as ContactAddressPhoneEntity).copy(
+          contactAddressPhoneId = 6666,
+          contactAddressId = contactAddressId,
+          contactId = contactId,
+        )
+      }.thenAnswer { i ->
+        (i.arguments[0] as ContactAddressPhoneEntity).copy(
+          contactAddressPhoneId = 5555,
+          contactAddressId = contactAddressId,
+          contactId = contactId,
+        )
+      }
+
+      val created = service.createMultiple(contactId, contactAddressId, request)
+      assertThat(created).hasSize(2)
+
+      val mobile = created.find { it.phoneType == "MOB" }!!
+      with(mobile) {
+        assertThat(contactAddressPhoneId).isEqualTo(6666)
+        assertThat(contactAddressId).isEqualTo(contactAddressId)
+        assertThat(contactPhoneId).isEqualTo(8888)
+        assertThat(contactId).isEqualTo(contactId)
+        assertThat(phoneType).isEqualTo("MOB")
+        assertThat(phoneNumber).isEqualTo("+447777777777")
+        assertThat(extNumber).isEqualTo("0123")
+      }
+
+      val home = created.find { it.phoneType == "HOME" }!!
+      with(home) {
+        assertThat(contactAddressPhoneId).isEqualTo(5555)
+        assertThat(contactAddressId).isEqualTo(contactAddressId)
+        assertThat(contactPhoneId).isEqualTo(9999)
+        assertThat(contactId).isEqualTo(contactId)
+        assertThat(phoneType).isEqualTo("HOME")
+        assertThat(phoneNumber).isEqualTo("01234 567890")
+        assertThat(extNumber).isNull()
       }
     }
   }
@@ -277,34 +403,7 @@ class ContactAddressPhoneServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource(
-      "!",
-      "\"",
-      "£",
-      "$",
-      "%",
-      "^",
-      "&",
-      "*",
-      "_",
-      "-",
-      "=",
-      // + not allowed unless at start
-      "0+",
-      ":",
-      ";",
-      "[",
-      "]",
-      "{",
-      "}",
-      "@",
-      "#",
-      "~",
-      "/",
-      "\\",
-      "'",
-      quoteCharacter = 'X',
-    )
+    @MethodSource("uk.gov.justice.digital.hmpps.hmppscontactsapi.util.PhoneNumberTestUtils#invalidPhoneNumbers")
     fun `should throw ValidationException updating address-specific phone if number contains invalid chars`(phone: String) {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
       whenever(contactAddressPhoneRepository.findById(contactAddressPhoneId)).thenReturn(Optional.of(addressPhoneEntity))

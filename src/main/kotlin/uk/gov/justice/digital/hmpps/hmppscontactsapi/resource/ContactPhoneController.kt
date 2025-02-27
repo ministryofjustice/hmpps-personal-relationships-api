@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.resource
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.ArraySchema
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -22,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactPhoneFacade
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultipleContactPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactPhoneDetails
@@ -92,7 +93,7 @@ class ContactPhoneController(private val contactPhoneFacade: ContactPhoneFacade)
         content = [
           Content(
             mediaType = "application/json",
-            schema = Schema(implementation = ContactPhoneDetails::class),
+            array = ArraySchema(schema = Schema(implementation = ContactPhoneDetails::class)),
           ),
         ],
       ),
@@ -115,7 +116,7 @@ class ContactPhoneController(private val contactPhoneFacade: ContactPhoneFacade)
       description = "The id of the contact",
       example = "123456",
     ) contactId: Long,
-    @Valid @RequestBody request: CreateMultipleContactPhoneNumbersRequest,
+    @Valid @RequestBody request: CreateMultiplePhoneNumbersRequest,
   ): ResponseEntity<Any> {
     val createdPhone = contactPhoneFacade.createMultiple(contactId, request)
     return ResponseEntity

@@ -9,7 +9,7 @@ import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactPhoneNumberDetails
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultipleContactPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdatePhoneRequest
@@ -78,7 +78,7 @@ class ContactPhoneFacadeTest {
     )
     whenever(phoneService.createMultiple(any(), any())).thenReturn(expectedCreated)
     whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
-    val request = CreateMultipleContactPhoneNumbersRequest(
+    val request = CreateMultiplePhoneNumbersRequest(
       listOf(
         PhoneNumber(
           phoneType = "MOB",

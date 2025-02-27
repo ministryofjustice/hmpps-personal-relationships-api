@@ -11,18 +11,19 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactPhoneInfo
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddressPhoneInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
+class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   private var savedContactId = 0L
-
+  private var savedAddressId = 0L
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
   @BeforeEach
@@ -34,10 +35,21 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
         createdBy = "created",
       ),
     ).id
+
+    savedAddressId = testAPIClient.createAContactAddress(
+      savedContactId,
+      CreateContactAddressRequest(
+        addressType = "HOME",
+        primaryAddress = true,
+        property = "27",
+        street = "Hello Road",
+        createdBy = "created",
+      ),
+    ).contactAddressId
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.post()
-    .uri("/contact/$savedContactId/phones")
+    .uri("/contact/$savedContactId/address/$savedAddressId/phones")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
     .bodyValue(aMinimalRequest())
@@ -56,7 +68,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
   )
   fun `should return bad request if required fields are null`(expectedMessage: String, json: String) {
     val errors = webTestClient.post()
-      .uri("/contact/$savedContactId/phones")
+      .uri("/contact/$savedContactId/address/$savedAddressId/phones")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
@@ -70,7 +82,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
 
     assertThat(errors.userMessage).isEqualTo("Validation failure: $expectedMessage")
     stubEvents.assertHasNoEvents(
-      event = OutboundEvent.CONTACT_PHONE_CREATED,
+      event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
     )
   }
 
@@ -78,7 +90,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
   @MethodSource("allFieldConstraintViolations")
   fun `should enforce field constraints`(expectedMessage: String, request: CreateMultiplePhoneNumbersRequest) {
     val errors = webTestClient.post()
-      .uri("/contact/$savedContactId/phones")
+      .uri("/contact/$savedContactId/address/$savedAddressId/phones")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
@@ -92,7 +104,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
 
     assertThat(errors.userMessage).isEqualTo("Validation failure(s): $expectedMessage")
     stubEvents.assertHasNoEvents(
-      event = OutboundEvent.CONTACT_PHONE_CREATED,
+      event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
     )
   }
 
@@ -113,7 +125,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
     )
 
     val errors = webTestClient.post()
-      .uri("/contact/$savedContactId/phones")
+      .uri("/contact/$savedContactId/address/$savedAddressId/phones")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
@@ -127,7 +139,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
 
     assertThat(errors.userMessage).isEqualTo("Validation failure: Phone number invalid, it can only contain numbers, () and whitespace with an optional + at the start")
     stubEvents.assertHasNoEvents(
-      event = OutboundEvent.CONTACT_PHONE_CREATED,
+      event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
     )
   }
 
@@ -144,7 +156,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
     )
 
     val errors = webTestClient.post()
-      .uri("/contact/$savedContactId/phones")
+      .uri("/contact/$savedContactId/address/$savedAddressId/phones")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
@@ -158,7 +170,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
 
     assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported phone type (SATELLITE)")
     stubEvents.assertHasNoEvents(
-      event = OutboundEvent.CONTACT_PHONE_CREATED,
+      event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
     )
   }
 
@@ -167,7 +179,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
     val request = aMinimalRequest()
 
     val errors = webTestClient.post()
-      .uri("/contact/-321/phones")
+      .uri("/contact/-321/address/$savedAddressId/phones")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
@@ -181,7 +193,30 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
 
     assertThat(errors.userMessage).isEqualTo("Entity not found : Contact (-321) not found")
     stubEvents.assertHasNoEvents(
-      event = OutboundEvent.CONTACT_PHONE_CREATED,
+      event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
+    )
+  }
+
+  @Test
+  fun `should not create the phone if the address is not found`() {
+    val request = aMinimalRequest()
+
+    val errors = webTestClient.post()
+      .uri("/contact/$savedContactId/address/-321/phones")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isNotFound
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Entity not found : Contact address (-321) not found")
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
     )
   }
 
@@ -203,21 +238,21 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
       createdBy = "created",
     )
 
-    val created = testAPIClient.createMultipleContactPhones(savedContactId, request, role)
+    val created = testAPIClient.createMultipleContactAddressPhones(savedContactId, savedAddressId, request, role)
 
     val mobile = created.find { it.phoneType == "MOB" }
     assertThat(mobile).isNotNull()
     stubEvents.assertHasEvent(
-      event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(mobile!!.contactPhoneId, Source.DPS),
+      event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
+      additionalInfo = ContactAddressPhoneInfo(mobile!!.contactAddressPhoneId, savedAddressId, Source.DPS),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
     val home = created.find { it.phoneType == "HOME" }
     assertThat(home).isNotNull()
     stubEvents.assertHasEvent(
-      event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(home!!.contactPhoneId, Source.DPS),
+      event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
+      additionalInfo = ContactAddressPhoneInfo(home!!.contactAddressPhoneId, savedAddressId, Source.DPS),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }

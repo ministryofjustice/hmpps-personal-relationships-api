@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
@@ -17,7 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactPhoneDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactPhoneEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultipleContactPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdatePhoneRequest
@@ -59,40 +58,9 @@ class ContactPhoneServiceTest {
     createdTime = now(),
   )
 
-  companion object {
-    @JvmStatic
-    fun invalidPhoneNumbers(): List<Arguments> = listOf(
-      "!",
-      "\"",
-      "£",
-      "$",
-      "%",
-      "^",
-      "&",
-      "*",
-      "_",
-      "-",
-      "=",
-      // + not allowed unless at start
-      "0+",
-      ":",
-      ";",
-      "[",
-      "]",
-      "{",
-      "}",
-      "@",
-      "#",
-      "~",
-      "/",
-      "\\",
-      "'",
-    ).map { Arguments.of(it) }
-  }
-
   @Nested
   inner class CreateMultiplePhones {
-    private val request = CreateMultipleContactPhoneNumbersRequest(
+    private val request = CreateMultiplePhoneNumbersRequest(
       listOf(
         PhoneNumber(
           "MOB",
@@ -137,7 +105,7 @@ class ContactPhoneServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactPhoneServiceTest#invalidPhoneNumbers")
+    @MethodSource("uk.gov.justice.digital.hmpps.hmppscontactsapi.util.PhoneNumberTestUtils#invalidPhoneNumbers")
     fun `should throw ValidationException creating phone if phone contains invalid chars`(phoneNumber: String) {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
       whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.PHONE_TYPE, "MOB")).thenReturn(
@@ -280,7 +248,7 @@ class ContactPhoneServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactPhoneServiceTest#invalidPhoneNumbers")
+    @MethodSource("uk.gov.justice.digital.hmpps.hmppscontactsapi.util.PhoneNumberTestUtils#invalidPhoneNumbers")
     fun `should throw ValidationException creating phone if phone contains invalid chars`(phoneNumber: String) {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
       whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.PHONE_TYPE, "MOB")).thenReturn(
@@ -453,7 +421,7 @@ class ContactPhoneServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactPhoneServiceTest#invalidPhoneNumbers")
+    @MethodSource("uk.gov.justice.digital.hmpps.hmppscontactsapi.util.PhoneNumberTestUtils#invalidPhoneNumbers")
     fun `should throw ValidationException updating phone if phone contains invalid chars`(phoneNumber: String) {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
       whenever(contactPhoneRepository.findById(contactPhoneId)).thenReturn(Optional.of(existingPhone))
