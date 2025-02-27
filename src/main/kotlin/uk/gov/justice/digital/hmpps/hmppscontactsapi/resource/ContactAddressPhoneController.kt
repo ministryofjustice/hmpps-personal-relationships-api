@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.resource
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.ArraySchema
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactAddressPhoneFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateContactAddressPhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
@@ -30,7 +32,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 @Tag(name = "Contacts")
 @RestController
 @RequestMapping(
-  value = ["/contact/{contactId}/address/{contactAddressId}/phone"],
+  value = ["/contact/{contactId}/address/{contactAddressId}"],
   produces = [MediaType.APPLICATION_JSON_VALUE],
 )
 @AuthApiResponses
@@ -38,7 +40,7 @@ class ContactAddressPhoneController(
   private val contactAddressPhoneFacade: ContactAddressPhoneFacade,
 ) {
 
-  @PostMapping(consumes = [MediaType.APPLICATION_JSON_VALUE])
+  @PostMapping("/phone", consumes = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(summary = "Create new address-specific phone number", description = "Creates a new address-specific phone number")
   @ApiResponses(
     value = [
@@ -81,7 +83,50 @@ class ContactAddressPhoneController(
       .body(created)
   }
 
-  @PutMapping("/{contactAddressPhoneId}", consumes = [MediaType.APPLICATION_JSON_VALUE])
+  @PostMapping("/phones", consumes = [MediaType.APPLICATION_JSON_VALUE])
+  @Operation(summary = "Create multiple address-specific phone numbers", description = "Creates one or more address-specific phone numbers")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "201",
+        description = "Created all the address-specific phone numbers successfully",
+        content = [
+          Content(
+            mediaType = "application/json",
+            array = ArraySchema(schema = Schema(implementation = ContactAddressPhoneDetails::class)),
+          ),
+        ],
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "The request has invalid or missing fields",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Could not find the the contact or address provided",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__RW')")
+  fun createMultipleContactAddressPhones(
+    @PathVariable("contactId")
+    @Parameter(name = "contactId", description = "The id of the contact", example = "111")
+    contactId: Long,
+    @PathVariable("contactAddressId")
+    @Parameter(name = "contactAddressId", description = "The id of the address", example = "222")
+    contactAddressId: Long,
+    @Valid @RequestBody
+    request: CreateMultiplePhoneNumbersRequest,
+  ): ResponseEntity<Any> {
+    val created = contactAddressPhoneFacade.createMultiple(contactId, contactAddressId, request)
+    return ResponseEntity
+      .status(HttpStatus.CREATED)
+      .body(created)
+  }
+
+  @PutMapping("/phone/{contactAddressPhoneId}", consumes = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(summary = "Update an address-specific phone number", description = "Updates an address-specific phone number by its ID")
   @ApiResponses(
     value = [
@@ -122,7 +167,7 @@ class ContactAddressPhoneController(
     request: UpdateContactAddressPhoneRequest,
   ) = contactAddressPhoneFacade.update(contactId, contactAddressPhoneId, request)
 
-  @GetMapping("/{contactAddressPhoneId}")
+  @GetMapping("/phone/{contactAddressPhoneId}")
   @Operation(summary = "Get an address-specific phone number", description = "Get an address-specific phone number by its ID")
   @ApiResponses(
     value = [
@@ -156,7 +201,7 @@ class ContactAddressPhoneController(
     contactAddressPhoneId: Long,
   ) = contactAddressPhoneFacade.get(contactId, contactAddressPhoneId)
 
-  @DeleteMapping("/{contactAddressPhoneId}")
+  @DeleteMapping("/phone/{contactAddressPhoneId}")
   @Operation(summary = "Delete an address-specific phone number", description = "Deletes an address-specific phone number by its ID")
   @ApiResponses(
     value = [

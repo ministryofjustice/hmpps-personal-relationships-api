@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.resource
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.ArraySchema
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -91,7 +92,7 @@ class ContactEmailController(private val contactEmailFacade: ContactEmailFacade)
         content = [
           Content(
             mediaType = "application/json",
-            schema = Schema(implementation = ContactEmailDetails::class),
+            array = ArraySchema(schema = Schema(implementation = ContactEmailDetails::class)),
           ),
         ],
       ),

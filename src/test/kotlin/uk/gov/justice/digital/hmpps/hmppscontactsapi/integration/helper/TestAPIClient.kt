@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateM
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.UpdateEmailRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigrateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateContactAddressPhoneRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultipleContactPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdatePhoneRequest
@@ -176,7 +176,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactPhoneDetails::class.java)
     .returnResult().responseBody!!
 
-  fun createMultipleContactPhones(contactId: Long, request: CreateMultipleContactPhoneNumbersRequest, role: String = "ROLE_CONTACTS_ADMIN"): List<ContactPhoneDetails> = webTestClient.post()
+  fun createMultipleContactPhones(contactId: Long, request: CreateMultiplePhoneNumbersRequest, role: String = "ROLE_CONTACTS_ADMIN"): List<ContactPhoneDetails> = webTestClient.post()
     .uri("/contact/$contactId/phones")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -229,6 +229,19 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .isCreated
     .expectHeader().contentType(MediaType.APPLICATION_JSON)
     .expectBody(ContactAddressPhoneDetails::class.java)
+    .returnResult().responseBody!!
+
+  fun createMultipleContactAddressPhones(contactId: Long, contactAddressId: Long, request: CreateMultiplePhoneNumbersRequest, role: String = "ROLE_CONTACTS_ADMIN"): List<ContactAddressPhoneDetails> = webTestClient.post()
+    .uri("/contact/$contactId/address/$contactAddressId/phones")
+    .accept(MediaType.APPLICATION_JSON)
+    .contentType(MediaType.APPLICATION_JSON)
+    .headers(authorised(role))
+    .bodyValue(request)
+    .exchange()
+    .expectStatus()
+    .isCreated
+    .expectHeader().contentType(MediaType.APPLICATION_JSON)
+    .expectBodyList(ContactAddressPhoneDetails::class.java)
     .returnResult().responseBody!!
 
   fun updateAContactAddressPhone(

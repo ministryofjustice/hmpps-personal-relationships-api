@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 
 import jakarta.persistence.EntityNotFoundException
-import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressEntity
@@ -10,6 +9,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactPhoneEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateContactAddressPhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPh
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.validatePhoneNumber
 import java.time.LocalDateTime
 
 @Service
@@ -34,21 +35,47 @@ class ContactAddressPhoneService(
     contactAddressId: Long,
     request: CreateContactAddressPhoneRequest,
   ): ContactAddressPhoneDetails {
-    // Validate the request
     validateContactExists(contactId)
     validateContactAddressExists(contactAddressId)
-    validatePhoneNumber(request.phoneNumber)
-    val phoneTypeReference = referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, request.phoneType, allowInactive = false)
+    return createAnAddressSpecificPhoneNumber(contactId, contactAddressId, request.phoneType, request.phoneNumber, request.extNumber, request.createdBy)
+  }
+
+  fun createMultiple(
+    contactId: Long,
+    contactAddressId: Long,
+    request: CreateMultiplePhoneNumbersRequest,
+  ): List<ContactAddressPhoneDetails> {
+    validateContactExists(contactId)
+    validateContactAddressExists(contactAddressId)
+    return request.phoneNumbers.map {
+      createAnAddressSpecificPhoneNumber(contactId, contactAddressId, it.phoneType, it.phoneNumber, it.extNumber, request.createdBy)
+    }
+  }
+
+  private fun createAnAddressSpecificPhoneNumber(
+    contactId: Long,
+    contactAddressId: Long,
+    phoneType: String,
+    phoneNumber: String,
+    extNumber: String?,
+    createdBy: String,
+  ): ContactAddressPhoneDetails {
+    validatePhoneNumber(phoneNumber)
+    val phoneTypeReference = referenceCodeService.validateReferenceCode(
+      ReferenceCodeGroup.PHONE_TYPE,
+      phoneType,
+      allowInactive = false,
+    )
     val createdTime = LocalDateTime.now()
     // Save the phone number
     val createdPhone = contactPhoneRepository.saveAndFlush(
       ContactPhoneEntity(
         contactPhoneId = 0,
         contactId = contactId,
-        phoneType = request.phoneType,
-        phoneNumber = request.phoneNumber,
-        extNumber = request.extNumber,
-        createdBy = request.createdBy,
+        phoneType = phoneType,
+        phoneNumber = phoneNumber,
+        extNumber = extNumber,
+        createdBy = createdBy,
         createdTime = createdTime,
       ),
     )
@@ -60,7 +87,7 @@ class ContactAddressPhoneService(
         contactId = contactId,
         contactAddressId = contactAddressId,
         contactPhoneId = createdPhone.contactPhoneId,
-        createdBy = request.createdBy,
+        createdBy = createdBy,
         createdTime = createdTime,
       ),
     )
@@ -118,12 +145,6 @@ class ContactAddressPhoneService(
     contactPhoneRepository.deleteById(existingPhone.contactPhoneId)
 
     return existingContactAddressPhone.toModel(existingPhone, phoneTypeRef)
-  }
-
-  private fun validatePhoneNumber(phoneNumber: String) {
-    if (!phoneNumber.matches(Regex("\\+?[\\d\\s()]+"))) {
-      throw ValidationException("Phone number invalid, it can only contain numbers, () and whitespace with an optional + at the start")
-    }
   }
 
   private fun validatePhoneExists(contactPhoneId: Long): ContactPhoneEntity = contactPhoneRepository.findById(contactPhoneId)

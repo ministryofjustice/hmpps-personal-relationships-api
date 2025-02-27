@@ -12,6 +12,8 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.contactAddressPhoneResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.updateContactAddressPhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactAddressPhoneService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
@@ -65,6 +67,52 @@ class ContactAddressPhoneFacadeTest {
 
     verify(addressPhoneService).create(contactId, contactAddressId, request)
     verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+  }
+
+  @Test
+  fun `should send event for all created`() {
+    val request = CreateMultiplePhoneNumbersRequest(
+      listOf(
+        PhoneNumber(
+          "MOB",
+          "+447777777777",
+          "0123",
+        ),
+        PhoneNumber(
+          phoneType = "HOME",
+          phoneNumber = "01234 567890",
+          extNumber = null,
+        ),
+      ),
+      "USER1",
+    )
+
+    val response = listOf(
+      contactAddressPhoneResponse(9999, contactAddressId, 6666, contactId),
+      contactAddressPhoneResponse(8888, contactAddressId, 5555, contactId),
+    )
+
+    whenever(addressPhoneService.createMultiple(any(), any(), any())).thenReturn(response)
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+
+    val result = facade.createMultiple(contactId, contactAddressId, request)
+
+    assertThat(result).isEqualTo(response)
+    verify(addressPhoneService).createMultiple(contactId, contactAddressId, request)
+    verify(eventsService).send(
+      outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
+      identifier = 9999,
+      secondIdentifier = contactAddressId,
+      contactId = contactId,
+      source = Source.DPS,
+    )
+    verify(eventsService).send(
+      outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
+      identifier = 8888,
+      secondIdentifier = contactAddressId,
+      contactId = contactId,
+      source = Source.DPS,
+    )
   }
 
   @Test

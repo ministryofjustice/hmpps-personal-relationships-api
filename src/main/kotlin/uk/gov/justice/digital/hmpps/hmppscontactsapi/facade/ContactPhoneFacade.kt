@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultipleContactPhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactPhoneDetails
@@ -23,7 +23,7 @@ class ContactPhoneFacade(
     )
   }
 
-  fun createMultiple(contactId: Long, request: CreateMultipleContactPhoneNumbersRequest): List<ContactPhoneDetails> = contactPhoneService.createMultiple(contactId, request).also { created ->
+  fun createMultiple(contactId: Long, request: CreateMultiplePhoneNumbersRequest): List<ContactPhoneDetails> = contactPhoneService.createMultiple(contactId, request).also { created ->
     created.forEach {
       outboundEventsService.send(
         outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
