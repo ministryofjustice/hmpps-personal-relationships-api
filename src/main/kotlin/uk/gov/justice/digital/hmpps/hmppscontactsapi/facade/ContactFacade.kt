@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactR
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PatchContactResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
@@ -71,6 +72,8 @@ class ContactFacade(
     }
 
   fun getContact(id: Long): ContactDetails? = contactService.getContact(id)
+
+  fun getContactName(id: Long): ContactNameDetails? = contactService.getContactName(id)
 
   fun searchContacts(pageable: Pageable, request: ContactSearchRequest): Page<ContactSearchResultItem> = contactService.searchContacts(pageable, request)
 

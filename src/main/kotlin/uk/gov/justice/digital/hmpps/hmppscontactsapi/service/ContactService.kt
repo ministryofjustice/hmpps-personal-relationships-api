@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateRelatio
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
@@ -74,6 +75,19 @@ class ContactService(
 
   fun getContact(id: Long): ContactDetails? = contactRepository.findById(id).getOrNull()
     ?.let { enrichContact(it) }
+
+  fun getContactName(id: Long): ContactNameDetails? = contactRepository.findById(id).getOrNull()
+    ?.let { contactEntity ->
+      ContactNameDetails(
+        titleCode = contactEntity.title,
+        titleDescription = contactEntity.title?.let {
+          referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.TITLE, it)?.description
+        },
+        lastName = contactEntity.lastName,
+        firstName = contactEntity.firstName,
+        middleNames = contactEntity.middleNames,
+      )
+    }
 
   fun searchContacts(pageable: Pageable, request: ContactSearchRequest): Page<ContactSearchResultItem> = contactSearchRepository.searchContacts(request, pageable).toModel()
 

@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreat
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactEmailDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactIdentityDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
@@ -90,6 +91,17 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .isOk
     .expectHeader().contentType(MediaType.APPLICATION_JSON)
     .expectBody(ContactDetails::class.java)
+    .returnResult().responseBody!!
+
+  fun getContactName(id: Long, role: String = "ROLE_CONTACTS_ADMIN"): ContactNameDetails = webTestClient.get()
+    .uri("/contact/$id/name")
+    .accept(MediaType.APPLICATION_JSON)
+    .headers(setAuthorisation(roles = listOf(role)))
+    .exchange()
+    .expectStatus()
+    .isOk
+    .expectHeader().contentType(MediaType.APPLICATION_JSON)
+    .expectBody(ContactNameDetails::class.java)
     .returnResult().responseBody!!
 
   fun getPrisonerContacts(prisonerNumber: String): PrisonerContactSummaryResponse = webTestClient.get()
