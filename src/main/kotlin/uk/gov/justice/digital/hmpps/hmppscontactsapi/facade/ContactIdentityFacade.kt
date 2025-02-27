@@ -2,8 +2,9 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
 
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateIdentityRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateIdentityRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateIdentityRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateMultipleIdentitiesRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.UpdateIdentityRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactIdentityDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactIdentityService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
@@ -21,6 +22,16 @@ class ContactIdentityFacade(
       identifier = it.contactIdentityId,
       contactId = contactId,
     )
+  }
+
+  fun createMultiple(contactId: Long, request: CreateMultipleIdentitiesRequest): List<ContactIdentityDetails> = contactIdentityService.createMultiple(contactId, request).also { created ->
+    created.forEach {
+      outboundEventsService.send(
+        outboundEvent = OutboundEvent.CONTACT_IDENTITY_CREATED,
+        identifier = it.contactIdentityId,
+        contactId = contactId,
+      )
+    }
   }
 
   fun update(contactId: Long, contactIdentityId: Long, request: UpdateIdentityRequest): ContactIdentityDetails = contactIdentityService.update(contactId, contactIdentityId, request).also {

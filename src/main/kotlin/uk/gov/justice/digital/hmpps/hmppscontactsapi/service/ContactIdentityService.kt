@@ -7,8 +7,9 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactIdentityEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateIdentityRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateIdentityRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateIdentityRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateMultipleIdentitiesRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.UpdateIdentityRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactIdentityDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactIdentityDetailsRepository
@@ -28,16 +29,50 @@ class ContactIdentityService(
   @Transactional
   fun create(contactId: Long, request: CreateIdentityRequest): ContactIdentityDetails {
     validateContactExists(contactId)
-    validatePNC(request.identityType, request.identityValue)
-    val type = referenceCodeService.validateReferenceCode(ReferenceCodeGroup.ID_TYPE, request.identityType, allowInactive = false)
+    return createAContactIdentity(
+      contactId,
+      request.identityType,
+      request.identityValue,
+      request.issuingAuthority,
+      request.createdBy,
+    )
+  }
+
+  @Transactional
+  fun createMultiple(contactId: Long, request: CreateMultipleIdentitiesRequest): List<ContactIdentityDetails> {
+    validateContactExists(contactId)
+    return request.identities.map {
+      createAContactIdentity(
+        contactId,
+        it.identityType,
+        it.identityValue,
+        it.issuingAuthority,
+        request.createdBy,
+      )
+    }
+  }
+
+  private fun createAContactIdentity(
+    contactId: Long,
+    identityType: String,
+    identityValue: String,
+    issuingAuthority: String?,
+    createdBy: String,
+  ): ContactIdentityDetails {
+    validatePNC(identityType, identityValue)
+    val type = referenceCodeService.validateReferenceCode(
+      ReferenceCodeGroup.ID_TYPE,
+      identityType,
+      allowInactive = false,
+    )
     val created = contactIdentityRepository.saveAndFlush(
       ContactIdentityEntity(
         contactIdentityId = 0,
         contactId = contactId,
-        identityType = request.identityType,
-        identityValue = request.identityValue,
-        issuingAuthority = request.issuingAuthority,
-        createdBy = request.createdBy,
+        identityType = identityType,
+        identityValue = identityValue,
+        issuingAuthority = issuingAuthority,
+        createdBy = createdBy,
         createdTime = LocalDateTime.now(),
       ),
     )

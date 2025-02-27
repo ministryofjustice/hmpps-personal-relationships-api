@@ -11,8 +11,8 @@ import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactIdentityFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactIdentityDetails
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateIdentityRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateIdentityRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateIdentityRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.UpdateIdentityRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactIdentityDetails
 import java.time.LocalDateTime
 
