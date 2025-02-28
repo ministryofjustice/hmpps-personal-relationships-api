@@ -108,10 +108,11 @@ class GetPrisonerContactRestrictionsIntegrationTest : SecureAPIIntegrationTestBa
         createdBy = "USER1",
         relationship = ContactRelationship(
           prisonerNumber = prisonerNumber,
-          relationshipType = "S",
-          relationshipToPrisoner = "FRI",
+          relationshipTypeCode = "S",
+          relationshipToPrisonerCode = "FRI",
           isNextOfKin = false,
           isEmergencyContact = false,
+          isApprovedVisitor = false,
           comments = null,
         ),
       ),

@@ -40,10 +40,11 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
         firstName = "first",
         relationship = ContactRelationship(
           prisonerNumber = prisonerNumberCreatedAgainst,
-          relationshipType = "S",
-          relationshipToPrisoner = "FRI",
+          relationshipTypeCode = "S",
+          relationshipToPrisonerCode = "FRI",
           isNextOfKin = true,
           isEmergencyContact = true,
+          isApprovedVisitor = false,
           comments = "Some comments",
         ),
         createdBy = "created",

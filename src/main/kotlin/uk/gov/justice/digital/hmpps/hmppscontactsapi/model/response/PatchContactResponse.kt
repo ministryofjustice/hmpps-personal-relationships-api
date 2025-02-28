@@ -20,7 +20,7 @@ data class PatchContactResponse(
     example = "MR",
     nullable = true,
   )
-  val title: String? = null,
+  val titleCode: String? = null,
 
   @Schema(description = "The last name of the contact", example = "Doe")
   val lastName: String,
@@ -50,10 +50,10 @@ data class PatchContactResponse(
     example = "M",
     nullable = true,
   )
-  var gender: String? = null,
+  var genderCode: String? = null,
 
   @Schema(description = "The domestic status code of the contact", example = "S", nullable = true)
-  var domesticStatus: String? = null,
+  var domesticStatusCode: String? = null,
 
   @Schema(description = "The language code of the contact", example = "EN", nullable = true)
   var languageCode: String? = null,

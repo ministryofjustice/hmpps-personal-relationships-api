@@ -85,6 +85,28 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @ParameterizedTest
+  @MethodSource("allReferenceCodeViolations")
+  fun `should enforce reference data`(expectedTypeDescription: String, request: CreateContactRequest) {
+    val errors = webTestClient.post()
+      .uri("/contact")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported $expectedTypeDescription (FOO)")
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.CONTACT_CREATED,
+    )
+  }
+
+  @ParameterizedTest
   @CsvSource(
     value = [
       "{\"firstName\": \"first\", \"lastName\": \"last\", \"createdBy\": \"created\", \"dateOfBirth\": \"1st Jan\"}",
@@ -140,11 +162,16 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create the contact with all fields`(role: String) {
     val request = CreateContactRequest(
-      title = "MR",
+      titleCode = "MR",
       lastName = "last",
       firstName = "first",
       middleNames = "middle",
       dateOfBirth = LocalDate.of(1982, 6, 15),
+      isStaff = true,
+      languageCode = "ENG",
+      interpreterRequired = true,
+      domesticStatusCode = "S",
+      genderCode = "M",
       createdBy = "created",
     )
 
@@ -161,19 +188,27 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
   private fun assertContactsAreEqualExcludingTimestamps(contact: ContactDetails, request: CreateContactRequest) {
     with(contact) {
-      assertThat(title).isEqualTo(request.title)
+      assertThat(titleCode).isEqualTo(request.titleCode)
       assertThat(lastName).isEqualTo(request.lastName)
       assertThat(firstName).isEqualTo(request.firstName)
       assertThat(middleNames).isEqualTo(request.middleNames)
       assertThat(dateOfBirth).isEqualTo(request.dateOfBirth)
       assertThat(createdBy).isEqualTo(request.createdBy)
+      assertThat(isStaff).isEqualTo(request.isStaff)
+      assertThat(languageCode).isEqualTo(request.languageCode)
+      assertThat(interpreterRequired).isEqualTo(request.interpreterRequired)
+      assertThat(domesticStatusCode).isEqualTo(request.domesticStatusCode)
+      assertThat(genderCode).isEqualTo(request.genderCode)
     }
   }
 
   companion object {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
-      Arguments.of("title must be <= 12 characters", aMinimalCreateContactRequest().copy(title = "".padStart(13, 'X'))),
+      Arguments.of("titleCode must be <= 12 characters", aMinimalCreateContactRequest().copy(titleCode = "".padStart(13, 'X'))),
+      Arguments.of("genderCode must be <= 12 characters", aMinimalCreateContactRequest().copy(genderCode = "".padStart(13, 'X'))),
+      Arguments.of("languageCode must be <= 12 characters", aMinimalCreateContactRequest().copy(languageCode = "".padStart(13, 'X'))),
+      Arguments.of("domesticStatusCode must be <= 12 characters", aMinimalCreateContactRequest().copy(domesticStatusCode = "".padStart(13, 'X'))),
       Arguments.of(
         "lastName must be <= 35 characters",
         aMinimalCreateContactRequest().copy(lastName = "".padStart(36, 'X')),
@@ -190,6 +225,14 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
         "createdBy must be <= 100 characters",
         aMinimalCreateContactRequest().copy(createdBy = "".padStart(101, 'X')),
       ),
+    )
+
+    @JvmStatic
+    fun allReferenceCodeViolations(): List<Arguments> = listOf(
+      Arguments.of("title", aMinimalCreateContactRequest().copy(titleCode = "FOO")),
+      Arguments.of("language", aMinimalCreateContactRequest().copy(languageCode = "FOO")),
+      Arguments.of("domestic status", aMinimalCreateContactRequest().copy(domesticStatusCode = "FOO")),
+      Arguments.of("gender", aMinimalCreateContactRequest().copy(genderCode = "FOO")),
     )
 
     private fun aMinimalCreateContactRequest() = CreateContactRequest(

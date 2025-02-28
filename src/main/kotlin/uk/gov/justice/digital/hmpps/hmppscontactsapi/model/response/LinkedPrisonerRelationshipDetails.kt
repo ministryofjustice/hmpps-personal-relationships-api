@@ -16,13 +16,13 @@ data class LinkedPrisonerRelationshipDetails(
       """,
     example = "S",
   )
-  val relationshipType: String,
+  val relationshipTypeCode: String,
 
   @Schema(description = "The description of the contact relationship type. Description from reference data Official or Social", example = "Official")
   val relationshipTypeDescription: String,
 
   @Schema(description = "The relationship to the prisoner. A code from SOCIAL_RELATIONSHIP or OFFICIAL_RELATIONSHIP reference data groups depending on the relationship type.", example = "FRI")
-  val relationshipToPrisoner: String,
+  val relationshipToPrisonerCode: String,
 
   @Schema(description = "The description of the relationship", example = "Friend", nullable = true)
   val relationshipToPrisonerDescription: String?,

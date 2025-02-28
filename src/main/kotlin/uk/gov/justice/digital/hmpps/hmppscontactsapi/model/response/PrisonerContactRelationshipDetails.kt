@@ -22,7 +22,7 @@ data class PrisonerContactRelationshipDetails(
       """,
     example = "S",
   )
-  val relationshipType: String,
+  val relationshipTypeCode: String,
 
   @Schema(description = "The description of the contact relationship type. Description from reference data Official or Social", example = "Official")
   val relationshipTypeDescription: String,
@@ -34,10 +34,10 @@ data class PrisonerContactRelationshipDetails(
   val relationshipToPrisonerDescription: String,
 
   @Schema(description = "Is this contact the prisoner's emergency contact?", example = "true")
-  val emergencyContact: Boolean,
+  val isEmergencyContact: Boolean,
 
   @Schema(description = "Is this contact the prisoner's next of kin?", example = "false")
-  val nextOfKin: Boolean,
+  val isNextOfKin: Boolean,
 
   @Schema(description = "Is this a approved visitor for the prisoner?", example = "true")
   val isApprovedVisitor: Boolean,

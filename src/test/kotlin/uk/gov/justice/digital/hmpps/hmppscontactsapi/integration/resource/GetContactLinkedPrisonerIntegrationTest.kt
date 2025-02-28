@@ -69,9 +69,9 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
           relationships = listOf(
             LinkedPrisonerRelationshipDetails(
               prisonerContactId = prisoner2FatherRelationship.prisonerContactId,
-              relationshipType = "S",
+              relationshipTypeCode = "S",
               relationshipTypeDescription = "Social",
-              relationshipToPrisoner = "FA",
+              relationshipToPrisonerCode = "FA",
               relationshipToPrisonerDescription = "Father",
             ),
           ),
@@ -84,16 +84,16 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
           relationships = listOf(
             LinkedPrisonerRelationshipDetails(
               prisonerContactId = prisoner1OtherRelationship.prisonerContactId,
-              relationshipType = "S",
+              relationshipTypeCode = "S",
               relationshipTypeDescription = "Social",
-              relationshipToPrisoner = "OTHER",
+              relationshipToPrisonerCode = "OTHER",
               relationshipToPrisonerDescription = "Other - Social",
             ),
             LinkedPrisonerRelationshipDetails(
               prisonerContactId = prisoner1FriendRelationship.prisonerContactId,
-              relationshipType = "S",
+              relationshipTypeCode = "S",
               relationshipTypeDescription = "Social",
-              relationshipToPrisoner = "FRI",
+              relationshipToPrisonerCode = "FRI",
               relationshipToPrisonerDescription = "Friend",
             ),
           ),
@@ -123,9 +123,9 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
           relationships = listOf(
             LinkedPrisonerRelationshipDetails(
               prisonerContactId = prisoner1OtherRelationship.prisonerContactId,
-              relationshipType = "S",
+              relationshipTypeCode = "S",
               relationshipTypeDescription = "Social",
-              relationshipToPrisoner = "OTHER",
+              relationshipToPrisonerCode = "OTHER",
               relationshipToPrisonerDescription = "Other - Social",
             ),
           ),
@@ -139,10 +139,11 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
       contactId = savedContactId,
       ContactRelationship(
         prisonerNumber = prisoner.prisonerNumber,
-        relationshipToPrisoner = relationshipCode,
+        relationshipToPrisonerCode = relationshipCode,
         isNextOfKin = true,
-        relationshipType = "S",
+        relationshipTypeCode = "S",
         isEmergencyContact = true,
+        isApprovedVisitor = false,
       ),
       createdBy = "created",
     ),

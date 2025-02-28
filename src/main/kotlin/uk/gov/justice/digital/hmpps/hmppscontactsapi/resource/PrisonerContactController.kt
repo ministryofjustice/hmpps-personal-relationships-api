@@ -25,8 +25,8 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.PrisonerContactRestrictionsFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePrisonerContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionsResponse
@@ -111,7 +111,7 @@ class PrisonerContactController(
       description = "The id of the prisoner contact",
       example = "123456",
     ) prisonerContactId: Long,
-    @Valid @RequestBody relationshipRequest: UpdateRelationshipRequest,
+    @Valid @RequestBody relationshipRequest: PatchRelationshipRequest,
   ): ResponseEntity<Any> {
     contactFacade.patchRelationship(prisonerContactId, relationshipRequest)
     return ResponseEntity.noContent().build()

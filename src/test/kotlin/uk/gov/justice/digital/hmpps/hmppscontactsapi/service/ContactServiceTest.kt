@@ -37,7 +37,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
@@ -86,9 +86,9 @@ class ContactServiceTest {
   @Nested
   inner class CreateContact {
     @Test
-    fun `should create a contact with a date of birth successfully`() {
+    fun `should create a contact with all fields successfully`() {
       val request = CreateContactRequest(
-        title = "mr",
+        titleCode = "mr",
         lastName = "last",
         firstName = "first",
         middleNames = "middle",
@@ -103,21 +103,31 @@ class ContactServiceTest {
       val contactCaptor = argumentCaptor<ContactEntity>()
       verify(contactRepository).saveAndFlush(contactCaptor.capture())
       with(contactCaptor.firstValue) {
-        assertThat(title).isEqualTo(request.title)
+        assertThat(title).isEqualTo(request.titleCode)
         assertThat(lastName).isEqualTo(request.lastName)
         assertThat(firstName).isEqualTo(request.firstName)
         assertThat(middleNames).isEqualTo(request.middleNames)
         assertThat(dateOfBirth).isEqualTo(request.dateOfBirth)
+        assertThat(languageCode).isEqualTo(request.languageCode)
+        assertThat(interpreterRequired).isEqualTo(request.interpreterRequired)
+        assertThat(gender).isEqualTo(request.genderCode)
+        assertThat(domesticStatus).isEqualTo(request.domesticStatusCode)
+        assertThat(staffFlag).isEqualTo(request.isStaff)
         assertThat(createdBy).isEqualTo(request.createdBy)
         assertThat(createdTime).isNotNull()
       }
       with(result) {
         with(createdContact) {
-          assertThat(title).isEqualTo(request.title)
+          assertThat(titleCode).isEqualTo(request.titleCode)
           assertThat(lastName).isEqualTo(request.lastName)
           assertThat(firstName).isEqualTo(request.firstName)
           assertThat(middleNames).isEqualTo(request.middleNames)
           assertThat(dateOfBirth).isEqualTo(request.dateOfBirth)
+          assertThat(languageCode).isEqualTo(request.languageCode)
+          assertThat(interpreterRequired).isEqualTo(request.interpreterRequired)
+          assertThat(genderCode).isEqualTo(request.genderCode)
+          assertThat(domesticStatusCode).isEqualTo(request.domesticStatusCode)
+          assertThat(isStaff).isEqualTo(request.isStaff)
           assertThat(createdBy).isEqualTo(request.createdBy)
           assertThat(createdTime).isNotNull()
           assertThat(addresses).isEqualTo(listOf(aContactAddressDetailsEntity.toModel(emptyList())))
@@ -126,13 +136,18 @@ class ContactServiceTest {
     }
 
     @Test
-    fun `should create a contact without a date of birth successfully`() {
+    fun `should create a contact without optional fields successfully`() {
       val request = CreateContactRequest(
-        title = "mr",
+        titleCode = "mr",
         lastName = "last",
         firstName = "first",
         middleNames = "middle",
         dateOfBirth = null,
+        languageCode = null,
+        interpreterRequired = false,
+        genderCode = null,
+        domesticStatusCode = null,
+        isStaff = false,
         createdBy = "created",
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
@@ -142,48 +157,35 @@ class ContactServiceTest {
       val contactCaptor = argumentCaptor<ContactEntity>()
       verify(contactRepository).saveAndFlush(contactCaptor.capture())
       with(contactCaptor.firstValue) {
-        assertThat(title).isEqualTo(request.title)
+        assertThat(title).isEqualTo(request.titleCode)
         assertThat(lastName).isEqualTo(request.lastName)
         assertThat(firstName).isEqualTo(request.firstName)
         assertThat(middleNames).isEqualTo(request.middleNames)
         assertNull(dateOfBirth)
+        assertNull(languageCode)
+        assertThat(interpreterRequired).isEqualTo(request.interpreterRequired)
+        assertNull(gender)
+        assertNull(domesticStatus)
+        assertThat(staffFlag).isEqualTo(request.isStaff)
         assertThat(createdBy).isEqualTo(request.createdBy)
         assertThat(createdTime).isNotNull()
       }
       with(result) {
         with(createdContact) {
-          assertThat(title).isEqualTo(request.title)
+          assertThat(titleCode).isEqualTo(request.titleCode)
           assertThat(lastName).isEqualTo(request.lastName)
           assertThat(firstName).isEqualTo(request.firstName)
           assertThat(middleNames).isEqualTo(request.middleNames)
           assertNull(dateOfBirth)
+          assertNull(languageCode)
+          assertThat(interpreterRequired).isEqualTo(request.interpreterRequired)
+          assertNull(genderCode)
+          assertNull(domesticStatusCode)
+          assertThat(isStaff).isEqualTo(request.isStaff)
           assertThat(createdBy).isEqualTo(request.createdBy)
           assertThat(createdTime).isNotNull()
         }
       }
-    }
-
-    @Test
-    fun `should create a contact returns existing value for the staff flag`() {
-      val request = CreateContactRequest(
-        title = "mr",
-        lastName = "last",
-        firstName = "first",
-        middleNames = "middle",
-        dateOfBirth = null,
-        createdBy = "created",
-      )
-      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
-
-      val result = service.createContact(request)
-
-      val contactCaptor = argumentCaptor<ContactEntity>()
-      verify(contactRepository).saveAndFlush(contactCaptor.capture())
-      with(contactCaptor.firstValue) {
-        assertThat(staffFlag).isFalse()
-        assertThat(createdTime).isNotNull()
-      }
-      assertThat(result.createdContact.isStaff).isFalse()
     }
 
     @ParameterizedTest
@@ -196,10 +198,11 @@ class ContactServiceTest {
     fun `should create a contact with a relationship successfully while validating the relationship type correctly`(relationshipType: String, expectedReferenceCodeGroup: ReferenceCodeGroup) {
       val relationshipRequest = ContactRelationship(
         prisonerNumber = "A1234BC",
-        relationshipType = relationshipType,
-        relationshipToPrisoner = "FRI",
+        relationshipTypeCode = relationshipType,
+        relationshipToPrisonerCode = "FRI",
         isNextOfKin = true,
         isEmergencyContact = true,
+        isApprovedVisitor = true,
         comments = "some comments",
       )
       val request = CreateContactRequest(
@@ -235,6 +238,7 @@ class ContactServiceTest {
         assertThat(relationshipToPrisoner).isEqualTo("FRI")
         assertThat(nextOfKin).isEqualTo(true)
         assertThat(emergencyContact).isEqualTo(true)
+        assertThat(approvedVisitor).isEqualTo(true)
         assertThat(comments).isEqualTo("some comments")
       }
     }
@@ -249,10 +253,11 @@ class ContactServiceTest {
     fun `should throw exception if relationship is invalid`(relationshipType: String, expectedReferenceCodeGroup: ReferenceCodeGroup) {
       val relationshipRequest = ContactRelationship(
         prisonerNumber = "A1234BC",
-        relationshipToPrisoner = "FRI",
+        relationshipToPrisonerCode = "FRI",
         isNextOfKin = true,
         isEmergencyContact = true,
-        relationshipType = relationshipType,
+        relationshipTypeCode = relationshipType,
+        isApprovedVisitor = false,
         comments = "some comments",
       )
       val request = CreateContactRequest(
@@ -306,10 +311,11 @@ class ContactServiceTest {
         createdBy = "created",
         relationship = ContactRelationship(
           prisonerNumber = "A1234BC",
-          relationshipType = "S",
-          relationshipToPrisoner = "FRI",
+          relationshipTypeCode = "S",
+          relationshipToPrisonerCode = "FRI",
           isNextOfKin = true,
           isEmergencyContact = true,
+          isApprovedVisitor = false,
           comments = "some comments",
         ),
       )
@@ -333,10 +339,11 @@ class ContactServiceTest {
         createdBy = "created",
         relationship = ContactRelationship(
           prisonerNumber = "A1234BC",
-          relationshipType = "S",
-          relationshipToPrisoner = "FRI",
+          relationshipTypeCode = "S",
+          relationshipToPrisonerCode = "FRI",
           isNextOfKin = true,
           isEmergencyContact = true,
+          isApprovedVisitor = false,
           comments = "some comments",
         ),
       )
@@ -371,7 +378,7 @@ class ContactServiceTest {
       assertNotNull(contact)
       with(contact!!) {
         assertThat(id).isEqualTo(entity.contactId)
-        assertThat(title).isEqualTo(entity.title)
+        assertThat(titleCode).isEqualTo(entity.title)
         assertThat(lastName).isEqualTo(entity.lastName)
         assertThat(firstName).isEqualTo(entity.firstName)
         assertThat(middleNames).isEqualTo(entity.middleNames)
@@ -505,7 +512,7 @@ class ContactServiceTest {
       assertNotNull(contact)
       with(contact!!) {
         assertThat(id).isEqualTo(entity.contactId)
-        assertThat(title).isEqualTo("MR")
+        assertThat(titleCode).isEqualTo("MR")
         assertThat(titleDescription).isEqualTo("Mr")
       }
     }
@@ -611,10 +618,11 @@ class ContactServiceTest {
     private val contactId = 123456L
     private val relationship = ContactRelationship(
       prisonerNumber = "A1234BC",
-      relationshipType = "S",
-      relationshipToPrisoner = "MOT",
+      relationshipTypeCode = "S",
+      relationshipToPrisonerCode = "MOT",
       isNextOfKin = true,
       isEmergencyContact = false,
+      isApprovedVisitor = false,
       comments = "Foo",
     )
     private val request = AddContactRelationshipRequest(contactId, relationship, "RELATIONSHIP_USER")
@@ -783,9 +791,9 @@ class ContactServiceTest {
           updatedBy = "adminUser"
           updatedTime = LocalDateTime.now()
         }
-        val request = UpdateRelationshipRequest(
-          relationshipType = JsonNullable.undefined(),
-          relationshipToPrisoner = JsonNullable.of(relationShipTypeCode),
+        val request = PatchRelationshipRequest(
+          relationshipTypeCode = JsonNullable.undefined(),
+          relationshipToPrisonerCode = JsonNullable.of(relationShipTypeCode),
           updatedBy = "Admin",
         )
         mockBrotherRelationshipReferenceCode()
@@ -838,9 +846,9 @@ class ContactServiceTest {
           updatedBy = "adminUser"
           updatedTime = LocalDateTime.now()
         }
-        val request = UpdateRelationshipRequest(
-          relationshipType = JsonNullable.of(newRelationshipType),
-          relationshipToPrisoner = JsonNullable.of(relationshipToPrisonerCode),
+        val request = PatchRelationshipRequest(
+          relationshipTypeCode = JsonNullable.of(newRelationshipType),
+          relationshipToPrisonerCode = JsonNullable.of(relationshipToPrisonerCode),
           updatedBy = "Admin",
         )
         mockBrotherRelationshipReferenceCode()
@@ -892,9 +900,9 @@ class ContactServiceTest {
           updatedBy = "adminUser"
           updatedTime = LocalDateTime.now()
         }
-        val request = UpdateRelationshipRequest(
-          relationshipType = JsonNullable.of(newRelationshipType),
-          relationshipToPrisoner = JsonNullable.undefined(),
+        val request = PatchRelationshipRequest(
+          relationshipTypeCode = JsonNullable.of(newRelationshipType),
+          relationshipToPrisonerCode = JsonNullable.undefined(),
           updatedBy = "Admin",
         )
         mockBrotherRelationshipReferenceCode()
@@ -932,8 +940,8 @@ class ContactServiceTest {
 
       @Test
       fun `should not update relationship to prisoner with null`() {
-        val request = UpdateRelationshipRequest(
-          relationshipToPrisoner = JsonNullable.of(null),
+        val request = PatchRelationshipRequest(
+          relationshipToPrisonerCode = JsonNullable.of(null),
           updatedBy = "Admin",
         )
 
@@ -948,8 +956,8 @@ class ContactServiceTest {
 
       @Test
       fun `should not update relationship type with null`() {
-        val request = UpdateRelationshipRequest(
-          relationshipType = JsonNullable.of(null),
+        val request = PatchRelationshipRequest(
+          relationshipTypeCode = JsonNullable.of(null),
           updatedBy = "Admin",
         )
 
@@ -964,8 +972,8 @@ class ContactServiceTest {
 
       @Test
       fun `should not update relationship type with invalid type`() {
-        val request = UpdateRelationshipRequest(
-          relationshipToPrisoner = JsonNullable.of("OOO"),
+        val request = PatchRelationshipRequest(
+          relationshipToPrisonerCode = JsonNullable.of("OOO"),
           updatedBy = "Admin",
         )
 
@@ -986,7 +994,7 @@ class ContactServiceTest {
 
       @Test
       fun `should update the approved visitor`() {
-        val request = UpdateRelationshipRequest(
+        val request = PatchRelationshipRequest(
           isApprovedVisitor = JsonNullable.of(false),
           updatedBy = "Admin",
         )
@@ -1008,7 +1016,7 @@ class ContactServiceTest {
 
       @Test
       fun `should not update approved visitor with null`() {
-        val request = UpdateRelationshipRequest(
+        val request = PatchRelationshipRequest(
           isApprovedVisitor = JsonNullable.of(null),
           updatedBy = "Admin",
         )
@@ -1028,7 +1036,7 @@ class ContactServiceTest {
 
       @Test
       fun `should update the next of kin`() {
-        val request = UpdateRelationshipRequest(
+        val request = PatchRelationshipRequest(
           isNextOfKin = JsonNullable.of(false),
           updatedBy = "Admin",
         )
@@ -1058,7 +1066,7 @@ class ContactServiceTest {
 
       @Test
       fun `should not update relationship next of kin with null`() {
-        val request = UpdateRelationshipRequest(
+        val request = PatchRelationshipRequest(
           isNextOfKin = JsonNullable.of(null),
           updatedBy = "Admin",
         )
@@ -1078,7 +1086,7 @@ class ContactServiceTest {
 
       @Test
       fun `should update the emergency contact status`() {
-        val request = UpdateRelationshipRequest(
+        val request = PatchRelationshipRequest(
           isEmergencyContact = JsonNullable.of(false),
           updatedBy = "Admin",
         )
@@ -1108,7 +1116,7 @@ class ContactServiceTest {
 
       @Test
       fun `should not update relationship emergency contact with null`() {
-        val request = UpdateRelationshipRequest(
+        val request = PatchRelationshipRequest(
           isEmergencyContact = JsonNullable.of(null),
           updatedBy = "Admin",
         )
@@ -1128,7 +1136,7 @@ class ContactServiceTest {
 
       @Test
       fun `should update the relationship active status`() {
-        val request = UpdateRelationshipRequest(
+        val request = PatchRelationshipRequest(
           isRelationshipActive = JsonNullable.of(false),
           updatedBy = "Admin",
         )
@@ -1158,7 +1166,7 @@ class ContactServiceTest {
 
       @Test
       fun `should not update relationship active status with null`() {
-        val request = UpdateRelationshipRequest(
+        val request = PatchRelationshipRequest(
           isRelationshipActive = JsonNullable.of(null),
           updatedBy = "Admin",
         )
@@ -1179,7 +1187,7 @@ class ContactServiceTest {
       @Test
       fun `should update the contact relationship comment`() {
         val relationShipTypeCode = "FRI"
-        val request = UpdateRelationshipRequest(
+        val request = PatchRelationshipRequest(
           comments = JsonNullable.of("a comment"),
           updatedBy = "Admin",
         )
@@ -1214,7 +1222,7 @@ class ContactServiceTest {
       @Test
       fun `should update the contact relationship comment to null`() {
         val relationShipTypeCode = "FRI"
-        val request = UpdateRelationshipRequest(
+        val request = PatchRelationshipRequest(
           comments = JsonNullable.of(null),
           updatedBy = "Admin",
         )
@@ -1249,7 +1257,7 @@ class ContactServiceTest {
 
     @Test
     fun `should update when only updated by filed is provided`() {
-      val request = UpdateRelationshipRequest(
+      val request = PatchRelationshipRequest(
         updatedBy = "Admin",
       )
 
@@ -1388,8 +1396,8 @@ class ContactServiceTest {
       assertThat(createdAtPrison).isEqualTo("LONDON")
     }
 
-    private fun updateRelationshipRequest(): UpdateRelationshipRequest = UpdateRelationshipRequest(
-      relationshipToPrisoner = JsonNullable.of("MOT"),
+    private fun updateRelationshipRequest(): PatchRelationshipRequest = PatchRelationshipRequest(
+      relationshipToPrisonerCode = JsonNullable.of("MOT"),
       isEmergencyContact = JsonNullable.of(true),
       isNextOfKin = JsonNullable.of(true),
       isRelationshipActive = JsonNullable.of(false),

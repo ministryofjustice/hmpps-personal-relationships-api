@@ -20,7 +20,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelati
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
@@ -78,10 +78,11 @@ class ContactFacadeTest {
       firstName = "first",
       relationship = ContactRelationship(
         prisonerNumber = "A1234BC",
-        relationshipToPrisoner = "FRI",
+        relationshipToPrisonerCode = "FRI",
         isNextOfKin = false,
         isEmergencyContact = false,
-        relationshipType = "S",
+        relationshipTypeCode = "S",
+        isApprovedVisitor = false,
         comments = null,
       ),
       createdBy = "created",
@@ -104,10 +105,11 @@ class ContactFacadeTest {
       99,
       ContactRelationship(
         prisonerNumber = "A1234BC",
-        relationshipToPrisoner = "FRI",
+        relationshipToPrisonerCode = "FRI",
         isNextOfKin = false,
-        relationshipType = "S",
+        relationshipTypeCode = "S",
         isEmergencyContact = false,
+        isApprovedVisitor = false,
         comments = null,
       ),
       "user",
@@ -150,7 +152,7 @@ class ContactFacadeTest {
     val contactId = 321L
     val prisonerContactId = 123L
     val prisonerNumber = "A1234BC"
-    val request = mock(UpdateRelationshipRequest::class.java)
+    val request = mock(PatchRelationshipRequest::class.java)
 
     whenever(contactService.updateContactRelationship(prisonerContactId, request)).thenReturn(
       createPrisonerContactRelationshipDetails(prisonerContactId, contactId, prisonerNumber),
@@ -177,7 +179,7 @@ class ContactFacadeTest {
     employments = emptyList(),
     domesticStatusCode = "S",
     domesticStatusDescription = "Single",
-    gender = null,
+    genderCode = null,
     genderDescription = null,
     createdBy = "user",
     createdTime = LocalDateTime.now(),

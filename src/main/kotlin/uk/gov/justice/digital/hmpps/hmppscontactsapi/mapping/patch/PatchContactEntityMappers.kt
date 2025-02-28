@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PatchContact
 
 fun ContactEntity.mapToResponse(): PatchContactResponse = PatchContactResponse(
   id = this.id(),
-  title = this.title,
+  titleCode = this.title,
   firstName = this.firstName,
   lastName = this.lastName,
   middleNames = this.middleNames,
@@ -14,8 +14,8 @@ fun ContactEntity.mapToResponse(): PatchContactResponse = PatchContactResponse(
   createdTime = this.createdTime,
   isStaff = this.staffFlag,
   deceasedDate = this.deceasedDate,
-  gender = this.gender,
-  domesticStatus = this.domesticStatus,
+  genderCode = this.gender,
+  domesticStatusCode = this.domesticStatus,
   languageCode = this.languageCode,
   interpreterRequired = this.interpreterRequired,
   updatedBy = this.updatedBy,
