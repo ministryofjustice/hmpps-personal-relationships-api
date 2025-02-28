@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContact
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItemPage
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PatchContactResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
@@ -128,6 +129,47 @@ class ContactController(
       ResponseEntity.ok(contact)
     } else {
       logger.info("Couldn't find contact with id '{}'", contactId)
+      ResponseEntity.notFound().build()
+    }
+  }
+
+  @GetMapping("/{contactId}/name")
+  @Operation(
+    summary = "Get contact name",
+    description = "Gets a contacts name details by their id. Includes title code, description, first name, middle names and last name.",
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Found the contact",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = ContactNameDetails::class),
+          ),
+        ],
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "No contact with that id could be found",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__R', 'ROLE_CONTACTS__RW')")
+  fun getContactName(
+    @PathVariable("contactId") @Parameter(
+      name = "contactId",
+      description = "The id of the contact",
+      example = "123456",
+    ) contactId: Long,
+  ): ResponseEntity<Any> {
+    val name = contactFacade.getContactName(contactId)
+    return if (name != null) {
+      ResponseEntity.ok(name)
+    } else {
+      logger.info("Couldn't find contact with id '{}' to get their name", contactId)
       ResponseEntity.notFound().build()
     }
   }

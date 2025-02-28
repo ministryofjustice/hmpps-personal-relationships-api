@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelati
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressDetailsRepository
@@ -1297,6 +1298,59 @@ class ContactServiceTest {
       assertThrows<RuntimeException>("Bang!") {
         service.updateContactRelationship(prisonerContactId, request)
       }
+    }
+
+    @Test
+    fun `should get contact names with a title`() {
+      val contactId: Long = 12345
+      val contactEntity = createContactEntity().copy(
+        contactId = contactId,
+        title = "MR",
+        firstName = "First",
+        lastName = "Last",
+        middleNames = "Middle Names",
+      )
+      val titleReference = ReferenceCode(1, ReferenceCodeGroup.TITLE, "MR", "Mr", 1, true)
+      whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.TITLE, "MR")).thenReturn(titleReference)
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contactEntity))
+
+      val names = service.getContactName(contactId)
+
+      assertThat(names).isEqualTo(
+        ContactNameDetails(
+          titleCode = "MR",
+          titleDescription = "Mr",
+          firstName = "First",
+          lastName = "Last",
+          middleNames = "Middle Names",
+        ),
+      )
+    }
+
+    @Test
+    fun `should get contact names without a title`() {
+      val contactId: Long = 12345
+      val contactEntity = createContactEntity().copy(
+        contactId = contactId,
+        title = null,
+        firstName = "First",
+        lastName = "Last",
+        middleNames = null,
+      )
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contactEntity))
+
+      val names = service.getContactName(contactId)
+
+      assertThat(names).isEqualTo(
+        ContactNameDetails(
+          titleCode = null,
+          titleDescription = null,
+          firstName = "First",
+          lastName = "Last",
+          middleNames = null,
+        ),
+      )
+      verify(referenceCodeService, never()).getReferenceDataByGroupAndCode(any(), any())
     }
 
     private fun createPrisonerContact(): PrisonerContactEntity = PrisonerContactEntity(
