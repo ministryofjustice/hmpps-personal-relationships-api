@@ -10,8 +10,10 @@ import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactIdentityDetails
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateIdentityRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateIdentityRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateIdentityRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateMultipleIdentitiesRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.IdentityDocument
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.UpdateIdentityRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactIdentityService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
@@ -67,6 +69,47 @@ class ContactIdentityFacadeTest {
     assertThat(exception).isEqualTo(exception)
     verify(identityService).create(contactId, request)
     verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+  }
+
+  @Test
+  fun `should send event if create multiple success`() {
+    val first = createContactIdentityDetails(id = 9999, contactId = contactId)
+    val second = createContactIdentityDetails(id = 8888, contactId = contactId)
+
+    whenever(identityService.createMultiple(any(), any())).thenReturn(listOf(first, second))
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    val request = CreateMultipleIdentitiesRequest(
+      identities = listOf(
+        IdentityDocument(
+          identityType = "DL",
+          identityValue = "DL123456789",
+          issuingAuthority = "DVLA",
+        ),
+        IdentityDocument(
+          identityType = "PASS",
+          identityValue = "P897654312",
+          issuingAuthority = null,
+        ),
+      ),
+      createdBy = "created",
+    )
+
+    val result = facade.createMultiple(contactId, request)
+
+    assertThat(result).isEqualTo(listOf(first, second))
+    verify(identityService).createMultiple(contactId, request)
+    verify(eventsService).send(
+      outboundEvent = OutboundEvent.CONTACT_IDENTITY_CREATED,
+      identifier = 9999,
+      contactId = contactId,
+      source = Source.DPS,
+    )
+    verify(eventsService).send(
+      outboundEvent = OutboundEvent.CONTACT_IDENTITY_CREATED,
+      identifier = 8888,
+      contactId = contactId,
+      source = Source.DPS,
+    )
   }
 
   @Test

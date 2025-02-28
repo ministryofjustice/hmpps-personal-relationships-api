@@ -14,8 +14,10 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactIdentityDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactIdentityEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateIdentityRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateIdentityRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateIdentityRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateMultipleIdentitiesRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.IdentityDocument
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.UpdateIdentityRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactIdentityDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactIdentityDetailsRepository
@@ -132,6 +134,142 @@ class ContactIdentityServiceTest {
           issuingAuthority = "DVLA",
           createdBy = "created",
           createdTime = created.createdTime,
+          updatedBy = null,
+          updatedTime = null,
+        ),
+      )
+    }
+  }
+
+  @Nested
+  inner class CreateMultipleIdentities {
+    private val request = CreateMultipleIdentitiesRequest(
+      identities = listOf(
+        IdentityDocument(
+          identityType = "DL",
+          identityValue = "DL123456789",
+          issuingAuthority = "DVLA",
+        ),
+        IdentityDocument(
+          identityType = "PASS",
+          identityValue = "P897654312",
+          issuingAuthority = null,
+        ),
+      ),
+      createdBy = "created",
+    )
+
+    @Test
+    fun `should throw EntityNotFoundException creating identities if contact doesn't exist`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
+
+      val exception = assertThrows<EntityNotFoundException> {
+        service.createMultiple(contactId, request)
+      }
+      assertThat(exception.message).isEqualTo("Contact (99) not found")
+    }
+
+    @Test
+    fun `should throw ValidationException creating identities if identity type is invalid`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
+      val expectedException = ValidationException("Unsupported identity type (FOO)")
+      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.ID_TYPE, "FOO", allowInactive = false)).thenThrow(
+        expectedException,
+      )
+
+      val exception = assertThrows<ValidationException> {
+        service.createMultiple(contactId, request.copy(identities = listOf(IdentityDocument(identityType = "FOO", identityValue = "111111"))))
+      }
+      assertThat(exception).isEqualTo(expectedException)
+      verify(referenceCodeService).validateReferenceCode(ReferenceCodeGroup.ID_TYPE, "FOO", allowInactive = false)
+    }
+
+    @Test
+    fun `should throw ValidationException if identity type is PNC but identity is not a valid PNC`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
+      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.ID_TYPE, "PNC", allowInactive = false)).thenReturn(
+        ReferenceCode(
+          0,
+          ReferenceCodeGroup.ID_TYPE,
+          "PNC",
+          "PNC Number",
+          0,
+          true,
+        ),
+      )
+
+      val exception = assertThrows<ValidationException> {
+        service.createMultiple(contactId, request.copy(identities = listOf(IdentityDocument(identityValue = "1923/1Z34567A", identityType = "PNC"))))
+      }
+      assertThat(exception.message).isEqualTo("Identity value (1923/1Z34567A) is not a valid PNC Number")
+    }
+
+    @Test
+    fun `should return identity details including the reference data after creating successfully`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
+      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.ID_TYPE, "DL", allowInactive = false)).thenReturn(
+        ReferenceCode(
+          0,
+          ReferenceCodeGroup.ID_TYPE,
+          "DL",
+          "Driving licence",
+          90,
+          true,
+        ),
+      )
+      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.ID_TYPE, "PASS", allowInactive = false)).thenReturn(
+        ReferenceCode(
+          0,
+          ReferenceCodeGroup.ID_TYPE,
+          "PASS",
+          "Passport Number",
+          90,
+          true,
+        ),
+      )
+      whenever(contactIdentityRepository.saveAndFlush(any())).thenAnswer { i ->
+        (i.arguments[0] as ContactIdentityEntity).copy(
+          contactIdentityId = 9999,
+        )
+      }.thenAnswer { i ->
+        (i.arguments[0] as ContactIdentityEntity).copy(
+          contactIdentityId = 8888,
+        )
+      }
+
+      val allCreated = service.createMultiple(contactId, request)
+
+      val drivingLicence = allCreated[0]
+      assertThat(drivingLicence.createdTime).isNotNull()
+      assertThat(drivingLicence).isEqualTo(
+        ContactIdentityDetails(
+          contactIdentityId = 9999,
+          contactId = contactId,
+          identityType = "DL",
+          identityTypeDescription = "Driving licence",
+          identityTypeIsActive = true,
+          identityValue = "DL123456789",
+          issuingAuthority = "DVLA",
+          createdBy = "created",
+          createdTime = drivingLicence.createdTime,
+          updatedBy = null,
+          updatedTime = null,
+        ),
+      )
+
+      val passport = allCreated[1]
+      assertThat(passport.createdTime).isNotNull()
+      assertThat(passport).isEqualTo(
+        ContactIdentityDetails(
+          contactIdentityId = 8888,
+          contactId = contactId,
+          identityType = "PASS",
+          identityTypeDescription = "Passport Number",
+          identityTypeIsActive = true,
+          identityValue = "P897654312",
+          issuingAuthority = null,
+          createdBy = "created",
+          createdTime = passport.createdTime,
           updatedBy = null,
           updatedTime = null,
         ),
