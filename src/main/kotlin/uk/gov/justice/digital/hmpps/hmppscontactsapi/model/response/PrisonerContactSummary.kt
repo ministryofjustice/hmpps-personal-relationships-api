@@ -36,13 +36,13 @@ data class PrisonerContactSummary(
       """,
     example = "S",
   )
-  val relationshipType: String,
+  val relationshipTypeCode: String,
 
   @Schema(description = "The description of the relationship type", example = "Friend")
   val relationshipTypeDescription: String,
 
   @Schema(description = "The relationship to the prisoner. A code from SOCIAL_RELATIONSHIP or OFFICIAL_RELATIONSHIP reference data groups depending on the relationship type.", example = "FRI")
-  val relationshipToPrisoner: String,
+  val relationshipToPrisonerCode: String,
 
   @Schema(description = "The description of the relationship to the prisoner", example = "Friend")
   val relationshipToPrisonerDescription: String,
@@ -99,13 +99,13 @@ data class PrisonerContactSummary(
   val extNumber: String?,
 
   @Schema(description = "Indicates whether the contact is an approved visitor", example = "true")
-  val approvedVisitor: Boolean,
+  val isApprovedVisitor: Boolean,
 
   @Schema(description = "Is this contact the prisoner's next of kin?", example = "false")
-  val nextOfKin: Boolean,
+  val isNextOfKin: Boolean,
 
   @Schema(description = "Is this contact the prisoner's emergency contact?", example = "true")
-  val emergencyContact: Boolean,
+  val isEmergencyContact: Boolean,
 
   @Schema(description = "Is this prisoner's contact relationship active?", example = "true")
   val isRelationshipActive: Boolean,

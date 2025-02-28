@@ -20,7 +20,7 @@ data class ContactDetails(
     example = "MR",
     nullable = true,
   )
-  val title: String? = null,
+  val titleCode: String? = null,
 
   @Schema(
     description = "The description of the title code, if present",
@@ -78,7 +78,7 @@ data class ContactDetails(
   val domesticStatusDescription: String?,
 
   @Schema(description = "The NOMIS code for the contacts gender. See reference data with group code 'GENDER'", examples = ["M", "F"], nullable = true)
-  val gender: String?,
+  val genderCode: String?,
 
   @Schema(description = "The description of gender code. See reference data with group code 'GENDER'", examples = ["Male", "Female"], nullable = true)
   val genderDescription: String?,

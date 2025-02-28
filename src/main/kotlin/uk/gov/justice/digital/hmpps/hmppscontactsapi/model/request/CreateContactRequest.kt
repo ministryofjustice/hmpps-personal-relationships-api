@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
@@ -20,8 +21,8 @@ data class CreateContactRequest(
     nullable = true,
     maxLength = 12,
   )
-  @field:Size(max = 12, message = "title must be <= 12 characters")
-  val title: String? = null,
+  @field:Size(max = 12, message = "titleCode must be <= 12 characters")
+  val titleCode: String? = null,
 
   @Schema(description = "The last name of the contact", example = "Doe", maxLength = 35)
   @field:Size(max = 35, message = "lastName must be <= 35 characters")
@@ -38,6 +39,47 @@ data class CreateContactRequest(
   @Schema(description = "The date of birth of the contact, if known", example = "1980-01-01", nullable = true)
   @field:DateTimeFormat(pattern = "yyyy-MM-dd")
   val dateOfBirth: LocalDate? = null,
+
+  @Schema(description = "Whether the contact is a staff member", example = "false", nullable = false)
+  @JsonProperty(required = true)
+  var isStaff: Boolean = false,
+
+  @Schema(
+    description = """
+      The primary language of the contact.
+      This is a coded value (from the group code LANGUAGE in reference data).
+      """,
+    example = "ENG",
+    nullable = true,
+  )
+  @field:Size(max = 12, message = "languageCode must be <= 12 characters")
+  val languageCode: String? = null,
+
+  @Schema(description = "Whether an interpreter is required for this contact", example = "true", nullable = true)
+  @JsonProperty(required = true)
+  val interpreterRequired: Boolean = false,
+
+  @Schema(
+    description = """
+      The domestic status of the contact.
+      This is a coded value (from the group code DOMESTIC_STS in reference data).
+      """,
+    example = "S",
+    nullable = true,
+  )
+  @field:Size(max = 12, message = "domesticStatusCode must be <= 12 characters")
+  val domesticStatusCode: String? = null,
+
+  @Schema(
+    description = """
+      The domestic status of the contact.
+      This is a coded value (from the group code GENDER in reference data).
+      """,
+    examples = ["M", "F"],
+    nullable = true,
+  )
+  @field:Size(max = 12, message = "genderCode must be <= 12 characters")
+  val genderCode: String? = null,
 
   @Schema(description = "A description of the relationship if the contact should be linked to a prisoner", nullable = true, exampleClasses = [ContactRelationship::class])
   @field:Valid

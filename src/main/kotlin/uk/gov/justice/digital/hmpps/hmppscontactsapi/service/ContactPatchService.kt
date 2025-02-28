@@ -41,13 +41,13 @@ class ContactPatchService(
   ): ContactEntity {
     val changedContact = this.copy(
       staffFlag = request.isStaff.orElse(this.staffFlag),
-      domesticStatus = request.domesticStatus.orElse(this.domesticStatus),
+      domesticStatus = request.domesticStatusCode.orElse(this.domesticStatus),
       interpreterRequired = request.interpreterRequired.orElse(this.interpreterRequired),
       languageCode = request.languageCode.orElse(this.languageCode),
       dateOfBirth = request.dateOfBirth.orElse(this.dateOfBirth),
-      title = request.title.orElse(this.title),
+      title = request.titleCode.orElse(this.title),
       middleNames = request.middleNames.orElse(this.middleNames),
-      gender = request.gender.orElse(this.gender),
+      gender = request.genderCode.orElse(this.gender),
       deceasedDate = request.deceasedDate.orElse(this.deceasedDate),
       updatedBy = request.updatedBy,
       updatedTime = LocalDateTime.now(),
@@ -76,22 +76,22 @@ class ContactPatchService(
   }
 
   private fun validateDomesticStatusCode(request: PatchContactRequest) {
-    if (request.domesticStatus.isPresent && request.domesticStatus.get() != null) {
-      val code = request.domesticStatus.get()!!
+    if (request.domesticStatusCode.isPresent && request.domesticStatusCode.get() != null) {
+      val code = request.domesticStatusCode.get()!!
       referenceCodeService.validateReferenceCode(ReferenceCodeGroup.DOMESTIC_STS, code, allowInactive = true)
     }
   }
 
   private fun validateTitle(request: PatchContactRequest) {
-    if (request.title.isPresent && request.title.get() != null) {
-      val code = request.title.get()!!
+    if (request.titleCode.isPresent && request.titleCode.get() != null) {
+      val code = request.titleCode.get()!!
       referenceCodeService.validateReferenceCode(ReferenceCodeGroup.TITLE, code, allowInactive = true)
     }
   }
 
   private fun validateGender(request: PatchContactRequest) {
-    if (request.gender.isPresent && request.gender.get() != null) {
-      val code = request.gender.get()!!
+    if (request.genderCode.isPresent && request.genderCode.get() != null) {
+      val code = request.genderCode.get()!!
       referenceCodeService.validateReferenceCode(ReferenceCodeGroup.GENDER, code, allowInactive = true)
     }
   }

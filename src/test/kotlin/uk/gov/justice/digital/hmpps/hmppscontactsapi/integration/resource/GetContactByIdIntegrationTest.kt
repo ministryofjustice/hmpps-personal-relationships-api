@@ -44,7 +44,7 @@ class GetContactByIdIntegrationTest : SecureAPIIntegrationTestBase() {
 
     with(contact) {
       assertThat(id).isEqualTo(1)
-      assertThat(title).isEqualTo("MR")
+      assertThat(titleCode).isEqualTo("MR")
       assertThat(titleDescription).isEqualTo("Mr")
       assertThat(lastName).isEqualTo("Last")
       assertThat(firstName).isEqualTo("Jack")
@@ -182,7 +182,7 @@ class GetContactByIdIntegrationTest : SecureAPIIntegrationTestBase() {
 
     with(contact) {
       assertThat(id).isEqualTo(19)
-      assertThat(title).isNull()
+      assertThat(titleCode).isNull()
       assertThat(titleDescription).isNull()
       assertThat(lastName).isEqualTo("Dead")
       assertThat(firstName).isEqualTo("Currently")
@@ -212,7 +212,7 @@ class GetContactByIdIntegrationTest : SecureAPIIntegrationTestBase() {
 
     with(contact) {
       assertThat(id).isEqualTo(16)
-      assertThat(gender).isEqualTo("F")
+      assertThat(genderCode).isEqualTo("F")
       assertThat(genderDescription).isEqualTo("Female")
     }
   }

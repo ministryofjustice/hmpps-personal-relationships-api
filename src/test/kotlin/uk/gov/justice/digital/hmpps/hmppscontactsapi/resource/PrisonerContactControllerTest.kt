@@ -19,8 +19,8 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createPrisonerConta
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePrisonerContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.PrisonerContactRelationshipService
@@ -64,12 +64,12 @@ class PrisonerContactControllerTest {
       prisonerContactId = 1,
       contactId = 2,
       prisonerNumber = "A1234BC",
-      relationshipType = "S",
+      relationshipTypeCode = "S",
       relationshipTypeDescription = "Social",
       relationshipToPrisonerCode = "FRI",
       relationshipToPrisonerDescription = "Friend",
-      nextOfKin = false,
-      emergencyContact = true,
+      isNextOfKin = false,
+      isEmergencyContact = true,
       isRelationshipActive = true,
       isApprovedVisitor = true,
       comments = "Close family friend",
@@ -99,8 +99,8 @@ class PrisonerContactControllerTest {
       }
     }
 
-    private fun patchContactRelationshipRequest() = UpdateRelationshipRequest(
-      relationshipToPrisoner = JsonNullable.of("ENG"),
+    private fun patchContactRelationshipRequest() = PatchRelationshipRequest(
+      relationshipToPrisonerCode = JsonNullable.of("ENG"),
       updatedBy = "system",
     )
   }
@@ -110,10 +110,11 @@ class PrisonerContactControllerTest {
     private val contactId = 123456L
     private val relationship = ContactRelationship(
       prisonerNumber = "A1234BC",
-      relationshipType = "S",
-      relationshipToPrisoner = "MOT",
+      relationshipTypeCode = "S",
+      relationshipToPrisonerCode = "MOT",
       isNextOfKin = true,
       isEmergencyContact = false,
+      isApprovedVisitor = false,
       comments = "Foo",
     )
     private val request = AddContactRelationshipRequest(contactId, relationship, "USER")

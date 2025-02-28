@@ -30,7 +30,7 @@ class GetContactNameIntegrationTest : SecureAPIIntegrationTestBase() {
   fun `should get the contact name with all fields if they have a title`() {
     val contact = testAPIClient.createAContact(
       CreateContactRequest(
-        title = "MR",
+        titleCode = "MR",
         lastName = "Last",
         firstName = "First",
         middleNames = "Middle Names",
@@ -53,7 +53,7 @@ class GetContactNameIntegrationTest : SecureAPIIntegrationTestBase() {
   fun `should get the contact name with only optional fields`() {
     val contact = testAPIClient.createAContact(
       CreateContactRequest(
-        title = null,
+        titleCode = null,
         lastName = "Last",
         firstName = "First",
         middleNames = null,

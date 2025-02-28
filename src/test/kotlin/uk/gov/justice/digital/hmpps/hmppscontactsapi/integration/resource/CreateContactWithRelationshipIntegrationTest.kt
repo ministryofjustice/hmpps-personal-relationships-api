@@ -30,11 +30,11 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
   @ParameterizedTest
   @CsvSource(
     value = [
-      "relationship.prisonerNumber must not be null;{\"relationshipType\": \"S\", \"relationshipToPrisoner\": \"FRI\", \"isNextOfKin\": false, \"isEmergencyContact\": false }",
-      "relationship.relationshipType must not be null;{ \"prisonerNumber\": \"A1234BC\", \"relationshipToPrisoner\": \"FRI\", \"isNextOfKin\": false, \"isEmergencyContact\": false }",
-      "relationship.relationshipToPrisoner must not be null;{ \"prisonerNumber\": \"A1234BC\", \"relationshipType\": \"S\", \"isNextOfKin\": false, \"isEmergencyContact\": false }",
-      "relationship.isNextOfKin must not be null;{ \"prisonerNumber\": \"A1234BC\", \"relationshipType\": \"S\", \"relationshipToPrisoner\": \"FRI\", \"isEmergencyContact\": false }",
-      "relationship.isEmergencyContact must not be null;{ \"prisonerNumber\": \"A1234BC\", \"relationshipType\": \"S\", \"relationshipToPrisoner\": \"FRI\", \"isNextOfKin\": false }",
+      "relationship.prisonerNumber must not be null;{\"relationshipTypeCode\": \"S\", \"relationshipToPrisonerCode\": \"FRI\", \"isNextOfKin\": false, \"isEmergencyContact\": false }",
+      "relationship.relationshipTypeCode must not be null;{ \"prisonerNumber\": \"A1234BC\", \"relationshipToPrisonerCode\": \"FRI\", \"isNextOfKin\": false, \"isEmergencyContact\": false }",
+      "relationship.relationshipToPrisonerCode must not be null;{ \"prisonerNumber\": \"A1234BC\", \"relationshipTypeCode\": \"S\", \"isNextOfKin\": false, \"isEmergencyContact\": false }",
+      "relationship.isNextOfKin must not be null;{ \"prisonerNumber\": \"A1234BC\", \"relationshipTypeCode\": \"S\", \"relationshipToPrisonerCode\": \"FRI\", \"isEmergencyContact\": false }",
+      "relationship.isEmergencyContact must not be null;{ \"prisonerNumber\": \"A1234BC\", \"relationshipTypeCode\": \"S\", \"relationshipToPrisonerCode\": \"FRI\", \"isNextOfKin\": false }",
     ],
     delimiter = ';',
   )
@@ -91,10 +91,11 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
       createdBy = "created",
       relationship = ContactRelationship(
         prisonerNumber = prisonerNumber,
-        relationshipType = "S",
-        relationshipToPrisoner = "FRI",
+        relationshipTypeCode = "S",
+        relationshipToPrisonerCode = "FRI",
         isNextOfKin = false,
         isEmergencyContact = false,
+        isApprovedVisitor = false,
         comments = null,
       ),
     )
@@ -123,10 +124,11 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
     stubPrisonSearchWithResponse(prisonerNumber)
     val requestedRelationship = ContactRelationship(
       prisonerNumber = prisonerNumber,
-      relationshipType = "S",
-      relationshipToPrisoner = "FOO",
+      relationshipTypeCode = "S",
+      relationshipToPrisonerCode = "FOO",
       isNextOfKin = false,
       isEmergencyContact = false,
+      isApprovedVisitor = false,
       comments = null,
     )
     val request = CreateContactRequest(
@@ -164,10 +166,11 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
     stubPrisonSearchWithResponse(prisonerNumber)
     val requestedRelationship = ContactRelationship(
       prisonerNumber = prisonerNumber,
-      relationshipType = "S",
-      relationshipToPrisoner = "FRI",
+      relationshipTypeCode = "S",
+      relationshipToPrisonerCode = "FRI",
       isNextOfKin = false,
       isEmergencyContact = false,
+      isApprovedVisitor = false,
       comments = null,
     )
     val request = CreateContactRequest(
@@ -202,10 +205,11 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
     stubPrisonSearchWithResponse(prisonerNumber)
     val requestedRelationship = ContactRelationship(
       prisonerNumber = prisonerNumber,
-      relationshipType = "S",
-      relationshipToPrisoner = "FRI",
+      relationshipTypeCode = "S",
+      relationshipToPrisonerCode = "FRI",
       isNextOfKin = true,
       isEmergencyContact = true,
+      isApprovedVisitor = true,
       comments = "Some comments",
     )
     val request = CreateContactRequest(
@@ -238,9 +242,11 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
     relationship: ContactRelationship,
   ) {
     with(prisonerContact) {
-      assertThat(relationshipToPrisonerCode).isEqualTo(relationship.relationshipToPrisoner)
-      assertThat(nextOfKin).isEqualTo(relationship.isNextOfKin)
-      assertThat(emergencyContact).isEqualTo(relationship.isEmergencyContact)
+      assertThat(relationshipTypeCode).isEqualTo(relationship.relationshipTypeCode)
+      assertThat(relationshipToPrisonerCode).isEqualTo(relationship.relationshipToPrisonerCode)
+      assertThat(isNextOfKin).isEqualTo(relationship.isNextOfKin)
+      assertThat(isEmergencyContact).isEqualTo(relationship.isEmergencyContact)
+      assertThat(isApprovedVisitor).isEqualTo(relationship.isApprovedVisitor)
       assertThat(comments).isEqualTo(relationship.comments)
     }
   }
@@ -250,10 +256,11 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
     fun allFieldConstraintViolations(): List<Arguments> {
       val relationship = ContactRelationship(
         prisonerNumber = "A1234AB",
-        relationshipType = "S",
-        relationshipToPrisoner = "FRI",
+        relationshipTypeCode = "S",
+        relationshipToPrisonerCode = "FRI",
         isNextOfKin = false,
         isEmergencyContact = false,
+        isApprovedVisitor = false,
         comments = null,
       )
       return listOf(

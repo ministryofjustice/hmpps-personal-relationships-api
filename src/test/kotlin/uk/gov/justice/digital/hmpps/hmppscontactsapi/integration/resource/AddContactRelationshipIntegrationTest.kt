@@ -50,18 +50,19 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     value = [
       "relationship must not be null;{\"contactId\": 99, \"relationship\": null, \"createdBy\": \"USER\"}",
       "relationship must not be null;{\"contactId\": 99, \"createdBy\": \"USER\"}",
-      "contactId must not be null;{\"contactId\": null, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipType\": \"S\", \"relationshipToPrisoner\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false}, \"createdBy\": \"USER\"}",
-      "contactId must not be null;{\"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipType\": \"S\", \"relationshipToPrisoner\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false}, \"createdBy\": \"USER\"}",
-      "createdBy must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipType\": \"S\", \"relationshipToPrisoner\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false}, \"createdBy\": null}",
-      "createdBy must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipType\": \"S\", \"relationshipToPrisoner\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false}}",
-      "relationship.prisonerNumber must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": null, \"relationshipType\": \"S\", \"relationshipToPrisoner\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false}, \"createdBy\": \"USER\"}",
-      "relationship.prisonerNumber must not be null;{\"contactId\": 99, \"relationship\": {\"relationshipType\": \"S\", \"relationshipToPrisoner\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false}, \"createdBy\": \"USER\"}",
-      "relationship.relationshipType must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipToPrisoner\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false}, \"createdBy\": \"USER\"}",
-      "relationship.relationshipType must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipType\":null, \"relationshipToPrisoner\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false}, \"createdBy\": \"USER\"}",
-      "relationship.relationshipToPrisoner must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipType\": \"S\", \"relationshipToPrisoner\": null, \"isNextOfKin\": false, \"isEmergencyContact\": false}, \"createdBy\": \"USER\"}",
-      "relationship.relationshipToPrisoner must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipType\": \"S\", \"isNextOfKin\": false, \"isEmergencyContact\": false}, \"createdBy\": \"USER\"}",
-      "relationship.isNextOfKin must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipType\": \"S\", \"relationshipToPrisoner\": \"MOT\", \"isEmergencyContact\": false}, \"createdBy\": \"USER\"}",
-      "relationship.isEmergencyContact must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipType\": \"S\", \"relationshipToPrisoner\": \"MOT\", \"isNextOfKin\": false}, \"createdBy\": \"USER\"}",
+      "contactId must not be null;{\"contactId\": null, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipTypeCode\": \"S\", \"relationshipToPrisonerCode\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false, \"isApprovedVisitor\": false}, \"createdBy\": \"USER\"}",
+      "contactId must not be null;{\"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipTypeCode\": \"S\", \"relationshipToPrisonerCode\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false, \"isApprovedVisitor\": false}, \"createdBy\": \"USER\"}",
+      "createdBy must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipTypeCode\": \"S\", \"relationshipToPrisonerCode\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false, \"isApprovedVisitor\": false}, \"createdBy\": null}",
+      "createdBy must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipTypeCode\": \"S\", \"relationshipToPrisonerCode\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false, \"isApprovedVisitor\": false}}",
+      "relationship.prisonerNumber must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": null, \"relationshipTypeCode\": \"S\", \"relationshipToPrisonerCode\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false, \"isApprovedVisitor\": false}, \"createdBy\": \"USER\"}",
+      "relationship.prisonerNumber must not be null;{\"contactId\": 99, \"relationship\": {\"relationshipTypeCode\": \"S\", \"relationshipToPrisonerCode\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false, \"isApprovedVisitor\": false}, \"createdBy\": \"USER\"}",
+      "relationship.relationshipTypeCode must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipToPrisonerCode\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false, \"isApprovedVisitor\": false}, \"createdBy\": \"USER\"}",
+      "relationship.relationshipTypeCode must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipTypeCode\":null, \"relationshipToPrisonerCode\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false, \"isApprovedVisitor\": false}, \"createdBy\": \"USER\"}",
+      "relationship.relationshipToPrisonerCode must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipTypeCode\": \"S\", \"relationshipToPrisonerCode\": null, \"isNextOfKin\": false, \"isEmergencyContact\": false, \"isApprovedVisitor\": false}, \"createdBy\": \"USER\"}",
+      "relationship.relationshipToPrisonerCode must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipTypeCode\": \"S\", \"isNextOfKin\": false, \"isEmergencyContact\": false, \"isApprovedVisitor\": false}, \"createdBy\": \"USER\"}",
+      "relationship.isNextOfKin must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipTypeCode\": \"S\", \"relationshipToPrisonerCode\": \"MOT\", \"isEmergencyContact\": false, \"isApprovedVisitor\": false}, \"createdBy\": \"USER\"}",
+      "relationship.isEmergencyContact must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipTypeCode\": \"S\", \"relationshipToPrisonerCode\": \"MOT\", \"isNextOfKin\": false, \"isApprovedVisitor\": false}, \"createdBy\": \"USER\"}",
+      "relationship.isApprovedVisitor must not be null;{\"contactId\": 99, \"relationship\": {\"prisonerNumber\": \"A1324BC\", \"relationshipTypeCode\": \"S\", \"relationshipToPrisonerCode\": \"MOT\", \"isNextOfKin\": false, \"isEmergencyContact\": false}, \"createdBy\": \"USER\"}",
     ],
     delimiter = ';',
   )
@@ -129,10 +130,11 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       contactId = contact.id,
       relationship = ContactRelationship(
         prisonerNumber = "A1234BC",
-        relationshipToPrisoner = "MOT",
+        relationshipToPrisonerCode = "MOT",
         isNextOfKin = true,
-        relationshipType = "S",
+        relationshipTypeCode = "S",
         isEmergencyContact = false,
+        isApprovedVisitor = false,
       ),
       createdBy = "USER",
     )
@@ -141,8 +143,8 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     assertThat(createdRelationship.relationshipToPrisonerCode).isEqualTo("MOT")
     assertThat(createdRelationship.relationshipToPrisonerDescription).isEqualTo("Mother")
-    assertThat(createdRelationship.nextOfKin).isTrue()
-    assertThat(createdRelationship.emergencyContact).isFalse()
+    assertThat(createdRelationship.isNextOfKin).isTrue()
+    assertThat(createdRelationship.isEmergencyContact).isFalse()
     assertThat(createdRelationship.comments).isNull()
 
     stubEvents.assertHasEvent(
@@ -182,10 +184,11 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       contactId = contact.id,
       relationship = ContactRelationship(
         prisonerNumber = "A1234BC",
-        relationshipToPrisoner = "MOT",
+        relationshipToPrisonerCode = "MOT",
         isNextOfKin = false,
-        relationshipType = "S",
+        relationshipTypeCode = "S",
         isEmergencyContact = true,
+        isApprovedVisitor = true,
         comments = "Some comments",
       ),
       createdBy = "USER",
@@ -194,8 +197,9 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     val createdRelationship = testAPIClient.addAContactRelationship(request)
     assertThat(createdRelationship.relationshipToPrisonerCode).isEqualTo("MOT")
     assertThat(createdRelationship.relationshipToPrisonerDescription).isEqualTo("Mother")
-    assertThat(createdRelationship.nextOfKin).isFalse()
-    assertThat(createdRelationship.emergencyContact).isTrue()
+    assertThat(createdRelationship.isNextOfKin).isFalse()
+    assertThat(createdRelationship.isEmergencyContact).isTrue()
+    assertThat(createdRelationship.isApprovedVisitor).isTrue()
     assertThat(createdRelationship.comments).isEqualTo("Some comments")
 
     stubEvents.assertHasEvent(
@@ -210,10 +214,11 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     fun allFieldConstraintViolations(): List<Arguments> {
       val relationship = ContactRelationship(
         prisonerNumber = "A1234AB",
-        relationshipType = "S",
-        relationshipToPrisoner = "FRI",
+        relationshipTypeCode = "S",
+        relationshipToPrisonerCode = "FRI",
         isNextOfKin = false,
         isEmergencyContact = false,
+        isApprovedVisitor = false,
         comments = null,
       )
       return listOf(
@@ -229,10 +234,11 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     contactId = contact.id,
     relationship = ContactRelationship(
       prisonerNumber = "A1234BC",
-      relationshipToPrisoner = "MOT",
+      relationshipToPrisonerCode = "MOT",
       isNextOfKin = true,
-      relationshipType = "S",
+      relationshipTypeCode = "S",
       isEmergencyContact = false,
+      isApprovedVisitor = false,
     ),
     createdBy = "USER",
   )

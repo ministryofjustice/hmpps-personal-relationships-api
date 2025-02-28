@@ -113,6 +113,22 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     }
 
     @Test
+    fun `should not patch the language code with an invalid value`() {
+      val req = PatchContactRequest(
+        languageCode = JsonNullable.of("FOO"),
+        updatedBy = updatedByUser,
+      )
+
+      val uri = UriComponentsBuilder.fromPath("/contact/$contactId")
+        .build()
+        .toUri()
+      val errors = testAPIClient.getBadResponseErrorsWithPatch(req, uri)
+      assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported language (FOO)")
+
+      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS))
+    }
+
+    @Test
     fun `should successfully patch the language code with a value`() {
       resetLanguageCode()
 
@@ -239,7 +255,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactId")
 
-      assertThat(res.domesticStatus).isEqualTo("P")
+      assertThat(res.domesticStatusCode).isEqualTo("P")
       assertThat(res.updatedBy).isEqualTo(updatedByUser)
 
       stubEvents.assertHasEvent(
@@ -254,12 +270,12 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       resetDomesticStatus()
 
       val req = PatchContactRequest(
-        domesticStatus = JsonNullable.of(null),
+        domesticStatusCode = JsonNullable.of(null),
         updatedBy = updatedByUser,
       )
       val res = testAPIClient.patchAContact(req, "/contact/$contactId")
 
-      assertThat(res.domesticStatus).isEqualTo(null)
+      assertThat(res.domesticStatusCode).isEqualTo(null)
       assertThat(res.updatedBy).isEqualTo(updatedByUser)
 
       stubEvents.assertHasEvent(
@@ -274,13 +290,13 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       resetDomesticStatus()
 
       val req = PatchContactRequest(
-        domesticStatus = JsonNullable.of("M"),
+        domesticStatusCode = JsonNullable.of("M"),
         updatedBy = updatedByUser,
       )
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactId")
 
-      assertThat(res.domesticStatus).isEqualTo("M")
+      assertThat(res.domesticStatusCode).isEqualTo("M")
       assertThat(res.updatedBy).isEqualTo(updatedByUser)
 
       stubEvents.assertHasEvent(
@@ -290,15 +306,31 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       )
     }
 
+    @Test
+    fun `should not patch the domestic status code with an invalid value`() {
+      val req = PatchContactRequest(
+        domesticStatusCode = JsonNullable.of("FOO"),
+        updatedBy = updatedByUser,
+      )
+
+      val uri = UriComponentsBuilder.fromPath("/contact/$contactId")
+        .build()
+        .toUri()
+      val errors = testAPIClient.getBadResponseErrorsWithPatch(req, uri)
+      assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported domestic status (FOO)")
+
+      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS))
+    }
+
     private fun resetDomesticStatus() {
       val req = PatchContactRequest(
-        domesticStatus = JsonNullable.of("P"),
+        domesticStatusCode = JsonNullable.of("P"),
         updatedBy = updatedByUser,
       )
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactId")
 
-      assertThat(res.domesticStatus).isEqualTo("P")
+      assertThat(res.domesticStatusCode).isEqualTo("P")
       assertThat(res.updatedBy).isEqualTo(updatedByUser)
 
       stubEvents.reset()
@@ -467,7 +499,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
           lastName = "Last",
           firstName = "First",
           middleNames = "Middle Names",
-          title = "MR",
+          titleCode = "MR",
           createdBy = "created",
         ),
 
@@ -484,7 +516,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(res.firstName).isEqualTo("First")
       assertThat(res.lastName).isEqualTo("Last")
       assertThat(res.middleNames).isEqualTo("Middle Names")
-      assertThat(res.title).isEqualTo("MR")
+      assertThat(res.titleCode).isEqualTo("MR")
       assertThat(res.updatedBy).isEqualTo(updatedByUser)
 
       stubEvents.assertHasEvent(
@@ -503,7 +535,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
         .bodyValue(
           """
-          { "firstName": "update first", "lastName": "update last", "middleNames": "update middle", "title": "MRS", "updatedBy": "$updatedByUser" }
+          { "firstName": "update first", "lastName": "update last", "middleNames": "update middle", "titleCode": "MRS", "updatedBy": "$updatedByUser" }
           """.trimIndent(),
         )
         .exchange()
@@ -516,7 +548,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(res.firstName).isEqualTo("First")
       assertThat(res.lastName).isEqualTo("Last")
       assertThat(res.middleNames).isEqualTo("update middle")
-      assertThat(res.title).isEqualTo("MRS")
+      assertThat(res.titleCode).isEqualTo("MRS")
       assertThat(res.updatedBy).isEqualTo(updatedByUser)
 
       stubEvents.assertHasEvent(
@@ -529,7 +561,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     @Test
     fun `should successfully patch middle name and title with null values`() {
       val req = PatchContactRequest(
-        title = JsonNullable.of(null),
+        titleCode = JsonNullable.of(null),
         middleNames = JsonNullable.of(null),
         updatedBy = updatedByUser,
       )
@@ -538,7 +570,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(res.firstName).isEqualTo("First")
       assertThat(res.lastName).isEqualTo("Last")
       assertThat(res.middleNames).isNull()
-      assertThat(res.title).isNull()
+      assertThat(res.titleCode).isNull()
       assertThat(res.updatedBy).isEqualTo(updatedByUser)
 
       stubEvents.assertHasEvent(
@@ -551,7 +583,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     @Test
     fun `should successfully patch middle name and title with a value`() {
       val req = PatchContactRequest(
-        title = JsonNullable.of("MRS"),
+        titleCode = JsonNullable.of("MRS"),
         middleNames = JsonNullable.of("Updated Middle"),
         updatedBy = updatedByUser,
       )
@@ -560,7 +592,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(res.firstName).isEqualTo("First")
       assertThat(res.lastName).isEqualTo("Last")
       assertThat(res.middleNames).isEqualTo("Updated Middle")
-      assertThat(res.title).isEqualTo("MRS")
+      assertThat(res.titleCode).isEqualTo("MRS")
       assertThat(res.updatedBy).isEqualTo(updatedByUser)
 
       stubEvents.assertHasEvent(
@@ -573,7 +605,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     @Test
     fun `should not be able to patch to an invalid title value`() {
       val req = PatchContactRequest(
-        title = JsonNullable.of("FOO"),
+        titleCode = JsonNullable.of("FOO"),
         updatedBy = updatedByUser,
       )
 
@@ -634,7 +666,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       )
       val res = testAPIClient.patchAContact(req, "/contact/$contactWithAGender")
 
-      assertThat(res.gender).isEqualTo("NS")
+      assertThat(res.genderCode).isEqualTo("NS")
       assertThat(res.updatedBy).isEqualTo(updatedByUser)
 
       stubEvents.assertHasEvent(
@@ -647,12 +679,12 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     @Test
     fun `should successfully patch gender with null values`() {
       val req = PatchContactRequest(
-        gender = JsonNullable.of(null),
+        genderCode = JsonNullable.of(null),
         updatedBy = updatedByUser,
       )
       val res = testAPIClient.patchAContact(req, "/contact/$contactWithAGender")
 
-      assertThat(res.gender).isNull()
+      assertThat(res.genderCode).isNull()
       assertThat(res.updatedBy).isEqualTo(updatedByUser)
 
       stubEvents.assertHasEvent(
@@ -665,12 +697,12 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     @Test
     fun `should successfully patch gender with a value`() {
       val req = PatchContactRequest(
-        gender = JsonNullable.of("M"),
+        genderCode = JsonNullable.of("M"),
         updatedBy = updatedByUser,
       )
       val res = testAPIClient.patchAContact(req, "/contact/$contactWithAGender")
 
-      assertThat(res.gender).isEqualTo("M")
+      assertThat(res.genderCode).isEqualTo("M")
       assertThat(res.updatedBy).isEqualTo(updatedByUser)
 
       stubEvents.assertHasEvent(
@@ -683,7 +715,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     @Test
     fun `should not be able to patch to an invalid gender value`() {
       val req = PatchContactRequest(
-        gender = JsonNullable.of("FOO"),
+        genderCode = JsonNullable.of("FOO"),
         updatedBy = updatedByUser,
       )
 

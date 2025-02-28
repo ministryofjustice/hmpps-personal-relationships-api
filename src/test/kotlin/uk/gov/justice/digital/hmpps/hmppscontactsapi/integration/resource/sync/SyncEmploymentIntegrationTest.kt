@@ -269,7 +269,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
 
   private fun createContact(): Long {
     val request = CreateContactRequest(
-      title = "MR",
+      titleCode = "MR",
       lastName = "last",
       firstName = "first",
       middleNames = "middle",

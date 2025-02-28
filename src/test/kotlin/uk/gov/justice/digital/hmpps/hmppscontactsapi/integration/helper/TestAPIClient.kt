@@ -12,11 +12,11 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateEmploym
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchEmploymentsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateEmploymentRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePrisonerContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateEmailRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateMultipleEmailsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.UpdateEmailRequest
@@ -370,7 +370,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactEmailDetails::class.java)
     .returnResult().responseBody!!
 
-  fun updateRelationship(prisonerContactId: Long, request: UpdateRelationshipRequest, role: String = "ROLE_CONTACTS_ADMIN") {
+  fun updateRelationship(prisonerContactId: Long, request: PatchRelationshipRequest, role: String = "ROLE_CONTACTS_ADMIN") {
     webTestClient.patch()
       .uri("/prisoner-contact/$prisonerContactId")
       .accept(MediaType.APPLICATION_JSON)

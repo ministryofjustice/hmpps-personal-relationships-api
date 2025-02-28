@@ -18,7 +18,7 @@ data class PatchContactRequest(
   var isStaff: JsonNullable<Boolean> = JsonNullable.undefined(),
 
   @Schema(description = "The domestic status code of the contact", example = "S", nullable = true, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-  var domesticStatus: JsonNullable<String?> = JsonNullable.undefined(),
+  var domesticStatusCode: JsonNullable<String?> = JsonNullable.undefined(),
 
   @Schema(description = "Whether an interpreter is required", example = "false", nullable = false, type = "boolean", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   var interpreterRequired: JsonNullable<Boolean> = JsonNullable.undefined(),
@@ -31,7 +31,7 @@ data class PatchContactRequest(
 
   @Schema(description = "The title code for the contact, if any", type = "string", example = "MR", nullable = true, maxLength = 12, requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @field:Size(max = 12, message = "title must be <= 12 characters")
-  var title: JsonNullable<String> = JsonNullable.undefined(),
+  var titleCode: JsonNullable<String> = JsonNullable.undefined(),
 
   @Schema(description = "The middle names of the contact, if any", type = "string", example = "William", nullable = true, maxLength = 35, requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @field:Size(max = 35, message = "middleNames must be <= 35 characters")
@@ -49,7 +49,7 @@ data class PatchContactRequest(
     type = "string",
     requiredMode = Schema.RequiredMode.NOT_REQUIRED,
   )
-  var gender: JsonNullable<String?> = JsonNullable.undefined(),
+  var genderCode: JsonNullable<String?> = JsonNullable.undefined(),
 
   @Schema(description = "The date the contact deceased, if known", example = "1980-01-01", type = "string", nullable = true, requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   var deceasedDate: JsonNullable<LocalDate?> = JsonNullable.undefined(),

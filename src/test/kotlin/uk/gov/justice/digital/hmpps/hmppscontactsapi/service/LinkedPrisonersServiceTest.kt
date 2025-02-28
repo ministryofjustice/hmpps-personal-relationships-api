@@ -44,16 +44,16 @@ class LinkedPrisonersServiceTest {
           relationships = listOf(
             LinkedPrisonerRelationshipDetails(
               prisonerContactId = 999,
-              relationshipType = "S",
+              relationshipTypeCode = "S",
               relationshipTypeDescription = "Social",
-              relationshipToPrisoner = "FRI",
+              relationshipToPrisonerCode = "FRI",
               relationshipToPrisonerDescription = "Friend",
             ),
             LinkedPrisonerRelationshipDetails(
               prisonerContactId = 888,
-              relationshipType = "O",
+              relationshipTypeCode = "O",
               relationshipTypeDescription = "Official",
-              relationshipToPrisoner = "LAW",
+              relationshipToPrisonerCode = "LAW",
               relationshipToPrisonerDescription = "Lawyer",
             ),
           ),
@@ -67,9 +67,9 @@ class LinkedPrisonersServiceTest {
 
             LinkedPrisonerRelationshipDetails(
               prisonerContactId = 777,
-              relationshipType = "S",
+              relationshipTypeCode = "S",
               relationshipTypeDescription = "Social",
-              relationshipToPrisoner = "FA",
+              relationshipToPrisonerCode = "FA",
               relationshipToPrisonerDescription = "Father",
             ),
           ),
@@ -105,9 +105,9 @@ class LinkedPrisonersServiceTest {
           relationships = listOf(
             LinkedPrisonerRelationshipDetails(
               prisonerContactId = 999,
-              relationshipType = "S",
+              relationshipTypeCode = "S",
               relationshipTypeDescription = "Social",
-              relationshipToPrisoner = "FRI",
+              relationshipToPrisonerCode = "FRI",
               relationshipToPrisonerDescription = "Friend",
             ),
           ),

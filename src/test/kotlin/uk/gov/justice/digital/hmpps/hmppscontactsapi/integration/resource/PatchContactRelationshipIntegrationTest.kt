@@ -14,7 +14,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
@@ -22,7 +22,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerCont
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
+class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
@@ -30,13 +30,13 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     .uri("/prisoner-contact/99")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .bodyValue(UpdateRelationshipRequest(updatedBy = "Admin"))
+    .bodyValue(PatchRelationshipRequest(updatedBy = "Admin"))
 
   @ParameterizedTest
   @CsvSource(
     value = [
-      "Unsupported relationship type null.;{\"relationshipType\": null,  \"updatedBy\": \"Admin\"}",
-      "Unsupported relationship to prisoner null.;{\"relationshipToPrisoner\": null,  \"updatedBy\": \"Admin\"}",
+      "Unsupported relationship type null.;{\"relationshipTypeCode\": null,  \"updatedBy\": \"Admin\"}",
+      "Unsupported relationship to prisoner null.;{\"relationshipToPrisonerCode\": null,  \"updatedBy\": \"Admin\"}",
       "Unsupported approved visitor value null.;{\"isApprovedVisitor\": null,  \"updatedBy\": \"Admin\"}",
       "Unsupported emergency contact null.;{\"isEmergencyContact\": null,  \"updatedBy\": \"Admin\"}",
       "Unsupported next of kin null.;{\"isNextOfKin\": null,  \"updatedBy\": \"Admin\"}",
@@ -70,7 +70,7 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
 
   @ParameterizedTest
   @MethodSource("allFieldConstraintViolations")
-  fun `should check all field constraints`(expectedMessage: String, request: UpdateRelationshipRequest) {
+  fun `should check all field constraints`(expectedMessage: String, request: PatchRelationshipRequest) {
     val prisonerNumber = getRandomPrisonerCode()
     stubPrisonSearchWithResponse(prisonerNumber)
     val prisonerContact = cretePrisonerContact(prisonerNumber)
@@ -100,8 +100,8 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     stubPrisonSearchWithResponse(prisonerNumber)
     val prisonerContact = cretePrisonerContact(prisonerNumber)
 
-    val updateRequest = UpdateRelationshipRequest(
-      relationshipToPrisoner = JsonNullable.of("SIS"),
+    val updateRequest = PatchRelationshipRequest(
+      relationshipToPrisonerCode = JsonNullable.of("SIS"),
       updatedBy = "Admin",
     )
 
@@ -111,7 +111,7 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
 
     val updatedPrisonerContacts = testAPIClient.getPrisonerContacts(prisonerNumber).content
     assertThat(updatedPrisonerContacts).hasSize(1)
-    assertThat(updatedPrisonerContacts[0].relationshipToPrisoner).isEqualTo("SIS")
+    assertThat(updatedPrisonerContacts[0].relationshipToPrisonerCode).isEqualTo("SIS")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
@@ -125,9 +125,9 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     stubPrisonSearchWithResponse(prisonerNumber)
     val prisonerContact = cretePrisonerContact(prisonerNumber)
 
-    val updateRequest = UpdateRelationshipRequest(
-      relationshipType = JsonNullable.of("O"),
-      relationshipToPrisoner = JsonNullable.of("DR"),
+    val updateRequest = PatchRelationshipRequest(
+      relationshipTypeCode = JsonNullable.of("O"),
+      relationshipToPrisonerCode = JsonNullable.of("DR"),
       updatedBy = "Admin",
     )
 
@@ -137,8 +137,8 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
 
     val updatedPrisonerContacts = testAPIClient.getPrisonerContacts(prisonerNumber).content
     assertThat(updatedPrisonerContacts).hasSize(1)
-    assertThat(updatedPrisonerContacts[0].relationshipType).isEqualTo("O")
-    assertThat(updatedPrisonerContacts[0].relationshipToPrisoner).isEqualTo("DR")
+    assertThat(updatedPrisonerContacts[0].relationshipTypeCode).isEqualTo("O")
+    assertThat(updatedPrisonerContacts[0].relationshipToPrisonerCode).isEqualTo("DR")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
@@ -152,7 +152,7 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     stubPrisonSearchWithResponse(prisonerNumber)
     val prisonerContact = cretePrisonerContact(prisonerNumber)
 
-    val updateRequest = UpdateRelationshipRequest(
+    val updateRequest = PatchRelationshipRequest(
       isNextOfKin = JsonNullable.of(true),
       updatedBy = "Admin",
     )
@@ -163,7 +163,7 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
 
     val updatedPrisonerContacts = testAPIClient.getPrisonerContacts(prisonerNumber).content
     assertThat(updatedPrisonerContacts).hasSize(1)
-    assertThat(updatedPrisonerContacts[0].nextOfKin).isTrue
+    assertThat(updatedPrisonerContacts[0].isNextOfKin).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
@@ -177,7 +177,7 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     stubPrisonSearchWithResponse(prisonerNumber)
     val prisonerContact = cretePrisonerContact(prisonerNumber)
 
-    val updateRequest = UpdateRelationshipRequest(
+    val updateRequest = PatchRelationshipRequest(
       isApprovedVisitor = JsonNullable.of(true),
       updatedBy = "Admin",
     )
@@ -188,7 +188,7 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
 
     val updatedPrisonerContacts = testAPIClient.getPrisonerContacts(prisonerNumber).content
     assertThat(updatedPrisonerContacts).hasSize(1)
-    assertThat(updatedPrisonerContacts[0].approvedVisitor).isTrue
+    assertThat(updatedPrisonerContacts[0].isApprovedVisitor).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
@@ -202,7 +202,7 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     stubPrisonSearchWithResponse(prisonerNumber)
     val prisonerContact = cretePrisonerContact(prisonerNumber)
 
-    val updateRequest = UpdateRelationshipRequest(
+    val updateRequest = PatchRelationshipRequest(
       isEmergencyContact = JsonNullable.of(true),
       updatedBy = "Admin",
     )
@@ -213,7 +213,7 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
 
     val updatedPrisonerContacts = testAPIClient.getPrisonerContacts(prisonerNumber).content
     assertThat(updatedPrisonerContacts).hasSize(1)
-    assertThat(updatedPrisonerContacts[0].emergencyContact).isTrue
+    assertThat(updatedPrisonerContacts[0].isEmergencyContact).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
@@ -227,7 +227,7 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     stubPrisonSearchWithResponse(prisonerNumber)
     val prisonerContact = cretePrisonerContact(prisonerNumber)
 
-    val updateRequest = UpdateRelationshipRequest(
+    val updateRequest = PatchRelationshipRequest(
       isRelationshipActive = JsonNullable.of(true),
       updatedBy = "Admin",
     )
@@ -252,7 +252,7 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     stubPrisonSearchWithResponse(prisonerNumber)
     val prisonerContact = cretePrisonerContact(prisonerNumber)
 
-    val updateRequest = UpdateRelationshipRequest(
+    val updateRequest = PatchRelationshipRequest(
       comments = JsonNullable.of("New comment"),
       updatedBy = "Admin",
     )
@@ -277,7 +277,7 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     stubPrisonSearchWithResponse(prisonerNumber)
     val prisonerContact = cretePrisonerContact(prisonerNumber)
 
-    val updateRequest = UpdateRelationshipRequest(
+    val updateRequest = PatchRelationshipRequest(
       updatedBy = "Admin",
     )
 
@@ -301,8 +301,8 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     stubPrisonSearchWithResponse(prisonerNumber)
     val prisonerContact = cretePrisonerContact(prisonerNumber)
 
-    val updateRequest = UpdateRelationshipRequest(
-      relationshipToPrisoner = JsonNullable.of("FRI"),
+    val updateRequest = PatchRelationshipRequest(
+      relationshipToPrisonerCode = JsonNullable.of("FRI"),
       isNextOfKin = JsonNullable.of(true),
       isApprovedVisitor = JsonNullable.of(true),
       isEmergencyContact = JsonNullable.of(true),
@@ -326,12 +326,12 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     )
   }
 
-  private fun assertUpdatedPrisonerContactEquals(prisonerContact: PrisonerContactSummary, relationship: UpdateRelationshipRequest) {
+  private fun assertUpdatedPrisonerContactEquals(prisonerContact: PrisonerContactSummary, relationship: PatchRelationshipRequest) {
     with(prisonerContact) {
-      assertThat(relationshipToPrisoner).isEqualTo(relationship.relationshipToPrisoner.get())
-      assertThat(nextOfKin).isEqualTo(relationship.isNextOfKin.get())
-      assertThat(approvedVisitor).isEqualTo(relationship.isApprovedVisitor.get())
-      assertThat(emergencyContact).isEqualTo(relationship.isEmergencyContact.get())
+      assertThat(relationshipToPrisonerCode).isEqualTo(relationship.relationshipToPrisonerCode.get())
+      assertThat(isNextOfKin).isEqualTo(relationship.isNextOfKin.get())
+      assertThat(isApprovedVisitor).isEqualTo(relationship.isApprovedVisitor.get())
+      assertThat(isEmergencyContact).isEqualTo(relationship.isEmergencyContact.get())
       assertThat(comments).isEqualTo(relationship.comments.get())
     }
   }
@@ -350,10 +350,11 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
   private fun cretePrisonerContact(prisonerNumber: String = "A1234AB"): PrisonerContactSummary {
     val requestedRelationship = ContactRelationship(
       prisonerNumber = prisonerNumber,
-      relationshipType = "S",
-      relationshipToPrisoner = "BRO",
+      relationshipTypeCode = "S",
+      relationshipToPrisonerCode = "BRO",
       isNextOfKin = false,
       isEmergencyContact = false,
+      isApprovedVisitor = false,
       comments = null,
     )
     val request = CreateContactRequest(
@@ -377,9 +378,9 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     relationship: ContactRelationship,
   ) {
     with(prisonerContact) {
-      assertThat(relationshipToPrisoner).isEqualTo(relationship.relationshipToPrisoner)
-      assertThat(nextOfKin).isEqualTo(relationship.isNextOfKin)
-      assertThat(emergencyContact).isEqualTo(relationship.isEmergencyContact)
+      assertThat(relationshipToPrisonerCode).isEqualTo(relationship.relationshipToPrisonerCode)
+      assertThat(isNextOfKin).isEqualTo(relationship.isNextOfKin)
+      assertThat(isEmergencyContact).isEqualTo(relationship.isEmergencyContact)
       assertThat(comments).isEqualTo(relationship.comments)
     }
   }
@@ -387,8 +388,8 @@ class UpdateContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
   companion object {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> {
-      val relationship = UpdateRelationshipRequest(
-        relationshipToPrisoner = JsonNullable.of("FRI"),
+      val relationship = PatchRelationshipRequest(
+        relationshipToPrisonerCode = JsonNullable.of("FRI"),
         isNextOfKin = JsonNullable.of(true),
         isApprovedVisitor = JsonNullable.of(true),
         isEmergencyContact = JsonNullable.of(true),

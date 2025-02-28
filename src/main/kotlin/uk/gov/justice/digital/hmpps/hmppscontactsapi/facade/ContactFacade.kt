@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameDetails
@@ -77,7 +77,7 @@ class ContactFacade(
 
   fun searchContacts(pageable: Pageable, request: ContactSearchRequest): Page<ContactSearchResultItem> = contactService.searchContacts(pageable, request)
 
-  fun patchRelationship(prisonerContactId: Long, request: UpdateRelationshipRequest) {
+  fun patchRelationship(prisonerContactId: Long, request: PatchRelationshipRequest) {
     contactService.updateContactRelationship(prisonerContactId, request)
       .also {
         logger.info("Send patch relationship domain event to {} {} ", OutboundEvent.PRISONER_CONTACT_UPDATED, it.contactId)

@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameD
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPhoneRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactEmailRepository
@@ -60,6 +61,11 @@ class ContactService(
     if (request.relationship != null) {
       validateNewRelationship(request.relationship)
     }
+    validateOptionalCode(request.titleCode, ReferenceCodeGroup.TITLE)
+    validateOptionalCode(request.genderCode, ReferenceCodeGroup.GENDER)
+    validateOptionalCode(request.languageCode, ReferenceCodeGroup.LANGUAGE)
+    validateOptionalCode(request.domesticStatusCode, ReferenceCodeGroup.DOMESTIC_STS)
+
     val newContact = request.toModel()
     val createdContact = contactRepository.saveAndFlush(newContact)
     val newRelationship = request.relationship?.toEntity(createdContact.id(), request.createdBy)
@@ -100,17 +106,19 @@ class ContactService(
     return enrichRelationship(newRelationship)
   }
 
+  private fun validateOptionalCode(code: String?, group: ReferenceCodeGroup): ReferenceCode? = code?.let { referenceCodeService.validateReferenceCode(group, it, false) }
+
   private fun validateNewRelationship(relationship: ContactRelationship) {
     prisonerService.getPrisoner(relationship.prisonerNumber)
       ?: throw EntityNotFoundException("Prisoner (${relationship.prisonerNumber}) could not be found")
     referenceCodeService.validateReferenceCode(
       ReferenceCodeGroup.RELATIONSHIP_TYPE,
-      relationship.relationshipType,
+      relationship.relationshipTypeCode,
       allowInactive = false,
     )
     validateRelationshipToPrisoner(
-      relationship.relationshipType,
-      relationship.relationshipToPrisoner,
+      relationship.relationshipTypeCode,
+      relationship.relationshipToPrisonerCode,
       allowInactive = false,
     )
   }
@@ -163,7 +171,7 @@ class ContactService(
 
     return ContactDetails(
       id = contactEntity.id(),
-      title = contactEntity.title,
+      titleCode = contactEntity.title,
       titleDescription = titleDescription,
       lastName = contactEntity.lastName,
       firstName = contactEntity.firstName,
@@ -181,7 +189,7 @@ class ContactService(
       employments = employments,
       domesticStatusCode = contactEntity.domesticStatus,
       domesticStatusDescription = domesticStatusDescription,
-      gender = contactEntity.gender,
+      genderCode = contactEntity.gender,
       genderDescription = genderDescription,
       createdBy = contactEntity.createdBy,
       createdTime = contactEntity.createdTime,
@@ -215,7 +223,7 @@ class ContactService(
   @Transactional
   fun updateContactRelationship(
     prisonerContactId: Long,
-    request: UpdateRelationshipRequest,
+    request: PatchRelationshipRequest,
   ): PrisonerContactRelationshipDetails {
     val prisonerContactEntity = getPrisonerContactEntity(prisonerContactId)
 
@@ -228,7 +236,7 @@ class ContactService(
     return enrichRelationship(prisonerContactEntity)
   }
 
-  private fun validateRequest(request: UpdateRelationshipRequest) {
+  private fun validateRequest(request: PatchRelationshipRequest) {
     unsupportedRelationshipType(request)
     unsupportedRelationshipToPrisoner(request)
     unsupportedApprovedToVisitFlag(request)
@@ -244,17 +252,17 @@ class ContactService(
   }
 
   private fun PrisonerContactEntity.applyUpdate(
-    request: UpdateRelationshipRequest,
+    request: PatchRelationshipRequest,
   ) = this.copy(
     contactId = this.contactId,
     prisonerNumber = this.prisonerNumber,
-    relationshipType = request.relationshipType.orElse(this.relationshipType),
+    relationshipType = request.relationshipTypeCode.orElse(this.relationshipType),
     approvedVisitor = request.isApprovedVisitor.orElse(this.approvedVisitor),
     currentTerm = this.currentTerm,
     nextOfKin = request.isNextOfKin.orElse(this.nextOfKin),
     emergencyContact = request.isEmergencyContact.orElse(this.emergencyContact),
     active = request.isRelationshipActive.orElse(this.active),
-    relationshipToPrisoner = request.relationshipToPrisoner.orElse(this.relationshipToPrisoner),
+    relationshipToPrisoner = request.relationshipToPrisonerCode.orElse(this.relationshipToPrisoner),
     comments = request.comments.orElse(this.comments),
   ).also {
     it.approvedBy = this.approvedBy
@@ -266,28 +274,28 @@ class ContactService(
   }
 
   private fun validateRelationshipCodes(
-    request: UpdateRelationshipRequest,
+    request: PatchRelationshipRequest,
     preUpdateRelationship: PrisonerContactEntity,
   ) {
-    if (request.relationshipType.isPresent && request.relationshipToPrisoner.isPresent) {
+    if (request.relationshipTypeCode.isPresent && request.relationshipToPrisonerCode.isPresent) {
       // Changing both
-      val relationshipType = request.relationshipType.get()
+      val relationshipType = request.relationshipTypeCode.get()
       referenceCodeService.validateReferenceCode(
         ReferenceCodeGroup.RELATIONSHIP_TYPE,
         relationshipType,
         allowInactive = true,
       )
 
-      val relationshipToPrisoner = request.relationshipToPrisoner.get()
+      val relationshipToPrisoner = request.relationshipToPrisonerCode.get()
       validateRelationshipToPrisoner(relationshipType, relationshipToPrisoner, allowInactive = true)
-    } else if (!request.relationshipType.isPresent && request.relationshipToPrisoner.isPresent) {
+    } else if (!request.relationshipTypeCode.isPresent && request.relationshipToPrisonerCode.isPresent) {
       // Changing only relationship to prisoner
       val relationshipType = preUpdateRelationship.relationshipType
-      val relationshipToPrisoner = request.relationshipToPrisoner.get()
+      val relationshipToPrisoner = request.relationshipToPrisonerCode.get()
       validateRelationshipToPrisoner(relationshipType, relationshipToPrisoner, allowInactive = true)
-    } else if (request.relationshipType.isPresent && !request.relationshipToPrisoner.isPresent) {
+    } else if (request.relationshipTypeCode.isPresent && !request.relationshipToPrisonerCode.isPresent) {
       // Changing only relationship type (this is only going to be valid if the type didn't actually change)
-      val relationshipType = request.relationshipType.get()
+      val relationshipType = request.relationshipTypeCode.get()
       referenceCodeService.validateReferenceCode(
         ReferenceCodeGroup.RELATIONSHIP_TYPE,
         relationshipType,
@@ -320,37 +328,37 @@ class ContactService(
     return groupCodeForRelationship
   }
 
-  private fun unsupportedRelationshipType(request: UpdateRelationshipRequest) {
-    if (request.relationshipType.isPresent && request.relationshipType.get() == null) {
+  private fun unsupportedRelationshipType(request: PatchRelationshipRequest) {
+    if (request.relationshipTypeCode.isPresent && request.relationshipTypeCode.get() == null) {
       throw ValidationException("Unsupported relationship type null.")
     }
   }
 
-  private fun unsupportedRelationshipToPrisoner(request: UpdateRelationshipRequest) {
-    if (request.relationshipToPrisoner.isPresent && request.relationshipToPrisoner.get() == null) {
+  private fun unsupportedRelationshipToPrisoner(request: PatchRelationshipRequest) {
+    if (request.relationshipToPrisonerCode.isPresent && request.relationshipToPrisonerCode.get() == null) {
       throw ValidationException("Unsupported relationship to prisoner null.")
     }
   }
 
-  private fun unsupportedApprovedToVisitFlag(request: UpdateRelationshipRequest) {
+  private fun unsupportedApprovedToVisitFlag(request: PatchRelationshipRequest) {
     if (request.isApprovedVisitor.isPresent && request.isApprovedVisitor.get() == null) {
       throw ValidationException("Unsupported approved visitor value null.")
     }
   }
 
-  private fun unsupportedEmergencyContact(request: UpdateRelationshipRequest) {
+  private fun unsupportedEmergencyContact(request: PatchRelationshipRequest) {
     if (request.isEmergencyContact.isPresent && request.isEmergencyContact.get() == null) {
       throw ValidationException("Unsupported emergency contact null.")
     }
   }
 
-  private fun unsupportedNextOfKin(request: UpdateRelationshipRequest) {
+  private fun unsupportedNextOfKin(request: PatchRelationshipRequest) {
     if (request.isNextOfKin.isPresent && request.isNextOfKin.get() == null) {
       throw ValidationException("Unsupported next of kin null.")
     }
   }
 
-  private fun unsupportedRelationshipActive(request: UpdateRelationshipRequest) {
+  private fun unsupportedRelationshipActive(request: PatchRelationshipRequest) {
     if (request.isRelationshipActive.isPresent && request.isRelationshipActive.get() == null) {
       throw ValidationException("Unsupported relationship status null.")
     }
@@ -360,7 +368,7 @@ class ContactService(
     prisonerContactId = relationship.prisonerContactId,
     contactId = relationship.contactId,
     prisonerNumber = relationship.prisonerNumber,
-    relationshipType = relationship.relationshipType,
+    relationshipTypeCode = relationship.relationshipType,
     relationshipTypeDescription = referenceCodeService.getReferenceDataByGroupAndCode(
       ReferenceCodeGroup.RELATIONSHIP_TYPE,
       relationship.relationshipType,
@@ -370,8 +378,8 @@ class ContactService(
       referenceCodeGroupForRelationshipType(relationship.relationshipType),
       relationship.relationshipToPrisoner,
     )?.description ?: relationship.relationshipToPrisoner,
-    emergencyContact = relationship.emergencyContact,
-    nextOfKin = relationship.nextOfKin,
+    isEmergencyContact = relationship.emergencyContact,
+    isNextOfKin = relationship.nextOfKin,
     isRelationshipActive = relationship.active,
     isApprovedVisitor = relationship.approvedVisitor,
     comments = relationship.comments,

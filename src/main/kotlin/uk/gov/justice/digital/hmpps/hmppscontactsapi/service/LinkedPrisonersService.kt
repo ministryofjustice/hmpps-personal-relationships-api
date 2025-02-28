@@ -24,9 +24,9 @@ class LinkedPrisonersService(
             relationships = summaries.map { summary ->
               LinkedPrisonerRelationshipDetails(
                 prisonerContactId = summary.prisonerContactId,
-                relationshipType = summary.relationshipType,
+                relationshipTypeCode = summary.relationshipType,
                 relationshipTypeDescription = summary.relationshipTypeDescription,
-                relationshipToPrisoner = summary.relationshipToPrisoner,
+                relationshipToPrisonerCode = summary.relationshipToPrisoner,
                 relationshipToPrisonerDescription = summary.relationshipToPrisonerDescription,
               )
             },
