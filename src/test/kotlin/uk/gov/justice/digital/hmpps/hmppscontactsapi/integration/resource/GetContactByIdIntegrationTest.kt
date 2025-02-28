@@ -224,7 +224,7 @@ class GetContactByIdIntegrationTest : SecureAPIIntegrationTestBase() {
     with(contact) {
       assertThat(id).isEqualTo(1)
       assertThat(domesticStatusCode).isEqualTo("M")
-      assertThat(domesticStatusDescription).isEqualTo("Married or in civil partnership")
+      assertThat(domesticStatusDescription).isEqualTo("Married or in a civil partnership")
     }
   }
 
