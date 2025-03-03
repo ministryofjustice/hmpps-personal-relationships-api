@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.prisoner
@@ -31,14 +33,15 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
     .contentType(MediaType.APPLICATION_JSON)
     .bodyValue(createRequest())
 
-  @Test
-  fun `should create new domestic status`() {
+  @ParameterizedTest
+  @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
+  fun `should create new domestic status`(role: String) {
     stubPrisonerSearch(prisoner1)
     val request = createRequest()
 
     val response = webTestClient.put()
       .uri("/prisoner/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
+      .headers(setAuthorisation(roles = listOf(role)))
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(request)
       .exchange()
