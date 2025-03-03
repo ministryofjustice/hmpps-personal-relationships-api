@@ -18,6 +18,11 @@ spring:
     url: 'jdbc:postgresql://${DB_SERVER}/${DB_NAME}?sslmode=${DB_SSL_MODE}'
     username: ${DB_USER}
     password: ${DB_PASS}
+    hikari:
+      pool-name: PERSONAL-RELATIONSHIPS-DB-CP
+      connection-timeout: 1000
+      validation-timeout: 500
+      maximum-pool-size: 25
 
   jpa:
     open-in-view: false
@@ -28,7 +33,14 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
+        session:
+          events:
+            log:
+              LOG_QUERIES_SLOWER_THAN_MS: 10000
+        javax:
+          persistence:
+            query:
+              timeout: 30000
   flyway:
     locations: classpath:/migrations/common,classpath:/migrations/prod
 
