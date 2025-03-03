@@ -70,7 +70,7 @@ class GetPrisonerDomesticStatusIntegrationTest : SecureAPIIntegrationTestBase() 
     )
     val request = CreateOrUpdatePrisonerDomesticStatusRequest(
       domesticStatusCode = "M",
-      updatedBy = "test-user",
+      requestedBy = "test-user",
     )
 
     val response = webTestClient.put()

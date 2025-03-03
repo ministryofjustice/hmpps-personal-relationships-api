@@ -49,7 +49,7 @@ class PrisonerDomesticStatusService(
     val newDomesticStatus = PrisonerDomesticStatus(
       prisonerNumber = prisonerNumber,
       domesticStatusCode = request.domesticStatusCode,
-      createdBy = request.updatedBy,
+      createdBy = request.requestedBy,
       createdTime = LocalDateTime.now(),
       active = true,
     )
@@ -71,7 +71,7 @@ class PrisonerDomesticStatusService(
     createdBy = createdBy,
   )
 
-  private fun getPrisonerDomesticStatusActive(prisonerNumber: String) = prisonerDomesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
+  fun getPrisonerDomesticStatusActive(prisonerNumber: String) = prisonerDomesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
 
   private fun checkReferenceDataExists(code: String) = referenceCodeRepository
     .findByGroupCodeAndCode(ReferenceCodeGroup.DOMESTIC_STS, code)

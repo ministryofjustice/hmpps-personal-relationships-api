@@ -74,7 +74,7 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
     stubPrisonerSearch(prisoner1)
     val request = CreateOrUpdatePrisonerDomesticStatusRequest(
       domesticStatusCode = null,
-      updatedBy = "test-user",
+      requestedBy = "test-user",
     )
 
     val response = webTestClient.put()
@@ -149,6 +149,11 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
         ),
       )
     stubEvents.assertHasEvent(
+      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
+      additionalInfo = PrisonerDomesticStatus(response.id, Source.DPS),
+      personReference = PersonReference(nomsNumber = prisonerNumber),
+    )
+    stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
       additionalInfo = PrisonerDomesticStatus(response.id, Source.DPS),
       personReference = PersonReference(nomsNumber = prisonerNumber),
@@ -164,7 +169,7 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
       .bodyValue(
         CreateOrUpdatePrisonerDomesticStatusRequest(
           domesticStatusCode = "MORE THAN 12 CHARACTERS",
-          updatedBy = "test-user",
+          requestedBy = "test-user",
         ),
       )
       .exchange()
@@ -174,6 +179,9 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
       .isEqualTo("Validation failure(s): domesticStatusCode must be less than or equal to 12 characters")
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
+    )
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
     )
   }
 
@@ -187,7 +195,7 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
       .bodyValue(
         CreateOrUpdatePrisonerDomesticStatusRequest(
           domesticStatusCode = "",
-          updatedBy = "test-user",
+          requestedBy = "test-user",
         ),
       )
       .exchange()
@@ -197,6 +205,9 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
       .isEqualTo("Entity not found : No reference data found for groupCode: DOMESTIC_STS and code: ")
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
+    )
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
     )
   }
 
@@ -210,7 +221,7 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
       .bodyValue(
         CreateOrUpdatePrisonerDomesticStatusRequest(
           domesticStatusCode = "Q",
-          updatedBy = "test-user",
+          requestedBy = "test-user",
         ),
       )
       .exchange()
@@ -221,10 +232,13 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
     )
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
+    )
   }
 
   private fun createRequest() = CreateOrUpdatePrisonerDomesticStatusRequest(
     domesticStatusCode = "M",
-    updatedBy = "test-user",
+    requestedBy = "test-user",
   )
 }

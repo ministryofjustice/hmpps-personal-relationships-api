@@ -12,6 +12,7 @@ import org.mockito.Mockito.verify
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerDomesticStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.isEqualTo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateOrUpdatePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerDomesticStatusResponse
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.PrisonerDomesticSta
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import java.time.LocalDateTime
 
 @ExtendWith(MockitoExtension::class)
 class PrisonerDomesticStatusFacadeTest {
@@ -70,17 +72,65 @@ class PrisonerDomesticStatusFacadeTest {
   inner class CreateOrUpdateDomesticStatus {
 
     @Test
-    fun `should create and send event`() {
+    fun `should create new record and send created event when no existing record`() {
       val prisonerNumber = "A1234BC"
       val request = CreateOrUpdatePrisonerDomesticStatusRequest(
         domesticStatusCode = "MARRIED",
-        updatedBy = "test-user",
+        requestedBy = "test-user",
       )
       val updatedResponse = PrisonerDomesticStatusResponse(
         id = 2L,
         domesticStatusCode = "MARRIED",
         active = true,
       )
+      whenever(prisonerDomesticStatusService.getPrisonerDomesticStatusActive(prisonerNumber))
+        .thenReturn(null)
+      whenever(prisonerDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request)).thenReturn(
+        updatedResponse,
+      )
+      val result = prisonerDomesticStatusFacade.createOrUpdateDomesticStatus(prisonerNumber, request)
+
+      assertThat(result)
+        .isNotNull
+        .isEqualTo(updatedResponse)
+
+      verify(outboundEventsService, never()).send(
+        outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
+        identifier = result.id,
+        noms = prisonerNumber,
+        source = Source.DPS,
+      )
+      verify(outboundEventsService).send(
+        outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
+        identifier = updatedResponse.id,
+        noms = prisonerNumber,
+        source = Source.DPS,
+      )
+    }
+
+    @Test
+    fun `should update existing record and send both updated and created events`() {
+      val prisonerNumber = "A1234BC"
+      val createdTime = LocalDateTime.now()
+      val request = CreateOrUpdatePrisonerDomesticStatusRequest(
+        domesticStatusCode = "MARRIED",
+        requestedBy = "test-user",
+      )
+      val updatedResponse = PrisonerDomesticStatusResponse(
+        id = 2L,
+        domesticStatusCode = "MARRIED",
+        active = true,
+      )
+      val existingRecord = PrisonerDomesticStatus(
+        prisonerDomesticStatusId = 2L,
+        prisonerNumber = prisonerNumber,
+        domesticStatusCode = "D",
+        createdBy = "USER1",
+        createdTime = createdTime,
+        active = true,
+      )
+      whenever(prisonerDomesticStatusService.getPrisonerDomesticStatusActive(prisonerNumber))
+        .thenReturn(existingRecord)
       whenever(prisonerDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request)).thenReturn(
         updatedResponse,
       )
@@ -91,6 +141,12 @@ class PrisonerDomesticStatusFacadeTest {
         .isEqualTo(updatedResponse)
 
       verify(outboundEventsService).send(
+        outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
+        identifier = result.id,
+        noms = prisonerNumber,
+        source = Source.DPS,
+      )
+      verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
         identifier = updatedResponse.id,
         noms = prisonerNumber,
@@ -99,12 +155,12 @@ class PrisonerDomesticStatusFacadeTest {
     }
 
     @Test
-    fun `should not send crate prisoner domestic status event on failure`() {
+    fun `should not send both updated and created event on create or update failure `() {
       val prisonerNumber = "A1234BC"
       val request = CreateOrUpdatePrisonerDomesticStatusRequest(
 
         domesticStatusCode = "MARRIED",
-        updatedBy = "test-user",
+        requestedBy = "test-user",
       )
       whenever(prisonerDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request)).thenThrow(
         RuntimeException("Prisoner's domestic status could not updated!"),

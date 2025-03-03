@@ -68,7 +68,7 @@ class PrisonerDomesticStatusControllerTest {
       val prisonerNumber = "A1234BC"
       val request = CreateOrUpdatePrisonerDomesticStatusRequest(
         domesticStatusCode = "MARRIED",
-        updatedBy = "test-user",
+        requestedBy = "test-user",
       )
       val expectedResponse = PrisonerDomesticStatusResponse(
         id = 1L,
@@ -93,7 +93,7 @@ class PrisonerDomesticStatusControllerTest {
       val prisonerNumber = "A1234BC"
       val request = CreateOrUpdatePrisonerDomesticStatusRequest(
         domesticStatusCode = "MARRIED",
-        updatedBy = "test-user",
+        requestedBy = "test-user",
       )
       whenever(
         prisonerDomesticStatusFacade.createOrUpdateDomesticStatus(prisonerNumber, request),
