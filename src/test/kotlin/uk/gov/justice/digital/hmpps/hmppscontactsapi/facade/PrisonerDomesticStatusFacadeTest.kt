@@ -83,8 +83,6 @@ class PrisonerDomesticStatusFacadeTest {
         domesticStatusCode = "MARRIED",
         active = true,
       )
-      whenever(prisonerDomesticStatusService.getPrisonerDomesticStatusActive(prisonerNumber))
-        .thenReturn(null)
       whenever(prisonerDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request)).thenReturn(
         updatedResponse,
       )
@@ -94,12 +92,6 @@ class PrisonerDomesticStatusFacadeTest {
         .isNotNull
         .isEqualTo(updatedResponse)
 
-      verify(outboundEventsService, never()).send(
-        outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
-        identifier = result.id,
-        noms = prisonerNumber,
-        source = Source.DPS,
-      )
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
         identifier = updatedResponse.id,
@@ -109,7 +101,7 @@ class PrisonerDomesticStatusFacadeTest {
     }
 
     @Test
-    fun `should update existing record and send both updated and created events`() {
+    fun `should update existing record and send created events`() {
       val prisonerNumber = "A1234BC"
       val createdTime = LocalDateTime.now()
       val request = CreateOrUpdatePrisonerDomesticStatusRequest(
@@ -129,8 +121,6 @@ class PrisonerDomesticStatusFacadeTest {
         createdTime = createdTime,
         active = true,
       )
-      whenever(prisonerDomesticStatusService.getPrisonerDomesticStatusActive(prisonerNumber))
-        .thenReturn(existingRecord)
       whenever(prisonerDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request)).thenReturn(
         updatedResponse,
       )
@@ -141,12 +131,6 @@ class PrisonerDomesticStatusFacadeTest {
         .isEqualTo(updatedResponse)
 
       verify(outboundEventsService).send(
-        outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
-        identifier = result.id,
-        noms = prisonerNumber,
-        source = Source.DPS,
-      )
-      verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
         identifier = updatedResponse.id,
         noms = prisonerNumber,
@@ -155,7 +139,7 @@ class PrisonerDomesticStatusFacadeTest {
     }
 
     @Test
-    fun `should not send both updated and created event on create or update failure `() {
+    fun `should not send created event on create or update failure `() {
       val prisonerNumber = "A1234BC"
       val request = CreateOrUpdatePrisonerDomesticStatusRequest(
 

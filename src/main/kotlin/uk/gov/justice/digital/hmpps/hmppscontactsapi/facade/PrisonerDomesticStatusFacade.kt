@@ -18,26 +18,13 @@ class PrisonerDomesticStatusFacade(
   fun createOrUpdateDomesticStatus(
     prisonerNumber: String,
     request: CreateOrUpdatePrisonerDomesticStatusRequest,
-  ): PrisonerDomesticStatusResponse {
-    val existingRecord = prisonerDomesticStatusService.getPrisonerDomesticStatusActive(prisonerNumber)
-
-    return prisonerDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request)
-      .also {
-        existingRecord?.prisonerDomesticStatusId?.let { identifier ->
-          outboundEventsService.send(
-            outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
-            identifier = identifier,
-            noms = prisonerNumber,
-            source = Source.DPS,
-          )
-        }
-
-        outboundEventsService.send(
-          outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-          identifier = it.id,
-          noms = prisonerNumber,
-          source = Source.DPS,
-        )
-      }
-  }
+  ): PrisonerDomesticStatusResponse = prisonerDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request)
+    .also {
+      outboundEventsService.send(
+        outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
+        identifier = it.id,
+        noms = prisonerNumber,
+        source = Source.DPS,
+      )
+    }
 }

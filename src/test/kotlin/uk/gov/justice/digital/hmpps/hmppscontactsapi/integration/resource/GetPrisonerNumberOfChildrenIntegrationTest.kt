@@ -8,23 +8,23 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.prisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateOrUpdatePrisonerDomesticStatusRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerDomesticStatusResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateOrUpdatePrisonerNumberOfChildrenRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerNumberOfChildrenResponse
 
-class GetPrisonerDomesticStatusIntegrationTest : SecureAPIIntegrationTestBase() {
+class GetPrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrationTestBase() {
 
   private val prisonerNumber = "A1234BC"
-  private var domesticStatusId = 0L
+  private var numberOfChildrenId = 0L
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()
-    .uri("/prisoner/A1234BC/domestic-status")
+    .uri("/prisoner/A1234BC/number-of-children")
 
   @Test
-  fun `should return 404 when prisoner domestic status does not exist`() {
+  fun `should return 404 when prisoner number of children does not exist`() {
     webTestClient.get()
-      .uri("/prisoner/A1234EE/domestic-status")
+      .uri("/prisoner/A1234EE/number-of-children")
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
       .exchange()
       .expectStatus()
@@ -33,23 +33,22 @@ class GetPrisonerDomesticStatusIntegrationTest : SecureAPIIntegrationTestBase() 
 
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
-  fun `should return domestic status when user has roles`(role: String) {
+  fun `should return number of children when user has roles`(role: String) {
     initialiseData()
-    val expectedResponse = PrisonerDomesticStatusResponse(
+    val expectedResponse = PrisonerNumberOfChildrenResponse(
       id = 1L,
-      domesticStatusCode = "M",
-      domesticStatusDescription = "Married or in a civil partnership",
+      numberOfChildren = "1",
       active = true,
       createdBy = "test-user",
     )
 
     val response = webTestClient.get()
-      .uri("/prisoner/A1234BC/domestic-status")
+      .uri("/prisoner/A1234BC/number-of-children")
       .headers(setAuthorisation(roles = listOf(role)))
       .exchange()
       .expectStatus().isOk
       .expectHeader().contentType(MediaType.APPLICATION_JSON_VALUE)
-      .expectBody(PrisonerDomesticStatusResponse::class.java)
+      .expectBody(PrisonerNumberOfChildrenResponse::class.java)
       .returnResult().responseBody
 
     assertThat(response).isNotNull
@@ -68,23 +67,23 @@ class GetPrisonerDomesticStatusIntegrationTest : SecureAPIIntegrationTestBase() 
         lastName = "Bloggs",
       ),
     )
-    val request = CreateOrUpdatePrisonerDomesticStatusRequest(
-      domesticStatusCode = "M",
+    val request = CreateOrUpdatePrisonerNumberOfChildrenRequest(
+      numberOfChildren = 1,
       requestedBy = "test-user",
     )
 
     val response = webTestClient.put()
-      .uri("/prisoner/$prisonerNumber/domestic-status")
+      .uri("/prisoner/$prisonerNumber/number-of-children")
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(request)
       .exchange()
       .expectStatus().isOk
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(PrisonerDomesticStatusResponse::class.java)
+      .expectBody(PrisonerNumberOfChildrenResponse::class.java)
       .returnResult().responseBody
 
     assertThat(response).isNotNull
-    domesticStatusId = response!!.id
+    numberOfChildrenId = response!!.id
   }
 }
