@@ -279,43 +279,4 @@ class PrisonerDomesticStatusServiceTest {
       }.message isEqualTo "Prisoner number $prisonerNumber - not found"
     }
   }
-
-  @Test
-  fun `should return active existing status`() {
-    // Given
-    val prisonerNumber = "A1234BC"
-    val domesticStatus = PrisonerDomesticStatus(
-      prisonerDomesticStatusId = 1L,
-      prisonerNumber = prisonerNumber,
-      domesticStatusCode = "D",
-      createdBy = "user",
-      createdTime = LocalDateTime.now(),
-      active = true,
-    )
-
-    whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
-      .thenReturn(domesticStatus)
-
-    // When
-    val result = prisonerDomesticStatusService.getPrisonerDomesticStatusActive(prisonerNumber)
-
-    // Then
-    assertThat(result?.prisonerDomesticStatusId).isEqualTo(domesticStatus.prisonerDomesticStatusId)
-    verify(prisonerDomesticStatusRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
-  }
-
-  @Test
-  fun `should not return active existing status`() {
-    // Given
-    val prisonerNumber = "A1234BC"
-    whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
-      .thenReturn(null)
-
-    // When
-    val result = prisonerDomesticStatusService.getPrisonerDomesticStatusActive(prisonerNumber)
-
-    // Then
-    assertThat(result).isNull()
-    verify(prisonerDomesticStatusRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
-  }
 }

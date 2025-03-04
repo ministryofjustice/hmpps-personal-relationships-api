@@ -8,14 +8,14 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.prisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateOrUpdatePrisonerDomesticStatusRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerDomesticStatusResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateOrUpdatePrisonerNumberOfChildrenRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerNumberOfChildrenResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerDomesticStatus
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerNumberOfChildren
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 
-class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegrationTestBase() {
+class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrationTestBase() {
 
   private val prisonerNumber = "A1234BC"
   private val prisoner1 = prisoner(
@@ -28,111 +28,109 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.put()
-    .uri("/prisoner/$prisonerNumber/domestic-status")
+    .uri("/prisoner/$prisonerNumber/number-of-children")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
     .bodyValue(createRequest())
 
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
-  fun `should create new domestic status`(role: String) {
+  fun `should create new number of children`(role: String) {
     stubPrisonerSearch(prisoner1)
     val request = createRequest()
 
     val response = webTestClient.put()
-      .uri("/prisoner/$prisonerNumber/domestic-status")
+      .uri("/prisoner/$prisonerNumber/number-of-children")
       .headers(setAuthorisation(roles = listOf(role)))
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(request)
       .exchange()
       .expectStatus().isOk
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(PrisonerDomesticStatusResponse::class.java)
+      .expectBody(PrisonerNumberOfChildrenResponse::class.java)
       .returnResult().responseBody
 
     assertThat(response).isNotNull
     assertThat(response).usingRecursiveComparison()
       .ignoringFields("id", "createdTime")
       .isEqualTo(
-        PrisonerDomesticStatusResponse(
+        PrisonerNumberOfChildrenResponse(
           id = 2L,
-          domesticStatusCode = "M",
-          domesticStatusDescription = "Married or in a civil partnership",
+          numberOfChildren = "1",
           active = true,
           createdBy = "test-user",
         ),
       )
     stubEvents.assertHasEvent(
-      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(response.id, Source.DPS),
+      event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
+      additionalInfo = PrisonerNumberOfChildren(response.id, Source.DPS),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
 
   @Test
-  fun `should allow null for domestic status`() {
+  fun `should allow null value for number of children`() {
     stubPrisonerSearch(prisoner1)
-    val request = CreateOrUpdatePrisonerDomesticStatusRequest(
-      domesticStatusCode = null,
+    val request = CreateOrUpdatePrisonerNumberOfChildrenRequest(
+      numberOfChildren = null,
       requestedBy = "test-user",
     )
 
     val response = webTestClient.put()
-      .uri("/prisoner/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(request)
-      .exchange()
-      .expectStatus().isOk
-      .expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(PrisonerDomesticStatusResponse::class.java)
-      .returnResult().responseBody
-
-    assertThat(response).isNotNull
-    assertThat(response).usingRecursiveComparison()
-      .ignoringFields("id", "createdTime")
-      .isEqualTo(
-        PrisonerDomesticStatusResponse(
-          id = 2L,
-          domesticStatusCode = null,
-          domesticStatusDescription = null,
-          active = true,
-          createdBy = "test-user",
-        ),
-      )
-    stubEvents.assertHasEvent(
-      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(response.id, Source.DPS),
-      personReference = PersonReference(nomsNumber = prisonerNumber),
-    )
-  }
-
-  @Test
-  fun `should update existing domestic status`() {
-    stubPrisonerSearch(prisoner1)
-    val request = createRequest()
-    val response = webTestClient.put()
-      .uri("/prisoner/$prisonerNumber/domestic-status")
+      .uri("/prisoner/$prisonerNumber/number-of-children")
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(request)
       .exchange()
       .expectStatus().isOk
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(PrisonerDomesticStatusResponse::class.java)
+      .expectBody(PrisonerNumberOfChildrenResponse::class.java)
+      .returnResult().responseBody
+
+    assertThat(response).isNotNull
+    assertThat(response).usingRecursiveComparison()
+      .ignoringFields("id", "createdTime")
+      .isEqualTo(
+        PrisonerNumberOfChildrenResponse(
+          id = 2L,
+          numberOfChildren = null,
+          active = true,
+          createdBy = "test-user",
+        ),
+      )
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
+      additionalInfo = PrisonerNumberOfChildren(response.id, Source.DPS),
+      personReference = PersonReference(nomsNumber = prisonerNumber),
+    )
+  }
+
+  @Test
+  fun `should update existing number of children`() {
+    stubPrisonerSearch(prisoner1)
+    val request = createRequest()
+    val response = webTestClient.put()
+      .uri("/prisoner/$prisonerNumber/number-of-children")
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(request)
+      .exchange()
+      .expectStatus().isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(PrisonerNumberOfChildrenResponse::class.java)
       .returnResult().responseBody
 
     assertThat(response).isNotNull
 
     val updateResponse = webTestClient.put()
-      .uri("/prisoner/$prisonerNumber/domestic-status")
+      .uri("/prisoner/$prisonerNumber/number-of-children")
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(request)
       .exchange()
       .expectStatus().isOk
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
-      .expectBody(PrisonerDomesticStatusResponse::class.java)
+      .expectBody(PrisonerNumberOfChildrenResponse::class.java)
       .returnResult().responseBody
 
     assertThat(updateResponse).isNotNull
@@ -140,30 +138,29 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
     assertThat(updateResponse).usingRecursiveComparison()
       .ignoringFields("id", "createdTime")
       .isEqualTo(
-        PrisonerDomesticStatusResponse(
+        PrisonerNumberOfChildrenResponse(
           id = 1L,
-          domesticStatusCode = "M",
-          domesticStatusDescription = "Married or in a civil partnership",
+          numberOfChildren = "1",
           active = true,
           createdBy = "test-user",
         ),
       )
     stubEvents.assertHasEvent(
-      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(response.id, Source.DPS),
+      event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
+      additionalInfo = PrisonerNumberOfChildren(response.id, Source.DPS),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
 
   @Test
-  fun `should return 400 when domestic status code is more than 12 characters`() {
+  fun `should return 400 when number of children is more than 99`() {
     webTestClient.put()
-      .uri("/prisoner/$prisonerNumber/domestic-status")
+      .uri("/prisoner/$prisonerNumber/number-of-children")
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(
-        CreateOrUpdatePrisonerDomesticStatusRequest(
-          domesticStatusCode = "MORE THAN 12 CHARACTERS",
+        CreateOrUpdatePrisonerNumberOfChildrenRequest(
+          numberOfChildren = 100,
           requestedBy = "test-user",
         ),
       )
@@ -171,60 +168,37 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
       .expectStatus().isBadRequest
       .expectBody()
       .jsonPath("$.userMessage")
-      .isEqualTo("Validation failure(s): domesticStatusCode must be less than or equal to 12 characters")
+      .isEqualTo("Validation failure(s): numberOfChildren must be less than or equal to 99")
     stubEvents.assertHasNoEvents(
-      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
+      event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
     )
   }
 
   @Test
-  fun `should return 404 when domestic status code is empty`() {
+  fun `should return 400 when number of children is invalid`() {
     stubPrisonerSearch(prisoner1)
     webTestClient.put()
-      .uri("/prisoner/$prisonerNumber/domestic-status")
+      .uri("/prisoner/$prisonerNumber/number-of-children")
       .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(
-        CreateOrUpdatePrisonerDomesticStatusRequest(
-          domesticStatusCode = "",
+        CreateOrUpdatePrisonerNumberOfChildrenRequest(
+          numberOfChildren = -1,
           requestedBy = "test-user",
         ),
       )
       .exchange()
-      .expectStatus().isNotFound
+      .expectStatus().isBadRequest
       .expectBody()
       .jsonPath("$.userMessage")
-      .isEqualTo("Entity not found : No reference data found for groupCode: DOMESTIC_STS and code: ")
+      .isEqualTo("Validation failure(s): numberOfChildren must be greater than or equal to 0")
     stubEvents.assertHasNoEvents(
-      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
+      event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
     )
   }
 
-  @Test
-  fun `should return 404 when domestic status code is invalid`() {
-    stubPrisonerSearch(prisoner1)
-    webTestClient.put()
-      .uri("/prisoner/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(
-        CreateOrUpdatePrisonerDomesticStatusRequest(
-          domesticStatusCode = "Q",
-          requestedBy = "test-user",
-        ),
-      )
-      .exchange()
-      .expectStatus().isNotFound
-      .expectBody()
-      .jsonPath("$.userMessage")
-      .isEqualTo("Entity not found : No reference data found for groupCode: DOMESTIC_STS and code: Q")
-    stubEvents.assertHasNoEvents(
-      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-    )
-  }
-
-  private fun createRequest() = CreateOrUpdatePrisonerDomesticStatusRequest(
-    domesticStatusCode = "M",
+  private fun createRequest() = CreateOrUpdatePrisonerNumberOfChildrenRequest(
+    numberOfChildren = 1,
     requestedBy = "test-user",
   )
 }

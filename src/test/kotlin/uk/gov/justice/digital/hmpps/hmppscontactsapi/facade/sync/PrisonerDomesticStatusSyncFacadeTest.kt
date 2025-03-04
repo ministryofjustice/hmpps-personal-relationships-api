@@ -68,8 +68,6 @@ class PrisonerDomesticStatusSyncFacadeTest {
         active = true,
       )
 
-      whenever(syncDomesticStatusService.getPrisonerDomesticStatusActive(prisonerNumber))
-        .thenReturn(null)
       whenever(syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request))
         .thenReturn(response)
 
@@ -77,12 +75,6 @@ class PrisonerDomesticStatusSyncFacadeTest {
       val result = facade.createOrUpdateDomesticStatus(prisonerNumber, request)
 
       // Then
-      verify(outboundEventsService, never()).send(
-        outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
-        identifier = result.id,
-        noms = prisonerNumber,
-        source = Source.NOMIS,
-      )
       verify(outboundEventsService, times(1)).send(
         outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
         identifier = response.id,
@@ -118,8 +110,6 @@ class PrisonerDomesticStatusSyncFacadeTest {
         active = true,
       )
 
-      whenever(syncDomesticStatusService.getPrisonerDomesticStatusActive(prisonerNumber))
-        .thenReturn(existingRecord)
       whenever(syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request))
         .thenReturn(response)
 
@@ -127,12 +117,6 @@ class PrisonerDomesticStatusSyncFacadeTest {
       val result = facade.createOrUpdateDomesticStatus(prisonerNumber, request)
 
       // Then
-      verify(outboundEventsService).send(
-        outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
-        identifier = existingRecord.prisonerDomesticStatusId,
-        noms = prisonerNumber,
-        source = Source.NOMIS,
-      )
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
         identifier = response.id,
@@ -180,12 +164,6 @@ class PrisonerDomesticStatusSyncFacadeTest {
       assertThat(error.message).isEqualTo("Not found")
 
       // Then
-      verify(outboundEventsService, never()).send(
-        outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
-        identifier = existingRecord.prisonerDomesticStatusId,
-        noms = prisonerNumber,
-        source = Source.NOMIS,
-      )
       verify(outboundEventsService, never()).send(
         outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
         identifier = response.id,
