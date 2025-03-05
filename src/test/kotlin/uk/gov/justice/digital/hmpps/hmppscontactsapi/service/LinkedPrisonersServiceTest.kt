@@ -29,7 +29,7 @@ class LinkedPrisonersServiceTest {
         prisonerContactEntity(777, "X6789YZ", "S", "Social", "FA", "Father"),
       ),
     )
-    whenever(prisonerService.getPrisoner("A1234BC")).thenReturn(prisoner(prisonerNumber = "A1234BC", firstName = "A", middleNames = "1234", lastName = "BC"))
+    whenever(prisonerService.getPrisoner("A1234BC")).thenReturn(prisoner(prisonerNumber = "A1234BC", firstName = "A", middleNames = "1234", lastName = "BC", prisonId = "BXI", prisonName = "Brixton (HMP)"))
     whenever(prisonerService.getPrisoner("X6789YZ")).thenReturn(prisoner(prisonerNumber = "X6789YZ", firstName = "X", middleNames = null, lastName = "YZ"))
 
     val linkedPrisoners = service.getLinkedPrisoners(contactId)
@@ -41,6 +41,8 @@ class LinkedPrisonersServiceTest {
           firstName = "A",
           middleNames = "1234",
           lastName = "BC",
+          prisonId = "BXI",
+          prisonName = "Brixton (HMP)",
           relationships = listOf(
             LinkedPrisonerRelationshipDetails(
               prisonerContactId = 999,

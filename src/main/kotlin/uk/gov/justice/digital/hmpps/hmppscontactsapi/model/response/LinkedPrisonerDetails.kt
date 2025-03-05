@@ -16,6 +16,12 @@ data class LinkedPrisonerDetails(
   @Schema(description = "The middle names of the prisoner, if any", example = "William", nullable = true)
   val middleNames: String? = null,
 
+  @Schema(description = "The id of the prisoners current prison", example = "BXI", nullable = true)
+  val prisonId: String? = null,
+
+  @Schema(description = "The name of the prisoners current prison", example = "Brixton (HMP)", nullable = true)
+  val prisonName: String? = null,
+
   @Schema(description = "All the relationships between the prisoner and contact. At least one will be present.")
   val relationships: List<LinkedPrisonerRelationshipDetails>,
 )

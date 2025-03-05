@@ -22,6 +22,7 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
   val prisoner1 = prisoner(
     prisonerNumber = "A1234BC",
     prisonId = "MDI",
+    prisonName = "Moorland (HMP & YOI)",
     firstName = "Joe",
     middleNames = "Middle",
     lastName = "Bloggs",
@@ -30,6 +31,7 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
   val prisoner2 = prisoner(
     prisonerNumber = "X9876YZ",
     prisonId = "BXI",
+    prisonName = "Brixton (HMP)",
     firstName = "Barney",
     middleNames = null,
     lastName = "Rubble",
@@ -66,6 +68,8 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
           firstName = prisoner2.firstName,
           middleNames = prisoner2.middleNames,
           lastName = prisoner2.lastName,
+          prisonId = prisoner2.prisonId,
+          prisonName = prisoner2.prisonName,
           relationships = listOf(
             LinkedPrisonerRelationshipDetails(
               prisonerContactId = prisoner2FatherRelationship.prisonerContactId,
@@ -81,6 +85,8 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
           firstName = prisoner1.firstName,
           middleNames = prisoner1.middleNames,
           lastName = prisoner1.lastName,
+          prisonId = prisoner1.prisonId,
+          prisonName = prisoner1.prisonName,
           relationships = listOf(
             LinkedPrisonerRelationshipDetails(
               prisonerContactId = prisoner1OtherRelationship.prisonerContactId,
@@ -120,6 +126,8 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
           firstName = prisoner1.firstName,
           middleNames = prisoner1.middleNames,
           lastName = prisoner1.lastName,
+          prisonId = prisoner1.prisonId,
+          prisonName = prisoner1.prisonName,
           relationships = listOf(
             LinkedPrisonerRelationshipDetails(
               prisonerContactId = prisoner1OtherRelationship.prisonerContactId,
