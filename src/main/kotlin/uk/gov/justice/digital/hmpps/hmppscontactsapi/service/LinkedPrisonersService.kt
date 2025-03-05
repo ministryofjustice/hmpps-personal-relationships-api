@@ -21,6 +21,8 @@ class LinkedPrisonersService(
             lastName = prisoner.lastName,
             firstName = prisoner.firstName,
             middleNames = prisoner.middleNames,
+            prisonId = prisoner.prisonId,
+            prisonName = prisoner.prisonName,
             relationships = summaries.map { summary ->
               LinkedPrisonerRelationshipDetails(
                 prisonerContactId = summary.prisonerContactId,

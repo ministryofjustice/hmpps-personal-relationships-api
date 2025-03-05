@@ -576,13 +576,15 @@ fun contactAddressPhoneResponse(
 
 fun prisoner(
   prisonerNumber: String = "A1324BC",
-  prisonId: String? = "",
+  prisonId: String? = null,
+  prisonName: String? = null,
   lastName: String = "Last",
   firstName: String = "First",
   middleNames: String? = null,
 ) = Prisoner(
   prisonerNumber,
   prisonId,
+  prisonName,
   lastName,
   firstName,
   middleNames,
