@@ -21,12 +21,12 @@ class LinkedPrisonersServiceTest {
 
   @Test
   fun `should call search service only once per prisoner even if multiple relationships`() {
-    whenever(repo.findByContactIdAndActive(contactId, true)).thenReturn(
+    whenever(repo.findByContactId(contactId)).thenReturn(
       listOf(
         // two relationships for A1234BC and one for X6789YZ
-        prisonerContactEntity(999, "A1234BC", "S", "Social", "FRI", "Friend"),
-        prisonerContactEntity(888, "A1234BC", "O", "Official", "LAW", "Lawyer"),
-        prisonerContactEntity(777, "X6789YZ", "S", "Social", "FA", "Father"),
+        prisonerContactEntity(999, "A1234BC", "S", "Social", "FRI", "Friend", true),
+        prisonerContactEntity(888, "A1234BC", "O", "Official", "LAW", "Lawyer", false),
+        prisonerContactEntity(777, "X6789YZ", "S", "Social", "FA", "Father", true),
       ),
     )
     whenever(prisonerService.getPrisoner("A1234BC")).thenReturn(prisoner(prisonerNumber = "A1234BC", firstName = "A", middleNames = "1234", lastName = "BC", prisonId = "BXI", prisonName = "Brixton (HMP)"))
@@ -50,6 +50,7 @@ class LinkedPrisonersServiceTest {
               relationshipTypeDescription = "Social",
               relationshipToPrisonerCode = "FRI",
               relationshipToPrisonerDescription = "Friend",
+              isRelationshipActive = true,
             ),
             LinkedPrisonerRelationshipDetails(
               prisonerContactId = 888,
@@ -57,6 +58,7 @@ class LinkedPrisonersServiceTest {
               relationshipTypeDescription = "Official",
               relationshipToPrisonerCode = "LAW",
               relationshipToPrisonerDescription = "Lawyer",
+              isRelationshipActive = false,
             ),
           ),
         ),
@@ -73,6 +75,7 @@ class LinkedPrisonersServiceTest {
               relationshipTypeDescription = "Social",
               relationshipToPrisonerCode = "FA",
               relationshipToPrisonerDescription = "Father",
+              isRelationshipActive = true,
             ),
           ),
         ),
@@ -85,11 +88,10 @@ class LinkedPrisonersServiceTest {
 
   @Test
   fun `should exclude results if they don't have a matching prisoner`() {
-    whenever(repo.findByContactIdAndActive(contactId, true)).thenReturn(
+    whenever(repo.findByContactId(contactId)).thenReturn(
       listOf(
-        // two relationships for A1234BC and one for X6789YZ
-        prisonerContactEntity(999, "A1234BC", "S", "Social", "FRI", "Friend"),
-        prisonerContactEntity(777, "X6789YZ", "S", "Social", "FA", "Father"),
+        prisonerContactEntity(999, "A1234BC", "S", "Social", "FRI", "Friend", true),
+        prisonerContactEntity(777, "X6789YZ", "S", "Social", "FA", "Father", true),
       ),
     )
     whenever(prisonerService.getPrisoner("A1234BC")).thenReturn(prisoner(prisonerNumber = "A1234BC", firstName = "A", middleNames = "1234", lastName = "BC"))
@@ -111,6 +113,7 @@ class LinkedPrisonersServiceTest {
               relationshipTypeDescription = "Social",
               relationshipToPrisonerCode = "FRI",
               relationshipToPrisonerDescription = "Friend",
+              isRelationshipActive = true,
             ),
           ),
         ),
@@ -128,6 +131,7 @@ class LinkedPrisonersServiceTest {
     contactTypeDescription: String,
     relationshipCode: String,
     relationshipDescription: String,
+    active: Boolean,
   ): PrisonerContactSummaryEntity = PrisonerContactSummaryEntity(
     prisonerContactId,
     contactId = contactId,
@@ -160,7 +164,7 @@ class LinkedPrisonersServiceTest {
     prisonerNumber = prisonerNumber,
     relationshipToPrisoner = relationshipCode,
     relationshipToPrisonerDescription = relationshipDescription,
-    active = true,
+    active = active,
     approvedVisitor = true,
     nextOfKin = false,
     emergencyContact = false,

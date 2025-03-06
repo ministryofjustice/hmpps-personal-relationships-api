@@ -28,6 +28,7 @@ class ContactLinkedPrisonersControllerTest {
             relationshipTypeDescription = "Social",
             relationshipToPrisonerCode = "FA",
             relationshipToPrisonerDescription = "Father",
+            isRelationshipActive = true,
           ),
         ),
       ),

@@ -11,7 +11,7 @@ class LinkedPrisonersService(
   private val prisonerService: PrisonerService,
 ) {
 
-  fun getLinkedPrisoners(contactId: Long): List<LinkedPrisonerDetails> = prisonerContactSummaryRepository.findByContactIdAndActive(contactId, true)
+  fun getLinkedPrisoners(contactId: Long): List<LinkedPrisonerDetails> = prisonerContactSummaryRepository.findByContactId(contactId)
     .groupBy { it.prisonerNumber }
     .mapNotNull { (prisonerNumber, summaries) ->
       prisonerService.getPrisoner(prisonerNumber)
@@ -30,6 +30,7 @@ class LinkedPrisonersService(
                 relationshipTypeDescription = summary.relationshipTypeDescription,
                 relationshipToPrisonerCode = summary.relationshipToPrisoner,
                 relationshipToPrisonerDescription = summary.relationshipToPrisonerDescription,
+                isRelationshipActive = summary.active,
               )
             },
           )
