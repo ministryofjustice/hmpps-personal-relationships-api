@@ -48,7 +48,7 @@ class PrisonerNumberOfChildrenSyncController(val prisonerNumberOfChildrenSyncFac
       ),
       ApiResponse(
         responseCode = "404",
-        description = "Could not find number of children record for prisoner",
+        description = "Could not find the number of children for this prisoner",
         content = [Content(schema = Schema(implementation = ErrorResponse::class))],
       ),
     ],

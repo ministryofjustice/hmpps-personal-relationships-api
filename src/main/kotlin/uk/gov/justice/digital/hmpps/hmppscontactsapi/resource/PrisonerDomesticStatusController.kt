@@ -80,7 +80,7 @@ class PrisonerDomesticStatusController(
       ),
       ApiResponse(
         responseCode = "404",
-        description = "Could not find active domestic status for prisoner or Could not find prisoner.",
+        description = "Could not find the prisoner or an active domestic status value.",
         content = [
           Content(
             mediaType = "application/json",

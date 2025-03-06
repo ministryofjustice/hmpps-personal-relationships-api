@@ -18,7 +18,7 @@ class SyncPrisonerDomesticStatusService(
   private val referenceCodeRepository: ReferenceCodeRepository,
 ) {
   companion object {
-    const val NOT_FOUND_MESSAGE = "No active domestic status found for the requested prisoner: %s"
+    const val NOT_FOUND_MESSAGE = "No active domestic status found for prisoner: %s"
     fun from(numberOfChildren: PrisonerDomesticStatus) = SyncPrisonerDomesticStatusResponse(
       id = numberOfChildren.prisonerDomesticStatusId,
       domesticStatusCode = numberOfChildren.domesticStatusCode,

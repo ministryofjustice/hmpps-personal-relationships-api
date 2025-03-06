@@ -15,7 +15,7 @@ class SyncPrisonerNumberOfChildrenService(
   private val numberOfChildrenRepository: PrisonerNumberOfChildrenRepository,
 ) {
   companion object {
-    const val NOT_FOUND_MESSAGE = "Could not find number of children record for prisoner: %s"
+    const val NOT_FOUND_MESSAGE = "Could not find the number of children for prisoner: %s"
 
     fun from(numberOfChildren: PrisonerNumberOfChildren) = SyncPrisonerNumberOfChildrenResponse(
       id = numberOfChildren.prisonerNumberOfChildrenId,

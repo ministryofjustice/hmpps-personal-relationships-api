@@ -44,7 +44,7 @@ class PrisonerNumberOfChildrenController(
       ),
       ApiResponse(
         responseCode = "404",
-        description = "Could not find the number of children for prisoner",
+        description = "Could not find the number of children for this prisoner",
         content = [
           Content(
             mediaType = "application/json",
