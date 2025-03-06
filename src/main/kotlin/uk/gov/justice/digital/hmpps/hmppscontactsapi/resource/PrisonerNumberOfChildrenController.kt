@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerNumb
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-@Tag(name = "Prisoner NumberOfChildren")
+@Tag(name = "Prisoner Number Of Children")
 @RestController
 @RequestMapping(value = ["prisoner/{prisonerNumber}/number-of-children"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @AuthApiResponses
@@ -44,7 +44,7 @@ class PrisonerNumberOfChildrenController(
       ),
       ApiResponse(
         responseCode = "404",
-        description = "Prisoner not found",
+        description = "Could not find the number of children for prisoner",
         content = [
           Content(
             mediaType = "application/json",
@@ -82,6 +82,11 @@ class PrisonerNumberOfChildrenController(
             schema = Schema(implementation = ErrorResponse::class),
           ),
         ],
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "Invalid input data",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
       ),
     ],
   )

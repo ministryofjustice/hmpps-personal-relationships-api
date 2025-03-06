@@ -47,13 +47,8 @@ class PrisonerNumberOfChildrenSyncController(val prisonerNumberOfChildrenSyncFac
         ],
       ),
       ApiResponse(
-        responseCode = "400",
-        description = "Invalid input data",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
-      ApiResponse(
         responseCode = "404",
-        description = "No number of children for that prisoner could be found",
+        description = "Could not find number of children record for prisoner",
         content = [Content(schema = Schema(implementation = ErrorResponse::class))],
       ),
     ],
@@ -95,11 +90,6 @@ class PrisonerNumberOfChildrenSyncController(val prisonerNumberOfChildrenSyncFac
       ApiResponse(
         responseCode = "400",
         description = "Invalid input data",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
-      ApiResponse(
-        responseCode = "404",
-        description = "Prisoner's number of children not found",
         content = [Content(schema = Schema(implementation = ErrorResponse::class))],
       ),
     ],

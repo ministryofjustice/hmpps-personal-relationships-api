@@ -48,6 +48,11 @@ class MigratePrisonerDomesticStatusController(
         description = "The request failed validation with invalid or missing data supplied",
         content = [Content(schema = Schema(implementation = ErrorResponse::class))],
       ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Could not find reference data for the supplied domestic status code",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
     ],
   )
   @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")

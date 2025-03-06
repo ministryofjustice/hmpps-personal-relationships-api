@@ -91,7 +91,7 @@ class PrisonerDomesticStatusSyncController(
       ),
       ApiResponse(
         responseCode = "404",
-        description = "Domestic status not found",
+        description = "Could not find the reference data for the supplied domestic status code",
         content = [Content(schema = Schema(implementation = ErrorResponse::class))],
       ),
       ApiResponse(

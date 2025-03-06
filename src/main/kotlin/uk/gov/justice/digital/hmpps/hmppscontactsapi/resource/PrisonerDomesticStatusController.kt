@@ -44,7 +44,7 @@ class PrisonerDomesticStatusController(
       ),
       ApiResponse(
         responseCode = "404",
-        description = "Prisoner not found",
+        description = "Could not find the active domestic status for prisoner.",
         content = [
           Content(
             mediaType = "application/json",
@@ -74,8 +74,13 @@ class PrisonerDomesticStatusController(
         ],
       ),
       ApiResponse(
+        responseCode = "400",
+        description = "Invalid input data",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
         responseCode = "404",
-        description = "Prisoner not found",
+        description = "Could not find active domestic status for prisoner or Could not find prisoner.",
         content = [
           Content(
             mediaType = "application/json",
