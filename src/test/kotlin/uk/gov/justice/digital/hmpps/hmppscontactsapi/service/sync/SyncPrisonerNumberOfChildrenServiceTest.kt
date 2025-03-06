@@ -66,7 +66,7 @@ class SyncPrisonerNumberOfChildrenServiceTest {
     val exception = assertThrows<EntityNotFoundException> {
       syncNumberOfChildrenService.getNumberOfChildrenByPrisonerNumber(prisonerNumber)
     }
-    assertThat(exception.message).isEqualTo("NumberOfChildren not found for prisoner: A1234BC")
+    assertThat(exception.message).isEqualTo("Could not find the number of children for prisoner: A1234BC")
   }
 
   @Test
