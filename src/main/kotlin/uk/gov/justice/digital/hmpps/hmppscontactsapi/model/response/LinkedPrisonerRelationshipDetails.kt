@@ -27,4 +27,7 @@ data class LinkedPrisonerRelationshipDetails(
   @Schema(description = "The description of the relationship", example = "Friend", nullable = true)
   val relationshipToPrisonerDescription: String?,
 
+  @Schema(description = "Is this prisoner's contact relationship active?", example = "true")
+  val isRelationshipActive: Boolean,
+
 )
