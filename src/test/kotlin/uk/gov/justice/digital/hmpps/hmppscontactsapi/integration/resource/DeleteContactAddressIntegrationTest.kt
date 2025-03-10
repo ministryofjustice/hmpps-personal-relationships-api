@@ -10,6 +10,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddressInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
@@ -43,6 +44,9 @@ class DeleteContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
         area = "Hoggs Bottom",
         postcode = "HB10 2NB",
         createdBy = "created",
+        phoneNumbers = listOf(
+          PhoneNumber(phoneType = "MOB", phoneNumber = "07777123456", extNumber = null),
+        ),
       ),
     ).contactAddressId
   }

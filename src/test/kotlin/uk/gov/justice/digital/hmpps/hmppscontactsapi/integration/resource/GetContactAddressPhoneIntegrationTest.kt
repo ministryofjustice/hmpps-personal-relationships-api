@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegr
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateContactAddressPhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
@@ -41,6 +42,9 @@ class GetContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
         property = "27",
         street = "Hello Road",
         createdBy = "created",
+        phoneNumbers = listOf(
+          PhoneNumber(phoneType = "MOB", phoneNumber = "07777123456", extNumber = null),
+        ),
       ),
 
     ).contactAddressId

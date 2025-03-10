@@ -13,6 +13,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddressInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
@@ -58,8 +59,13 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "createdBy must not be null;{\"createdBy\": null}",
-      "createdBy must not be null;{}",
+      "createdBy must not be null;{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\", \"phoneType\": \"MOB\" } ], \"createdBy\": null}",
+      "createdBy must not be null;{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\", \"phoneType\": \"MOB\" } ]}",
+      "Unsupported phone type (UNKNOWN);{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\", \"phoneType\": \"UNKNOWN\" } ], \"createdBy\": \"JD000001\"}",
+      "phoneNumbers[0].phoneNumber must not be null;{ \"phoneNumbers\": [ { \"phoneType\": \"MOB\" } ], \"createdBy\": \"JD000001\"}",
+      "phoneNumbers[0].phoneType must not be null;{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\" } ], \"createdBy\": \"JD000001\"}",
+      "phoneNumbers must not be null;{ \"phoneNumbers\": null, \"createdBy\": \"JD000001\"}",
+      "phoneNumbers must not be null;{ \"createdBy\": \"JD000001\" }",
     ],
     delimiter = ';',
   )
@@ -368,6 +374,10 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       Arguments.of("postcode must be <= 12 characters", aMinimalAddressRequest().copy(postcode = "".padStart(13, 'X'))),
       Arguments.of("comments must be <= 240 characters", aMinimalAddressRequest().copy(comments = "".padStart(241, 'X'))),
       Arguments.of("createdBy must be <= 100 characters", aMinimalAddressRequest().copy(createdBy = "".padStart(101, 'X'))),
+      Arguments.of("phoneNumbers must have at least 1 item", aMinimalAddressRequest().copy(phoneNumbers = emptyList())),
+      Arguments.of("phoneNumbers[0].phoneNumber must be <= 40 characters", aMinimalAddressRequest().copy(phoneNumbers = listOf(PhoneNumber(phoneType = "MOB", phoneNumber = "".padStart(41, 'X'), extNumber = null)))),
+      Arguments.of("phoneNumbers[0].phoneType must be <= 12 characters", aMinimalAddressRequest().copy(phoneNumbers = listOf(PhoneNumber(phoneType = "".padStart(13, 'X'), phoneNumber = "07403322232", extNumber = null)))),
+      Arguments.of("phoneNumbers[0].extNumber must be <= 7 characters", aMinimalAddressRequest().copy(phoneNumbers = listOf(PhoneNumber(phoneType = "MOB", phoneNumber = "07403322232", extNumber = "".padStart(8, 'X'))))),
     )
 
     private fun assertEqualsExcludingTimestamps(address: ContactAddressResponse, request: CreateContactAddressRequest) {
@@ -388,6 +398,9 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       property = "27",
       street = "Hello Road",
       createdBy = "created",
+      phoneNumbers = listOf(
+        PhoneNumber(phoneType = "MOB", phoneNumber = "07777123456", extNumber = null),
+      ),
     )
   }
 }
