@@ -25,6 +25,8 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateContactAddressRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPhoneRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ReferenceCodeRepository
@@ -36,7 +38,9 @@ class ContactAddressServiceTest {
   private val contactRepository: ContactRepository = mock()
   private val contactAddressRepository: ContactAddressRepository = mock()
   private val referenceCodeRepository: ReferenceCodeRepository = mock()
-  private val contactAddressService = ContactAddressService(contactRepository, contactAddressRepository, referenceCodeRepository)
+  private val contactAddressPhoneService: ContactAddressPhoneService = mock()
+  private val contactAddressPhoneRepository: ContactAddressPhoneRepository = mock()
+  private val contactAddressService = ContactAddressService(contactRepository, contactAddressRepository, referenceCodeRepository, contactAddressPhoneService, contactAddressPhoneRepository)
   private val referenceData = ReferenceCodeEntity(1L, ReferenceCodeGroup.RELATIONSHIP_TYPE, "FRIEND", "Friend", 0, true, "name")
 
   private val contactId: Long = 1L
@@ -102,12 +106,15 @@ class ContactAddressServiceTest {
 
     whenever(contactAddressRepository.saveAndFlush(any()))
       .thenReturn(contactAddressEntity)
+    whenever(contactAddressPhoneService.createMultipleAddressSpecificPhones(contactId, contactAddressId, request.createdBy, request.phoneNumbers))
+      .thenReturn(listOf(1L))
 
     val (contactAddress, _) = contactAddressService.create(contactId, request)
 
     val addressCaptor = argumentCaptor<ContactAddressEntity>()
 
     verify(contactRepository).findById(contactId)
+    verify(contactAddressPhoneService).createMultipleAddressSpecificPhones(contactId, contactAddressId, request.createdBy, request.phoneNumbers)
     verify(contactAddressRepository).saveAndFlush(addressCaptor.capture())
 
     with(addressCaptor.firstValue) {
@@ -126,6 +133,7 @@ class ContactAddressServiceTest {
     with(contactAddress) {
       assertThat(addressType).isEqualTo(request.addressType)
       assertThat(primaryAddress).isEqualTo(request.primaryAddress)
+      assertThat(phoneNumberIds).isEqualTo(listOf(1L))
       assertThat(property).isEqualTo(request.property)
       assertThat(street).isEqualTo(request.street)
       assertThat(area).isEqualTo(request.area)
@@ -210,6 +218,26 @@ class ContactAddressServiceTest {
 
     verify(contactRepository).findById(contactId)
     verifyNoInteractions(contactAddressRepository)
+  }
+
+  @Test
+  fun `should throw RuntimeException when saving address phone fails`() {
+    val request = createContactAddressRequest()
+    val contactAddressEntity = request.toEntity(contactId, contactAddressId)
+
+    whenever(contactRepository.findById(contactId))
+      .thenReturn(Optional.of(contactEntity()))
+
+    whenever(contactAddressRepository.saveAndFlush(any()))
+      .thenReturn(contactAddressEntity)
+    whenever(contactAddressPhoneService.createMultipleAddressSpecificPhones(contactId, contactAddressId, request.createdBy, request.phoneNumbers))
+      .thenThrow(RuntimeException("Error while saving the address phone!"))
+
+    assertThrows<RuntimeException> {
+      contactAddressService.create(contactId, request)
+    }.message isEqualTo "Error while saving the address phone!"
+
+    verify(contactRepository).findById(contactId)
   }
 
   @Test
@@ -984,6 +1012,9 @@ private fun createContactAddressRequest() = CreateContactAddressRequest(
   postcode = "CV4 9NJ",
   countryCode = "UK",
   createdBy = "TEST",
+  phoneNumbers = listOf(
+    PhoneNumber(phoneType = "MOB", phoneNumber = "07777123456", extNumber = null),
+  ),
 )
 
 private fun contactEntity(contactId: Long = 1L) = ContactEntity(

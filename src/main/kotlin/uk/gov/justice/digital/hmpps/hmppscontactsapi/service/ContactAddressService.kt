@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateContact
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.CreateAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.UpdateAddressResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPhoneRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ReferenceCodeRepository
@@ -26,6 +27,8 @@ class ContactAddressService(
   private val contactRepository: ContactRepository,
   private val contactAddressRepository: ContactAddressRepository,
   private val referenceCodeRepository: ReferenceCodeRepository,
+  private val contactAddressPhoneService: ContactAddressPhoneService,
+  private val contactAddressPhoneRepository: ContactAddressPhoneRepository,
 ) {
   companion object {
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -58,7 +61,16 @@ class ContactAddressService(
     if (request.mailFlag != null && request.mailFlag) {
       updatedAddressIds += contactAddressRepository.resetMailAddressFlagForContact(contactId)
     }
-    return CreateAddressResponse(contactAddressRepository.saveAndFlush(request.toEntity(contactId)).toModel(), updatedAddressIds)
+    val savedContactAddress = contactAddressRepository.saveAndFlush(request.toEntity(contactId))
+
+    val contactAddressPhoneId = contactAddressPhoneService.createMultipleAddressSpecificPhones(
+      contactId,
+      savedContactAddress.contactAddressId,
+      request.createdBy,
+      request.phoneNumbers,
+    )
+    val savedContactAddressModel = savedContactAddress.toModel(contactAddressPhoneId)
+    return CreateAddressResponse(savedContactAddressModel, updatedAddressIds)
   }
 
   fun update(contactId: Long, contactAddressId: Long, request: UpdateContactAddressRequest): UpdateAddressResponse {
@@ -175,6 +187,7 @@ class ContactAddressService(
   fun delete(contactId: Long, contactAddressId: Long): ContactAddressResponse {
     val contact = validateContactExists(contactId)
     val rowToDelete = validateExistingAddress(contactAddressId)
+    contactAddressPhoneRepository.deleteAll(contactAddressPhoneRepository.findByContactId(contactId))
 
     if (contact.contactId != rowToDelete.contactId) {
       logger.error("Contact address delete specified for a contact not linked to this address")

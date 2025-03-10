@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegr
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactAddressRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddressInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
@@ -51,6 +52,9 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
         area = "Hoggs Bottom",
         postcode = "HB10 2NB",
         createdBy = "created",
+        phoneNumbers = listOf(
+          PhoneNumber(phoneType = "MOB", phoneNumber = "07777123456", extNumber = null),
+        ),
       ),
 
     ).contactAddressId
@@ -575,6 +579,9 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       property = "27",
       street = "Hello Road",
       createdBy = "created",
+      phoneNumbers = listOf(
+        PhoneNumber(phoneType = "MOB", phoneNumber = "07777123456", extNumber = null),
+      ),
     )
   }
 }

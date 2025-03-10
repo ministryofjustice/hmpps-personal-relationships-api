@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactPhoneEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
@@ -49,6 +50,28 @@ class ContactAddressPhoneService(
     validateContactAddressExists(contactAddressId)
     return request.phoneNumbers.map {
       createAnAddressSpecificPhoneNumber(contactId, contactAddressId, it.phoneType, it.phoneNumber, it.extNumber, request.createdBy)
+    }
+  }
+
+  @Transactional
+  fun createMultipleAddressSpecificPhones(
+    contactId: Long,
+    contactAddressId: Long,
+    createdBy: String,
+    phoneNumbers: List<PhoneNumber>,
+  ): List<Long> {
+    validateContactExists(contactId)
+    validateContactAddressExists(contactAddressId)
+    return phoneNumbers.map {
+      val contactAddressPhoneDetails = createAnAddressSpecificPhoneNumber(
+        contactId,
+        contactAddressId,
+        it.phoneType,
+        it.phoneNumber,
+        it.extNumber,
+        createdBy,
+      )
+      contactAddressPhoneDetails.contactAddressPhoneId
     }
   }
 

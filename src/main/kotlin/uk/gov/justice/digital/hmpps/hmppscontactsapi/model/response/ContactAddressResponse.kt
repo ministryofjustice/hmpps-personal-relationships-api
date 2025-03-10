@@ -13,6 +13,9 @@ data class ContactAddressResponse(
   @Schema(description = "The id of the contact", example = "123456")
   val contactId: Long,
 
+  @Schema(description = "The IDs of the contact's address phone numbers")
+  val phoneNumberIds: List<Long>,
+
   @Schema(
     description =
     """

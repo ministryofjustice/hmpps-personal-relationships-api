@@ -21,6 +21,14 @@ class ContactAddressFacade(
       identifier = created.contactAddressId,
       contactId = contactId,
     )
+    created.phoneNumberIds.map {
+      outboundEventsService.send(
+        outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
+        identifier = it,
+        secondIdentifier = created.contactAddressId,
+        contactId = contactId,
+      )
+    }
     sendOtherUpdatedAddressEvents(otherUpdatedAddressIds, contactId)
   }.created
 

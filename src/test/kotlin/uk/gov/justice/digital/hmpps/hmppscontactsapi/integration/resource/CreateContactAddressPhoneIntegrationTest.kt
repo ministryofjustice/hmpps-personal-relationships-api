@@ -8,22 +8,28 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddressPhoneInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
+import java.time.LocalDateTime
 
 class CreateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   private var savedContactId = 0L
   private var savedAddressId = 0L
+
+  @Autowired
+  private lateinit var contactAddressRepository: ContactAddressRepository
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
@@ -37,14 +43,16 @@ class CreateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
       ),
     ).id
 
-    savedAddressId = testAPIClient.createAContactAddress(
-      savedContactId,
-      CreateContactAddressRequest(
+    savedAddressId = contactAddressRepository.save(
+      ContactAddressEntity(
+        contactId = savedContactId,
+        contactAddressId = 0L,
         addressType = "HOME",
         primaryAddress = true,
         property = "27",
         street = "Hello Road",
         createdBy = "created",
+        createdTime = LocalDateTime.now(),
       ),
     ).contactAddressId
   }

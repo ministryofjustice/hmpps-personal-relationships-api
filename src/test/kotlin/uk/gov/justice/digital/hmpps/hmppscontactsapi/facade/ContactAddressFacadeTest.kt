@@ -32,7 +32,9 @@ class ContactAddressFacadeTest {
   @Test
   fun `should send event if create success`() {
     val request = createContactAddressRequest()
-    val response = contactAddressResponse(contactAddressId, contactId)
+    val addressSpecificPhoneId1 = 1L
+    val addressSpecificPhoneId2 = 2L
+    val response = contactAddressResponse(contactAddressId, contactId, phoneNumberIds = listOf(addressSpecificPhoneId1, addressSpecificPhoneId2))
 
     whenever(addressService.create(any(), any())).thenReturn(CreateAddressResponse(response, emptySet()))
     whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
@@ -44,6 +46,21 @@ class ContactAddressFacadeTest {
     verify(eventsService).send(
       outboundEvent = OutboundEvent.CONTACT_ADDRESS_CREATED,
       identifier = contactAddressId,
+      contactId = contactId,
+      source = Source.DPS,
+    )
+
+    verify(eventsService).send(
+      outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
+      identifier = addressSpecificPhoneId1,
+      secondIdentifier = contactAddressId,
+      contactId = contactId,
+      source = Source.DPS,
+    )
+    verify(eventsService).send(
+      outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
+      identifier = addressSpecificPhoneId2,
+      secondIdentifier = contactAddressId,
       contactId = contactId,
       source = Source.DPS,
     )
