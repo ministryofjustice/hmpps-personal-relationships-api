@@ -63,11 +63,12 @@ fun CreateContactAddressRequest.toEntity(contactId: Long): ContactAddressEntity 
   createdTime = LocalDateTime.now(),
 )
 
-fun ContactAddressEntity.toModel() = ContactAddressResponse(
+fun ContactAddressEntity.toModel(contactAddressPhoneId: List<Long> = emptyList()) = ContactAddressResponse(
   contactAddressId = this.contactAddressId,
   contactId = this.contactId!!,
   addressType = this.addressType,
   primaryAddress = this.primaryAddress,
+  phoneNumberIds = contactAddressPhoneId,
   flat = this.flat,
   property = this.property,
   street = this.street,
