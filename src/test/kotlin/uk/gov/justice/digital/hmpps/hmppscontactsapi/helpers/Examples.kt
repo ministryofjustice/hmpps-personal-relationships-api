@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContact
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateContactAddressPhoneRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
@@ -439,7 +438,6 @@ fun createContactAddressRequest(
   area: String = "Bulls Nose",
   postcode: String = "EC1 2NJ",
   createdBy: String = "CREATE_USER",
-  createdTime: LocalDateTime = LocalDateTime.now(),
 ) = CreateContactAddressRequest(
   addressType = addressType,
   flat = flat,
@@ -448,10 +446,6 @@ fun createContactAddressRequest(
   area = area,
   postcode = postcode,
   createdBy = createdBy,
-  phoneNumbers = listOf(
-    PhoneNumber(phoneType = "MOBILE", phoneNumber = "07777123456", extNumber = null),
-    PhoneNumber(phoneType = "HOME", phoneNumber = "02071234567", extNumber = "123"),
-  ),
 )
 
 fun updateContactAddressRequest(
@@ -463,7 +457,6 @@ fun updateContactAddressRequest(
   area: String = "Bulls Nose",
   postcode: String = "EC1 2NJ",
   updatedBy: String = "AMEND_USER",
-  updatedTime: LocalDateTime = LocalDateTime.now(),
 ) = UpdateContactAddressRequest(
   primaryAddress = primaryAddress,
   addressType = addressType,
@@ -561,7 +554,6 @@ fun contactAddressPhoneResponse(
   phoneType: String = "HOME",
   phoneTypeDescription: String = "Home",
   phoneNumber: String = "0878 7666565",
-  extNumber: String? = null,
   createdBy: String = "CREATE_USER",
   createdTime: LocalDateTime = LocalDateTime.now(),
   updatedBy: String = "AMEND_USER",

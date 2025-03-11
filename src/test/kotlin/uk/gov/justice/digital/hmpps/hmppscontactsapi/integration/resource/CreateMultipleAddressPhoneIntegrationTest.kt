@@ -11,25 +11,22 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddressPhoneInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
-import java.time.LocalDateTime
 
 class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   private var savedContactId = 0L
   private var savedAddressId = 0L
 
   @Autowired
-  private lateinit var contactAddressRepository: ContactAddressRepository
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
   @BeforeEach
@@ -42,18 +39,17 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
       ),
     ).id
 
-    savedAddressId = contactAddressRepository.save(
-      ContactAddressEntity(
-        contactId = savedContactId,
-        contactAddressId = 0L,
+    savedAddressId = testAPIClient.createAContactAddress(
+      savedContactId,
+      CreateContactAddressRequest(
         addressType = "HOME",
         primaryAddress = true,
         property = "27",
         street = "Hello Road",
         createdBy = "created",
-        createdTime = LocalDateTime.now(),
       ),
     ).contactAddressId
+    stubEvents.reset()
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.post()

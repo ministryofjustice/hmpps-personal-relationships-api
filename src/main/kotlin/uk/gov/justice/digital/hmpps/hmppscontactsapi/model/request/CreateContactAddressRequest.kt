@@ -73,8 +73,7 @@ data class CreateContactAddressRequest(
 
   @Schema(description = "List of new address-specific phone numbers to create")
   @field:Valid
-  @field:Size(min = 1, message = "phoneNumbers must have at least 1 item")
-  val phoneNumbers: List<PhoneNumber>,
+  val phoneNumbers: List<PhoneNumber> = emptyList(),
 
   @Schema(description = "Any additional information or comments about the address", example = "Some additional information", nullable = true)
   @field:Size(max = 240, message = "comments must be <= 240 characters")

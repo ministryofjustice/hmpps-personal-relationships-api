@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateContactAddressRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPhoneRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
@@ -1012,9 +1011,6 @@ private fun createContactAddressRequest() = CreateContactAddressRequest(
   postcode = "CV4 9NJ",
   countryCode = "UK",
   createdBy = "TEST",
-  phoneNumbers = listOf(
-    PhoneNumber(phoneType = "MOB", phoneNumber = "07777123456", extNumber = null),
-  ),
 )
 
 private fun contactEntity(contactId: Long = 1L) = ContactEntity(
