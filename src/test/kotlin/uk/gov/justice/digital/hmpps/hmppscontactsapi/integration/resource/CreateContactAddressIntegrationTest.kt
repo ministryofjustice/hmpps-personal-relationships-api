@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContact
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddressInfo
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddressPhoneInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -167,6 +168,68 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
       additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS),
       personReference = PersonReference(dpsContactId = created.contactId),
+    )
+  }
+
+  @Test
+  fun `should create the contact address with multiple address specific phone numbers`() {
+    val request = CreateContactAddressRequest(
+      addressType = "HOME",
+      primaryAddress = true,
+      property = "27",
+      street = "Hello Road",
+      createdBy = "created",
+      phoneNumbers = listOf(
+        PhoneNumber(phoneType = "MOB", phoneNumber = "07777123456", extNumber = null),
+        PhoneNumber(phoneType = "BUS", phoneNumber = "07777123455", extNumber = null),
+      ),
+    )
+
+    val created = testAPIClient.createAContactAddress(savedContactId, request, "ROLE_CONTACTS_ADMIN")
+
+    assertEqualsExcludingTimestamps(created, request)
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.CONTACT_ADDRESS_CREATED,
+      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS),
+      personReference = PersonReference(dpsContactId = created.contactId),
+    )
+
+    created.phoneNumberIds.map {
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
+        additionalInfo = ContactAddressPhoneInfo(it, created.contactAddressId, Source.DPS),
+        personReference = PersonReference(dpsContactId = created.contactId),
+      )
+    }
+  }
+
+  @Test
+  fun `should rollback when creating address caused exception during saving address phone number`() {
+    val request = aMinimalAddressRequest().copy(
+      phoneNumbers = listOf(
+        PhoneNumber(phoneType = "INVALID", phoneNumber = "07777123456", extNumber = null),
+      ),
+    )
+
+    webTestClient.post()
+      .uri("/contact/$savedContactId/address")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+
+    // Verify no address was created
+    val contact = testAPIClient.getContact(savedContactId)
+    assertThat(contact.addresses).isEmpty()
+
+    // Verify no events were published
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.CONTACT_ADDRESS_CREATED,
+      additionalInfo = ContactAddressInfo(savedContactId, Source.DPS),
     )
   }
 
