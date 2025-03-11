@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request
 
 import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import java.time.LocalDate
 
 @Schema(description = "Request to create a new contact address")
@@ -68,6 +70,10 @@ data class CreateContactAddressRequest(
 
   @Schema(description = "Flag to indicate this address should be considered as no fixed address", example = "false")
   val noFixedAddress: Boolean? = false,
+
+  @Schema(description = "List of new address-specific phone numbers to create")
+  @field:Valid
+  val phoneNumbers: List<PhoneNumber> = emptyList(),
 
   @Schema(description = "Any additional information or comments about the address", example = "Some additional information", nullable = true)
   @field:Size(max = 240, message = "comments must be <= 240 characters")

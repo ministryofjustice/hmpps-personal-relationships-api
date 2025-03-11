@@ -24,6 +24,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   private var savedContactId = 0L
   private var savedAddressId = 0L
+
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
   @BeforeEach
@@ -46,6 +47,7 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
         createdBy = "created",
       ),
     ).contactAddressId
+    stubEvents.reset()
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.post()

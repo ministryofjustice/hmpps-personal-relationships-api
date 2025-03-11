@@ -438,7 +438,6 @@ fun createContactAddressRequest(
   area: String = "Bulls Nose",
   postcode: String = "EC1 2NJ",
   createdBy: String = "CREATE_USER",
-  createdTime: LocalDateTime = LocalDateTime.now(),
 ) = CreateContactAddressRequest(
   addressType = addressType,
   flat = flat,
@@ -458,7 +457,6 @@ fun updateContactAddressRequest(
   area: String = "Bulls Nose",
   postcode: String = "EC1 2NJ",
   updatedBy: String = "AMEND_USER",
-  updatedTime: LocalDateTime = LocalDateTime.now(),
 ) = UpdateContactAddressRequest(
   primaryAddress = primaryAddress,
   addressType = addressType,
@@ -493,10 +491,12 @@ fun contactAddressResponse(
   postcode: String? = null,
   createdBy: String = "CREATE_USER",
   createdTime: LocalDateTime = LocalDateTime.now(),
+  phoneNumberIds: List<Long> = emptyList(),
 ) = ContactAddressResponse(
   contactAddressId = contactAddressId,
   contactId = contactId,
   addressType = addressType,
+  phoneNumberIds = phoneNumberIds,
   primaryAddress = primaryAddress,
   flat = flat,
   property = property,
@@ -554,7 +554,6 @@ fun contactAddressPhoneResponse(
   phoneType: String = "HOME",
   phoneTypeDescription: String = "Home",
   phoneNumber: String = "0878 7666565",
-  extNumber: String? = null,
   createdBy: String = "CREATE_USER",
   createdTime: LocalDateTime = LocalDateTime.now(),
   updatedBy: String = "AMEND_USER",

@@ -13,8 +13,10 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddressInfo
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddressPhoneInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -60,6 +62,10 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     value = [
       "createdBy must not be null;{\"createdBy\": null}",
       "createdBy must not be null;{}",
+      "Unsupported phone type (UNKNOWN);{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\", \"phoneType\": \"UNKNOWN\" } ], \"createdBy\": \"JD000001\"}",
+      "phoneNumbers[0].phoneNumber must not be null;{ \"phoneNumbers\": [ { \"phoneType\": \"MOB\" } ], \"createdBy\": \"JD000001\"}",
+      "phoneNumbers[0].phoneType must not be null;{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\" } ], \"createdBy\": \"JD000001\"}",
+      "phoneNumbers must not be null;{ \"phoneNumbers\": null, \"createdBy\": \"JD000001\"}",
     ],
     delimiter = ';',
   )
@@ -161,6 +167,68 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
       additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS),
       personReference = PersonReference(dpsContactId = created.contactId),
+    )
+  }
+
+  @Test
+  fun `should create the contact address with multiple address specific phone numbers`() {
+    val request = CreateContactAddressRequest(
+      addressType = "HOME",
+      primaryAddress = true,
+      property = "27",
+      street = "Hello Road",
+      createdBy = "created",
+      phoneNumbers = listOf(
+        PhoneNumber(phoneType = "MOB", phoneNumber = "07777123456", extNumber = null),
+        PhoneNumber(phoneType = "BUS", phoneNumber = "07777123455", extNumber = null),
+      ),
+    )
+
+    val created = testAPIClient.createAContactAddress(savedContactId, request, "ROLE_CONTACTS_ADMIN")
+
+    assertEqualsExcludingTimestamps(created, request)
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.CONTACT_ADDRESS_CREATED,
+      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS),
+      personReference = PersonReference(dpsContactId = created.contactId),
+    )
+
+    created.phoneNumberIds.map {
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
+        additionalInfo = ContactAddressPhoneInfo(it, created.contactAddressId, Source.DPS),
+        personReference = PersonReference(dpsContactId = created.contactId),
+      )
+    }
+  }
+
+  @Test
+  fun `should rollback address creation when saving address phone number fails`() {
+    val request = aMinimalAddressRequest().copy(
+      phoneNumbers = listOf(
+        PhoneNumber(phoneType = "INVALID", phoneNumber = "07777123456", extNumber = null),
+      ),
+    )
+
+    webTestClient.post()
+      .uri("/contact/$savedContactId/address")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+
+    // Verify no address was created
+    val contact = testAPIClient.getContact(savedContactId)
+    assertThat(contact.addresses).isEmpty()
+
+    // Verify no events were published
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.CONTACT_ADDRESS_CREATED,
+      additionalInfo = ContactAddressInfo(savedContactId, Source.DPS),
     )
   }
 
@@ -368,6 +436,9 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       Arguments.of("postcode must be <= 12 characters", aMinimalAddressRequest().copy(postcode = "".padStart(13, 'X'))),
       Arguments.of("comments must be <= 240 characters", aMinimalAddressRequest().copy(comments = "".padStart(241, 'X'))),
       Arguments.of("createdBy must be <= 100 characters", aMinimalAddressRequest().copy(createdBy = "".padStart(101, 'X'))),
+      Arguments.of("phoneNumbers[0].phoneNumber must be <= 40 characters", aMinimalAddressRequest().copy(phoneNumbers = listOf(PhoneNumber(phoneType = "MOB", phoneNumber = "".padStart(41, 'X'), extNumber = null)))),
+      Arguments.of("phoneNumbers[0].phoneType must be <= 12 characters", aMinimalAddressRequest().copy(phoneNumbers = listOf(PhoneNumber(phoneType = "".padStart(13, 'X'), phoneNumber = "07403322232", extNumber = null)))),
+      Arguments.of("phoneNumbers[0].extNumber must be <= 7 characters", aMinimalAddressRequest().copy(phoneNumbers = listOf(PhoneNumber(phoneType = "MOB", phoneNumber = "07403322232", extNumber = "".padStart(8, 'X'))))),
     )
 
     private fun assertEqualsExcludingTimestamps(address: ContactAddressResponse, request: CreateContactAddressRequest) {

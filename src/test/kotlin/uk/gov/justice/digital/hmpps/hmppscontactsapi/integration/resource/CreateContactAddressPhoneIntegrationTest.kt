@@ -47,6 +47,7 @@ class CreateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
         createdBy = "created",
       ),
     ).contactAddressId
+    stubEvents.reset()
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.post()
