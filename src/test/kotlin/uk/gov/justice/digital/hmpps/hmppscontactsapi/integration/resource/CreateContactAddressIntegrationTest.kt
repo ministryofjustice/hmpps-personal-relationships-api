@@ -60,8 +60,8 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "createdBy must not be null;{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\", \"phoneType\": \"MOB\" } ], \"createdBy\": null}",
-      "createdBy must not be null;{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\", \"phoneType\": \"MOB\" } ]}",
+      "createdBy must not be null;{\"createdBy\": null}",
+      "createdBy must not be null;{}",
       "Unsupported phone type (UNKNOWN);{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\", \"phoneType\": \"UNKNOWN\" } ], \"createdBy\": \"JD000001\"}",
       "phoneNumbers[0].phoneNumber must not be null;{ \"phoneNumbers\": [ { \"phoneType\": \"MOB\" } ], \"createdBy\": \"JD000001\"}",
       "phoneNumbers[0].phoneType must not be null;{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\" } ], \"createdBy\": \"JD000001\"}",
