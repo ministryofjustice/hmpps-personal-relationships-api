@@ -16,6 +16,8 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEmailEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateEmailException
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactEmailEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateEmailRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.UpdateEmailRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactEmailDetails
@@ -62,12 +64,29 @@ class ContactEmailServiceTest {
 
     @ParameterizedTest
     @MethodSource("uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactEmailServiceTest#allInvalidEmailAddresses")
-    fun `should not update email address if it's invalid`(case: String, invalidEmail: String) {
+    fun `should not create email address if it's invalid`(case: String, invalidEmail: String) {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
       val exception = assertThrows<ValidationException> {
         service.create(contactId, request.copy(emailAddress = invalidEmail))
       }
       assertThat(exception.message).isEqualTo("Email address is invalid")
+      verify(contactEmailRepository, never()).saveAndFlush(any())
+    }
+
+    @Test
+    fun `should not create email address if there is a case-insensitive match`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
+      whenever(contactEmailRepository.findByContactId(contactId)).thenReturn(
+        listOf(
+          createContactEmailEntity(
+            emailAddress = "TEST@EXAMPLE.COM",
+          ),
+        ),
+      )
+      val exception = assertThrows<DuplicateEmailException> {
+        service.create(contactId, request.copy(emailAddress = "test@example.com"))
+      }
+      assertThat(exception.message).isEqualTo("Contact already has an email address matching \"test@example.com\"")
       verify(contactEmailRepository, never()).saveAndFlush(any())
     }
 
@@ -144,6 +163,19 @@ class ContactEmailServiceTest {
         service.update(contactId, contactEmailId, request.copy(emailAddress = invalidEmail))
       }
       assertThat(exception.message).isEqualTo("Email address is invalid")
+      verify(contactEmailRepository, never()).saveAndFlush(any())
+    }
+
+    @Test
+    fun `should not update email address if there is a case-insensitive match`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
+      whenever(contactEmailRepository.findById(contactEmailId)).thenReturn(Optional.of(existingEmail))
+      whenever(contactEmailRepository.findByContactId(contactId)).thenReturn(listOf(existingEmail, createContactEmailEntity(id = 9999999, emailAddress = "other@example.com")))
+
+      val exception = assertThrows<DuplicateEmailException> {
+        service.update(contactId, contactEmailId, request.copy(emailAddress = "OTHER@EXAMPLE.COM"))
+      }
+      assertThat(exception.message).isEqualTo("Contact already has an email address matching \"OTHER@EXAMPLE.COM\"")
       verify(contactEmailRepository, never()).saveAndFlush(any())
     }
 

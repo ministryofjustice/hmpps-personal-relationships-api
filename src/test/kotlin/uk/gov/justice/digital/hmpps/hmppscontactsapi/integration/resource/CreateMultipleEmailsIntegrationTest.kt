@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.http.HttpStatus.CONFLICT
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
@@ -118,6 +119,60 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
+  fun `should not create the email if the contact already has the same email address`() {
+    testAPIClient.createContactEmails(
+      savedContactId,
+      CreateMultipleEmailsRequest(
+        emailAddresses = listOf(EmailAddress("test@example.com")),
+        createdBy = "created",
+      ),
+    )
+
+    val request = CreateMultipleEmailsRequest(
+      emailAddresses = listOf(EmailAddress("other@example.com"), EmailAddress("test@example.com")),
+      createdBy = "created",
+    )
+
+    val errors = webTestClient.post()
+      .uri("/contact/$savedContactId/emails")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isEqualTo(CONFLICT)
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Contact already has an email address matching \"test@example.com\"")
+  }
+
+  @Test
+  fun `should not allow duplicate email addresses in the same request`() {
+    val request = CreateMultipleEmailsRequest(
+      emailAddresses = listOf(EmailAddress("foo@example.com"), EmailAddress("FOO@EXAMPLE.COM")),
+      createdBy = "created",
+    )
+
+    val errors = webTestClient.post()
+      .uri("/contact/$savedContactId/emails")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Validation failure: Request contains duplicate email addresses")
+  }
+
+  @Test
   fun `should not create the emails if any email is not valid`() {
     val request = CreateMultipleEmailsRequest(
       emailAddresses = listOf(EmailAddress("@example.com"), EmailAddress("good@example.com")),
@@ -167,7 +222,10 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
   companion object {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
-      Arguments.of("emailAddresses[0].emailAddress must be <= 240 characters", aMinimalRequest().copy(emailAddresses = listOf(EmailAddress("".padStart(241, 'X'))))),
+      Arguments.of(
+        "emailAddresses[0].emailAddress must be <= 240 characters",
+        aMinimalRequest().copy(emailAddresses = listOf(EmailAddress("".padStart(241, 'X')))),
+      ),
       Arguments.of("emailAddresses must have at least 1 item", aMinimalRequest().copy(emailAddresses = emptyList())),
       Arguments.of(
         "createdBy must be <= 100 characters",

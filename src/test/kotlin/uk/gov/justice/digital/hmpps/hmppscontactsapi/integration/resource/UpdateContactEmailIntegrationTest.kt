@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.http.HttpStatus.CONFLICT
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
@@ -23,6 +24,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
   private var savedContactId = 0L
   private var savedContactEmailId = 0L
+  private val initialEmailAddress = "test@example.com"
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
@@ -39,7 +41,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
     savedContactEmailId = testAPIClient.createAContactEmail(
       savedContactId,
       CreateEmailRequest(
-        emailAddress = "test@example.com",
+        emailAddress = initialEmailAddress,
         createdBy = "created",
       ),
 
@@ -197,6 +199,59 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     with(updated) {
       assertThat(emailAddress).isEqualTo("updated@example.com")
+      assertThat(createdBy).isEqualTo("created")
+      assertThat(createdTime).isNotNull()
+      assertThat(updatedBy).isEqualTo("updated")
+      assertThat(updatedTime).isNotNull()
+    }
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.CONTACT_EMAIL_UPDATED,
+      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS),
+      personReference = PersonReference(dpsContactId = savedContactId),
+    )
+  }
+
+  @Test
+  fun `should not be able to update the email to an existing email address leading to a duplicate`() {
+    testAPIClient.createAContactEmail(savedContactId, CreateEmailRequest("foo@example.com", "created"))
+
+    val request = UpdateEmailRequest(
+      emailAddress = "FOO@EXAMPLE.COM",
+      updatedBy = "updated",
+    )
+
+    val errors = webTestClient.put()
+      .uri("/contact/$savedContactId/email/$savedContactEmailId")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isEqualTo(CONFLICT)
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Contact already has an email address matching \"FOO@EXAMPLE.COM\"")
+
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.CONTACT_EMAIL_UPDATED,
+      additionalInfo = ContactEmailInfo(-99, Source.DPS),
+    )
+  }
+
+  @Test
+  fun `should be able to update the email to the same email address`() {
+    val request = UpdateEmailRequest(
+      emailAddress = initialEmailAddress,
+      updatedBy = "updated",
+    )
+    val updated = testAPIClient.updateAContactEmail(savedContactId, savedContactEmailId, request)
+
+    with(updated) {
+      assertThat(emailAddress).isEqualTo(initialEmailAddress)
       assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
       assertThat(updatedBy).isEqualTo("updated")
