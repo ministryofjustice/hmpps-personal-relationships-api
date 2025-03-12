@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEmailEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateEmailException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateEmailRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateMultipleEmailsRequest
@@ -28,21 +29,28 @@ class ContactEmailService(
   @Transactional
   fun create(contactId: Long, request: CreateEmailRequest): ContactEmailDetails {
     validateContactExists(contactId)
-    return createAnEmail(request.emailAddress, request.createdBy, contactId)
+    val existingLowercaseEmails = contactEmailRepository.findByContactId(contactId).map { it.emailAddress.lowercase() }
+    return createAnEmail(request.emailAddress, request.createdBy, contactId, existingLowercaseEmails)
   }
 
   @Transactional
   fun createMultiple(contactId: Long, request: CreateMultipleEmailsRequest): List<ContactEmailDetails> {
     validateContactExists(contactId)
-    return request.emailAddresses.map { createAnEmail(it.emailAddress, request.createdBy, contactId) }
+    val existingLowercaseEmails = contactEmailRepository.findByContactId(contactId).map { it.emailAddress.lowercase() }
+    val requestedLowerCaseEmails = request.emailAddresses.map { it.emailAddress.lowercase() }
+    if (requestedLowerCaseEmails.size != requestedLowerCaseEmails.toSet().size) {
+      throw ValidationException("Request contains duplicate email addresses")
+    }
+    return request.emailAddresses.map { createAnEmail(it.emailAddress, request.createdBy, contactId, existingLowercaseEmails) }
   }
 
   private fun createAnEmail(
     emailAddress: String,
     createdBy: String,
     contactId: Long,
+    existingLowercaseEmails: List<String>,
   ): ContactEmailDetails {
-    validateEmailAddress(emailAddress)
+    validateEmailAddress(emailAddress, existingLowercaseEmails)
     val created = contactEmailRepository.saveAndFlush(
       ContactEmailEntity(
         contactEmailId = 0,
@@ -57,8 +65,11 @@ class ContactEmailService(
   @Transactional
   fun update(contactId: Long, contactEmailId: Long, request: UpdateEmailRequest): ContactEmailDetails {
     validateContactExists(contactId)
-    validateEmailAddress(request.emailAddress)
     val existing = validateExistingEmail(contactEmailId)
+    val existingLowercaseEmailsExcludingTheOneBeingUpdated = contactEmailRepository.findByContactId(contactId)
+      .filter { it.contactEmailId != existing.contactEmailId }
+      .map { it.emailAddress.lowercase() }
+    validateEmailAddress(request.emailAddress, existingLowercaseEmailsExcludingTheOneBeingUpdated)
 
     val updating = existing.copy(
       emailAddress = request.emailAddress,
@@ -80,9 +91,12 @@ class ContactEmailService(
     contactEmailRepository.delete(existing)
   }
 
-  private fun validateEmailAddress(emailAddress: String) {
+  private fun validateEmailAddress(emailAddress: String, otherEmails: List<String>) {
     if (!emailAddress.matches(EMAIL_REGEX)) {
       throw ValidationException("Email address is invalid")
+    }
+    if (emailAddress.lowercase() in otherEmails) {
+      throw DuplicateEmailException(emailAddress)
     }
   }
 
