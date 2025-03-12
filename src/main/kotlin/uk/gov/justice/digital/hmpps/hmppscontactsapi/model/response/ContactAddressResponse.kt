@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response
 
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.AddressLines
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -32,28 +33,28 @@ data class ContactAddressResponse(
   val primaryAddress: Boolean,
 
   @Schema(description = "Flat number or name", example = "Flat 2B", nullable = true)
-  val flat: String?,
+  override val flat: String?,
 
   @Schema(description = "Building or house number or name", example = "Mansion House", nullable = true)
-  val property: String?,
+  override val property: String?,
 
   @Schema(description = "Street or road name", example = "Acacia Avenue", nullable = true)
-  val street: String?,
+  override val street: String?,
 
   @Schema(description = "Area", example = "Morton Heights", nullable = true)
-  val area: String?,
+  override val area: String?,
 
   @Schema(description = "City code", example = "25343", nullable = true)
-  val cityCode: String?,
+  override val cityCode: String?,
 
   @Schema(description = "County code", example = "S.YORKSHIRE", nullable = true)
-  val countyCode: String?,
+  override val countyCode: String?,
 
   @Schema(description = "Postcode", example = "S13 4FH", nullable = true)
-  val postcode: String?,
+  override val postcode: String?,
 
   @Schema(description = "Country code", example = "ENG", nullable = true)
-  val countryCode: String?,
+  override val countryCode: String?,
 
   @Schema(description = "Whether the address has been verified by postcode lookup", example = "false")
   val verified: Boolean,
@@ -90,4 +91,4 @@ data class ContactAddressResponse(
 
   @Schema(description = "The timestamp of when the contact address was last updated", example = "2024-01-01T00:00:00Z", nullable = true)
   val updatedTime: LocalDateTime?,
-)
+) : AddressLines
