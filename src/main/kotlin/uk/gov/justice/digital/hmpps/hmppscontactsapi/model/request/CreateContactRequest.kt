@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
 import org.springframework.format.annotation.DateTimeFormat
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.IdentityDocument
 import java.time.LocalDate
 
 @Schema(description = "Request to create a new contact")
@@ -84,6 +85,10 @@ data class CreateContactRequest(
   @Schema(description = "A description of the relationship if the contact should be linked to a prisoner", nullable = true, exampleClasses = [ContactRelationship::class])
   @field:Valid
   val relationship: ContactRelationship? = null,
+
+  @Schema(description = "Identity documents")
+  @field:Valid
+  val identities: List<IdentityDocument> = emptyList(),
 
   @Schema(description = "The id of the user creating the contact", example = "JD000001", maxLength = 100)
   @field:Size(max = 100, message = "createdBy must be <= 100 characters")

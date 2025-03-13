@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.patch
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
@@ -54,49 +55,99 @@ class ContactFacadeTest {
     verify(outboundEventsService).send(OutboundEvent.CONTACT_UPDATED, contactId, contactId)
   }
 
-  @Test
-  fun `create contact without relationship should send contact domain event only`() {
-    val request = CreateContactRequest(
-      lastName = "last",
-      firstName = "first",
-      createdBy = "created",
-    )
-    val createdContact = aContactDetails().copy(id = 98765)
-    val expected = ContactCreationResult(createdContact, null)
-    whenever(contactService.createContact(request)).thenReturn(expected)
+  @Nested
+  inner class CreateContact {
+    @Test
+    fun `create contact without relationship should send contact domain event only`() {
+      val request = CreateContactRequest(
+        lastName = "last",
+        firstName = "first",
+        createdBy = "created",
+      )
+      val createdContact = aContactDetails().copy(id = 98765)
+      val expected = ContactCreationResult(createdContact, null)
+      whenever(contactService.createContact(request)).thenReturn(expected)
 
-    val result = contactFacade.createContact(request)
+      val result = contactFacade.createContact(request)
 
-    assertThat(result).isEqualTo(expected)
-    verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
-  }
+      assertThat(result).isEqualTo(expected)
+      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
+    }
 
-  @Test
-  fun `create contact with relationship should send contact and prisoner contact domain events`() {
-    val request = CreateContactRequest(
-      lastName = "last",
-      firstName = "first",
-      relationship = ContactRelationship(
-        prisonerNumber = "A1234BC",
-        relationshipToPrisonerCode = "FRI",
-        isNextOfKin = false,
-        isEmergencyContact = false,
-        relationshipTypeCode = "S",
-        isApprovedVisitor = false,
-        comments = null,
-      ),
-      createdBy = "created",
-    )
-    val createdContact = aContactDetails().copy(id = 98765)
-    val createdRelationship = createPrisonerContactRelationshipDetails(id = 123456)
-    val expected = ContactCreationResult(createdContact, createdRelationship)
-    whenever(contactService.createContact(request)).thenReturn(expected)
+    @Test
+    fun `create contact with relationship should send contact and prisoner contact domain events`() {
+      val request = CreateContactRequest(
+        lastName = "last",
+        firstName = "first",
+        relationship = ContactRelationship(
+          prisonerNumber = "A1234BC",
+          relationshipToPrisonerCode = "FRI",
+          isNextOfKin = false,
+          isEmergencyContact = false,
+          relationshipTypeCode = "S",
+          isApprovedVisitor = false,
+          comments = null,
+        ),
+        createdBy = "created",
+      )
+      val createdContact = aContactDetails().copy(id = 98765)
+      val createdRelationship = createPrisonerContactRelationshipDetails(id = 123456)
+      val expected = ContactCreationResult(createdContact, createdRelationship)
+      whenever(contactService.createContact(request)).thenReturn(expected)
 
-    val result = contactFacade.createContact(request)
+      val result = contactFacade.createContact(request)
 
-    assertThat(result).isEqualTo(expected)
-    verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
-    verify(outboundEventsService).send(OutboundEvent.PRISONER_CONTACT_CREATED, 123456, createdContact.id, "A1234BC")
+      assertThat(result).isEqualTo(expected)
+      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
+      verify(outboundEventsService).send(OutboundEvent.PRISONER_CONTACT_CREATED, 123456, createdContact.id, "A1234BC")
+    }
+
+    @Test
+    fun `create contact without identities should send contact domain event only`() {
+      val request = CreateContactRequest(
+        lastName = "last",
+        firstName = "first",
+        createdBy = "created",
+      )
+      val createdContact = aContactDetails().copy(id = 98765, identities = emptyList())
+      val expected = ContactCreationResult(createdContact, null)
+      whenever(contactService.createContact(request)).thenReturn(expected)
+
+      val result = contactFacade.createContact(request)
+
+      assertThat(result).isEqualTo(expected)
+      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
+      verify(outboundEventsService, never()).send(
+        outboundEvent = OutboundEvent.CONTACT_IDENTITY_CREATED,
+        identifier = 1L,
+        contactId = createdContact.id,
+      )
+    }
+
+    @Test
+    fun `create contact with multiple identities should send identity created event`() {
+      val request = CreateContactRequest(
+        lastName = "last",
+        firstName = "first",
+        createdBy = "created",
+      )
+      val createdContact = aContactDetails().copy(id = 98765)
+      val expected = ContactCreationResult(createdContact, null)
+      whenever(contactService.createContact(request)).thenReturn(expected)
+
+      val result = contactFacade.createContact(request)
+
+      assertThat(result).isEqualTo(expected)
+      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
+
+      result.createdContact.identities.forEach { identityId ->
+        verify(outboundEventsService).send(
+          outboundEvent = OutboundEvent.CONTACT_IDENTITY_CREATED,
+          identifier = identityId.contactIdentityId,
+          contactId = createdContact.id,
+        )
+      }
+    }
   }
 
   @Test
