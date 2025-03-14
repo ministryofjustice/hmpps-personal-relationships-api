@@ -223,6 +223,36 @@ class ContactFacadeTest {
         contactId = createdContact.id,
       )
     }
+
+    @Test
+    fun `create contact with multiple email addresses should send email address created events`() {
+      val request = CreateContactRequest(
+        lastName = "last",
+        firstName = "first",
+        createdBy = "created",
+      )
+      val createdContact = aContactDetails().copy(
+        id = 98765,
+        emailAddresses = listOf(createContactEmailDetails(id = 999), createContactEmailDetails(id = 777)),
+      )
+      val expected = ContactCreationResult(createdContact, null)
+      whenever(contactService.createContact(request)).thenReturn(expected)
+
+      val result = contactFacade.createContact(request)
+
+      assertThat(result).isEqualTo(expected)
+      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
+      verify(outboundEventsService).send(
+        outboundEvent = OutboundEvent.CONTACT_EMAIL_CREATED,
+        identifier = 999,
+        contactId = createdContact.id,
+      )
+      verify(outboundEventsService).send(
+        outboundEvent = OutboundEvent.CONTACT_EMAIL_CREATED,
+        identifier = 777,
+        contactId = createdContact.id,
+      )
+    }
   }
 
   @Test

@@ -24,7 +24,11 @@ class ContactEmailFacade(
     )
   }
 
-  fun createMultiple(contactId: Long, request: CreateMultipleEmailsRequest): List<ContactEmailDetails> = contactEmailService.createMultiple(contactId, request).also { created ->
+  fun createMultiple(contactId: Long, request: CreateMultipleEmailsRequest): List<ContactEmailDetails> = contactEmailService.createMultiple(
+    contactId,
+    request.createdBy,
+    request.emailAddresses,
+  ).also { created ->
     created.forEach {
       outboundEventsService.send(
         outboundEvent = OutboundEvent.CONTACT_EMAIL_CREATED,

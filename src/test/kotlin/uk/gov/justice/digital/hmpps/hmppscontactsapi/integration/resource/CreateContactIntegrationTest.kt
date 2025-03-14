@@ -12,11 +12,13 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.Address
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.EmailAddress
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.IdentityDocument
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddressInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddressPhoneInfo
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactEmailInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactIdentityInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactPhoneInfo
@@ -477,6 +479,61 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
     stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_PHONE_CREATED)
   }
 
+  @Test
+  fun `should create the contact with multiple email addresses`() {
+    val request =
+      aMinimalCreateContactRequest().copy(emailAddresses = listOf(EmailAddress("test@example.com"), EmailAddress("another@example.com")))
+
+    val contactReturned = testAPIClient.createAContactWithARelationship(request)
+    val contactId = contactReturned.createdContact.id
+    assertThat(contactReturned.createdContact.emailAddresses).hasSize(2)
+    val firstCreated = contactReturned.createdContact.emailAddresses.find { it.emailAddress == "test@example.com" }
+    assertThat(firstCreated).isNotNull
+    val secondCreated = contactReturned.createdContact.emailAddresses.find { it.emailAddress == "another@example.com" }
+    assertThat(secondCreated).isNotNull
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.CONTACT_CREATED,
+      additionalInfo = ContactInfo(contactId, Source.DPS),
+      personReference = PersonReference(dpsContactId = contactId),
+    )
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.CONTACT_EMAIL_CREATED,
+      additionalInfo = ContactEmailInfo(firstCreated!!.contactEmailId, Source.DPS),
+      personReference = PersonReference(dpsContactId = contactId),
+    )
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.CONTACT_EMAIL_CREATED,
+      additionalInfo = ContactEmailInfo(secondCreated!!.contactEmailId, Source.DPS),
+      personReference = PersonReference(dpsContactId = contactId),
+    )
+  }
+
+  @Test
+  fun `should rollback if emails are invalid`() {
+    val invalid = EmailAddress(
+      emailAddress = "FOO",
+    )
+    val errors = webTestClient.post()
+      .uri("/contact")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(aMinimalCreateContactRequest().copy(emailAddresses = listOf(invalid)))
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Validation failure: Email address is invalid")
+    stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_CREATED)
+    stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_EMAIL_CREATED)
+  }
+
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create the contact with all fields`(role: String) {
@@ -728,6 +785,16 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
                 phoneType = "MOB",
                 phoneNumber = "07403322232",
                 extNumber = "".padStart(8, 'X'),
+              ),
+            ),
+          ),
+        ),
+        Arguments.of(
+          "emailAddresses[0].emailAddress must be <= 240 characters",
+          aMinimalCreateContactRequest().copy(
+            emailAddresses = listOf(
+              EmailAddress(
+                emailAddress = "@example.com".padStart(241, 'X'),
               ),
             ),
           ),
