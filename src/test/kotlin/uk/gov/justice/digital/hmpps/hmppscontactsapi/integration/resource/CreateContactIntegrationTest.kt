@@ -364,6 +364,48 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
     )
   }
 
+  @Test
+  fun `should rollback if addresses or phones are invalid`() {
+    val addressWithInvalidPhone = Address(
+      addressType = "HOME",
+      primaryAddress = false,
+      flat = null,
+      property = null,
+      street = null,
+      area = null,
+      cityCode = null,
+      countyCode = null,
+      postcode = null,
+      countryCode = "ENG",
+      verified = false,
+      mailFlag = false,
+      startDate = LocalDate.of(2020, 2, 3),
+      endDate = null,
+      noFixedAddress = false,
+      phoneNumbers = listOf(
+        PhoneNumber("FOO", "123456789"),
+      ),
+      comments = null,
+    )
+    val errors = webTestClient.post()
+      .uri("/contact")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(aMinimalCreateContactRequest().copy(addresses = listOf(addressWithInvalidPhone)))
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported phone type (FOO)")
+    stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_CREATED)
+    stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_ADDRESS_CREATED)
+    stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED)
+  }
+
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create the contact with all fields`(role: String) {
@@ -410,90 +452,245 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
   companion object {
     @JvmStatic
-    fun allFieldConstraintViolations(): List<Arguments> = listOf(
-      Arguments.of("titleCode must be <= 12 characters", aMinimalCreateContactRequest().copy(titleCode = "".padStart(13, 'X'))),
-      Arguments.of("genderCode must be <= 12 characters", aMinimalCreateContactRequest().copy(genderCode = "".padStart(13, 'X'))),
-      Arguments.of("languageCode must be <= 12 characters", aMinimalCreateContactRequest().copy(languageCode = "".padStart(13, 'X'))),
-      Arguments.of("domesticStatusCode must be <= 12 characters", aMinimalCreateContactRequest().copy(domesticStatusCode = "".padStart(13, 'X'))),
-      Arguments.of(
-        "lastName must be <= 35 characters",
-        aMinimalCreateContactRequest().copy(lastName = "".padStart(36, 'X')),
-      ),
-      Arguments.of(
-        "firstName must be <= 35 characters",
-        aMinimalCreateContactRequest().copy(firstName = "".padStart(36, 'X')),
-      ),
-      Arguments.of(
-        "middleNames must be <= 35 characters",
-        aMinimalCreateContactRequest().copy(middleNames = "".padStart(36, 'X')),
-      ),
-      Arguments.of(
-        "createdBy must be <= 100 characters",
-        aMinimalCreateContactRequest().copy(createdBy = "".padStart(101, 'X')),
-      ),
-      Arguments.of(
-        "identities[0].identityType must be <= 12 characters",
-        aMinimalCreateContactRequest().copy(
-          identities = listOf(
-            IdentityDocument(
-              identityType = "".padStart(13, 'X'),
-              identityValue = "DL123456789",
-              issuingAuthority = "DVLA",
+    fun allFieldConstraintViolations(): List<Arguments> {
+      val minimalAddress = Address(
+        addressType = "HOME",
+        primaryAddress = false,
+        flat = null,
+        property = null,
+        street = null,
+        area = null,
+        cityCode = null,
+        countyCode = null,
+        postcode = null,
+        countryCode = "ENG",
+        verified = false,
+        mailFlag = false,
+        startDate = LocalDate.of(2020, 2, 3),
+        endDate = null,
+        noFixedAddress = false,
+        phoneNumbers = listOf(
+          PhoneNumber("FOO", "123456789"),
+        ),
+        comments = null,
+      )
+
+      return listOf(
+        Arguments.of(
+          "titleCode must be <= 12 characters",
+          aMinimalCreateContactRequest().copy(titleCode = "".padStart(13, 'X')),
+        ),
+        Arguments.of(
+          "genderCode must be <= 12 characters",
+          aMinimalCreateContactRequest().copy(genderCode = "".padStart(13, 'X')),
+        ),
+        Arguments.of(
+          "languageCode must be <= 12 characters",
+          aMinimalCreateContactRequest().copy(languageCode = "".padStart(13, 'X')),
+        ),
+        Arguments.of(
+          "domesticStatusCode must be <= 12 characters",
+          aMinimalCreateContactRequest().copy(domesticStatusCode = "".padStart(13, 'X')),
+        ),
+        Arguments.of(
+          "lastName must be <= 35 characters",
+          aMinimalCreateContactRequest().copy(lastName = "".padStart(36, 'X')),
+        ),
+        Arguments.of(
+          "firstName must be <= 35 characters",
+          aMinimalCreateContactRequest().copy(firstName = "".padStart(36, 'X')),
+        ),
+        Arguments.of(
+          "middleNames must be <= 35 characters",
+          aMinimalCreateContactRequest().copy(middleNames = "".padStart(36, 'X')),
+        ),
+        Arguments.of(
+          "createdBy must be <= 100 characters",
+          aMinimalCreateContactRequest().copy(createdBy = "".padStart(101, 'X')),
+        ),
+        Arguments.of(
+          "identities[0].identityType must be <= 12 characters",
+          aMinimalCreateContactRequest().copy(
+            identities = listOf(
+              IdentityDocument(
+                identityType = "".padStart(13, 'X'),
+                identityValue = "DL123456789",
+                issuingAuthority = "DVLA",
+              ),
             ),
           ),
         ),
-      ),
-      Arguments.of(
-        "identities[0].identityValue must be <= 20 characters",
-        aMinimalCreateContactRequest().copy(
-          identities = listOf(
-            IdentityDocument(
-              identityType = "PASS",
-              identityValue = "".padStart(21, 'X'),
-              issuingAuthority = "DVLA",
+        Arguments.of(
+          "identities[0].identityValue must be <= 20 characters",
+          aMinimalCreateContactRequest().copy(
+            identities = listOf(
+              IdentityDocument(
+                identityType = "PASS",
+                identityValue = "".padStart(21, 'X'),
+                issuingAuthority = "DVLA",
+              ),
             ),
           ),
         ),
-      ),
-      Arguments.of(
-        "identities[0].issuingAuthority must be <= 40 characters",
-        aMinimalCreateContactRequest().copy(
-          identities = listOf(
-            IdentityDocument(
-              identityType = "PASS",
-              identityValue = "DL123456789",
-              issuingAuthority = "".padStart(41, 'X'),
+        Arguments.of(
+          "identities[0].issuingAuthority must be <= 40 characters",
+          aMinimalCreateContactRequest().copy(
+            identities = listOf(
+              IdentityDocument(
+                identityType = "PASS",
+                identityValue = "DL123456789",
+                issuingAuthority = "".padStart(41, 'X'),
+              ),
             ),
           ),
         ),
-      ),
-    )
+        Arguments.of(
+          "addresses[0].flat must be <= 30 characters",
+          aMinimalCreateContactRequest().copy(addresses = listOf(minimalAddress.copy(flat = "".padStart(31, 'X')))),
+        ),
+        Arguments.of(
+          "addresses[0].property must be <= 50 characters",
+          aMinimalCreateContactRequest().copy(addresses = listOf(minimalAddress.copy(property = "".padStart(51, 'X')))),
+        ),
+        Arguments.of(
+          "addresses[0].street must be <= 160 characters",
+          aMinimalCreateContactRequest().copy(addresses = listOf(minimalAddress.copy(street = "".padStart(161, 'X')))),
+        ),
+        Arguments.of(
+          "addresses[0].area must be <= 70 characters",
+          aMinimalCreateContactRequest().copy(addresses = listOf(minimalAddress.copy(area = "".padStart(71, 'X')))),
+        ),
+        Arguments.of(
+          "addresses[0].postcode must be <= 12 characters",
+          aMinimalCreateContactRequest().copy(addresses = listOf(minimalAddress.copy(postcode = "".padStart(13, 'X')))),
+        ),
+        Arguments.of(
+          "addresses[0].comments must be <= 240 characters",
+          aMinimalCreateContactRequest().copy(
+            addresses = listOf(
+              minimalAddress.copy(
+                comments = "".padStart(
+                  241,
+                  'X',
+                ),
+              ),
+            ),
+          ),
+        ),
+        Arguments.of(
+          "addresses[0].phoneNumbers[0].phoneNumber must be <= 40 characters",
+          aMinimalCreateContactRequest().copy(
+            addresses = listOf(
+              minimalAddress.copy(
+                phoneNumbers = listOf(
+                  PhoneNumber(
+                    phoneType = "MOB",
+                    phoneNumber = "".padStart(41, 'X'),
+                    extNumber = null,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Arguments.of(
+          "addresses[0].phoneNumbers[0].phoneType must be <= 12 characters",
+          aMinimalCreateContactRequest().copy(
+            addresses = listOf(
+              minimalAddress.copy(
+                phoneNumbers = listOf(
+                  PhoneNumber(
+                    phoneType = "".padStart(13, 'X'),
+                    phoneNumber = "07403322232",
+                    extNumber = null,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Arguments.of(
+          "addresses[0].phoneNumbers[0].extNumber must be <= 7 characters",
+          aMinimalCreateContactRequest().copy(
+            addresses = listOf(
+              minimalAddress.copy(
+                phoneNumbers = listOf(
+                  PhoneNumber(
+                    phoneType = "MOB",
+                    phoneNumber = "07403322232",
+                    extNumber = "".padStart(8, 'X'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+    }
 
     @JvmStatic
-    fun allReferenceCodeViolations(): List<Arguments> = listOf(
-      Arguments.of("title", aMinimalCreateContactRequest().copy(titleCode = "FOO")),
-      Arguments.of("language", aMinimalCreateContactRequest().copy(languageCode = "FOO")),
-      Arguments.of("domestic status", aMinimalCreateContactRequest().copy(domesticStatusCode = "FOO")),
-      Arguments.of("gender", aMinimalCreateContactRequest().copy(genderCode = "FOO")),
-      Arguments.of(
-        "identity type",
-        aMinimalCreateContactRequest().copy(
-          identities = listOf(
-            IdentityDocument(
-              identityType = "DL",
-              identityValue = "DL123456789",
-              issuingAuthority = "DVLA",
-            ),
-            IdentityDocument(
-              identityType = "FOO",
-              identityValue = "P897654312",
-              issuingAuthority = null,
+    fun allReferenceCodeViolations(): List<Arguments> {
+      val minimalAddress = Address(
+        addressType = "HOME",
+        primaryAddress = false,
+        flat = null,
+        property = null,
+        street = null,
+        area = null,
+        cityCode = null,
+        countyCode = null,
+        postcode = null,
+        countryCode = "ENG",
+        verified = false,
+        mailFlag = false,
+        startDate = LocalDate.of(2020, 2, 3),
+        endDate = null,
+        noFixedAddress = false,
+        phoneNumbers = listOf(
+          PhoneNumber("FOO", "123456789"),
+        ),
+        comments = null,
+      )
+      return listOf(
+        Arguments.of("title", aMinimalCreateContactRequest().copy(titleCode = "FOO")),
+        Arguments.of("language", aMinimalCreateContactRequest().copy(languageCode = "FOO")),
+        Arguments.of("domestic status", aMinimalCreateContactRequest().copy(domesticStatusCode = "FOO")),
+        Arguments.of("gender", aMinimalCreateContactRequest().copy(genderCode = "FOO")),
+        Arguments.of(
+          "identity type",
+          aMinimalCreateContactRequest().copy(
+            identities = listOf(
+              IdentityDocument(
+                identityType = "DL",
+                identityValue = "DL123456789",
+                issuingAuthority = "DVLA",
+              ),
+              IdentityDocument(
+                identityType = "FOO",
+                identityValue = "P897654312",
+                issuingAuthority = null,
+              ),
             ),
           ),
         ),
-      ),
-
-    )
+        Arguments.of(
+          "address type",
+          aMinimalCreateContactRequest().copy(addresses = listOf(minimalAddress.copy(addressType = "FOO"))),
+        ),
+        Arguments.of(
+          "city",
+          aMinimalCreateContactRequest().copy(addresses = listOf(minimalAddress.copy(cityCode = "FOO"))),
+        ),
+        Arguments.of(
+          "county",
+          aMinimalCreateContactRequest().copy(addresses = listOf(minimalAddress.copy(countyCode = "FOO"))),
+        ),
+        Arguments.of(
+          "country",
+          aMinimalCreateContactRequest().copy(addresses = listOf(minimalAddress.copy(countryCode = "FOO"))),
+        ),
+      )
+    }
 
     private fun aMinimalCreateContactRequest(identityDocuments: List<IdentityDocument> = emptyList()) = CreateContactRequest(
       lastName = "last",

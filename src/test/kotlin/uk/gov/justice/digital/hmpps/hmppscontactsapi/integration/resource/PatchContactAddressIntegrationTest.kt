@@ -118,7 +118,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @ParameterizedTest
   @MethodSource("referenceTypeNotFound")
-  fun `should enforce reference type value validation`(expectedMessage: String, request: PatchContactAddressRequest) {
+  fun `should enforce reference type value validation`(expectedTypeDescription: String, request: PatchContactAddressRequest) {
     val errors = webTestClient.patch()
       .uri("/contact/$savedContactId/address/$savedContactAddressId")
       .accept(MediaType.APPLICATION_JSON)
@@ -127,12 +127,12 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .bodyValue(request)
       .exchange()
       .expectStatus()
-      .isNotFound
+      .isBadRequest
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
       .expectBody(ErrorResponse::class.java)
       .returnResult().responseBody!!
 
-    assertThat(errors.userMessage).isEqualTo("Entity not found : $expectedMessage")
+    assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported $expectedTypeDescription (FOO)")
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
@@ -493,20 +493,20 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     @JvmStatic
     fun referenceTypeNotFound(): List<Arguments> = listOf(
       Arguments.of(
-        "No reference data found for groupCode: ADDRESS_TYPE and code: INVALID",
-        aMinimalPatchAddressRequest().copy(addressType = JsonNullable.of("INVALID")),
+        "address type",
+        aMinimalPatchAddressRequest().copy(addressType = JsonNullable.of("FOO")),
       ),
       Arguments.of(
-        "No reference data found for groupCode: CITY and code: INVALID",
-        aMinimalPatchAddressRequest().copy(cityCode = JsonNullable.of("INVALID")),
+        "city",
+        aMinimalPatchAddressRequest().copy(cityCode = JsonNullable.of("FOO")),
       ),
       Arguments.of(
-        "No reference data found for groupCode: COUNTY and code: INVALID",
-        aMinimalPatchAddressRequest().copy(countyCode = JsonNullable.of("INVALID")),
+        "county",
+        aMinimalPatchAddressRequest().copy(countyCode = JsonNullable.of("FOO")),
       ),
       Arguments.of(
-        "No reference data found for groupCode: COUNTRY and code: INVALID",
-        aMinimalPatchAddressRequest().copy(countryCode = JsonNullable.of("INVALID")),
+        "country",
+        aMinimalPatchAddressRequest().copy(countryCode = JsonNullable.of("FOO")),
       ),
     )
 

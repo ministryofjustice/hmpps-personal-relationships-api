@@ -117,7 +117,7 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @ParameterizedTest
   @MethodSource("referenceTypeNotFound")
-  fun `should enforce reference type value validation`(expectedMessage: String, request: UpdateContactAddressRequest) {
+  fun `should enforce reference type value validation`(expectedTypeDescription: String, request: UpdateContactAddressRequest) {
     val errors = webTestClient.put()
       .uri("/contact/$savedContactId/address/$savedContactAddressId")
       .accept(MediaType.APPLICATION_JSON)
@@ -126,12 +126,12 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .bodyValue(request)
       .exchange()
       .expectStatus()
-      .isNotFound
+      .isBadRequest
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
       .expectBody(ErrorResponse::class.java)
       .returnResult().responseBody!!
 
-    assertThat(errors.userMessage).isEqualTo("Entity not found : $expectedMessage")
+    assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported $expectedTypeDescription (FOO)")
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
@@ -468,20 +468,20 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     @JvmStatic
     fun referenceTypeNotFound(): List<Arguments> = listOf(
       Arguments.of(
-        "No reference data found for groupCode: ADDRESS_TYPE and code: INVALID",
-        aMinimalUpdateAddressRequest().copy(addressType = "INVALID"),
+        "address type",
+        aMinimalUpdateAddressRequest().copy(addressType = "FOO"),
       ),
       Arguments.of(
-        "No reference data found for groupCode: CITY and code: INVALID",
-        aMinimalUpdateAddressRequest().copy(cityCode = "INVALID"),
+        "city",
+        aMinimalUpdateAddressRequest().copy(cityCode = "FOO"),
       ),
       Arguments.of(
-        "No reference data found for groupCode: COUNTY and code: INVALID",
-        aMinimalUpdateAddressRequest().copy(countyCode = "INVALID"),
+        "county",
+        aMinimalUpdateAddressRequest().copy(countyCode = "FOO"),
       ),
       Arguments.of(
-        "No reference data found for groupCode: COUNTRY and code: INVALID",
-        aMinimalUpdateAddressRequest().copy(countryCode = "INVALID"),
+        "country",
+        aMinimalUpdateAddressRequest().copy(countryCode = "FOO"),
       ),
     )
 

@@ -19,16 +19,15 @@ import org.mockito.kotlin.whenever
 import org.openapitools.jackson.nullable.JsonNullable
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ReferenceCodeEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.helper.isEqualTo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.PatchContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.UpdateContactAddressRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPhoneRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ReferenceCodeRepository
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -36,18 +35,18 @@ import java.util.*
 class ContactAddressServiceTest {
   private val contactRepository: ContactRepository = mock()
   private val contactAddressRepository: ContactAddressRepository = mock()
-  private val referenceCodeRepository: ReferenceCodeRepository = mock()
+  private val referenceCodeService: ReferenceCodeService = mock()
   private val contactAddressPhoneService: ContactAddressPhoneService = mock()
   private val contactAddressPhoneRepository: ContactAddressPhoneRepository = mock()
-  private val contactAddressService = ContactAddressService(contactRepository, contactAddressRepository, referenceCodeRepository, contactAddressPhoneService, contactAddressPhoneRepository)
-  private val referenceData = ReferenceCodeEntity(1L, ReferenceCodeGroup.RELATIONSHIP_TYPE, "FRIEND", "Friend", 0, true, "name")
+  private val contactAddressService = ContactAddressService(contactRepository, contactAddressRepository, referenceCodeService, contactAddressPhoneService, contactAddressPhoneRepository)
+  private val referenceData = ReferenceCode(1L, ReferenceCodeGroup.RELATIONSHIP_TYPE, "FRIEND", "Friend", 0, true)
 
   private val contactId: Long = 1L
   private val contactAddressId: Long = 2L
 
   @BeforeEach
   fun setUp() {
-    whenever(referenceCodeRepository.findByGroupCodeAndCode(any(), any())).thenReturn(referenceData)
+    whenever(referenceCodeService.validateReferenceCode(any(), any(), any())).thenReturn(referenceData)
   }
 
   @Test
@@ -449,9 +448,9 @@ class ContactAddressServiceTest {
       delimiter = ';',
     )
     fun `should fail to create a contact address when the reference type not present`(referenceType: ReferenceCodeGroup, referenceValue: String) {
-      whenever(referenceCodeRepository.findByGroupCodeAndCode(referenceType, referenceValue)).thenReturn(null)
+      whenever(referenceCodeService.validateReferenceCode(referenceType, referenceValue, true)).thenThrow(ValidationException("No reference data found for groupCode: $referenceType and code: $referenceValue"))
 
-      val exception = assertThrows<EntityNotFoundException> {
+      val exception = assertThrows<ValidationException> {
         contactAddressService.create(contactId, request)
       }
 
@@ -487,9 +486,9 @@ class ContactAddressServiceTest {
       delimiter = ';',
     )
     fun `should fail to update a contact address when the reference type not present`(referenceType: ReferenceCodeGroup, referenceValue: String) {
-      whenever(referenceCodeRepository.findByGroupCodeAndCode(referenceType, referenceValue)).thenReturn(null)
+      whenever(referenceCodeService.validateReferenceCode(referenceType, referenceValue, true)).thenThrow(ValidationException("No reference data found for groupCode: $referenceType and code: $referenceValue"))
 
-      val exception = assertThrows<EntityNotFoundException> {
+      val exception = assertThrows<ValidationException> {
         contactAddressService.update(contactId, contactAddressId, request)
       }
 
@@ -551,9 +550,9 @@ class ContactAddressServiceTest {
         updatedBy = "system",
       )
 
-      whenever(referenceCodeRepository.findByGroupCodeAndCode(groupCode, cityCode)).thenReturn(null)
+      whenever(referenceCodeService.validateReferenceCode(groupCode, cityCode, true)).thenThrow(ValidationException("No reference data found for groupCode: $groupCode and code: $cityCode"))
 
-      val exception = assertThrows<EntityNotFoundException> {
+      val exception = assertThrows<ValidationException> {
         contactAddressService.patch(contactId, contactAddressId, request)
       }
 
@@ -569,9 +568,9 @@ class ContactAddressServiceTest {
         updatedBy = "system",
       )
 
-      whenever(referenceCodeRepository.findByGroupCodeAndCode(groupCode, countyCode)).thenReturn(null)
+      whenever(referenceCodeService.validateReferenceCode(groupCode, countyCode, true)).thenThrow(ValidationException("No reference data found for groupCode: $groupCode and code: $countyCode"))
 
-      val exception = assertThrows<EntityNotFoundException> {
+      val exception = assertThrows<ValidationException> {
         contactAddressService.patch(contactId, contactAddressId, request)
       }
 
@@ -587,9 +586,9 @@ class ContactAddressServiceTest {
         updatedBy = "system",
       )
 
-      whenever(referenceCodeRepository.findByGroupCodeAndCode(groupCode, countryCode)).thenReturn(null)
+      whenever(referenceCodeService.validateReferenceCode(groupCode, countryCode, true)).thenThrow(ValidationException("No reference data found for groupCode: $groupCode and code: $countryCode"))
 
-      val exception = assertThrows<EntityNotFoundException> {
+      val exception = assertThrows<ValidationException> {
         contactAddressService.patch(contactId, contactAddressId, request)
       }
 
