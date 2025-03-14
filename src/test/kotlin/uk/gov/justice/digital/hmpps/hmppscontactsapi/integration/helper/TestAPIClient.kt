@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateM
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdatePhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
@@ -48,11 +49,37 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerCont
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.MigrateContactResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContact
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContactId
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 import java.net.URI
 
 class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAuthHelper: JwtAuthorisationHelper) {
+
+  fun syncReconcileContacts(page: Long = 0, size: Long = 10) = webTestClient.get()
+    .uri("/sync/contact/reconcile?page=$page&size=$size")
+    .accept(MediaType.APPLICATION_JSON)
+    .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+    .exchange()
+    .expectStatus()
+    .isOk
+    .expectHeader().contentType(MediaType.APPLICATION_JSON)
+    .expectBody(ContactIdsResponse::class.java)
+    .returnResult().responseBody!!
+
+  fun syncCreateAnContact(request: SyncCreateContactRequest) = webTestClient.post()
+    .uri("/sync/contact")
+    .accept(MediaType.APPLICATION_JSON)
+    .contentType(MediaType.APPLICATION_JSON)
+    .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+    .bodyValue(request)
+    .exchange()
+    .expectStatus()
+    .isOk
+    .expectHeader().contentType(MediaType.APPLICATION_JSON)
+    .expectBody(SyncContact::class.java)
+    .returnResult().responseBody!!
 
   fun createAContact(request: CreateContactRequest, role: String = "ROLE_CONTACTS_ADMIN"): ContactDetails = createAContactWithARelationship(request, role).createdContact
 
@@ -655,5 +682,19 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     val empty: Boolean,
     val unsorted: Boolean,
     val sorted: Boolean,
+  )
+
+  data class ContactIdsResponse(
+    val content: List<SyncContactId>,
+    val pageable: ReturnedPageable,
+    val last: Boolean,
+    val totalPages: Int,
+    val totalElements: Int,
+    val first: Boolean,
+    val size: Int,
+    val number: Int,
+    val sort: ReturnedSort,
+    val numberOfElements: Int,
+    val empty: Boolean,
   )
 }

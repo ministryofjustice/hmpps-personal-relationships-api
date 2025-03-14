@@ -8,6 +8,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.springdoc.core.annotations.ParameterObject
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort.Direction
+import org.springframework.data.web.PageableDefault
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -23,6 +28,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.SyncFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContact
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContactId
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
@@ -166,4 +172,24 @@ class ContactSyncController(
     @PathVariable contactId: Long,
     @Valid @RequestBody updateContactRequest: SyncUpdateContactRequest,
   ) = syncFacade.updateContact(contactId, updateContactRequest)
+
+  @GetMapping("/contact/reconcile")
+  @Operation(
+    summary = "Reconciliation endpoint",
+    description = "Get a paged list of existing contact IDs to reconcile against",
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Pageable contact IDs returned",
+      ),
+    ],
+  )
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
+  fun reconcileOrganisations(
+    @ParameterObject
+    @PageableDefault(sort = ["contactId"], size = 100, direction = Direction.ASC)
+    pageable: Pageable,
+  ): Page<SyncContactId> = syncFacade.getContactIds(pageable)
 }

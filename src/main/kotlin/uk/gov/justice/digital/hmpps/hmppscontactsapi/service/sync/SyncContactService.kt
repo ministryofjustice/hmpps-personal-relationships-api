@@ -2,13 +2,17 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync
 
 import jakarta.persistence.EntityNotFoundException
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync.mapEntityToSyncResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync.mapSyncRequestToEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync.toModelIds
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContact
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContactId
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactWithFixedIdRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate.DuplicatePersonException
 
@@ -71,4 +75,6 @@ class SyncContactService(
 
     return contactRepository.saveAndFlush(changedContact).mapEntityToSyncResponse()
   }
+
+  fun getContactIds(pageable: Pageable): Page<SyncContactId> = contactRepository.findAll(pageable).toModelIds()
 }
