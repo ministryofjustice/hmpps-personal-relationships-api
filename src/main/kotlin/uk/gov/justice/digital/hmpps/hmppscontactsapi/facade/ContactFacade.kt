@@ -78,6 +78,14 @@ class ContactFacade(
           contactId = creationResult.createdContact.id,
         )
       }
+
+      creationResult.createdContact.emailAddresses.forEach {
+        outboundEventsService.send(
+          outboundEvent = OutboundEvent.CONTACT_EMAIL_CREATED,
+          identifier = it.contactEmailId,
+          contactId = creationResult.createdContact.id,
+        )
+      }
     }
 
   fun addContactRelationship(request: AddContactRelationshipRequest): PrisonerContactRelationshipDetails {

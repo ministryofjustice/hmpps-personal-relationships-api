@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEmailEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateEmailException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateEmailRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateMultipleEmailsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.EmailAddress
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.UpdateEmailRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactEmailDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactEmailRepository
@@ -34,14 +34,14 @@ class ContactEmailService(
   }
 
   @Transactional
-  fun createMultiple(contactId: Long, request: CreateMultipleEmailsRequest): List<ContactEmailDetails> {
+  fun createMultiple(contactId: Long, createdBy: String, emailAddresses: List<EmailAddress>): List<ContactEmailDetails> {
     validateContactExists(contactId)
     val existingLowercaseEmails = contactEmailRepository.findByContactId(contactId).map { it.emailAddress.lowercase() }
-    val requestedLowerCaseEmails = request.emailAddresses.map { it.emailAddress.lowercase() }
+    val requestedLowerCaseEmails = emailAddresses.map { it.emailAddress.lowercase() }
     if (requestedLowerCaseEmails.size != requestedLowerCaseEmails.toSet().size) {
       throw ValidationException("Request contains duplicate email addresses")
     }
-    return request.emailAddresses.map { createAnEmail(it.emailAddress, request.createdBy, contactId, existingLowercaseEmails) }
+    return emailAddresses.map { createAnEmail(it.emailAddress, createdBy, contactId, existingLowercaseEmails) }
   }
 
   private fun createAnEmail(
