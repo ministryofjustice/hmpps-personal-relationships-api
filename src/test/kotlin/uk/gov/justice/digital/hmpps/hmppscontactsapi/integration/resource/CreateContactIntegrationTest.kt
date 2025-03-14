@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddre
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddressPhoneInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactIdentityInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactInfo
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactPhoneInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -365,7 +366,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  fun `should rollback if addresses or phones are invalid`() {
+  fun `should rollback if addresses or address phones are invalid`() {
     val addressWithInvalidPhone = Address(
       addressType = "HOME",
       primaryAddress = false,
@@ -404,6 +405,76 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
     stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_CREATED)
     stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_ADDRESS_CREATED)
     stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED)
+  }
+
+  @Test
+  fun `should create the contact with multiple phone numbers`() {
+    val minimalPhoneNumber = PhoneNumber("HOME", "123456")
+    val phoneNumberWithEverything = PhoneNumber("MOB", "987654321", "#123")
+
+    val request =
+      aMinimalCreateContactRequest().copy(phoneNumbers = listOf(minimalPhoneNumber, phoneNumberWithEverything))
+
+    val contactReturned = testAPIClient.createAContactWithARelationship(request)
+    val contactId = contactReturned.createdContact.id
+    assertThat(contactReturned.createdContact.phoneNumbers).hasSize(2)
+    val minimalCreated = contactReturned.createdContact.phoneNumbers.find { it.phoneType == "HOME" }!!
+    with(minimalCreated) {
+      assertThat(phoneType).isEqualTo("HOME")
+      assertThat(phoneTypeDescription).isEqualTo("Home")
+      assertThat(phoneNumber).isEqualTo("123456")
+      assertThat(extNumber).isNull()
+    }
+
+    val everythingCreated = contactReturned.createdContact.phoneNumbers.find { it.phoneType == "MOB" }!!
+    with(everythingCreated) {
+      assertThat(phoneType).isEqualTo("MOB")
+      assertThat(phoneTypeDescription).isEqualTo("Mobile")
+      assertThat(phoneNumber).isEqualTo("987654321")
+      assertThat(extNumber).isEqualTo("#123")
+    }
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.CONTACT_CREATED,
+      additionalInfo = ContactInfo(contactId, Source.DPS),
+      personReference = PersonReference(dpsContactId = contactId),
+    )
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.CONTACT_PHONE_CREATED,
+      additionalInfo = ContactPhoneInfo(minimalCreated.contactPhoneId, Source.DPS),
+      personReference = PersonReference(dpsContactId = contactId),
+    )
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.CONTACT_PHONE_CREATED,
+      additionalInfo = ContactPhoneInfo(everythingCreated.contactPhoneId, Source.DPS),
+      personReference = PersonReference(dpsContactId = contactId),
+    )
+  }
+
+  @Test
+  fun `should rollback if phones are invalid`() {
+    val invalidPhone = PhoneNumber(
+      phoneType = "FOO",
+      phoneNumber = "123456",
+    )
+    val errors = webTestClient.post()
+      .uri("/contact")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(aMinimalCreateContactRequest().copy(phoneNumbers = listOf(invalidPhone)))
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported phone type (FOO)")
+    stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_CREATED)
+    stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_PHONE_CREATED)
   }
 
   @ParameterizedTest
@@ -625,6 +696,42 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
             ),
           ),
         ),
+        Arguments.of(
+          "phoneNumbers[0].phoneNumber must be <= 40 characters",
+          aMinimalCreateContactRequest().copy(
+            phoneNumbers = listOf(
+              PhoneNumber(
+                phoneType = "MOB",
+                phoneNumber = "".padStart(41, 'X'),
+                extNumber = null,
+              ),
+            ),
+          ),
+        ),
+        Arguments.of(
+          "phoneNumbers[0].phoneType must be <= 12 characters",
+          aMinimalCreateContactRequest().copy(
+            phoneNumbers = listOf(
+              PhoneNumber(
+                phoneType = "".padStart(13, 'X'),
+                phoneNumber = "07403322232",
+                extNumber = null,
+              ),
+            ),
+          ),
+        ),
+        Arguments.of(
+          "phoneNumbers[0].extNumber must be <= 7 characters",
+          aMinimalCreateContactRequest().copy(
+            phoneNumbers = listOf(
+              PhoneNumber(
+                phoneType = "MOB",
+                phoneNumber = "07403322232",
+                extNumber = "".padStart(8, 'X'),
+              ),
+            ),
+          ),
+        ),
       )
     }
 
@@ -688,6 +795,10 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
         Arguments.of(
           "country",
           aMinimalCreateContactRequest().copy(addresses = listOf(minimalAddress.copy(countryCode = "FOO"))),
+        ),
+        Arguments.of(
+          "phone type",
+          aMinimalCreateContactRequest().copy(phoneNumbers = listOf(PhoneNumber("FOO", "12456879"))),
         ),
       )
     }

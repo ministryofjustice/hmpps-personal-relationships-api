@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactPhoneEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
@@ -40,15 +40,15 @@ class ContactPhoneService(
   }
 
   @Transactional
-  fun createMultiple(contactId: Long, request: CreateMultiplePhoneNumbersRequest): List<ContactPhoneDetails> {
+  fun createMultiple(contactId: Long, createdBy: String, phoneNumbers: List<PhoneNumber>): List<ContactPhoneDetails> {
     validateContactExists(contactId)
-    return request.phoneNumbers.map {
+    return phoneNumbers.map {
       createANewPhoneNumber(
         contactId,
         it.phoneType,
         it.phoneNumber,
         it.extNumber,
-        request.createdBy,
+        createdBy,
       )
     }
   }

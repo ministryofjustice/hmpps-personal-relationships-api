@@ -56,6 +56,7 @@ class ContactService(
   private val employmentService: EmploymentService,
   private val contactIdentityService: ContactIdentityService,
   private val contactAddressService: ContactAddressService,
+  private val contactPhoneService: ContactPhoneService,
 ) {
   companion object {
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -78,6 +79,7 @@ class ContactService(
 
     createIdentityInformation(createdContact, request)
     createAddresses(createdContact.id(), request.createdBy, request.addresses)
+    createPhoneNumbers(request, createdContact)
 
     logger.info("Created new contact {}", createdContact)
     newRelationship?.let { logger.info("Created new relationship {}", newRelationship) }
@@ -85,6 +87,15 @@ class ContactService(
       enrichContact(createdContact),
       newRelationship?.let { enrichRelationship(newRelationship) },
     )
+  }
+
+  private fun createPhoneNumbers(
+    request: CreateContactRequest,
+    createdContact: ContactEntity,
+  ) {
+    if (request.phoneNumbers.isNotEmpty()) {
+      contactPhoneService.createMultiple(createdContact.id(), request.createdBy, request.phoneNumbers)
+    }
   }
 
   fun getContact(id: Long): ContactDetails? = contactRepository.findById(id).getOrNull()

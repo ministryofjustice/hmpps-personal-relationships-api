@@ -163,7 +163,14 @@ class ContactFacadeTest {
           createContactAddressDetails(
             id = 123456,
             contactId = 98765,
-            phoneNumbers = listOf(createContactAddressPhoneDetails(contactId = 98765, contactAddressId = 123456, contactPhoneId = 999999, contactAddressPhoneId = 987654)),
+            phoneNumbers = listOf(
+              createContactAddressPhoneDetails(
+                contactId = 98765,
+                contactAddressId = 123456,
+                contactPhoneId = 999999,
+                contactAddressPhoneId = 987654,
+              ),
+            ),
           ),
         ),
       )
@@ -183,6 +190,36 @@ class ContactFacadeTest {
         outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
         identifier = 987654,
         secondIdentifier = 123456,
+        contactId = createdContact.id,
+      )
+    }
+
+    @Test
+    fun `create contact with multiple phone numbers should send phone created events`() {
+      val request = CreateContactRequest(
+        lastName = "last",
+        firstName = "first",
+        createdBy = "created",
+      )
+      val createdContact = aContactDetails().copy(
+        id = 98765,
+        phoneNumbers = listOf(createContactPhoneNumberDetails(id = 999), createContactPhoneNumberDetails(id = 777)),
+      )
+      val expected = ContactCreationResult(createdContact, null)
+      whenever(contactService.createContact(request)).thenReturn(expected)
+
+      val result = contactFacade.createContact(request)
+
+      assertThat(result).isEqualTo(expected)
+      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
+      verify(outboundEventsService).send(
+        outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
+        identifier = 999,
+        contactId = createdContact.id,
+      )
+      verify(outboundEventsService).send(
+        outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
+        identifier = 777,
         contactId = createdContact.id,
       )
     }
@@ -250,7 +287,12 @@ class ContactFacadeTest {
     contactFacade.patchRelationship(prisonerContactId, request)
 
     verify(contactService).updateContactRelationship(prisonerContactId, request)
-    verify(outboundEventsService).send(OutboundEvent.PRISONER_CONTACT_UPDATED, prisonerContactId, contactId, prisonerNumber)
+    verify(outboundEventsService).send(
+      OutboundEvent.PRISONER_CONTACT_UPDATED,
+      prisonerContactId,
+      contactId,
+      prisonerNumber,
+    )
   }
 
   private fun aContactDetails() = ContactDetails(

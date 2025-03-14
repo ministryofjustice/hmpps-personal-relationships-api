@@ -70,6 +70,14 @@ class ContactFacade(
           )
         }
       }
+
+      creationResult.createdContact.phoneNumbers.forEach {
+        outboundEventsService.send(
+          outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
+          identifier = it.contactPhoneId,
+          contactId = creationResult.createdContact.id,
+        )
+      }
     }
 
   fun addContactRelationship(request: AddContactRelationshipRequest): PrisonerContactRelationshipDetails {

@@ -17,7 +17,6 @@ import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.never
-import org.mockito.kotlin.times
 import org.mockito.kotlin.whenever
 import org.openapitools.jackson.nullable.JsonNullable
 import org.springframework.data.domain.Page
@@ -34,6 +33,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactEmailE
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactIdentityDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactIdentityDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactPhoneDetailsEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactPhoneNumberDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createEmploymentDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createPhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.prisoner
@@ -79,6 +79,7 @@ class ContactServiceTest {
   private val referenceCodeService: ReferenceCodeService = mock()
   private val contactIdentityService: ContactIdentityService = mock()
   private val contactAddressService: ContactAddressService = mock()
+  private val contactPhoneService: ContactPhoneService = mock()
   private val service = ContactService(
     contactRepository,
     prisonerContactRepository,
@@ -93,6 +94,7 @@ class ContactServiceTest {
     employmentService,
     contactIdentityService,
     contactAddressService,
+    contactPhoneService,
   )
 
   private val aContactAddressDetailsEntity = createContactAddressDetailsEntity()
@@ -108,6 +110,7 @@ class ContactServiceTest {
         ),
       )
       val addressWithPhoneNumber = createAddress(addressType = "HOME", phoneNumbers = listOf(createPhoneNumber()))
+      val phoneNumber = createPhoneNumber("BUS", "999", "1")
       val request = CreateContactRequest(
         titleCode = "mr",
         lastName = "last",
@@ -117,6 +120,7 @@ class ContactServiceTest {
         createdBy = "created",
         identities = identities,
         addresses = listOf(addressWithPhoneNumber),
+        phoneNumbers = listOf(phoneNumber),
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(contactAddressDetailsRepository.findByContactId(any())).thenReturn(listOf(aContactAddressDetailsEntity))
@@ -134,6 +138,7 @@ class ContactServiceTest {
           emptySet(),
         ),
       )
+      whenever(contactPhoneService.createMultiple(any(), any(), any())).thenReturn(listOf(createContactPhoneNumberDetails()))
 
       val result = service.createContact(request)
 
@@ -198,6 +203,8 @@ class ContactServiceTest {
         assertThat(comments).isEqualTo(addressWithPhoneNumber.comments)
         assertThat(createdBy).isEqualTo(request.createdBy)
       }
+
+      verify(contactPhoneService).createMultiple(123L, request.createdBy, listOf(phoneNumber))
     }
 
     @Test
@@ -477,6 +484,23 @@ class ContactServiceTest {
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(contactAddressDetailsRepository.findByContactId(any())).thenReturn(listOf(aContactAddressDetailsEntity))
       whenever(contactAddressService.create(any(), any())).thenThrow(RuntimeException("Bang!"))
+
+      assertThrows<RuntimeException>("Bang!") {
+        service.createContact(request)
+      }
+    }
+
+    @Test
+    fun `should propagate exceptions creating a contact with phone numbers`() {
+      val request = CreateContactRequest(
+        lastName = "last",
+        firstName = "first",
+        createdBy = "created",
+        phoneNumbers = listOf(createPhoneNumber()),
+      )
+      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
+      whenever(contactAddressDetailsRepository.findByContactId(any())).thenReturn(listOf(aContactAddressDetailsEntity))
+      whenever(contactPhoneService.createMultiple(any(), any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
         service.createContact(request)
