@@ -32,14 +32,12 @@ class ContactFacade(
 
   fun createContact(request: CreateContactRequest): ContactCreationResult = contactService.createContact(request)
     .also { creationResult ->
-      // Send the contact created event
       outboundEventsService.send(
         outboundEvent = OutboundEvent.CONTACT_CREATED,
         identifier = creationResult.createdContact.id,
         contactId = creationResult.createdContact.id,
       )
 
-      // Send the prisons contact created event
       creationResult.createdRelationship?.let {
         outboundEventsService.send(
           outboundEvent = OutboundEvent.PRISONER_CONTACT_CREATED,
@@ -55,6 +53,22 @@ class ContactFacade(
           identifier = it.contactIdentityId,
           contactId = creationResult.createdContact.id,
         )
+      }
+
+      creationResult.createdContact.addresses.forEach { createdAddress ->
+        outboundEventsService.send(
+          outboundEvent = OutboundEvent.CONTACT_ADDRESS_CREATED,
+          identifier = createdAddress.contactAddressId,
+          contactId = creationResult.createdContact.id,
+        )
+        createdAddress.phoneNumbers.forEach {
+          outboundEventsService.send(
+            outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
+            identifier = it.contactAddressPhoneId,
+            secondIdentifier = it.contactAddressId,
+            contactId = creationResult.createdContact.id,
+          )
+        }
       }
     }
 

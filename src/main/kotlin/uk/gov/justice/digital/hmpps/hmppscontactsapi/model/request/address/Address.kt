@@ -1,17 +1,19 @@
-package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request
+package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address
+
 import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.Valid
 import jakarta.validation.constraints.Size
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.AddressLines
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import java.time.LocalDate
 
-@Schema(description = "Request to update a contact address")
-data class UpdateContactAddressRequest(
+data class Address(
   @Schema(
     description =
     """
-    The type of address.
-    This is a coded value (from the group code ADDRESS_TYPE in reference data).
-    The known values are HOME, WORK or BUS (business address).
+      The type of address.
+      This is a coded value (from the group code ADDRESS_TYPE in reference data).
+      The known values are HOME, WORK or BUS (business address).
     """,
     example = "HOME",
     nullable = true,
@@ -20,7 +22,7 @@ data class UpdateContactAddressRequest(
   val addressType: String? = null,
 
   @Schema(description = "True if this is the primary address otherwise false", example = "true")
-  val primaryAddress: Boolean,
+  val primaryAddress: Boolean = false,
 
   @Schema(description = "Flat number or name", example = "Flat 2B", nullable = true)
   @field:Size(max = 30, message = "flat must be <= 30 characters")
@@ -38,11 +40,11 @@ data class UpdateContactAddressRequest(
   @field:Size(max = 70, message = "area must be <= 70 characters")
   override val area: String? = null,
 
-  @Schema(description = "City code - from NOMIS reference data", example = "BIRM", nullable = true)
+  @Schema(description = "City code - from NOMIS", example = "13232", nullable = true)
   @field:Size(max = 12, message = "cityCode must be <= 12 characters")
   override val cityCode: String? = null,
 
-  @Schema(description = "County code - from NOMIS reference data", example = "WMIDS", nullable = true)
+  @Schema(description = "County code - from NOMIS", example = "WMIDS", nullable = true)
   @field:Size(max = 12, message = "countyCode must be <= 12 characters")
   override val countyCode: String? = null,
 
@@ -50,12 +52,12 @@ data class UpdateContactAddressRequest(
   @field:Size(max = 12, message = "postcode must be <= 12 characters")
   override val postcode: String? = null,
 
-  @Schema(description = "Country code - from NOMIS reference data", example = "UK", nullable = true)
+  @Schema(description = "Country code - from NOMIS", example = "UK", nullable = true)
   @field:Size(max = 12, message = "countryCode must be <= 12 characters")
   override val countryCode: String? = null,
 
   @Schema(description = "Whether the address has been verified by postcode lookup", example = "false")
-  val verified: Boolean = false,
+  val verified: Boolean? = false,
 
   @Schema(description = "Whether the address can be used for mailing", example = "false")
   val mailFlag: Boolean? = false,
@@ -69,11 +71,11 @@ data class UpdateContactAddressRequest(
   @Schema(description = "Flag to indicate this address should be considered as no fixed address", example = "false")
   val noFixedAddress: Boolean? = false,
 
+  @Schema(description = "Any phone numbers that are specific to this address")
+  @field:Valid
+  val phoneNumbers: List<PhoneNumber> = emptyList(),
+
   @Schema(description = "Any additional information or comments about the address", example = "Some additional information", nullable = true)
   @field:Size(max = 240, message = "comments must be <= 240 characters")
   val comments: String? = null,
-
-  @Schema(description = "The id of the user who updated the address", example = "JD000001")
-  @field:Size(max = 100, message = "updatedBy must be <= 100 characters")
-  val updatedBy: String,
 ) : AddressLines

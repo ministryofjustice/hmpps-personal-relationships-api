@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactEmailDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactIdentityDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactPhoneNumberDetails
@@ -147,6 +148,43 @@ class ContactFacadeTest {
           contactId = createdContact.id,
         )
       }
+    }
+
+    @Test
+    fun `create contact with multiple address should send address and address phone created events`() {
+      val request = CreateContactRequest(
+        lastName = "last",
+        firstName = "first",
+        createdBy = "created",
+      )
+      val createdContact = aContactDetails().copy(
+        id = 98765,
+        addresses = listOf(
+          createContactAddressDetails(
+            id = 123456,
+            contactId = 98765,
+            phoneNumbers = listOf(createContactAddressPhoneDetails(contactId = 98765, contactAddressId = 123456, contactPhoneId = 999999, contactAddressPhoneId = 987654)),
+          ),
+        ),
+      )
+      val expected = ContactCreationResult(createdContact, null)
+      whenever(contactService.createContact(request)).thenReturn(expected)
+
+      val result = contactFacade.createContact(request)
+
+      assertThat(result).isEqualTo(expected)
+      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
+      verify(outboundEventsService).send(
+        outboundEvent = OutboundEvent.CONTACT_ADDRESS_CREATED,
+        identifier = 123456,
+        contactId = createdContact.id,
+      )
+      verify(outboundEventsService).send(
+        outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
+        identifier = 987654,
+        secondIdentifier = 123456,
+        contactId = createdContact.id,
+      )
     }
   }
 
