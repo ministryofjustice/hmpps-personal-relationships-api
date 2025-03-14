@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response
 
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.AddressLines
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -29,34 +30,34 @@ data class ContactSearchResultItem(
   val createdTime: LocalDateTime? = null,
 
   @Schema(description = "The flat of the contact address, if known", example = "01", nullable = true)
-  val flat: String? = null,
+  override val flat: String? = null,
 
   @Schema(description = "The property of the contact address, if known", example = "01", nullable = true)
-  val property: String? = null,
+  override val property: String? = null,
 
   @Schema(description = "The street of the contact address, if known", example = "Bluebell Crescent", nullable = true)
-  val street: String? = null,
+  override val street: String? = null,
 
   @Schema(description = "The area of the contact address, if known", example = "Birmingham", nullable = true)
-  val area: String? = null,
+  override val area: String? = null,
 
   @Schema(description = "The city code of the contact address, if known", example = "25343", nullable = true)
-  val cityCode: String? = null,
+  override val cityCode: String? = null,
 
   @Schema(description = "The description of city code, if known", example = "Sheffield", nullable = true)
   val cityDescription: String? = null,
 
   @Schema(description = "The county code of the contact address, if known", example = "S.YORKSHIRE", nullable = true)
-  val countyCode: String? = null,
+  override val countyCode: String? = null,
 
   @Schema(description = "The description of county code, if known", example = "South Yorkshire", nullable = true)
   val countyDescription: String? = null,
 
   @Schema(description = "The postcode of the contact address, if known", example = "B42 2QJ", nullable = true)
-  val postCode: String? = null,
+  override val postcode: String? = null,
 
   @Schema(description = "The country code of the contact address, if known", example = "ENG", nullable = true)
-  val countryCode: String? = null,
+  override val countryCode: String? = null,
 
   @Schema(description = "The description of country code, if known", example = "England", nullable = true)
   val countryDescription: String? = null,
@@ -76,4 +77,4 @@ data class ContactSearchResultItem(
   @Schema(description = "Any additional information or comments about the address", example = "Some additional information", nullable = true)
   val comments: String?,
 
-)
+) : AddressLines

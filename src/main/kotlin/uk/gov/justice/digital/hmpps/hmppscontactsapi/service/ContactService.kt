@@ -18,6 +18,8 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelati
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.Address
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateMultipleIdentitiesRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
@@ -53,6 +55,7 @@ class ContactService(
   private val referenceCodeService: ReferenceCodeService,
   private val employmentService: EmploymentService,
   private val contactIdentityService: ContactIdentityService,
+  private val contactAddressService: ContactAddressService,
 ) {
   companion object {
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -74,6 +77,7 @@ class ContactService(
       ?.let { prisonerContactRepository.saveAndFlush(it) }
 
     createIdentityInformation(createdContact, request)
+    createAddresses(createdContact.id(), request.createdBy, request.addresses)
 
     logger.info("Created new contact {}", createdContact)
     newRelationship?.let { logger.info("Created new relationship {}", newRelationship) }
@@ -85,6 +89,34 @@ class ContactService(
 
   fun getContact(id: Long): ContactDetails? = contactRepository.findById(id).getOrNull()
     ?.let { enrichContact(it) }
+
+  private fun createAddresses(contactId: Long, createdBy: String, addresses: List<Address>) {
+    addresses.forEach { address ->
+      contactAddressService.create(
+        contactId,
+        CreateContactAddressRequest(
+          addressType = address.addressType,
+          primaryAddress = address.primaryAddress,
+          flat = address.flat,
+          property = address.property,
+          street = address.street,
+          area = address.area,
+          cityCode = address.cityCode,
+          countyCode = address.countyCode,
+          postcode = address.postcode,
+          countryCode = address.countryCode,
+          verified = address.verified,
+          mailFlag = address.mailFlag,
+          startDate = address.startDate,
+          endDate = address.endDate,
+          noFixedAddress = address.noFixedAddress,
+          phoneNumbers = address.phoneNumbers,
+          comments = address.comments,
+          createdBy = createdBy,
+        ),
+      )
+    }
+  }
 
   fun getContactName(id: Long): ContactNameDetails? = contactRepository.findById(id).getOrNull()
     ?.let { contactEntity ->

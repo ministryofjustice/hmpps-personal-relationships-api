@@ -250,7 +250,7 @@ class ContactControllerTest {
     flat = "user",
     street = "user",
     area = "user",
-    postCode = "user",
+    postcode = "user",
     mailAddress = true,
     noFixedAddress = true,
     comments = "Some comments",

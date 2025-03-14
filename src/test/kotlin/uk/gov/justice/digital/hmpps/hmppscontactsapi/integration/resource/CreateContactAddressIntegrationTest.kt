@@ -11,8 +11,8 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddressInfo
@@ -88,7 +88,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @ParameterizedTest
   @MethodSource("referenceTypeNotFound")
-  fun `should enforce reference type value validation`(expectedMessage: String, request: CreateContactAddressRequest) {
+  fun `should enforce reference type value validation`(expectedTypeDescription: String, request: CreateContactAddressRequest) {
     val errors = webTestClient.post()
       .uri("/contact/$savedContactId/address")
       .accept(MediaType.APPLICATION_JSON)
@@ -97,12 +97,12 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .bodyValue(request)
       .exchange()
       .expectStatus()
-      .isNotFound
+      .isBadRequest
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
       .expectBody(ErrorResponse::class.java)
       .returnResult().responseBody!!
 
-    assertThat(errors.userMessage).isEqualTo("Entity not found : $expectedMessage")
+    assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported $expectedTypeDescription (FOO)")
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
@@ -410,20 +410,20 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     @JvmStatic
     fun referenceTypeNotFound(): List<Arguments> = listOf(
       Arguments.of(
-        "No reference data found for groupCode: ADDRESS_TYPE and code: INVALID",
-        aMinimalAddressRequest().copy(addressType = "INVALID"),
+        "address type",
+        aMinimalAddressRequest().copy(addressType = "FOO"),
       ),
       Arguments.of(
-        "No reference data found for groupCode: CITY and code: INVALID",
-        aMinimalAddressRequest().copy(cityCode = "INVALID"),
+        "city",
+        aMinimalAddressRequest().copy(cityCode = "FOO"),
       ),
       Arguments.of(
-        "No reference data found for groupCode: COUNTY and code: INVALID",
-        aMinimalAddressRequest().copy(countyCode = "INVALID"),
+        "county",
+        aMinimalAddressRequest().copy(countyCode = "FOO"),
       ),
       Arguments.of(
-        "No reference data found for groupCode: COUNTRY and code: INVALID",
-        aMinimalAddressRequest().copy(countryCode = "INVALID"),
+        "country",
+        aMinimalAddressRequest().copy(countryCode = "FOO"),
       ),
     )
 

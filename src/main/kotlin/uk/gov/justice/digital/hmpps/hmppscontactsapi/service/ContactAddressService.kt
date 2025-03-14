@@ -9,16 +9,15 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactAddressRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateContactAddressRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.CreateContactAddressRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.PatchContactAddressRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.UpdateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.CreateAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.UpdateAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPhoneRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ReferenceCodeRepository
 import java.time.LocalDateTime
 
 @Service
@@ -26,7 +25,7 @@ import java.time.LocalDateTime
 class ContactAddressService(
   private val contactRepository: ContactRepository,
   private val contactAddressRepository: ContactAddressRepository,
-  private val referenceCodeRepository: ReferenceCodeRepository,
+  private val referenceCodeService: ReferenceCodeService,
   private val contactAddressPhoneService: ContactAddressPhoneService,
   private val contactAddressPhoneRepository: ContactAddressPhoneRepository,
 ) {
@@ -219,9 +218,7 @@ class ContactAddressService(
     addressType?.let { validateReferenceDataExists(it, ReferenceCodeGroup.ADDRESS_TYPE) }
   }
 
-  private fun validateReferenceDataExists(code: String, groupCode: ReferenceCodeGroup) = referenceCodeRepository
-    .findByGroupCodeAndCode(groupCode, code)
-    ?: throw EntityNotFoundException("No reference data found for groupCode: $groupCode and code: $code")
+  private fun validateReferenceDataExists(code: String, groupCode: ReferenceCodeGroup) = referenceCodeService.validateReferenceCode(groupCode, code, true)
 
   private fun validateExistingAddress(contactAddressId: Long) = contactAddressRepository
     .findById(contactAddressId)
