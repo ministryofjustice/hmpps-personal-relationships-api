@@ -76,7 +76,7 @@ class ContactPhoneFacadeTest {
       contactPhoneDetails,
       contactPhoneDetails.copy(contactPhoneId = 123456789),
     )
-    whenever(phoneService.createMultiple(any(), any())).thenReturn(expectedCreated)
+    whenever(phoneService.createMultiple(any(), any(), any())).thenReturn(expectedCreated)
     whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
     val request = CreateMultiplePhoneNumbersRequest(
       listOf(
@@ -95,7 +95,7 @@ class ContactPhoneFacadeTest {
     val result = facade.createMultiple(contactId, request)
 
     assertThat(result).isEqualTo(expectedCreated)
-    verify(phoneService).createMultiple(contactId, request)
+    verify(phoneService).createMultiple(contactId, request.createdBy, request.phoneNumbers)
     verify(eventsService).send(
       outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
       identifier = contactPhoneId,

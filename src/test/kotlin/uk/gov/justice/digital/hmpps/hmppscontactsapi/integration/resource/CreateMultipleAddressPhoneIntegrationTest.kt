@@ -11,8 +11,8 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddressPhoneInfo
@@ -24,6 +24,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   private var savedContactId = 0L
   private var savedAddressId = 0L
+
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
   @BeforeEach
@@ -46,6 +47,7 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
         createdBy = "created",
       ),
     ).contactAddressId
+    stubEvents.reset()
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.post()

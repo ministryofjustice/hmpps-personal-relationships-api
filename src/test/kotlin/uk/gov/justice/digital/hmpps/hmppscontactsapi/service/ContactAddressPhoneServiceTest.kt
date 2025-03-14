@@ -295,6 +295,125 @@ class ContactAddressPhoneServiceTest {
   }
 
   @Nested
+  inner class CreateMultipleAddressSpecificPhonesReturnIds {
+    val contactId = 1L
+    val contactAddressId = 2L
+    val createdBy = "TEST_USER"
+    private val phoneNumbers = listOf(
+      PhoneNumber(phoneType = "MOBILE", phoneNumber = "07777123456", extNumber = null),
+      PhoneNumber(phoneType = "HOME", phoneNumber = "02071234567", extNumber = "123"),
+    )
+
+    @Test
+    fun `should throw EntityNotFoundException if the contact does not exist`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
+
+      val exception = assertThrows<EntityNotFoundException> {
+        service.createMultipleAddressSpecificPhones(contactId, contactAddressId, createdBy, phoneNumbers)
+      }
+      assertThat(exception.message).isEqualTo("Contact ($contactId) not found")
+    }
+
+    @Test
+    fun `should throw EntityNotFoundException if the address does not exist`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
+      whenever(contactAddressRepository.findById(contactAddressId)).thenReturn(Optional.empty())
+
+      val exception = assertThrows<EntityNotFoundException> {
+        service.createMultipleAddressSpecificPhones(contactId, contactAddressId, createdBy, phoneNumbers)
+      }
+      assertThat(exception.message).isEqualTo("Contact address ($contactAddressId) not found")
+    }
+
+    @Test
+    fun `should throw ValidationException creating an address-specific phone if the phone type is invalid`() {
+      val expectedException = ValidationException("Unsupported phone type (FOO)")
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
+      whenever(contactAddressRepository.findById(contactAddressId)).thenReturn(Optional.of(contactAddressEntity))
+      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "FOO", allowInactive = false)).thenThrow(expectedException)
+
+      val exception = assertThrows<ValidationException> {
+        service.createMultipleAddressSpecificPhones(
+          contactId,
+          contactAddressId,
+          createdBy,
+          phoneNumbers = listOf(
+            PhoneNumber(
+              phoneType = "FOO",
+              phoneNumber = "+447777777777",
+            ),
+          ),
+        )
+      }
+
+      assertThat(exception).isEqualTo(expectedException)
+      verify(referenceCodeService).validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "FOO", allowInactive = false)
+    }
+
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.hmppscontactsapi.util.PhoneNumberTestUtils#invalidPhoneNumbers")
+    fun `should throw ValidationException creating address-specific phone if phone number contains invalid chars`(phoneNumber: String) {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
+      whenever(contactAddressRepository.findById(contactAddressId)).thenReturn(Optional.of(contactAddressEntity))
+      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "HOME", allowInactive = false))
+        .thenReturn(ReferenceCode(0, ReferenceCodeGroup.PHONE_TYPE, "HOME", "Home", 90, true))
+
+      val exception = assertThrows<ValidationException> {
+        service.createMultipleAddressSpecificPhones(
+          contactId,
+          contactAddressId,
+          createdBy,
+          phoneNumbers = listOf(
+            PhoneNumber(
+              phoneType = "MOB",
+              phoneNumber = phoneNumber,
+            ),
+          ),
+        )
+      }
+
+      assertThat(exception.message).isEqualTo("Phone number invalid, it can only contain numbers, () and whitespace with an optional + at the start")
+    }
+
+    @Test
+    fun `should return a the address-specific phone details after successful creation`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
+      whenever(contactAddressRepository.findById(contactAddressId)).thenReturn(Optional.of(contactAddressEntity))
+      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "HOME", allowInactive = false))
+        .thenReturn(ReferenceCode(0, ReferenceCodeGroup.PHONE_TYPE, "HOME", "Home", 90, true))
+
+      whenever(contactPhoneRepository.saveAndFlush(any())).thenAnswer { i ->
+        (i.arguments[0] as ContactPhoneEntity).copy(
+          contactPhoneId = 8888,
+          contactId = contactId,
+        )
+      }.thenAnswer { i ->
+        (i.arguments[0] as ContactPhoneEntity).copy(
+          contactPhoneId = 9999,
+          contactId = contactId,
+        )
+      }
+
+      whenever(contactAddressPhoneRepository.saveAndFlush(any())).thenAnswer { i ->
+        (i.arguments[0] as ContactAddressPhoneEntity).copy(
+          contactAddressPhoneId = 6666,
+          contactAddressId = contactAddressId,
+          contactId = contactId,
+        )
+      }.thenAnswer { i ->
+        (i.arguments[0] as ContactAddressPhoneEntity).copy(
+          contactAddressPhoneId = 5555,
+          contactAddressId = contactAddressId,
+          contactId = contactId,
+        )
+      }
+
+      val created = service.createMultipleAddressSpecificPhones(contactId, contactAddressId, createdBy, phoneNumbers)
+      assertThat(created).hasSize(2).contains(6666L, 5555L)
+    }
+  }
+
+  @Nested
   inner class GetAddressSpecificPhone {
     @Test
     fun `get address-specific phone number by ID`() {

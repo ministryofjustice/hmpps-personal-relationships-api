@@ -23,7 +23,11 @@ class ContactPhoneFacade(
     )
   }
 
-  fun createMultiple(contactId: Long, request: CreateMultiplePhoneNumbersRequest): List<ContactPhoneDetails> = contactPhoneService.createMultiple(contactId, request).also { created ->
+  fun createMultiple(contactId: Long, request: CreateMultiplePhoneNumbersRequest): List<ContactPhoneDetails> = contactPhoneService.createMultiple(
+    contactId,
+    request.createdBy,
+    request.phoneNumbers,
+  ).also { created ->
     created.forEach {
       outboundEventsService.send(
         outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,

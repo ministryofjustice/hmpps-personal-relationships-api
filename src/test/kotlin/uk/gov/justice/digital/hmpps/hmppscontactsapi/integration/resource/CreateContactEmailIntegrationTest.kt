@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.http.HttpStatus.CONFLICT
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
@@ -115,6 +116,28 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_EMAIL_CREATED,
     )
+  }
+
+  @Test
+  fun `should not create the email if the contact already has the same email address`() {
+    val request = aMinimalRequest()
+
+    testAPIClient.createAContactEmail(savedContactId, request)
+
+    val errors = webTestClient.post()
+      .uri("/contact/$savedContactId/email")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isEqualTo(CONFLICT)
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Contact already has an email address matching \"test@example.com\"")
   }
 
   @Test

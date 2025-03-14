@@ -18,6 +18,9 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelati
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.Address
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.CreateContactAddressRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateMultipleIdentitiesRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
@@ -51,6 +54,10 @@ class ContactService(
   private val contactIdentityDetailsRepository: ContactIdentityDetailsRepository,
   private val referenceCodeService: ReferenceCodeService,
   private val employmentService: EmploymentService,
+  private val contactIdentityService: ContactIdentityService,
+  private val contactAddressService: ContactAddressService,
+  private val contactPhoneService: ContactPhoneService,
+  private val contactEmailService: ContactEmailService,
 ) {
   companion object {
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -71,6 +78,11 @@ class ContactService(
     val newRelationship = request.relationship?.toEntity(createdContact.id(), request.createdBy)
       ?.let { prisonerContactRepository.saveAndFlush(it) }
 
+    createIdentityInformation(createdContact, request)
+    createAddresses(createdContact.id(), request.createdBy, request.addresses)
+    createPhoneNumbers(request, createdContact)
+    createEmailAddresses(request, createdContact)
+
     logger.info("Created new contact {}", createdContact)
     newRelationship?.let { logger.info("Created new relationship {}", newRelationship) }
     return ContactCreationResult(
@@ -79,8 +91,54 @@ class ContactService(
     )
   }
 
+  private fun createPhoneNumbers(
+    request: CreateContactRequest,
+    createdContact: ContactEntity,
+  ) {
+    if (request.phoneNumbers.isNotEmpty()) {
+      contactPhoneService.createMultiple(createdContact.id(), request.createdBy, request.phoneNumbers)
+    }
+  }
+
+  private fun createEmailAddresses(
+    request: CreateContactRequest,
+    createdContact: ContactEntity,
+  ) {
+    if (request.emailAddresses.isNotEmpty()) {
+      contactEmailService.createMultiple(createdContact.id(), request.createdBy, request.emailAddresses)
+    }
+  }
+
   fun getContact(id: Long): ContactDetails? = contactRepository.findById(id).getOrNull()
     ?.let { enrichContact(it) }
+
+  private fun createAddresses(contactId: Long, createdBy: String, addresses: List<Address>) {
+    addresses.forEach { address ->
+      contactAddressService.create(
+        contactId,
+        CreateContactAddressRequest(
+          addressType = address.addressType,
+          primaryAddress = address.primaryAddress,
+          flat = address.flat,
+          property = address.property,
+          street = address.street,
+          area = address.area,
+          cityCode = address.cityCode,
+          countyCode = address.countyCode,
+          postcode = address.postcode,
+          countryCode = address.countryCode,
+          verified = address.verified,
+          mailFlag = address.mailFlag,
+          startDate = address.startDate,
+          endDate = address.endDate,
+          noFixedAddress = address.noFixedAddress,
+          phoneNumbers = address.phoneNumbers,
+          comments = address.comments,
+          createdBy = createdBy,
+        ),
+      )
+    }
+  }
 
   fun getContactName(id: Long): ContactNameDetails? = contactRepository.findById(id).getOrNull()
     ?.let { contactEntity ->
@@ -361,6 +419,21 @@ class ContactService(
   private fun unsupportedRelationshipActive(request: PatchRelationshipRequest) {
     if (request.isRelationshipActive.isPresent && request.isRelationshipActive.get() == null) {
       throw ValidationException("Unsupported relationship status null.")
+    }
+  }
+
+  fun createIdentityInformation(
+    createdContact: ContactEntity,
+    request: CreateContactRequest,
+  ) {
+    if (request.identities.isNotEmpty()) {
+      contactIdentityService.createMultiple(
+        createdContact.id(),
+        CreateMultipleIdentitiesRequest(
+          identities = request.identities,
+          createdBy = createdContact.createdBy,
+        ),
+      )
     }
   }
 

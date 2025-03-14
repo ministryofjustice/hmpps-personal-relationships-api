@@ -9,7 +9,7 @@ import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.contactAddressPhoneResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.updateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
@@ -33,7 +33,7 @@ class ContactAddressPhoneFacadeTest {
   @Test
   fun `should send event if create success`() {
     val request = createContactAddressPhoneRequest(contactAddressId)
-    val response = contactAddressPhoneResponse(contactAddressPhoneId, contactAddressId, contactPhoneId, contactId)
+    val response = createContactAddressPhoneDetails(contactAddressPhoneId, contactAddressId, contactPhoneId, contactId)
 
     whenever(addressPhoneService.create(any(), any(), any())).thenReturn(response)
     whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
@@ -88,8 +88,8 @@ class ContactAddressPhoneFacadeTest {
     )
 
     val response = listOf(
-      contactAddressPhoneResponse(9999, contactAddressId, 6666, contactId),
-      contactAddressPhoneResponse(8888, contactAddressId, 5555, contactId),
+      createContactAddressPhoneDetails(9999, contactAddressId, 6666, contactId),
+      createContactAddressPhoneDetails(8888, contactAddressId, 5555, contactId),
     )
 
     whenever(addressPhoneService.createMultiple(any(), any(), any())).thenReturn(response)
@@ -117,7 +117,7 @@ class ContactAddressPhoneFacadeTest {
 
   @Test
   fun `should send event if update success`() {
-    val response = contactAddressPhoneResponse(contactAddressPhoneId, contactAddressId, contactPhoneId, contactId)
+    val response = createContactAddressPhoneDetails(contactAddressPhoneId, contactAddressId, contactPhoneId, contactId)
     val request = updateContactAddressPhoneRequest()
 
     whenever(addressPhoneService.update(any(), any(), any())).thenReturn(response)
@@ -159,7 +159,7 @@ class ContactAddressPhoneFacadeTest {
 
   @Test
   fun `should not send an event on get requests`() {
-    val response = contactAddressPhoneResponse(contactAddressPhoneId, contactAddressId, contactPhoneId, contactId)
+    val response = createContactAddressPhoneDetails(contactAddressPhoneId, contactAddressId, contactPhoneId, contactId)
     whenever(addressPhoneService.get(any(), any())).thenReturn(response)
 
     val result = facade.get(contactId, contactAddressPhoneId)
@@ -185,7 +185,7 @@ class ContactAddressPhoneFacadeTest {
 
   @Test
   fun `should send event if delete success`() {
-    val response = contactAddressPhoneResponse(contactAddressPhoneId, contactAddressId, contactPhoneId, contactId)
+    val response = createContactAddressPhoneDetails(contactAddressPhoneId, contactAddressId, contactPhoneId, contactId)
     whenever(addressPhoneService.delete(any(), any())).thenReturn(response)
     whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
 

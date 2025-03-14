@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
 
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactAddressPhoneRequest
@@ -105,6 +106,7 @@ class SyncFacade(
       )
     }
 
+  fun getContactIds(pageable: Pageable) = syncContactService.getContactIds(pageable)
   // ================================================================
   //  Contact Phone
   // ================================================================

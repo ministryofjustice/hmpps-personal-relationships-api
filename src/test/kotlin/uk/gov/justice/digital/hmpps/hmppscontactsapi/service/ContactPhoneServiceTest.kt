@@ -81,7 +81,7 @@ class ContactPhoneServiceTest {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
 
       val exception = assertThrows<EntityNotFoundException> {
-        service.createMultiple(contactId, request)
+        service.createMultiple(contactId, request.createdBy, request.phoneNumbers)
       }
       assertThat(exception.message).isEqualTo("Contact (99) not found")
     }
@@ -99,7 +99,11 @@ class ContactPhoneServiceTest {
       ).thenThrow(expectedException)
 
       val exception = assertThrows<ValidationException> {
-        service.createMultiple(contactId, request.copy(phoneNumbers = listOf(PhoneNumber(phoneType = "FOO", phoneNumber = "123"))))
+        service.createMultiple(
+          contactId,
+          request.createdBy,
+          listOf(PhoneNumber(phoneType = "FOO", phoneNumber = "123")),
+        )
       }
       assertThat(exception).isEqualTo(expectedException)
     }
@@ -120,7 +124,11 @@ class ContactPhoneServiceTest {
       )
 
       val exception = assertThrows<ValidationException> {
-        service.createMultiple(contactId, request.copy(phoneNumbers = listOf(PhoneNumber(phoneType = "MOB", phoneNumber = phoneNumber))))
+        service.createMultiple(
+          contactId,
+          request.createdBy,
+          listOf(PhoneNumber(phoneType = "MOB", phoneNumber = phoneNumber)),
+        )
       }
       assertThat(exception.message).isEqualTo("Phone number invalid, it can only contain numbers, () and whitespace with an optional + at the start")
     }
@@ -171,7 +179,7 @@ class ContactPhoneServiceTest {
         )
       }
 
-      val allCreated = service.createMultiple(contactId, request)
+      val allCreated = service.createMultiple(contactId, request.createdBy, request.phoneNumbers)
       assertThat(allCreated).hasSize(2)
       val mobile = allCreated[0]
       assertThat(mobile.createdTime).isNotNull()

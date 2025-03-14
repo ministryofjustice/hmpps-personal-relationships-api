@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response
 
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.AddressLines
 import java.time.LocalDate
 
 @Schema(description = "Describes the details of a prisoner's contact")
@@ -48,34 +49,34 @@ data class PrisonerContactSummary(
   val relationshipToPrisonerDescription: String,
 
   @Schema(description = "Flat number in the address, if any", example = "Flat 1", nullable = true)
-  val flat: String?,
+  override val flat: String?,
 
   @Schema(description = "Property name or number", example = "123")
-  val property: String?,
+  override val property: String?,
 
   @Schema(description = "Street name", example = "Baker Street")
-  val street: String?,
+  override val street: String?,
 
   @Schema(description = "Area or locality, if any", example = "Marylebone", nullable = true)
-  val area: String?,
+  override val area: String?,
 
   @Schema(description = "City code", example = "25343")
-  val cityCode: String?,
+  override val cityCode: String?,
 
   @Schema(description = "The description of city code", example = "Sheffield")
   val cityDescription: String?,
 
   @Schema(description = "County code", example = "S.YORKSHIRE")
-  val countyCode: String?,
+  override val countyCode: String?,
 
   @Schema(description = "The description of county code", example = "South Yorkshire")
   val countyDescription: String?,
 
   @Schema(description = "Postal code", example = "NW1 6XE")
-  val postCode: String?,
+  override val postcode: String?,
 
   @Schema(description = "Country code", example = "ENG")
-  val countryCode: String?,
+  override val countryCode: String?,
 
   @Schema(description = "The description of country code", example = "England")
   val countryDescription: String?,
@@ -115,4 +116,4 @@ data class PrisonerContactSummary(
 
   @Schema(description = "Any additional comments", example = "Close family friend", nullable = true)
   val comments: String?,
-)
+) : AddressLines

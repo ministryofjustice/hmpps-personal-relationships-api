@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.resource.NoResourceFoundException
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateEmailException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.InvalidReferenceCodeGroupException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate.DuplicatePersonException
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
@@ -131,8 +132,8 @@ class HmppsContactsApiExceptionHandler {
       ),
     )
 
-  @ExceptionHandler(DuplicatePersonException::class)
-  fun handleDuplicatePersonException(e: DuplicatePersonException): ResponseEntity<ErrorResponse> = ResponseEntity
+  @ExceptionHandler(DuplicatePersonException::class, DuplicateEmailException::class)
+  fun handleDuplicateException(e: RuntimeException): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(CONFLICT)
     .body(
       ErrorResponse(

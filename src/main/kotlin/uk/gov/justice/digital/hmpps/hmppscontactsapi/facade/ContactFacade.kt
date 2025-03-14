@@ -32,20 +32,58 @@ class ContactFacade(
 
   fun createContact(request: CreateContactRequest): ContactCreationResult = contactService.createContact(request)
     .also { creationResult ->
-      // Send the contact created event
       outboundEventsService.send(
         outboundEvent = OutboundEvent.CONTACT_CREATED,
         identifier = creationResult.createdContact.id,
         contactId = creationResult.createdContact.id,
       )
 
-      // Send the prisons contact created event
       creationResult.createdRelationship?.let {
         outboundEventsService.send(
           outboundEvent = OutboundEvent.PRISONER_CONTACT_CREATED,
           identifier = it.prisonerContactId,
           contactId = creationResult.createdContact.id,
           noms = request.relationship?.prisonerNumber.let { request.relationship!!.prisonerNumber },
+        )
+      }
+
+      creationResult.createdContact.identities.forEach {
+        outboundEventsService.send(
+          outboundEvent = OutboundEvent.CONTACT_IDENTITY_CREATED,
+          identifier = it.contactIdentityId,
+          contactId = creationResult.createdContact.id,
+        )
+      }
+
+      creationResult.createdContact.addresses.forEach { createdAddress ->
+        outboundEventsService.send(
+          outboundEvent = OutboundEvent.CONTACT_ADDRESS_CREATED,
+          identifier = createdAddress.contactAddressId,
+          contactId = creationResult.createdContact.id,
+        )
+        createdAddress.phoneNumbers.forEach {
+          outboundEventsService.send(
+            outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
+            identifier = it.contactAddressPhoneId,
+            secondIdentifier = it.contactAddressId,
+            contactId = creationResult.createdContact.id,
+          )
+        }
+      }
+
+      creationResult.createdContact.phoneNumbers.forEach {
+        outboundEventsService.send(
+          outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
+          identifier = it.contactPhoneId,
+          contactId = creationResult.createdContact.id,
+        )
+      }
+
+      creationResult.createdContact.emailAddresses.forEach {
+        outboundEventsService.send(
+          outboundEvent = OutboundEvent.CONTACT_EMAIL_CREATED,
+          identifier = it.contactEmailId,
+          contactId = creationResult.createdContact.id,
         )
       }
     }

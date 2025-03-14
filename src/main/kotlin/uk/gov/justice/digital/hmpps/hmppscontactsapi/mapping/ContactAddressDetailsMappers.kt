@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping
 
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressEntity
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactAddressRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressResponse
@@ -63,11 +63,12 @@ fun CreateContactAddressRequest.toEntity(contactId: Long): ContactAddressEntity 
   createdTime = LocalDateTime.now(),
 )
 
-fun ContactAddressEntity.toModel() = ContactAddressResponse(
+fun ContactAddressEntity.toModel(contactAddressPhoneId: List<Long> = emptyList()) = ContactAddressResponse(
   contactAddressId = this.contactAddressId,
   contactId = this.contactId!!,
   addressType = this.addressType,
   primaryAddress = this.primaryAddress,
+  phoneNumberIds = contactAddressPhoneId,
   flat = this.flat,
   property = this.property,
   street = this.street,
