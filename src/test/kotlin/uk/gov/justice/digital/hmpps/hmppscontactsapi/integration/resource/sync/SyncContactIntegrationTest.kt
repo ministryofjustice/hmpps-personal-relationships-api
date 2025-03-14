@@ -138,18 +138,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should create a new contact`() {
-      val contact = webTestClient.post()
-        .uri("/sync/contact")
-        .accept(MediaType.APPLICATION_JSON)
-        .contentType(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
-        .bodyValue(createSyncContactRequest(5000L))
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(SyncContact::class.java)
-        .returnResult().responseBody!!
+      val contact = testAPIClient.syncCreateAnContact(createSyncContactRequest(5000L))
 
       // The created is returned
       with(contact) {
@@ -179,18 +168,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should create and then update a contact`() {
-      val contact = webTestClient.post()
-        .uri("/sync/contact")
-        .accept(MediaType.APPLICATION_JSON)
-        .contentType(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
-        .bodyValue(createSyncContactRequest(5001L))
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(SyncContact::class.java)
-        .returnResult().responseBody!!
+      val contact = testAPIClient.syncCreateAnContact(createSyncContactRequest(5001L))
 
       with(contact) {
         assertThat(id).isEqualTo(5001L)
@@ -250,18 +228,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should delete an existing contact`() {
-      val contact = webTestClient.post()
-        .uri("/sync/contact")
-        .accept(MediaType.APPLICATION_JSON)
-        .contentType(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
-        .bodyValue(createSyncContactRequest(5002L))
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(SyncContact::class.java)
-        .returnResult().responseBody!!
+      val contact = testAPIClient.syncCreateAnContact(createSyncContactRequest(5002L))
 
       webTestClient.delete()
         .uri("/sync/contact/{contactId}", contact.id)
@@ -290,6 +257,33 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
         additionalInfo = ContactInfo(contact.id, Source.NOMIS),
         personReference = PersonReference(dpsContactId = contact.id),
       )
+    }
+
+    @Test
+    fun `should support pageable contact IDs for reconciliation`() {
+      testAPIClient.syncCreateAnContact(createSyncContactRequest(5005L))
+      testAPIClient.syncCreateAnContact(createSyncContactRequest(5006L))
+      testAPIClient.syncCreateAnContact(createSyncContactRequest(5007L))
+
+      val firstPage = testAPIClient.syncReconcileContacts(0, 2)
+      with(firstPage) {
+        assertThat(totalElements).isGreaterThanOrEqualTo(3)
+        assertThat(content).hasSize(2)
+        assertThat(content).extracting("contactId").hasSize(2)
+      }
+
+      val secondPage = testAPIClient.syncReconcileContacts(1, 2)
+      with(secondPage) {
+        assertThat(totalElements).isGreaterThanOrEqualTo(3)
+        assertThat(content.size).isGreaterThanOrEqualTo(1)
+      }
+
+      val bigPage = testAPIClient.syncReconcileContacts(0, 100)
+      with(bigPage) {
+        assertThat(totalElements).isGreaterThanOrEqualTo(3)
+        assertThat(content.size).isGreaterThanOrEqualTo(3)
+        assertThat(content).extracting("contactId").containsAll(listOf(5005L, 5006L, 5007L))
+      }
     }
 
     private fun updateContactRequest() = SyncUpdateContactRequest(

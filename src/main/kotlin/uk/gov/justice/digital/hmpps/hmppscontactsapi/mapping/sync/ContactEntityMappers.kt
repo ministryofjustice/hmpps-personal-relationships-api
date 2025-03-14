@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync
 
+import org.springframework.data.domain.Page
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithFixedIdEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContact
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContactId
 
 fun ContactWithFixedIdEntity.mapEntityToSyncResponse(): SyncContact = SyncContact(
   id = this.contactId,
@@ -43,3 +45,7 @@ fun SyncCreateContactRequest.mapSyncRequestToEntity() = ContactWithFixedIdEntity
   updatedBy = null,
   updatedTime = null,
 )
+
+fun ContactWithFixedIdEntity.toModelIds(): SyncContactId = SyncContactId(contactId = this.contactId)
+
+fun Page<ContactWithFixedIdEntity>.toModelIds(): Page<SyncContactId> = map { it.toModelIds() }
