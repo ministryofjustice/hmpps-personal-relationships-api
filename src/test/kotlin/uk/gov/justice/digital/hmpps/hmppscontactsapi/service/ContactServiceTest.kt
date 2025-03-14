@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEn
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactEmailEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactIdentityDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactIdentityDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactPhoneDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createEmploymentDetails
@@ -38,6 +39,8 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelati
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateMultipleIdentitiesRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.IdentityDocument
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
@@ -67,6 +70,7 @@ class ContactServiceTest {
   private val contactIdentityDetailsRepository: ContactIdentityDetailsRepository = mock()
   private val employmentService: EmploymentService = mock()
   private val referenceCodeService: ReferenceCodeService = mock()
+  private val contactIdentityService: ContactIdentityService = mock()
   private val service = ContactService(
     contactRepository,
     prisonerContactRepository,
@@ -79,6 +83,7 @@ class ContactServiceTest {
     contactIdentityDetailsRepository,
     referenceCodeService,
     employmentService,
+    contactIdentityService,
   )
 
   private val aContactAddressDetailsEntity = createContactAddressDetailsEntity()
@@ -87,6 +92,12 @@ class ContactServiceTest {
   inner class CreateContact {
     @Test
     fun `should create a contact with all fields successfully`() {
+      val identities = listOf(
+        IdentityDocument(
+          identityType = "PNC",
+          identityValue = "1923/1Z34567A",
+        ),
+      )
       val request = CreateContactRequest(
         titleCode = "mr",
         lastName = "last",
@@ -94,12 +105,17 @@ class ContactServiceTest {
         middleNames = "middle",
         dateOfBirth = LocalDate.of(1982, 6, 15),
         createdBy = "created",
+        identities = identities,
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(contactAddressDetailsRepository.findByContactId(any())).thenReturn(listOf(aContactAddressDetailsEntity))
+      whenever(contactIdentityService.createMultiple(any(), any())).thenReturn(listOf(createContactIdentityDetails()))
+      val identityEntity1 = createContactIdentityDetailsEntity(id = 1, identityType = "PNC", identityValue = "1923/1Z34567A")
+      whenever(contactIdentityDetailsRepository.findByContactId(123L)).thenReturn(listOf(identityEntity1))
 
       val result = service.createContact(request)
 
+      verify(contactIdentityService).createMultiple(123, CreateMultipleIdentitiesRequest(identities, "created"))
       val contactCaptor = argumentCaptor<ContactEntity>()
       verify(contactRepository).saveAndFlush(contactCaptor.capture())
       with(contactCaptor.firstValue) {
@@ -133,6 +149,51 @@ class ContactServiceTest {
           assertThat(addresses).isEqualTo(listOf(aContactAddressDetailsEntity.toModel(emptyList())))
         }
       }
+      assertThat(result.createdContact.identities).hasSize(1)
+      assertThat(result.createdContact.identities[0].identityType).isEqualTo("PNC")
+      assertThat(result.createdContact.identities[0].identityValue).isEqualTo("1923/1Z34567A")
+    }
+
+    @Test
+    fun `should create a contact with multiple identities successfully`() {
+      val identities = listOf(
+        IdentityDocument(
+          identityType = "PNC",
+          identityValue = "1923/1Z34567A",
+        ),
+        IdentityDocument(
+          identityType = "DL",
+          identityValue = "DL123456789",
+        ),
+      )
+      val request = CreateContactRequest(
+        titleCode = "mr",
+        lastName = "last",
+        firstName = "first",
+        middleNames = "middle",
+        dateOfBirth = LocalDate.of(1982, 6, 15),
+        createdBy = "created",
+        identities = identities,
+      )
+      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123L) }
+      whenever(contactAddressDetailsRepository.findByContactId(123L)).thenReturn(listOf(aContactAddressDetailsEntity))
+      whenever(contactIdentityService.createMultiple(any(), any())).thenReturn(listOf(createContactIdentityDetails(), createContactIdentityDetails(2L)))
+      val identityEntity1 = createContactIdentityDetailsEntity(id = 1, identityType = "PNC", identityValue = "1923/1Z34567A")
+      val identityEntity2 = createContactIdentityDetailsEntity(id = 2, identityType = "DL", identityValue = "DL123456789")
+      whenever(contactIdentityDetailsRepository.findByContactId(123L)).thenReturn(listOf(identityEntity1, identityEntity2))
+
+      val result = service.createContact(request)
+
+      verify(contactIdentityService).createMultiple(123L, CreateMultipleIdentitiesRequest(identities, "created"))
+      val contactCaptor = argumentCaptor<ContactEntity>()
+      verify(contactRepository).saveAndFlush(contactCaptor.capture())
+      assertThat(contactCaptor.firstValue).isNotNull()
+      assertThat(result.createdContact).isNotNull()
+      assertThat(result.createdContact.identities).hasSize(2)
+      assertThat(result.createdContact.identities[0].identityType).isEqualTo("PNC")
+      assertThat(result.createdContact.identities[0].identityValue).isEqualTo("1923/1Z34567A")
+      assertThat(result.createdContact.identities[1].identityType).isEqualTo("DL")
+      assertThat(result.createdContact.identities[1].identityValue).isEqualTo("DL123456789")
     }
 
     @Test
@@ -153,6 +214,8 @@ class ContactServiceTest {
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
 
       val result = service.createContact(request)
+
+      verify(contactIdentityService, never()).createMultiple(any(), any())
 
       val contactCaptor = argumentCaptor<ContactEntity>()
       verify(contactRepository).saveAndFlush(contactCaptor.capture())
@@ -297,6 +360,28 @@ class ContactServiceTest {
         createdBy = "created",
       )
       whenever(contactRepository.saveAndFlush(any())).thenThrow(RuntimeException("Bang!"))
+
+      assertThrows<RuntimeException>("Bang!") {
+        service.createContact(request)
+      }
+    }
+
+    @Test
+    fun `should propagate exceptions creating a contact with identities`() {
+      val request = CreateContactRequest(
+        lastName = "last",
+        firstName = "first",
+        createdBy = "created",
+        identities = listOf(
+          IdentityDocument(
+            identityType = "PNC",
+            identityValue = "1923/1Z34567A",
+          ),
+        ),
+      )
+      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
+      whenever(contactAddressDetailsRepository.findByContactId(any())).thenReturn(listOf(aContactAddressDetailsEntity))
+      whenever(contactIdentityService.createMultiple(any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
         service.createContact(request)

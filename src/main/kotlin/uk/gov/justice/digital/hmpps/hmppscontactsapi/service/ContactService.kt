@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelati
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateMultipleIdentitiesRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
@@ -51,6 +52,7 @@ class ContactService(
   private val contactIdentityDetailsRepository: ContactIdentityDetailsRepository,
   private val referenceCodeService: ReferenceCodeService,
   private val employmentService: EmploymentService,
+  private val contactIdentityService: ContactIdentityService,
 ) {
   companion object {
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -70,6 +72,8 @@ class ContactService(
     val createdContact = contactRepository.saveAndFlush(newContact)
     val newRelationship = request.relationship?.toEntity(createdContact.id(), request.createdBy)
       ?.let { prisonerContactRepository.saveAndFlush(it) }
+
+    createIdentityInformation(createdContact, request)
 
     logger.info("Created new contact {}", createdContact)
     newRelationship?.let { logger.info("Created new relationship {}", newRelationship) }
@@ -361,6 +365,21 @@ class ContactService(
   private fun unsupportedRelationshipActive(request: PatchRelationshipRequest) {
     if (request.isRelationshipActive.isPresent && request.isRelationshipActive.get() == null) {
       throw ValidationException("Unsupported relationship status null.")
+    }
+  }
+
+  fun createIdentityInformation(
+    createdContact: ContactEntity,
+    request: CreateContactRequest,
+  ) {
+    if (request.identities.isNotEmpty()) {
+      contactIdentityService.createMultiple(
+        createdContact.id(),
+        CreateMultipleIdentitiesRequest(
+          identities = request.identities,
+          createdBy = createdContact.createdBy,
+        ),
+      )
     }
   }
 

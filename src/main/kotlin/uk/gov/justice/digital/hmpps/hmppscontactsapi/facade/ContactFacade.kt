@@ -48,6 +48,14 @@ class ContactFacade(
           noms = request.relationship?.prisonerNumber.let { request.relationship!!.prisonerNumber },
         )
       }
+
+      creationResult.createdContact.identities.forEach {
+        outboundEventsService.send(
+          outboundEvent = OutboundEvent.CONTACT_IDENTITY_CREATED,
+          identifier = it.contactIdentityId,
+          contactId = creationResult.createdContact.id,
+        )
+      }
     }
 
   fun addContactRelationship(request: AddContactRelationshipRequest): PrisonerContactRelationshipDetails {

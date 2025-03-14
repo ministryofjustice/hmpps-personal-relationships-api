@@ -11,7 +11,9 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.IdentityDocument
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactIdentityInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
@@ -135,6 +137,36 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
+  fun `should validate PNC number`() {
+    val expectedMessage = "Identity value (1923/1Z34567A) is not a valid PNC Number"
+    val request = aMinimalCreateContactRequest().copy(
+      identities = listOf(
+        IdentityDocument(
+          identityType = "PNC",
+          identityValue = "1923/1Z34567A",
+        ),
+      ),
+    )
+    val errors = webTestClient.post()
+      .uri("/contact")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Validation failure: $expectedMessage")
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.CONTACT_IDENTITY_CREATED,
+    )
+  }
+
+  @Test
   fun `should create the contact with minimal fields`() {
     val request = aMinimalCreateContactRequest()
 
@@ -156,6 +188,46 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactInfo(contactReturnedOnCreate.id, Source.DPS),
       personReference = PersonReference(dpsContactId = contactReturnedOnCreate.id),
     )
+  }
+
+  @Test
+  fun `should create the contact with multiple identity documents`() {
+    val identityDocuments = listOf(
+      IdentityDocument(
+        identityType = "DL",
+        identityValue = "DL123456789",
+      ),
+      IdentityDocument(
+        identityType = "PASS",
+        identityValue = "P897654312",
+      ),
+    )
+    val request = aMinimalCreateContactRequest(identityDocuments = identityDocuments)
+
+    val contactReturned = testAPIClient.createAContactWithARelationship(request)
+
+    val contactReturnedOnCreate = contactReturned.createdContact
+    assertContactsAreEqualExcludingTimestamps(contactReturnedOnCreate, request)
+
+    assertThat(contactReturned.createdContact.identities).hasSize(2)
+    assertThat(contactReturned.createdContact.identities[0].identityType).isEqualTo("DL")
+    assertThat(contactReturned.createdContact.identities[0].identityValue).isEqualTo("DL123456789")
+    assertThat(contactReturned.createdContact.identities[1].identityType).isEqualTo("PASS")
+    assertThat(contactReturned.createdContact.identities[1].identityValue).isEqualTo("P897654312")
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.CONTACT_CREATED,
+      additionalInfo = ContactInfo(contactReturnedOnCreate.id, Source.DPS),
+      personReference = PersonReference(dpsContactId = contactReturnedOnCreate.id),
+    )
+
+    contactReturnedOnCreate.identities.forEach { identity ->
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.CONTACT_IDENTITY_CREATED,
+        additionalInfo = ContactIdentityInfo(identity.contactIdentityId, Source.DPS),
+        personReference = PersonReference(dpsContactId = contactReturnedOnCreate.id),
+      )
+    }
   }
 
   @ParameterizedTest
@@ -225,6 +297,42 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
         "createdBy must be <= 100 characters",
         aMinimalCreateContactRequest().copy(createdBy = "".padStart(101, 'X')),
       ),
+      Arguments.of(
+        "identities[0].identityType must be <= 12 characters",
+        aMinimalCreateContactRequest().copy(
+          identities = listOf(
+            IdentityDocument(
+              identityType = "".padStart(13, 'X'),
+              identityValue = "DL123456789",
+              issuingAuthority = "DVLA",
+            ),
+          ),
+        ),
+      ),
+      Arguments.of(
+        "identities[0].identityValue must be <= 20 characters",
+        aMinimalCreateContactRequest().copy(
+          identities = listOf(
+            IdentityDocument(
+              identityType = "PASS",
+              identityValue = "".padStart(21, 'X'),
+              issuingAuthority = "DVLA",
+            ),
+          ),
+        ),
+      ),
+      Arguments.of(
+        "identities[0].issuingAuthority must be <= 40 characters",
+        aMinimalCreateContactRequest().copy(
+          identities = listOf(
+            IdentityDocument(
+              identityType = "PASS",
+              identityValue = "DL123456789",
+              issuingAuthority = "".padStart(41, 'X'),
+            ),
+          ),
+        ),
+      ),
     )
 
     @JvmStatic
@@ -233,12 +341,31 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       Arguments.of("language", aMinimalCreateContactRequest().copy(languageCode = "FOO")),
       Arguments.of("domestic status", aMinimalCreateContactRequest().copy(domesticStatusCode = "FOO")),
       Arguments.of("gender", aMinimalCreateContactRequest().copy(genderCode = "FOO")),
+      Arguments.of(
+        "identity type",
+        aMinimalCreateContactRequest().copy(
+          identities = listOf(
+            IdentityDocument(
+              identityType = "DL",
+              identityValue = "DL123456789",
+              issuingAuthority = "DVLA",
+            ),
+            IdentityDocument(
+              identityType = "FOO",
+              identityValue = "P897654312",
+              issuingAuthority = null,
+            ),
+          ),
+        ),
+      ),
+
     )
 
-    private fun aMinimalCreateContactRequest() = CreateContactRequest(
+    private fun aMinimalCreateContactRequest(identityDocuments: List<IdentityDocument> = emptyList()) = CreateContactRequest(
       lastName = "last",
       firstName = "first",
       createdBy = "created",
+      identities = identityDocuments,
     )
 
     private const val LOCAL_CONTACT_ID_SEQUENCE_MIN: Long = 20000000L
