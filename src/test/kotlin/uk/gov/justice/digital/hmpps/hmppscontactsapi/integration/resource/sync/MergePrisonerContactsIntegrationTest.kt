@@ -21,6 +21,8 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerCont
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import java.time.LocalDate
 
+@Sql("classpath:merge.tests/data-for-merge-test.sql")
+@Sql(scripts = ["classpath:merge.tests/cleanup-merge-test.sql"], executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 class MergePrisonerContactsIntegrationTest : PostgresIntegrationTestBase() {
 
   @Nested
@@ -57,8 +59,6 @@ class MergePrisonerContactsIntegrationTest : PostgresIntegrationTestBase() {
     }
 
     @Test
-    @Sql("classpath:merge.tests/cleanup-merge-test.sql")
-    @Sql("classpath:merge.tests/data-for-merge-test.sql")
     fun `should remove the prisoner contacts and restrictions with nothing to recreate - empty list provided`() {
       val mergeResponse = webTestClient.post()
         .uri("/sync/prisoner-contact/merge")
@@ -83,8 +83,6 @@ class MergePrisonerContactsIntegrationTest : PostgresIntegrationTestBase() {
     }
 
     @Test
-    @Sql("classpath:merge.tests/cleanup-merge-test.sql")
-    @Sql("classpath:merge.tests/data-for-merge-test.sql")
     fun `should remove the prisoner contacts and restrictions then recreate for the retained prisoner`() {
       val mergeResponse = webTestClient.post()
         .uri("/sync/prisoner-contact/merge")
