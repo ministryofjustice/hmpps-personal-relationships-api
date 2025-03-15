@@ -1,11 +1,11 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync
 
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.ContactsAndRestrictions
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.IdPair
 
 @Schema(description = "The response object for a prisoner merge request")
 data class MergePrisonerContactResponse(
-  val relationshipsCreated: List<ContactsAndRestrictions>,
+  val relationshipsCreated: List<PrisonerContactAndRestrictionIds>,
   val relationshipsRemoved: List<PrisonerRelationshipIds>,
 )
 
@@ -23,4 +23,16 @@ data class PrisonerRelationshipIds(
 
   @Schema(description = "A list of relationship restriction IDs", example = "[1234, 2345, 3456]")
   val prisonerContactRestrictionIds: List<Long> = emptyList(),
+)
+
+@Schema(description = "Contains the IDs of the contact, relationships and restrictions created during a prisoner merge")
+data class PrisonerContactAndRestrictionIds(
+  @Schema(description = "The contactId that this relationship is with")
+  val contactId: Long,
+
+  @Schema(description = "The unique IDs in NOMIS and DPS for this relationship or prisoner contact")
+  val relationship: IdPair,
+
+  @Schema(description = "The pairs of IDs in NOMIS and DPS for relationship-specific restrictions")
+  val restrictions: List<IdPair>,
 )

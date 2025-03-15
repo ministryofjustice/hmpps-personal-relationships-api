@@ -5,10 +5,10 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactRestrictionEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerContactRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.ContactsAndRestrictions
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.ElementType
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.IdPair
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.MergePrisonerContactResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.PrisonerContactAndRestrictionIds
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.PrisonerRelationshipIds
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRestrictionRepository
@@ -83,7 +83,8 @@ class MergePrisonerContactService(
   ) = relationships.map { relationship ->
     val restrictionsForThisContact = restrictions.filter { it.first == relationship.first }
     restrictionsForThisContact.map { restriction ->
-      ContactsAndRestrictions(
+      PrisonerContactAndRestrictionIds(
+        contactId = relationship.second.contactId,
         relationship = IdPair(ElementType.PRISONER_CONTACT, relationship.first, relationship.second.prisonerContactId),
         restrictions = restriction.second.map {
           IdPair(ElementType.PRISONER_CONTACT_RESTRICTION, it.first, it.second.prisonerContactRestrictionId)

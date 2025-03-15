@@ -468,16 +468,12 @@ class SyncFacade(
       }
 
       it.relationshipsCreated.map { relationshipCreated ->
-        // Determine which contactId this relationship is with, as it is not directly available in the response object
-        val requestedRelationship = request.prisonerContacts.filter { requested -> requested.id == relationshipCreated.relationship.nomisId }
-        val contactId = if (requestedRelationship.isNotEmpty()) requestedRelationship[0].contactId else 0L
-
-        // Send an event for each prisoner contact restriction created for this relationship
+        // Send an event for each prisoner contact restriction created for each relationship
         relationshipCreated.restrictions.map { restriction ->
           outboundEventsService.send(
             outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
             identifier = restriction.dpsId,
-            contactId = contactId,
+            contactId = relationshipCreated.contactId,
             noms = request.retainedPrisonerNumber,
             source = Source.NOMIS,
           )
@@ -487,7 +483,7 @@ class SyncFacade(
         outboundEventsService.send(
           outboundEvent = OutboundEvent.PRISONER_CONTACT_CREATED,
           identifier = relationshipCreated.relationship.dpsId,
-          contactId = contactId,
+          contactId = relationshipCreated.contactId,
           noms = request.retainedPrisonerNumber,
           source = Source.NOMIS,
         )
