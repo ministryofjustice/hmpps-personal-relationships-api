@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class SyncPrisonerContactRestrictionEntityIntegrationTest : PostgresIntegrationTestBase() {
+class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
 
   @Nested
   inner class PrisonerContactRestrictionEntitySyncTests {
