@@ -60,6 +60,7 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
     val prisoner1OtherRelationship = addRelationship(prisoner1, "OTHER")
     val prisoner2FatherRelationship = addRelationship(prisoner2, "FA")
 
+    stubSearchPrisonersByPrisonerNumbers(setOf(prisoner1.prisonerNumber, prisoner2.prisonerNumber), listOf(prisoner1, prisoner2))
     val linkedPrisoners = testAPIClient.getLinkedPrisoners(savedContactId)
     assertThat(linkedPrisoners).isEqualTo(
       listOf(
@@ -119,7 +120,7 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
     val prisoner1OtherRelationship = addRelationship(prisoner1, "OTHER")
     addRelationship(prisoner2, "FA")
 
-    stubPrisonSearchWithNotFoundResponse(prisoner2.prisonerNumber)
+    stubSearchPrisonersByPrisonerNumbers(setOf(prisoner1.prisonerNumber, prisoner2.prisonerNumber), listOf(prisoner1))
 
     val linkedPrisoners = testAPIClient.getLinkedPrisoners(savedContactId)
     assertThat(linkedPrisoners).isEqualTo(
