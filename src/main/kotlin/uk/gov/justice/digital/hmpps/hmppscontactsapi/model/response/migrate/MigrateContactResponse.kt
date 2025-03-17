@@ -48,7 +48,7 @@ data class AddressAndPhones(
 )
 
 /**
- * Class to return the IDs for an address and a list of associated phone numbers
+ * Class to return the IDs for a prisoner contact relationships and their restrictions
  */
 data class ContactsAndRestrictions(
   @Schema(description = "The unique IDs in NOMIS and DPS for this relationship")

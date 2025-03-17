@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
 
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactEmailRequest
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpda
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.MergePrisonerContactService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncContactAddressPhoneService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncContactAddressService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncContactEmailService
@@ -46,7 +48,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncPrisonerCo
  * - To generate a domain event to inform subscribed services what has happened.
  *
  * All events generated as a result of a sync operation should generate domain events with the
- * additionalInformation.source = "NOMIS", which indicates that the actual source of the change
+ * additionalInformation source = "NOMIS", which indicates that the actual source of the change
  * was NOMIS.
  *
  * This is important as the Syscon sync service will ignore domain events with
@@ -65,6 +67,7 @@ class SyncFacade(
   private val syncPrisonerContactService: SyncPrisonerContactService,
   private val syncPrisonerContactRestrictionService: SyncPrisonerContactRestrictionService,
   private val syncEmploymentService: SyncEmploymentService,
+  private val mergePrisonerContactService: MergePrisonerContactService,
   private val outboundEventsService: OutboundEventsService,
 ) {
   // ================================================================
@@ -434,5 +437,56 @@ class SyncFacade(
         contactId = it.contactId,
         source = Source.NOMIS,
       )
+    }
+
+  // ================================================================
+  //  Replace the full set of relationships for a prisoner
+  // ================================================================
+
+  fun mergePrisonerContacts(request: MergePrisonerContactRequest) = mergePrisonerContactService.mergePrisonerContacts(request)
+    .also {
+      it.relationshipsRemoved.map { relationshipRemoved ->
+        relationshipRemoved.prisonerContactRestrictionIds.map { prisonerContactRestrictionId ->
+          // Send an event for each prisoner contact restriction removed
+          outboundEventsService.send(
+            outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED,
+            identifier = prisonerContactRestrictionId,
+            contactId = relationshipRemoved.contactId,
+            noms = relationshipRemoved.prisonerNumber,
+            source = Source.NOMIS,
+          )
+        }
+
+        // Send an event for each prisoner contact removed
+        outboundEventsService.send(
+          outboundEvent = OutboundEvent.PRISONER_CONTACT_DELETED,
+          identifier = relationshipRemoved.prisonerContactId,
+          contactId = relationshipRemoved.contactId,
+          noms = relationshipRemoved.prisonerNumber,
+          source = Source.NOMIS,
+        )
+      }
+
+      it.relationshipsCreated.map { relationshipCreated ->
+        // Send an event for each prisoner contact restriction created for each relationship
+        relationshipCreated.restrictions.map { restriction ->
+          outboundEventsService.send(
+            outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
+            identifier = restriction.dpsId,
+            contactId = relationshipCreated.contactId,
+            noms = request.retainedPrisonerNumber,
+            source = Source.NOMIS,
+          )
+        }
+
+        // Send an event for each prisoner contact created
+        outboundEventsService.send(
+          outboundEvent = OutboundEvent.PRISONER_CONTACT_CREATED,
+          identifier = relationshipCreated.relationship.dpsId,
+          contactId = relationshipCreated.contactId,
+          noms = request.retainedPrisonerNumber,
+          source = Source.NOMIS,
+        )
+      }
     }
 }

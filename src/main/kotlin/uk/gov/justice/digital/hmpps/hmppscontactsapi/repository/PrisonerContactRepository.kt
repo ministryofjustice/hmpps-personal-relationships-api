@@ -13,4 +13,10 @@ interface PrisonerContactRepository : JpaRepository<PrisonerContactEntity, Long>
   @Modifying
   @Query("delete from PrisonerContactEntity pc where pc.contactId = :contactId")
   fun deleteAllByContactId(contactId: Long): Int
+
+  fun findAllByPrisonerNumber(prisonerNumber: String): List<PrisonerContactEntity>
+
+  @Modifying
+  @Query("delete from PrisonerContactEntity pc where pc.prisonerNumber = :prisonerNumber")
+  fun deleteAllByPrisonerNumber(prisonerNumber: String): Int
 }
