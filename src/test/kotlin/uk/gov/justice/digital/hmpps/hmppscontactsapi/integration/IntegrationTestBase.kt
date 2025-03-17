@@ -74,8 +74,8 @@ abstract class IntegrationTestBase {
     manageUsersApiMockServer.stubGetUser(user)
   }
 
-  fun stubOrganisationSummary(id: Long): OrganisationSummary {
-    val organisation = createOrganisationSummary(id)
+  fun stubOrganisationSummary(id: Long, name: String = "Some name limited"): OrganisationSummary {
+    val organisation = createOrganisationSummary(id, name)
     organisationsApiMockServer.stubOrganisationSummary(organisation)
     return organisation
   }

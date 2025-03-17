@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddres
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactEmailDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactIdentityDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactPhoneNumberDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createEmploymentDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createPrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
@@ -249,6 +250,36 @@ class ContactFacadeTest {
       )
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.CONTACT_EMAIL_CREATED,
+        identifier = 777,
+        contactId = createdContact.id,
+      )
+    }
+
+    @Test
+    fun `create contact with multiple employments should send employment created events`() {
+      val request = CreateContactRequest(
+        lastName = "last",
+        firstName = "first",
+        createdBy = "created",
+      )
+      val createdContact = aContactDetails().copy(
+        id = 98765,
+        employments = listOf(createEmploymentDetails(id = 999), createEmploymentDetails(id = 777)),
+      )
+      val expected = ContactCreationResult(createdContact, null)
+      whenever(contactService.createContact(request)).thenReturn(expected)
+
+      val result = contactFacade.createContact(request)
+
+      assertThat(result).isEqualTo(expected)
+      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
+      verify(outboundEventsService).send(
+        outboundEvent = OutboundEvent.EMPLOYMENT_CREATED,
+        identifier = 999,
+        contactId = createdContact.id,
+      )
+      verify(outboundEventsService).send(
+        outboundEvent = OutboundEvent.EMPLOYMENT_CREATED,
         identifier = 777,
         contactId = createdContact.id,
       )

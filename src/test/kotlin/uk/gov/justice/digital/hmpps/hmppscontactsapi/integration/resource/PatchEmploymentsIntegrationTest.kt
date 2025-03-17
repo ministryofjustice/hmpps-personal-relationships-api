@@ -11,9 +11,9 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.EmploymentEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchEmploymentsNewEmployment
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchEmploymentsRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchEmploymentsUpdateEmployment
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.Employment
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.PatchEmploymentsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.PatchEmploymentsUpdateEmployment
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.EmploymentRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.EmploymentInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
@@ -173,7 +173,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `Should be able to add, edit and delete employments in one go`() {
     val request = aMinimalRequest().copy(
-      createEmployments = listOf(PatchEmploymentsNewEmployment(organisationId = 999, isActive = true)),
+      createEmployments = listOf(Employment(organisationId = 999, isActive = true)),
       updateEmployments = listOf(PatchEmploymentsUpdateEmployment(employmentId = employmentToBeUpdated.employmentId, organisationId = 555, isActive = false)),
       deleteEmployments = listOf(employmentToBeDeleted.employmentId),
     )
@@ -232,7 +232,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `Should be able to add inactive employments`() {
     val request = aMinimalRequest().copy(
-      createEmployments = listOf(PatchEmploymentsNewEmployment(organisationId = 999, isActive = false)),
+      createEmployments = listOf(Employment(organisationId = 999, isActive = false)),
     )
     val employmentsAfterUpdate = testAPIClient.patchEmployments(savedContactId, request)
     with(employmentsAfterUpdate.find { it.employer.organisationId == 999L }!!) {
@@ -249,7 +249,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
   fun `Should not be able to add employment for org that doesn't exist`() {
     stubOrganisationSummaryNotFound(987654321)
     val request = aMinimalRequest().copy(
-      createEmployments = listOf(PatchEmploymentsNewEmployment(organisationId = 987654321, isActive = false)),
+      createEmployments = listOf(Employment(organisationId = 987654321, isActive = false)),
     )
     val error = webTestClient.patch()
       .uri("/contact/$savedContactId/employment")
@@ -289,7 +289,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `Should be atomic so if delete fails then no other updates are applied`() {
     val request = aMinimalRequest().copy(
-      createEmployments = listOf(PatchEmploymentsNewEmployment(organisationId = 999, isActive = true)),
+      createEmployments = listOf(Employment(organisationId = 999, isActive = true)),
       updateEmployments = listOf(
         PatchEmploymentsUpdateEmployment(
           employmentId = employmentToBeUpdated.employmentId,

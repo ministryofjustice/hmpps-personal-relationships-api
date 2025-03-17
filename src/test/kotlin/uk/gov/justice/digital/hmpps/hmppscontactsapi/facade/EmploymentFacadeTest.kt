@@ -8,9 +8,9 @@ import org.mockito.kotlin.doNothing
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createEmploymentDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.PatchEmploymentResult
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateEmploymentRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchEmploymentsRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateEmploymentRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.CreateEmploymentRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.PatchEmploymentsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.UpdateEmploymentRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -92,7 +92,7 @@ class EmploymentFacadeTest {
     val contactId = 123L
     val request = CreateEmploymentRequest(999, true, "USER")
 
-    whenever(employmentService.createEmployment(contactId, request)).thenReturn(expectedEmploymentDetails)
+    whenever(employmentService.createEmployment(contactId, request.organisationId, request.isActive, request.createdBy)).thenReturn(expectedEmploymentDetails)
 
     val result = facade.createEmployment(contactId, request)
 

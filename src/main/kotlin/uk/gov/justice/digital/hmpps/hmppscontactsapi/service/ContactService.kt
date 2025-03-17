@@ -82,6 +82,7 @@ class ContactService(
     createAddresses(createdContact.id(), request.createdBy, request.addresses)
     createPhoneNumbers(request, createdContact)
     createEmailAddresses(request, createdContact)
+    createEmployments(request, createdContact)
 
     logger.info("Created new contact {}", createdContact)
     newRelationship?.let { logger.info("Created new relationship {}", newRelationship) }
@@ -106,6 +107,20 @@ class ContactService(
   ) {
     if (request.emailAddresses.isNotEmpty()) {
       contactEmailService.createMultiple(createdContact.id(), request.createdBy, request.emailAddresses)
+    }
+  }
+
+  private fun createEmployments(
+    request: CreateContactRequest,
+    createdContact: ContactEntity,
+  ) {
+    request.employments.forEach { employment ->
+      employmentService.createEmployment(
+        createdContact.id(),
+        employment.organisationId,
+        employment.isActive,
+        request.createdBy,
+      )
     }
   }
 

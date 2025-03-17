@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegr
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.Address
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.EmailAddress
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.Employment
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.IdentityDocument
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactEmail
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactIdentityInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactPhoneInfo
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.EmploymentInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -532,6 +534,68 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(errors.userMessage).isEqualTo("Validation failure: Email address is invalid")
     stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_CREATED)
     stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_EMAIL_CREATED)
+  }
+
+  @Test
+  fun `should create the contact with multiple employments`() {
+    stubOrganisationSummary(1, "First ltd.")
+    stubOrganisationSummary(2, "Second ltd.")
+
+    val request =
+      aMinimalCreateContactRequest().copy(employments = listOf(Employment(1, true), Employment(2, false)))
+
+    val contactReturned = testAPIClient.createAContactWithARelationship(request)
+    val contactId = contactReturned.createdContact.id
+    assertThat(contactReturned.createdContact.employments).hasSize(2)
+    val firstCreated = contactReturned.createdContact.employments.find { it.employer.organisationId == 1L }
+    assertThat(firstCreated).isNotNull
+    assertThat(firstCreated!!.isActive).isTrue()
+    val secondCreated = contactReturned.createdContact.employments.find { it.employer.organisationId == 2L }
+    assertThat(secondCreated).isNotNull
+    assertThat(secondCreated!!.isActive).isFalse()
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.CONTACT_CREATED,
+      additionalInfo = ContactInfo(contactId, Source.DPS),
+      personReference = PersonReference(dpsContactId = contactId),
+    )
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.EMPLOYMENT_CREATED,
+      additionalInfo = EmploymentInfo(firstCreated.employmentId, Source.DPS),
+      personReference = PersonReference(dpsContactId = contactId),
+    )
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.EMPLOYMENT_CREATED,
+      additionalInfo = EmploymentInfo(secondCreated.employmentId, Source.DPS),
+      personReference = PersonReference(dpsContactId = contactId),
+    )
+  }
+
+  @Test
+  fun `should rollback if employments are invalid`() {
+    stubOrganisationSummaryNotFound(1)
+    val invalid = Employment(
+      organisationId = 1,
+      isActive = false,
+    )
+    val errors = webTestClient.post()
+      .uri("/contact")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .bodyValue(aMinimalCreateContactRequest().copy(employments = listOf(invalid)))
+      .exchange()
+      .expectStatus()
+      .isNotFound
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Entity not found : Organisation with id 1 not found")
+    stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_CREATED)
+    stubEvents.assertHasNoEvents(event = OutboundEvent.EMPLOYMENT_CREATED)
   }
 
   @ParameterizedTest
