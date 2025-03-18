@@ -66,6 +66,10 @@ abstract class IntegrationTestBase {
     prisonerSearchApiServer.stubGetPrisoner(prisoner)
   }
 
+  protected fun stubSearchPrisonersByPrisonerNumbers(idsBeingSearchFor: Set<String>, prisonersToReturn: List<Prisoner>) {
+    prisonerSearchApiServer.stubSearchPrisonersByPrisonerNumber(idsBeingSearchFor, prisonersToReturn)
+  }
+
   protected fun stubPrisonSearchWithNotFoundResponse(prisonerNumber: String) {
     prisonerSearchApiServer.stubGetPrisonerReturnNoResults(prisonerNumber)
   }

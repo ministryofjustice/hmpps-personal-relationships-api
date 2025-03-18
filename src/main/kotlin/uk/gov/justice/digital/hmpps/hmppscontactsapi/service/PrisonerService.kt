@@ -7,4 +7,5 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.prisonersearch.Priso
 @Service
 class PrisonerService(private val prisonerSearchClient: PrisonerSearchClient) {
   fun getPrisoner(prisonerNumber: String): Prisoner? = prisonerSearchClient.getPrisoner(prisonerNumber)
+  fun getPrisoners(prisonerNumbers: Set<String>): List<Prisoner> = prisonerSearchClient.getPrisoners(prisonerNumbers)
 }

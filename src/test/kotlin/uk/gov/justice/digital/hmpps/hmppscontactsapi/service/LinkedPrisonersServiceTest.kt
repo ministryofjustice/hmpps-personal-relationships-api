@@ -20,7 +20,7 @@ class LinkedPrisonersServiceTest {
   private val contactId: Long = 123
 
   @Test
-  fun `should call search service only once per prisoner even if multiple relationships`() {
+  fun `Should search for unique prisoner ids and join with multiple relationships even if to the same prisoner`() {
     whenever(repo.findByContactId(contactId)).thenReturn(
       listOf(
         // two relationships for A1234BC and one for X6789YZ
@@ -29,8 +29,7 @@ class LinkedPrisonersServiceTest {
         prisonerContactEntity(777, "X6789YZ", "S", "Social", "FA", "Father", true),
       ),
     )
-    whenever(prisonerService.getPrisoner("A1234BC")).thenReturn(prisoner(prisonerNumber = "A1234BC", firstName = "A", middleNames = "1234", lastName = "BC", prisonId = "BXI", prisonName = "Brixton (HMP)"))
-    whenever(prisonerService.getPrisoner("X6789YZ")).thenReturn(prisoner(prisonerNumber = "X6789YZ", firstName = "X", middleNames = null, lastName = "YZ"))
+    whenever(prisonerService.getPrisoners(setOf("A1234BC", "X6789YZ"))).thenReturn(listOf(prisoner(prisonerNumber = "A1234BC", firstName = "A", middleNames = "1234", lastName = "BC", prisonId = "BXI", prisonName = "Brixton (HMP)"), prisoner(prisonerNumber = "X6789YZ", firstName = "X", middleNames = null, lastName = "YZ")))
 
     val linkedPrisoners = service.getLinkedPrisoners(contactId)
 
@@ -82,8 +81,7 @@ class LinkedPrisonersServiceTest {
       ),
     )
 
-    verify(prisonerService, times(1)).getPrisoner("A1234BC")
-    verify(prisonerService, times(1)).getPrisoner("X6789YZ")
+    verify(prisonerService, times(1)).getPrisoners(setOf("A1234BC", "X6789YZ"))
   }
 
   @Test
@@ -94,8 +92,7 @@ class LinkedPrisonersServiceTest {
         prisonerContactEntity(777, "X6789YZ", "S", "Social", "FA", "Father", true),
       ),
     )
-    whenever(prisonerService.getPrisoner("A1234BC")).thenReturn(prisoner(prisonerNumber = "A1234BC", firstName = "A", middleNames = "1234", lastName = "BC"))
-    whenever(prisonerService.getPrisoner("X6789YZ")).thenReturn(null)
+    whenever(prisonerService.getPrisoners(setOf("A1234BC", "X6789YZ"))).thenReturn(listOf(prisoner(prisonerNumber = "A1234BC", firstName = "A", middleNames = "1234", lastName = "BC")))
 
     val linkedPrisoners = service.getLinkedPrisoners(contactId)
 
@@ -120,8 +117,7 @@ class LinkedPrisonersServiceTest {
       ),
     )
 
-    verify(prisonerService, times(1)).getPrisoner("A1234BC")
-    verify(prisonerService, times(1)).getPrisoner("X6789YZ")
+    verify(prisonerService, times(1)).getPrisoners(setOf("A1234BC", "X6789YZ"))
   }
 
   private fun prisonerContactEntity(
