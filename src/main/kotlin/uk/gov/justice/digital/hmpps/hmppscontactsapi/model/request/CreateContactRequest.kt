@@ -90,23 +90,23 @@ data class CreateContactRequest(
   @field:Valid
   val relationship: ContactRelationship? = null,
 
-  @Schema(description = "Identity documents", required = false)
+  @Schema(description = "Identity documents", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @field:Valid
   val identities: List<IdentityDocument> = emptyList(),
 
-  @Schema(description = "Addresses", required = false)
+  @Schema(description = "Addresses", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @field:Valid
   val addresses: List<Address> = emptyList(),
 
-  @Schema(description = "Phone numbers", required = false)
+  @Schema(description = "Phone numbers", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @field:Valid
   val phoneNumbers: List<PhoneNumber> = emptyList(),
 
-  @Schema(description = "Email addresses", required = false)
+  @Schema(description = "Email addresses", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @field:Valid
   val emailAddresses: List<EmailAddress> = emptyList(),
 
-  @Schema(description = "Employments", required = false)
+  @Schema(description = "Employments", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @field:Valid
   val employments: List<Employment> = emptyList(),
 
