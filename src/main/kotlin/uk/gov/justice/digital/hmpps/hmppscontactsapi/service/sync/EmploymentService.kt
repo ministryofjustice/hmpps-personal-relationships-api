@@ -6,9 +6,8 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.organisationsapi.model.OrganisationSummary
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.EmploymentEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.PatchEmploymentResult
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateEmploymentRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchEmploymentsRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateEmploymentRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.PatchEmploymentsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.UpdateEmploymentRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.EmploymentDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.EmploymentRepository
@@ -83,16 +82,16 @@ class EmploymentService(
     return createEmploymentDetails(employment, org)
   }
 
-  fun createEmployment(contactId: Long, request: CreateEmploymentRequest): EmploymentDetails {
+  fun createEmployment(contactId: Long, organisationId: Long, isActive: Boolean, createdBy: String): EmploymentDetails {
     validateContactExists(contactId)
-    val organisation = validateOrganisationExists(request.organisationId)
+    val organisation = validateOrganisationExists(organisationId)
     val created = employmentRepository.saveAndFlush(
       EmploymentEntity(
         employmentId = 0,
-        organisationId = request.organisationId,
+        organisationId = organisationId,
         contactId = contactId,
-        active = request.isActive,
-        createdBy = request.createdBy,
+        active = isActive,
+        createdBy = createdBy,
         createdTime = LocalDateTime.now(),
         updatedBy = null,
         updatedTime = null,

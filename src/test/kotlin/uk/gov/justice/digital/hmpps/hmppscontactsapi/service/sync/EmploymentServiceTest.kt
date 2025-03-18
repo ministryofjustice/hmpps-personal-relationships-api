@@ -15,11 +15,10 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.EmploymentEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createEmploymentEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createOrganisationSummary
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateEmploymentRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchEmploymentsNewEmployment
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchEmploymentsRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchEmploymentsUpdateEmployment
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateEmploymentRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.Employment
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.PatchEmploymentsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.PatchEmploymentsUpdateEmployment
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.UpdateEmploymentRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.EmploymentRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.OrganisationService
@@ -63,7 +62,7 @@ class EmploymentServiceTest {
     val employments = service.patchEmployments(
       contactId,
       PatchEmploymentsRequest(
-        createEmployments = listOf(PatchEmploymentsNewEmployment(2, true)),
+        createEmployments = listOf(Employment(2, true)),
         updateEmployments = emptyList(),
         deleteEmployments = emptyList(),
         requestedBy = "USER1",
@@ -302,12 +301,10 @@ class EmploymentServiceTest {
     whenever(organisationService.getOrganisationSummaryById(1)).thenReturn(org)
 
     val created = service.createEmployment(
-      contactId,
-      CreateEmploymentRequest(
-        organisationId = 1,
-        isActive = true,
-        createdBy = "USER1",
-      ),
+      contactId = contactId,
+      organisationId = 1,
+      isActive = true,
+      createdBy = "USER1",
     )
 
     assertThat(created.employmentId).isEqualTo(1)
@@ -340,12 +337,10 @@ class EmploymentServiceTest {
 
     val exception = assertThrows<EntityNotFoundException> {
       service.createEmployment(
-        contactId,
-        CreateEmploymentRequest(
-          organisationId = 1,
-          isActive = true,
-          createdBy = "USER1",
-        ),
+        contactId = contactId,
+        organisationId = 1,
+        isActive = true,
+        createdBy = "USER1",
       )
     }
     assertThat(exception).isEqualTo(expectedException)
@@ -361,12 +356,10 @@ class EmploymentServiceTest {
 
     val exception = assertThrows<EntityNotFoundException> {
       service.createEmployment(
-        contactId,
-        CreateEmploymentRequest(
-          organisationId = 1,
-          isActive = true,
-          createdBy = "USER1",
-        ),
+        contactId = contactId,
+        organisationId = 1,
+        isActive = true,
+        createdBy = "USER1",
       )
     }
     assertThat(exception.message).isEqualTo("Contact (99) not found")

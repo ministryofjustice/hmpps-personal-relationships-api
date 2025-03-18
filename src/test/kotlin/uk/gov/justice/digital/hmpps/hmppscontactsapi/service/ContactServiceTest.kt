@@ -47,6 +47,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContact
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.EmailAddress
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.Employment
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateMultipleIdentitiesRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.IdentityDocument
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameDetails
@@ -126,6 +127,7 @@ class ContactServiceTest {
         addresses = listOf(addressWithPhoneNumber),
         phoneNumbers = listOf(phoneNumber),
         emailAddresses = listOf(EmailAddress("test@example.com")),
+        employments = listOf(Employment(organisationId = 1, isActive = true), Employment(organisationId = 2, isActive = false)),
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(contactAddressDetailsRepository.findByContactId(any())).thenReturn(listOf(aContactAddressDetailsEntity))
@@ -212,6 +214,8 @@ class ContactServiceTest {
 
       verify(contactPhoneService).createMultiple(123L, request.createdBy, listOf(phoneNumber))
       verify(contactEmailService).createMultiple(123L, request.createdBy, listOf(EmailAddress("test@example.com")))
+      verify(employmentService).createEmployment(123L, 1, true, request.createdBy)
+      verify(employmentService).createEmployment(123L, 2, false, request.createdBy)
     }
 
     @Test
@@ -525,6 +529,22 @@ class ContactServiceTest {
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(contactAddressDetailsRepository.findByContactId(any())).thenReturn(listOf(aContactAddressDetailsEntity))
       whenever(contactEmailService.createMultiple(any(), any(), any())).thenThrow(RuntimeException("Bang!"))
+
+      assertThrows<RuntimeException>("Bang!") {
+        service.createContact(request)
+      }
+    }
+
+    @Test
+    fun `should propagate exceptions creating a contact with employments`() {
+      val request = CreateContactRequest(
+        lastName = "last",
+        firstName = "first",
+        createdBy = "created",
+        employments = listOf(Employment(1, true)),
+      )
+      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
+      whenever(employmentService.createEmployment(any(), any(), any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
         service.createContact(request)

@@ -86,6 +86,14 @@ class ContactFacade(
           contactId = creationResult.createdContact.id,
         )
       }
+
+      creationResult.createdContact.employments.forEach {
+        outboundEventsService.send(
+          outboundEvent = OutboundEvent.EMPLOYMENT_CREATED,
+          identifier = it.employmentId,
+          contactId = creationResult.createdContact.id,
+        )
+      }
     }
 
   fun addContactRelationship(request: AddContactRelationshipRequest): PrisonerContactRelationshipDetails {

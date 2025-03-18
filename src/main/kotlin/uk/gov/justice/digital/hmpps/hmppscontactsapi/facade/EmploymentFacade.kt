@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateEmploymentRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchEmploymentsRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateEmploymentRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.CreateEmploymentRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.PatchEmploymentsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.UpdateEmploymentRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.EmploymentDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
@@ -22,7 +22,12 @@ class EmploymentFacade(
     result.deletedIds.onEach { outboundEventsService.send(OutboundEvent.EMPLOYMENT_DELETED, it, contactId = contactId, source = Source.DPS) }
   }.employmentsAfterUpdate
 
-  fun createEmployment(contactId: Long, request: CreateEmploymentRequest): EmploymentDetails = employmentService.createEmployment(contactId, request).also { result ->
+  fun createEmployment(contactId: Long, request: CreateEmploymentRequest): EmploymentDetails = employmentService.createEmployment(
+    contactId,
+    request.organisationId,
+    request.isActive,
+    request.createdBy,
+  ).also { result ->
     outboundEventsService.send(OutboundEvent.EMPLOYMENT_CREATED, result.employmentId, contactId = contactId, source = Source.DPS)
   }
 
