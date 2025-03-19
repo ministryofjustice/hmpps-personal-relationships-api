@@ -9,6 +9,7 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.never
@@ -22,7 +23,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.Domes
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerDomesticStatusRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ReferenceCodeRepository
-import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 
 @ExtendWith(MockitoExtension::class)
 class PrisonerDomesticStatusMigrationServiceTest {
@@ -40,18 +41,18 @@ class PrisonerDomesticStatusMigrationServiceTest {
     ReferenceCodeEntity(1L, ReferenceCodeGroup.DOMESTIC_STS, "M", "Married", 0, true, "name")
 
   @Test
-  fun `migrateDomesticStatus should save current and historical records and return correct response`() {
+  fun `should save current and historical records and return correct response`() {
     // Given
     val prisonerNumber = "A1234BC"
     val current = DomesticStatusDetailsRequest(
       domesticStatusCode = "M",
       createdBy = "USER1",
-      createdTime = LocalDateTime.now().minusDays(2),
+      createdTime = now().minusDays(2),
     )
     val historical = DomesticStatusDetailsRequest(
       domesticStatusCode = "S",
       createdBy = "USER2",
-      createdTime = LocalDateTime.now().minusDays(1),
+      createdTime = now().minusDays(1),
     )
 
     val request = MigratePrisonerDomesticStatusRequest(
@@ -108,10 +109,10 @@ class PrisonerDomesticStatusMigrationServiceTest {
   }
 
   @Test
-  fun `migrateDomesticStatus should handle empty history`() {
+  fun `should handle empty history`() {
     // Given
     val prisonerNumber = "A1234BC"
-    val createdTime = LocalDateTime.now()
+    val createdTime = now()
     val request = MigratePrisonerDomesticStatusRequest(
       prisonerNumber = prisonerNumber,
       history = emptyList(),
@@ -155,13 +156,80 @@ class PrisonerDomesticStatusMigrationServiceTest {
   }
 
   @Test
-  fun `migrateDomesticStatus should handle single history item`() {
+  fun `should overwrite existing records`() {
+    // Given
+    val prisonerNumber = "A1234BC"
+    val current = DomesticStatusDetailsRequest(
+      domesticStatusCode = "M",
+      createdBy = "USER1",
+      createdTime = now(),
+    )
+    val historical = DomesticStatusDetailsRequest(
+      domesticStatusCode = "S",
+      createdBy = "USER2",
+      createdTime = now().minusDays(1),
+    )
+
+    val request = MigratePrisonerDomesticStatusRequest(
+      prisonerNumber = prisonerNumber,
+      current = current,
+      history = listOf(historical),
+    )
+
+    val savedCurrent = PrisonerDomesticStatus(
+      prisonerDomesticStatusId = 1L,
+      prisonerNumber = prisonerNumber,
+      domesticStatusCode = "D",
+      createdBy = "Admin",
+      createdTime = now().minusDays(5),
+      active = true,
+    )
+
+    val savedHistory = PrisonerDomesticStatus(
+      prisonerDomesticStatusId = 2L,
+      prisonerNumber = prisonerNumber,
+      domesticStatusCode = "M",
+      createdBy = "User1",
+      createdTime = now().minusDays(6),
+      active = false,
+    )
+
+    // When
+    whenever(referenceCodeRepository.findByGroupCodeAndCode(any(), any())).thenReturn(referenceData)
+    whenever(prisonerDomesticStatusRepository.saveAll<PrisonerDomesticStatus>(any())).thenReturn(listOf(savedCurrent, savedHistory))
+    whenever(prisonerDomesticStatusRepository.deleteByPrisonerNumber(prisonerNumber)).then {}
+
+    val result = domesticStatusMigrationService.migrateDomesticStatus(request)
+    assertThat(result.history).hasSize(1)
+    assertThat(result.history[0]).isEqualTo(2L)
+    assertThat(result.current).isEqualTo(1L)
+    verify(prisonerDomesticStatusRepository).deleteByPrisonerNumber(prisonerNumber)
+
+    // Then
+    val argumentCaptor = argumentCaptor<List<PrisonerDomesticStatus>>()
+    verify(prisonerDomesticStatusRepository).saveAll(argumentCaptor.capture())
+    val items = argumentCaptor.firstValue
+    assertThat(items).hasSize(2)
+    assertThat(items[0].prisonerNumber).isEqualTo(prisonerNumber)
+    assertThat(items[0].domesticStatusCode).isEqualTo(historical.domesticStatusCode)
+    assertThat(items[0].createdBy).isEqualTo(historical.createdBy)
+    assertThat(items[0].createdTime).isEqualTo(historical.createdTime)
+    assertThat(items[0].active).isFalse()
+    assertThat(items[1].prisonerNumber).isEqualTo(prisonerNumber)
+    assertThat(items[1].domesticStatusCode).isEqualTo(current.domesticStatusCode)
+    assertThat(items[1].createdBy).isEqualTo(current.createdBy)
+    assertThat(items[1].createdTime).isEqualTo(current.createdTime)
+    assertThat(items[1].active).isTrue()
+  }
+
+  @Test
+  fun `should handle single history item`() {
     // Given
     val prisonerNumber = "A1234BC"
     val historyItem = DomesticStatusDetailsRequest(
       domesticStatusCode = "M",
       createdBy = "USER1",
-      createdTime = LocalDateTime.now(),
+      createdTime = now(),
     )
 
     val request = MigratePrisonerDomesticStatusRequest(
@@ -192,7 +260,7 @@ class PrisonerDomesticStatusMigrationServiceTest {
   }
 
   @Test
-  fun `migrateDomesticStatus should throw exception when current domestic status code is invalid`() {
+  fun `should throw exception when current domestic status code is invalid`() {
     // Given
     val prisonerNumber = "A1234BC"
     val invalidStatusCode = "INVALID_CODE"
@@ -200,7 +268,7 @@ class PrisonerDomesticStatusMigrationServiceTest {
     val currentItem = DomesticStatusDetailsRequest(
       domesticStatusCode = invalidStatusCode,
       createdBy = "USER1",
-      createdTime = LocalDateTime.now(),
+      createdTime = now(),
     )
 
     val request = MigratePrisonerDomesticStatusRequest(
@@ -223,7 +291,7 @@ class PrisonerDomesticStatusMigrationServiceTest {
   }
 
   @Test
-  fun `migrateDomesticStatus should validate all historical status codes in the request`() {
+  fun `should validate all historical status codes in the request`() {
     // Given
     val prisonerNumber = "A1234BC"
     val validCode = "M"
@@ -233,12 +301,12 @@ class PrisonerDomesticStatusMigrationServiceTest {
       DomesticStatusDetailsRequest(
         domesticStatusCode = validCode,
         createdBy = "USER1",
-        createdTime = LocalDateTime.now(),
+        createdTime = now(),
       ),
       DomesticStatusDetailsRequest(
         domesticStatusCode = invalidCode,
         createdBy = "USER1",
-        createdTime = LocalDateTime.now(),
+        createdTime = now(),
       ),
     )
 
