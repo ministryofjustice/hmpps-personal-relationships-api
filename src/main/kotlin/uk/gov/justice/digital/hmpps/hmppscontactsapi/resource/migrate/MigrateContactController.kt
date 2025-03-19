@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate.ContactMigr
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-@Tag(name = "Sync & Migrate")
+@Tag(name = "Migrate and sync")
 @RestController
 @RequestMapping(value = ["migrate/contact"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @AuthApiResponses

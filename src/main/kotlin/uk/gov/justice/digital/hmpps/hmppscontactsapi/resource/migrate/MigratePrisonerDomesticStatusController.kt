@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate.PrisonerDom
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-@Tag(name = "Sync & Migrate")
+@Tag(name = "Migrate and sync")
 @RestController
 @RequestMapping(value = ["migrate/domestic-status"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @AuthApiResponses

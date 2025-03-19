@@ -41,7 +41,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
       Info()
         .title("Personal Relationships API")
         .version(version)
-        .description("API for management of contacts and their relationships to prisoners including restrictions that apply to the contact or relationship specifically.")
+        .description("API for the management of contacts, their relationships to prisoners and restrictions.")
         .contact(
           Contact()
             .name("HMPPS Digital Studio")
@@ -52,32 +52,27 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
       listOf(
         Tag().apply {
           name("Contacts")
-          description("APIs relating to creating and managing a contact")
+          description("Endpoints for creating and managing contacts.")
         },
         Tag().apply {
-          name("Prisoner Contact Relationship")
-          description("APIs relating to creating and managing relationships between contacts and prisoners")
+          name("Prisoner relationships")
+          description("Endpoints for creating and managing the relationships between contacts and prisoners.")
         },
         Tag().apply {
           name("Restrictions")
-          description(
-            """
-            APIs relating to creating and managing restrictions. Two kinds of restrictions are supported in this API
-            
-             - Estate wide restrictions, a.k.a global and contact restrictions. These apply to all of a contacts relationships.
-             - Prisoner-contact restrictions. These apply to a relationship between a specific prisoner and contact. 
-             
-            There are also restrictions that can apply to a prisoner and all of their relationships but those are not supported by this API.
-            """.trimIndent(),
-          )
+          description("Endpoints for creating and managing restrictions including global and relationship-specific varieties.")
         },
         Tag().apply {
-          name("Reference Data")
-          description("APIs relating to reference data used in the service")
+          name("Reference data")
+          description("Endpoints for accessing the reference data used in this service")
         },
         Tag().apply {
-          name("Sync & Migrate")
-          description("APIs relating to data sync and migration with NOMIS")
+          name("Migrate and sync")
+          description("Endpoints for migrating and synchronising data to and from NOMIS")
+        },
+        Tag().apply {
+          name("Sync admin")
+          description("Endpoints use by synchronisation for administrative purposes")
         },
       ),
     )

@@ -29,7 +29,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.Prisone
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.MergePrisonerContactService
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncAdminService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncContactAddressPhoneService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncContactAddressService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncContactEmailService
@@ -70,7 +70,7 @@ class SyncFacade(
   private val syncPrisonerContactService: SyncPrisonerContactService,
   private val syncPrisonerContactRestrictionService: SyncPrisonerContactRestrictionService,
   private val syncEmploymentService: SyncEmploymentService,
-  private val mergePrisonerContactService: MergePrisonerContactService,
+  private val syncAdminService: SyncAdminService,
   private val outboundEventsService: OutboundEventsService,
 ) {
   // ================================================================
@@ -449,7 +449,7 @@ class SyncFacade(
   //  restrictions as they are in NOMIS after the merge for the retained prisoner.
   // =====================================================================================
 
-  fun mergePrisonerContacts(request: MergePrisonerContactRequest) = mergePrisonerContactService.mergePrisonerContacts(request)
+  fun mergePrisonerContacts(request: MergePrisonerContactRequest) = syncAdminService.mergePrisonerContacts(request)
     .also {
       sendEventsForRelationshipsRemoved(it.relationshipsRemoved)
       sendEventsForRelationshipsCreated(request.retainedPrisonerNumber, it.relationshipsCreated)
@@ -463,7 +463,7 @@ class SyncFacade(
   //    - An old booking (for the same prisoner) is reinstated
   // ===========================================================================================================
 
-  fun resetPrisonerContacts(request: ResetPrisonerContactRequest) = mergePrisonerContactService.resetPrisonerContacts(request)
+  fun resetPrisonerContacts(request: ResetPrisonerContactRequest) = syncAdminService.resetPrisonerContacts(request)
     .also {
       sendEventsForRelationshipsRemoved(it.relationshipsRemoved)
       sendEventsForRelationshipsCreated(request.prisonerNumber, it.relationshipsCreated)

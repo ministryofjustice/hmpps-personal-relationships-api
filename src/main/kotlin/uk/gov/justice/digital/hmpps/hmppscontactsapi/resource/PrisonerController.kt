@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.PrisonNumberDoc
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-@Tag(name = "Prisoner Contact Relationship")
+@Tag(name = "Prisoner relationships")
 @RestController
 @RequestMapping(value = ["prisoner"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @AuthApiResponses

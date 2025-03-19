@@ -44,7 +44,7 @@ class PrisonerContactController(
 ) {
 
   @Operation(summary = "Endpoint to get a prisoner contact relationship by relationship id")
-  @Tag(name = "Prisoner Contact Relationship")
+  @Tag(name = "Prisoner relationships")
   @ApiResponses(
     value = [
       ApiResponse(
@@ -84,7 +84,7 @@ class PrisonerContactController(
     summary = "Update prisoner contact relationship",
     description = "Update the relationship between the contact and a prisoner.",
   )
-  @Tag(name = "Prisoner Contact Relationship")
+  @Tag(name = "Prisoner relationships")
   @ApiResponses(
     value = [
       ApiResponse(
@@ -122,7 +122,7 @@ class PrisonerContactController(
     summary = "Add a new prisoner contact relationship",
     description = "Creates a new relationship between the contact and a prisoner.",
   )
-  @Tag(name = "Prisoner Contact Relationship")
+  @Tag(name = "Prisoner relationships")
   @ApiResponses(
     value = [
       ApiResponse(

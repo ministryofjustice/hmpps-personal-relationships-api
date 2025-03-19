@@ -25,7 +25,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpda
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContactAddressPhone
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-@Tag(name = "Sync & Migrate")
+@Tag(name = "Migrate and sync")
 @RestController
 @RequestMapping(value = ["/sync"], produces = [MediaType.APPLICATION_JSON_VALUE])
 class ContactAddressPhoneSyncController(

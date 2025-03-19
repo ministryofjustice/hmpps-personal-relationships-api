@@ -19,7 +19,7 @@ import java.time.LocalDateTime
 
 @Service
 @Transactional
-class MergePrisonerContactService(
+class SyncAdminService(
   val prisonerContactRepository: PrisonerContactRepository,
   val prisonerContactRestrictionRepository: PrisonerContactRestrictionRepository,
 ) {

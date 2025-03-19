@@ -23,10 +23,10 @@ import java.time.LocalDate
 
 @Sql("classpath:merge.tests/data-for-merge-test.sql")
 @Sql(scripts = ["classpath:merge.tests/cleanup-merge-test.sql"], executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-class MergePrisonerContactsIntegrationTest : PostgresIntegrationTestBase() {
+class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
 
   @Nested
-  inner class MergePrisonerContactTests {
+  inner class SyncAdminTests {
 
     @BeforeEach
     fun resetEvents() {
@@ -36,7 +36,7 @@ class MergePrisonerContactsIntegrationTest : PostgresIntegrationTestBase() {
     @Test
     fun `Merge endpoint should return unauthorized if no token provided`() {
       webTestClient.post()
-        .uri("/sync/prisoner-contact/merge")
+        .uri("/sync/admin/merge")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(createMergeRequest(retained = "A3333AA", removed = "A4444AA"))
@@ -48,7 +48,7 @@ class MergePrisonerContactsIntegrationTest : PostgresIntegrationTestBase() {
     @Test
     fun `Merge endpoint should return forbidden without an authorised role on the token`() {
       webTestClient.post()
-        .uri("/sync/prisoner-contact/merge")
+        .uri("/sync/admin/merge")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(createMergeRequest(retained = "A3333AA", removed = "A4444AA"))
@@ -61,7 +61,7 @@ class MergePrisonerContactsIntegrationTest : PostgresIntegrationTestBase() {
     @Test
     fun `should remove the prisoner contacts and restrictions with nothing to recreate - empty list provided`() {
       val mergeResponse = webTestClient.post()
-        .uri("/sync/prisoner-contact/merge")
+        .uri("/sync/admin/merge")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
@@ -85,7 +85,7 @@ class MergePrisonerContactsIntegrationTest : PostgresIntegrationTestBase() {
     @Test
     fun `should remove the prisoner contacts and restrictions then recreate for the retained prisoner`() {
       val mergeResponse = webTestClient.post()
-        .uri("/sync/prisoner-contact/merge")
+        .uri("/sync/admin/merge")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))

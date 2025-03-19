@@ -11,10 +11,10 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.PatchEmploym
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.CreateEmploymentRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.PatchEmploymentsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.UpdateEmploymentRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.EmploymentService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.EmploymentService
 
 class EmploymentFacadeTest {
 

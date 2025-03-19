@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.Country
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.CountryService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 
-@Tag(name = "Reference Data")
+@Tag(name = "Reference data")
 @Deprecated(
   level = DeprecationLevel.WARNING,
   message = "No longer used. Please use the generic endpoint /reference-codes/group/{groupCode} for all reference values",
