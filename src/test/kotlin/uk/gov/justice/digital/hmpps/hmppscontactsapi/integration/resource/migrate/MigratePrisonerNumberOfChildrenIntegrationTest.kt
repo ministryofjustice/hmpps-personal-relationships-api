@@ -8,7 +8,9 @@ import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerNumberOfChildrenRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.NumberOfChildrenDetailsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerNumberOfChildrenRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerNumberOfChildrenMigrationResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerNumberOfChildrenResponse
 import java.time.LocalDateTime
 
 class MigratePrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase() {
@@ -96,6 +98,63 @@ class MigratePrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBa
       .expectBody()
       .jsonPath("$.userMessage")
       .isEqualTo("Validation failure(s): current.numberOfChildren must be less than or equal to 50 characters")
+  }
+
+  @Test
+  fun `should overwrite existing migration`() {
+    // Given
+    val prisonerNumber = "A1234BC"
+    val numberOfChildrenToMigrate = basicMigrationRequest()
+    val numberOfChildrenToSync = SyncUpdatePrisonerNumberOfChildrenRequest(
+      numberOfChildren = "1",
+      createdBy = "user",
+      createdTime = LocalDateTime.now(),
+    )
+    // When
+    webTestClient.put()
+      .uri("/sync/$prisonerNumber/number-of-children")
+      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(numberOfChildrenToSync)
+      .exchange()
+      .expectStatus().isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(SyncPrisonerNumberOfChildrenResponse::class.java)
+      .returnResult().responseBody
+
+    val response = webTestClient.post()
+      .uri("/migrate/number-of-children")
+      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(numberOfChildrenToMigrate)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(PrisonerNumberOfChildrenMigrationResponse::class.java)
+      .returnResult().responseBody!!
+
+    // Then
+    with(response) {
+      assertThat(prisonerNumber).isEqualTo("A1234BC")
+      assertThat(current).isGreaterThan(0)
+      assertThat(history[0]).isGreaterThan(0)
+    }
+
+    val syncResponse = webTestClient.get()
+      .uri("/sync/$prisonerNumber/number-of-children")
+      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .exchange()
+      .expectStatus().isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(SyncPrisonerNumberOfChildrenResponse::class.java)
+      .returnResult().responseBody
+
+    with(syncResponse!!) {
+      assertThat(numberOfChildren).isEqualTo(numberOfChildrenToMigrate.current?.numberOfChildren)
+      assertThat(createdBy).isEqualTo(numberOfChildrenToMigrate.current?.createdBy)
+      assertThat(createdTime).isNotNull
+    }
   }
 
   private fun basicMigrationRequest() = MigratePrisonerNumberOfChildrenRequest(

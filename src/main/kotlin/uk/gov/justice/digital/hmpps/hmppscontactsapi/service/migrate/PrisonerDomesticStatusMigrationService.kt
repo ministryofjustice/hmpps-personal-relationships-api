@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate
 
 import jakarta.persistence.EntityNotFoundException
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerDomesticStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
@@ -15,8 +16,10 @@ class PrisonerDomesticStatusMigrationService(
   private val referenceCodeRepository: ReferenceCodeRepository,
 ) {
 
+  @Transactional
   fun migrateDomesticStatus(request: MigratePrisonerDomesticStatusRequest): PrisonerDomesticStatusMigrationResponse {
     // Create list of entities to save
+    removeExistingRecords(request)
     val entitiesToSave = buildList {
       addAll(
         request.history.map {
@@ -54,6 +57,10 @@ class PrisonerDomesticStatusMigrationService(
       current = savedEntities.find { it.active }?.prisonerDomesticStatusId,
       history = savedEntities.filter { !it.active }.map { it.prisonerDomesticStatusId },
     )
+  }
+
+  private fun removeExistingRecords(request: MigratePrisonerDomesticStatusRequest) {
+    prisonerDomesticStatusRepository.deleteByPrisonerNumber(request.prisonerNumber)
   }
 
   private fun validateReferenceDataExists(code: String) = referenceCodeRepository

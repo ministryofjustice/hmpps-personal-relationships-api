@@ -26,7 +26,7 @@ class PrisonerNumberOfChildrenMigrationServiceTest {
   private lateinit var numberOfChildrenMigrationService: PrisonerNumberOfChildrenMigrationService
 
   @Test
-  fun `migrateNumberOfChildren should save historical records and return correct response`() {
+  fun `should save historical records and return correct response`() {
     // Given
     val prisonerNumber = "A1234BC"
     val current = NumberOfChildrenDetailsRequest(
@@ -93,7 +93,74 @@ class PrisonerNumberOfChildrenMigrationServiceTest {
   }
 
   @Test
-  fun `migrateNumberOfChildren should handle empty history`() {
+  fun `should overwrite existing records`() {
+    // Given
+    val prisonerNumber = "A1234BC"
+    val current = NumberOfChildrenDetailsRequest(
+      numberOfChildren = "1",
+      createdBy = "USER1",
+      createdTime = LocalDateTime.now().minusDays(2),
+    )
+    val historical = NumberOfChildrenDetailsRequest(
+      numberOfChildren = "1",
+      createdBy = "USER2",
+      createdTime = LocalDateTime.now().minusDays(1),
+    )
+
+    val request = MigratePrisonerNumberOfChildrenRequest(
+      prisonerNumber = prisonerNumber,
+      current = current,
+      history = listOf(historical),
+    )
+
+    val savedCurrent = PrisonerNumberOfChildren(
+      prisonerNumberOfChildrenId = 1L,
+      prisonerNumber = prisonerNumber,
+      numberOfChildren = "4",
+      createdBy = "Admin",
+      createdTime = LocalDateTime.now(),
+      active = true,
+    )
+
+    val savedHistory = PrisonerNumberOfChildren(
+      prisonerNumberOfChildrenId = 2L,
+      prisonerNumber = prisonerNumber,
+      numberOfChildren = "2",
+      createdBy = "User1",
+      createdTime = LocalDateTime.now(),
+      active = false,
+    )
+
+    // When
+    whenever(prisonerNumberOfChildrenRepository.saveAll<PrisonerNumberOfChildren>(any())).thenReturn(listOf(savedCurrent, savedHistory))
+    whenever(prisonerNumberOfChildrenRepository.deleteByPrisonerNumber(prisonerNumber)).then {}
+
+    val result = numberOfChildrenMigrationService.migrateNumberOfChildren(request)
+    assertThat(result.history).hasSize(1)
+    assertThat(result.history[0]).isEqualTo(2L)
+    assertThat(result.current).isEqualTo(1L)
+    // Then
+
+    verify(prisonerNumberOfChildrenRepository).deleteByPrisonerNumber(prisonerNumber)
+    val capture = argumentCaptor<List<PrisonerNumberOfChildren>>()
+    verify(prisonerNumberOfChildrenRepository).saveAll(capture.capture())
+    with(capture.firstValue) {
+      assertThat(size).isEqualTo(2)
+      assertThat(get(0).prisonerNumber).isEqualTo(prisonerNumber)
+      assertThat(get(0).numberOfChildren).isEqualTo(historical.numberOfChildren)
+      assertThat(get(0).createdBy).isEqualTo(historical.createdBy)
+      assertThat(get(0).createdTime).isEqualTo(historical.createdTime)
+      assertThat(get(0).active).isFalse()
+      assertThat(get(1).prisonerNumber).isEqualTo(prisonerNumber)
+      assertThat(get(1).numberOfChildren).isEqualTo(current.numberOfChildren)
+      assertThat(get(1).createdBy).isEqualTo(current.createdBy)
+      assertThat(get(1).createdTime).isEqualTo(current.createdTime)
+      assertThat(get(1).active).isTrue()
+    }
+  }
+
+  @Test
+  fun `should handle empty history`() {
     // Given
     val prisonerNumber = "A1234BC"
     val createdTime = LocalDateTime.now()
@@ -139,7 +206,7 @@ class PrisonerNumberOfChildrenMigrationServiceTest {
   }
 
   @Test
-  fun `migrateNumberOfChildren should handle single history item`() {
+  fun `should handle single history item`() {
     // Given
     val prisonerNumber = "A1234BC"
     val historyItem = NumberOfChildrenDetailsRequest(
