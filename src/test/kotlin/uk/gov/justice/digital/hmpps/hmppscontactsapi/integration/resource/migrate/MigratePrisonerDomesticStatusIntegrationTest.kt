@@ -8,7 +8,9 @@ import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.DomesticStatusDetailsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerDomesticStatusRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerDomesticStatusMigrationResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponse
 import java.time.LocalDateTime
 
 class MigratePrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() {
@@ -61,6 +63,66 @@ class MigratePrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase
       assertThat(prisonerNumber).isEqualTo("A1234BC")
       assertThat(current).isGreaterThan(0)
       assertThat(history[0]).isGreaterThan(0)
+    }
+  }
+
+  @Test
+  fun `should overwrite existing migration`() {
+    // Given
+    val prisonerNumber = "A1234BC"
+    val domesticStatusToMigrate = basicMigrationRequest()
+    // When
+    val domesticStatusToSync = SyncUpdatePrisonerDomesticStatusRequest(
+      domesticStatusCode = "D",
+      createdBy = "ADMIN",
+      createdTime = LocalDateTime.now(),
+    )
+
+    // When
+    webTestClient.put()
+      .uri("/sync/$prisonerNumber/domestic-status")
+      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(domesticStatusToSync)
+      .exchange()
+      .expectStatus().isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(SyncPrisonerDomesticStatusResponse::class.java)
+      .returnResult().responseBody
+
+    val response = webTestClient.post()
+      .uri("/migrate/domestic-status")
+      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(domesticStatusToMigrate)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(PrisonerDomesticStatusMigrationResponse::class.java)
+      .returnResult().responseBody!!
+
+    // Then
+    with(response) {
+      assertThat(this.prisonerNumber).isEqualTo(prisonerNumber)
+      assertThat(this.current).isGreaterThan(0)
+      assertThat(history[0]).isGreaterThan(0)
+    }
+
+    val domesticStatus = webTestClient.get()
+      .uri("/sync/$prisonerNumber/domestic-status")
+      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .exchange()
+      .expectStatus().isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(SyncPrisonerDomesticStatusResponse::class.java)
+      .returnResult().responseBody
+
+    with(domesticStatus!!) {
+      assertThat(prisonerNumber).isEqualTo(prisonerNumber)
+      assertThat(domesticStatusCode).isEqualTo(domesticStatusToMigrate.current?.domesticStatusCode)
+      assertThat(createdBy).isEqualTo(domesticStatusToMigrate.current?.createdBy)
+      assertThat(createdTime).isNotNull
     }
   }
 

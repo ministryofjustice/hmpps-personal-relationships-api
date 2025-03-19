@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate
 
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerNumberOfChildren
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerNumberOfChildrenRequest
@@ -11,7 +12,9 @@ class PrisonerNumberOfChildrenMigrationService(
   private val prisonerNumberOfChildrenRepository: PrisonerNumberOfChildrenRepository,
 ) {
 
+  @Transactional
   fun migrateNumberOfChildren(request: MigratePrisonerNumberOfChildrenRequest): PrisonerNumberOfChildrenMigrationResponse {
+    removeExistingRecords(request)
     val entitiesToSave = buildList {
       addAll(
         request.history.map {
@@ -46,5 +49,9 @@ class PrisonerNumberOfChildrenMigrationService(
       current = savedEntities.find { it.active }?.prisonerNumberOfChildrenId,
       history = savedEntities.filter { !it.active }.map { it.prisonerNumberOfChildrenId },
     )
+  }
+
+  private fun removeExistingRecords(request: MigratePrisonerNumberOfChildrenRequest) {
+    prisonerNumberOfChildrenRepository.deleteByPrisonerNumber(request.prisonerNumber)
   }
 }

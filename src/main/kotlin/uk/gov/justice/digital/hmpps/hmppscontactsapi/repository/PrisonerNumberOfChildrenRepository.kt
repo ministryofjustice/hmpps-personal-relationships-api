@@ -7,4 +7,5 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerNumberOfChil
 @Repository
 interface PrisonerNumberOfChildrenRepository : JpaRepository<PrisonerNumberOfChildren, Long> {
   fun findByPrisonerNumberAndActive(prisonerNumber: String, active: Boolean): PrisonerNumberOfChildren?
+  fun deleteByPrisonerNumber(prisonerNumber: String)
 }
