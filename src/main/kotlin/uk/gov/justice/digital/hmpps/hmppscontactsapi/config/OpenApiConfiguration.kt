@@ -60,7 +60,14 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
         },
         Tag().apply {
           name("Restrictions")
-          description("Endpoints for creating and managing restrictions including global and relationship-specific varieties.")
+          description(
+            """
+            Endpoints for creating and managing restrictions. Two kinds of restrictions are supported:
+             - Estate wide restrictions (known as global or contact restrictions), which apply to all the contact's relationships.
+             - Prisoner-contact restrictions, which apply to a specific relationship between a prisoner and a contact.
+            There are also restrictions that can apply to a prisoner (and all of their relationships) but these are not supported here.
+            """.trimIndent(),
+          )
         },
         Tag().apply {
           name("Reference data")
