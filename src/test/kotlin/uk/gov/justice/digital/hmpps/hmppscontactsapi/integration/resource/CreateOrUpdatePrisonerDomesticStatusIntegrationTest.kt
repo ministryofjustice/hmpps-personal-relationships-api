@@ -64,7 +64,7 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(response.id, Source.DPS),
+      additionalInfo = PrisonerDomesticStatus(response!!.id, Source.DPS),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -102,7 +102,7 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(response.id, Source.DPS),
+      additionalInfo = PrisonerDomesticStatus(response!!.id, Source.DPS),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
