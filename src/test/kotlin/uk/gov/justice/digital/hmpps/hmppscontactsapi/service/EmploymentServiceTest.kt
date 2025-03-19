@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync
+package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 
 import jakarta.persistence.EntityNotFoundException
 import org.assertj.core.api.Assertions.assertThat
@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.Pa
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.UpdateEmploymentRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.EmploymentRepository
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.OrganisationService
 import java.time.LocalDateTime.now
 import java.util.*
 

@@ -5,22 +5,30 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactRestrictionEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncPrisonerRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.ElementType
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.IdPair
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.MergePrisonerContactResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.PrisonerContactAndRestrictionIds
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.PrisonerRelationshipIds
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.ResetPrisonerContactResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRestrictionRepository
 import java.time.LocalDateTime
 
 @Service
 @Transactional
-class MergePrisonerContactService(
+class SyncAdminService(
   val prisonerContactRepository: PrisonerContactRepository,
   val prisonerContactRestrictionRepository: PrisonerContactRestrictionRepository,
 ) {
-
+  /**
+   * MERGE - Called by the Syscon Sync Service when an offender merge happens in NOMIS.
+   * This removes the relationships and relationship restrictions for both old and new prisoner numbers,
+   * and then recreates the relationships and restrictions provided in the request for the
+   * retained prisoner number only.
+   */
   fun mergePrisonerContacts(request: MergePrisonerContactRequest): MergePrisonerContactResponse {
     // Get the list of relationships for both prisoner numbers
     val relationshipsForRemovedPrisoner = prisonerContactRepository.findAllByPrisonerNumber(request.removedPrisonerNumber)
@@ -35,7 +43,7 @@ class MergePrisonerContactService(
       prisonerContactRestrictionRepository.findAllByPrisonerContactId(relationship.prisonerContactId)
     }.flatten()
 
-    // Delete the restrictions
+    // Delete the relationship restrictions for both prisoners
     relationshipsForRemovedPrisoner.map { relationship ->
       prisonerContactRestrictionRepository.deleteAllByPrisonerContactId(relationship.prisonerContactId)
     }
@@ -43,13 +51,13 @@ class MergePrisonerContactService(
       prisonerContactRestrictionRepository.deleteAllByPrisonerContactId(relationship.prisonerContactId)
     }
 
-    // Delete the relationships for both prisoner numbers
+    // Delete the relationships for both prisoners
     prisonerContactRepository.deleteAllByPrisonerNumber(request.removedPrisonerNumber)
     prisonerContactRepository.deleteAllByPrisonerNumber(request.retainedPrisonerNumber)
 
     // Recreate the relationships and restrictions provided for the retained prisoner number only
-    val relationshipPairs = extractAndSavePrisonerContacts(request)
-    val restrictionPairs = extractAndSavePrisonerContactRestrictions(request, relationshipPairs)
+    val relationshipPairs = extractAndSavePrisonerContacts(request.prisonerContacts)
+    val restrictionPairs = extractAndSavePrisonerContactRestrictions(request.prisonerContacts, relationshipPairs)
 
     // Build the response objects for relationships and restrictions that were removed
     val relationshipsRemovedPrisoner = buildRelationshipsRemoved(relationshipsForRemovedPrisoner, restrictionsForRemovedPrisoner)
@@ -61,7 +69,47 @@ class MergePrisonerContactService(
     )
   }
 
-  fun buildRelationshipsRemoved(
+  /**
+   * RESET - Called by the Syscon Sync Service for 3 admin scenarios which can happen in NOMIS.
+   * 1. New booking - someone comes back into prison on a new booking.
+   * 2. Reactivate an old booking - bookings are re-instated over an existing booking.
+   * 3. Booking move - to correct misidentified people (i.e. the booking was created against the wrong name)
+   *
+   * For each of these scenarios the action is the same:
+   *  - Remove the relationships and restrictions for a prisoner
+   *  - Recreate the relationships and restrictions for this prisoner to match what is present in NOMIS
+   */
+  fun resetPrisonerContacts(request: ResetPrisonerContactRequest): ResetPrisonerContactResponse {
+    // Get the list of relationship entities for the prisoner
+    val relationshipsForPrisoner = prisonerContactRepository.findAllByPrisonerNumber(request.prisonerNumber)
+
+    // Get the list of prisoner contact restrictions for the prisoner
+    val restrictionsForPrisoner = relationshipsForPrisoner.map { relationship ->
+      prisonerContactRestrictionRepository.findAllByPrisonerContactId(relationship.prisonerContactId)
+    }.flatten()
+
+    // Delete the prisoner contact restrictions
+    relationshipsForPrisoner.map { relationship ->
+      prisonerContactRestrictionRepository.deleteAllByPrisonerContactId(relationship.prisonerContactId)
+    }
+
+    // Delete the prisoner contacts
+    prisonerContactRepository.deleteAllByPrisonerNumber(request.prisonerNumber)
+
+    // Recreate the relationships and restrictions provided for this prisoner
+    val relationshipPairs = extractAndSavePrisonerContacts(request.prisonerContacts)
+    val restrictionPairs = extractAndSavePrisonerContactRestrictions(request.prisonerContacts, relationshipPairs)
+
+    // Build a list of the IDs for relationships that were removed
+    val relationshipsRemoved = buildRelationshipsRemoved(relationshipsForPrisoner, restrictionsForPrisoner)
+
+    return ResetPrisonerContactResponse(
+      relationshipsCreated = buildContactsAndRestrictionsResponse(relationshipPairs, restrictionPairs),
+      relationshipsRemoved = relationshipsRemoved,
+    )
+  }
+
+  private fun buildRelationshipsRemoved(
     relationships: List<PrisonerContactEntity>,
     restrictions: List<PrisonerContactRestrictionEntity>,
   ): List<PrisonerRelationshipIds> = relationships.map { relationship ->
@@ -77,7 +125,7 @@ class MergePrisonerContactService(
     )
   }
 
-  fun buildContactsAndRestrictionsResponse(
+  private fun buildContactsAndRestrictionsResponse(
     relationships: List<Pair<Long, PrisonerContactEntity>>,
     restrictions: List<Pair<Long, List<Pair<Long, PrisonerContactRestrictionEntity>>>>,
   ) = relationships.map { relationship ->
@@ -93,7 +141,7 @@ class MergePrisonerContactService(
     }
   }.flatten()
 
-  fun extractAndSavePrisonerContacts(req: MergePrisonerContactRequest) = req.prisonerContacts.map { relationship ->
+  private fun extractAndSavePrisonerContacts(prisonerContacts: List<SyncPrisonerRelationship>) = prisonerContacts.map { relationship ->
     Pair(
       relationship.id,
       prisonerContactRepository.save(
@@ -109,7 +157,7 @@ class MergePrisonerContactService(
           active = relationship.active,
           approvedVisitor = relationship.approvedVisitor,
           currentTerm = relationship.currentTerm,
-          createdBy = relationship.createUsername ?: "MERGE",
+          createdBy = relationship.createUsername ?: "SYSTEM",
           createdTime = relationship.createDateTime ?: LocalDateTime.now(),
         ).also {
           it.updatedBy = relationship.modifyUsername
@@ -120,10 +168,10 @@ class MergePrisonerContactService(
     )
   }
 
-  fun extractAndSavePrisonerContactRestrictions(
-    req: MergePrisonerContactRequest,
+  private fun extractAndSavePrisonerContactRestrictions(
+    prisonerContacts: List<SyncPrisonerRelationship>,
     prisonerContactPairs: List<Pair<Long, PrisonerContactEntity>>,
-  ) = req.prisonerContacts.map { relationship ->
+  ) = prisonerContacts.map { relationship ->
     // We need to know the saved prisonerContactId for each of the relationship
     val thisRelationship = prisonerContactPairs.find { it.first == relationship.id }
 
@@ -140,7 +188,7 @@ class MergePrisonerContactService(
               startDate = restriction.startDate,
               expiryDate = restriction.expiryDate,
               comments = restriction.comment,
-              createdBy = restriction.createUsername ?: "MERGE",
+              createdBy = restriction.createUsername ?: "SYSTEM",
               createdTime = restriction.createDateTime ?: LocalDateTime.now(),
               updatedBy = restriction.modifyUsername,
               updatedTime = restriction.modifyDateTime,

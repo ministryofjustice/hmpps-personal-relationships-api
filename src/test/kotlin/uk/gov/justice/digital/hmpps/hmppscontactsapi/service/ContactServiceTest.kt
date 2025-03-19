@@ -62,7 +62,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneDeta
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRepository
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.EmploymentService
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync
+package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.Up
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.EmploymentDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.EmploymentRepository
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.OrganisationService
 import java.time.LocalDateTime
 
 @Service

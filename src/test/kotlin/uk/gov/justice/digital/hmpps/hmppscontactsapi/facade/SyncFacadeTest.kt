@@ -42,7 +42,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPri
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.MergePrisonerContactService
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncAdminService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncContactAddressPhoneService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncContactAddressService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncContactEmailService
@@ -67,7 +67,7 @@ class SyncFacadeTest {
   private val syncPrisonerContactService: SyncPrisonerContactService = mock()
   private val syncPrisonerContactRestrictionService: SyncPrisonerContactRestrictionService = mock()
   private val syncEmploymentService: SyncEmploymentService = mock()
-  private val mergePrisonerContactService: MergePrisonerContactService = mock()
+  private val syncAdminService: SyncAdminService = mock()
   private val outboundEventsService: OutboundEventsService = mock()
 
   private val facade = SyncFacade(
@@ -81,7 +81,7 @@ class SyncFacadeTest {
     syncPrisonerContactService,
     syncPrisonerContactRestrictionService,
     syncEmploymentService,
-    mergePrisonerContactService,
+    syncAdminService,
     outboundEventsService,
   )
 
