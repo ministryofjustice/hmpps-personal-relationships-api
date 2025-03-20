@@ -110,6 +110,7 @@ class SyncFacade(
     }
 
   fun getContactIds(pageable: Pageable) = syncContactService.getContactIds(pageable)
+
   // ================================================================
   //  Contact Phone
   // ================================================================

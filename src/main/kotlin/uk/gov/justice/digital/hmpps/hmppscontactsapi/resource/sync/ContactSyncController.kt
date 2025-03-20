@@ -187,7 +187,7 @@ class ContactSyncController(
     ],
   )
   @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
-  fun reconcileOrganisations(
+  fun reconcileContacts(
     @ParameterObject
     @PageableDefault(sort = ["contactId"], size = 100, direction = Direction.ASC)
     pageable: Pageable,

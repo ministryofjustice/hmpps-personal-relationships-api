@@ -9,11 +9,13 @@ import org.springframework.test.context.jdbc.Sql
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.CodedValue
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncPrisonerRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncRelationshipRestriction
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.MergePrisonerContactResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.PrisonerContactAndRestrictionIds
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.PrisonerRelationshipIds
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.ResetPrisonerContactResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerContactInfo
@@ -26,7 +28,7 @@ import java.time.LocalDate
 class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
 
   @Nested
-  inner class SyncAdminTests {
+  inner class MergeTests {
 
     @BeforeEach
     fun resetEvents() {
@@ -34,7 +36,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
     }
 
     @Test
-    fun `Merge endpoint should return unauthorized if no token provided`() {
+    fun `should return unauthorized for a merge if no token provided`() {
       webTestClient.post()
         .uri("/sync/admin/merge")
         .accept(MediaType.APPLICATION_JSON)
@@ -46,7 +48,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
     }
 
     @Test
-    fun `Merge endpoint should return forbidden without an authorised role on the token`() {
+    fun `should return forbidden for merge without an authorised role on the token`() {
       webTestClient.post()
         .uri("/sync/admin/merge")
         .accept(MediaType.APPLICATION_JSON)
@@ -59,7 +61,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
     }
 
     @Test
-    fun `should remove the prisoner contacts and restrictions with nothing to recreate - empty list provided`() {
+    fun `merge should remove prisoner contacts and restrictions with nothing to recreate - empty list provided`() {
       val mergeResponse = webTestClient.post()
         .uri("/sync/admin/merge")
         .accept(MediaType.APPLICATION_JSON)
@@ -78,12 +80,12 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         assertThat(relationshipsRemoved).hasSize(5)
         assertThat(relationshipsRemoved).extracting("prisonerNumber").containsOnly("A3333AA", "A4444AA")
 
-        checkForExpectedEvents(relationshipsRemoved, relationshipsCreated)
+        checkForExpectedEvents(relationshipsRemoved, relationshipsCreated, createdPrisonerNumber = "A3333AA")
       }
     }
 
     @Test
-    fun `should remove the prisoner contacts and restrictions then recreate for the retained prisoner`() {
+    fun `merge should remove the prisoner contacts and restrictions and recreate for the retained prisoner`() {
       val mergeResponse = webTestClient.post()
         .uri("/sync/admin/merge")
         .accept(MediaType.APPLICATION_JSON)
@@ -133,57 +135,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         assertThat(relationshipsRemoved).extracting("prisonerNumber").containsOnly("A3333AA", "A4444AA")
         assertThat(relationshipsCreated).hasSize(2)
 
-        checkForExpectedEvents(relationshipsRemoved, relationshipsCreated)
-      }
-    }
-
-    private fun checkForExpectedEvents(
-      relationshipsRemoved: List<PrisonerRelationshipIds>,
-      relationshipsCreated: List<PrisonerContactAndRestrictionIds>,
-    ) {
-      val retainedPrisonerNumber = "A3333AA"
-
-      relationshipsRemoved.map { relationship ->
-        relationship.prisonerContactRestrictionIds.map { restrictionId ->
-          stubEvents.assertHasEvent(
-            event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED,
-            additionalInfo = PrisonerContactRestrictionInfo(restrictionId, Source.NOMIS),
-            personReference = PersonReference(
-              dpsContactId = relationship.contactId,
-              nomsNumber = relationship.prisonerNumber,
-            ),
-          )
-        }
-        stubEvents.assertHasEvent(
-          event = OutboundEvent.PRISONER_CONTACT_DELETED,
-          additionalInfo = PrisonerContactInfo(relationship.prisonerContactId, Source.NOMIS),
-          personReference = PersonReference(
-            dpsContactId = relationship.contactId,
-            nomsNumber = relationship.prisonerNumber,
-          ),
-        )
-      }
-
-      relationshipsCreated.map { created ->
-        created.restrictions.map { restriction ->
-          stubEvents.assertHasEvent(
-            event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
-            additionalInfo = PrisonerContactRestrictionInfo(restriction.dpsId, Source.NOMIS),
-            personReference = PersonReference(
-              dpsContactId = created.contactId,
-              nomsNumber = retainedPrisonerNumber,
-            ),
-          )
-        }
-
-        stubEvents.assertHasEvent(
-          event = OutboundEvent.PRISONER_CONTACT_CREATED,
-          additionalInfo = PrisonerContactInfo(created.relationship.dpsId, Source.NOMIS),
-          personReference = PersonReference(
-            dpsContactId = created.contactId,
-            nomsNumber = retainedPrisonerNumber,
-          ),
-        )
+        checkForExpectedEvents(relationshipsRemoved, relationshipsCreated, createdPrisonerNumber = "A3333AA")
       }
     }
 
@@ -196,40 +148,222 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
       prisonerContacts,
       removedPrisonerNumber = removed,
     )
+  }
 
-    private fun aRelationship(
-      id: Long,
-      contactId: Long,
-      contactType: String = "S",
-      relationshipType: String = "BRO",
-      restrictions: List<SyncRelationshipRestriction> = emptyList(),
-    ) = SyncPrisonerRelationship(
-      id = id,
-      contactId = contactId,
-      contactType = CodedValue(code = contactType, description = "contact type"),
-      relationshipType = CodedValue(code = relationshipType, description = "relationship type"),
-      currentTerm = true,
-      active = true,
-      approvedVisitor = true,
-      nextOfKin = true,
-      emergencyContact = true,
-      prisonerNumber = "A3333AA",
-      comment = "comment",
-      restrictions = restrictions,
-    )
+  @Nested
+  inner class ResetTests {
 
-    private fun aRestriction(
-      id: Long,
-      restrictionType: String = "BAN",
-      comment: String = "comment",
-      startDate: LocalDate,
-      expiryDate: LocalDate? = null,
-    ) = SyncRelationshipRestriction(
-      id = id,
-      restrictionType = CodedValue(code = restrictionType, description = "restriction type"),
-      comment = comment,
-      startDate = startDate,
-      expiryDate = expiryDate,
-    )
+    @BeforeEach
+    fun resetEvents() {
+      stubEvents.reset()
+    }
+
+    @Test
+    fun `should return unauthorized for a reset if no token provided`() {
+      webTestClient.post()
+        .uri("/sync/admin/reset")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(createResetRequest(prisonerNumber = "A3333AA"))
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `should return forbidden for a reset without an authorised role on the token`() {
+      webTestClient.post()
+        .uri("/sync/admin/reset")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(createResetRequest(prisonerNumber = "A3333AA"))
+        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `reset should remove prisoner contacts and restrictions with nothing to recreate - empty list provided`() {
+      val resetResponse = webTestClient.post()
+        .uri("/sync/admin/reset")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .bodyValue(createResetRequest(prisonerNumber = "A3333AA"))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody(ResetPrisonerContactResponse::class.java)
+        .returnResult().responseBody!!
+
+      with(resetResponse) {
+        assertThat(relationshipsCreated).hasSize(0)
+        assertThat(relationshipsRemoved).hasSize(2)
+        assertThat(relationshipsRemoved).extracting("prisonerNumber").containsOnly("A3333AA")
+        val restrictionsRemoved = relationshipsRemoved.map { relationship ->
+          relationship.prisonerContactRestrictionIds
+        }.flatten()
+        assertThat(restrictionsRemoved).hasSize(2)
+
+        checkForExpectedEvents(relationshipsRemoved, relationshipsCreated, createdPrisonerNumber = "A3333AA")
+      }
+    }
+
+    @Test
+    fun `reset should remove the prisoner contacts and restrictions and recreate for this prisoner`() {
+      val resetResponse = webTestClient.post()
+        .uri("/sync/admin/reset")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .bodyValue(
+          createResetRequest(
+            prisonerNumber = "A4444AA",
+            prisonerContacts = listOf(
+              aRelationship(
+                id = 1,
+                contactId = 30001,
+                contactType = "S",
+                relationshipType = "BRO",
+                restrictions = listOf(
+                  aRestriction(
+                    id = 1,
+                    startDate = LocalDate.now().minusDays(1),
+                  ),
+                ),
+              ),
+              aRelationship(
+                id = 2,
+                contactId = 30002,
+                contactType = "O",
+                relationshipType = "POL",
+                restrictions = listOf(
+                  aRestriction(
+                    id = 2,
+                    startDate = LocalDate.now().minusDays(1),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody(ResetPrisonerContactResponse::class.java)
+        .returnResult().responseBody!!
+
+      with(resetResponse) {
+        assertThat(relationshipsRemoved).hasSize(3)
+        assertThat(relationshipsRemoved).extracting("prisonerNumber").containsOnly("A4444AA")
+        assertThat(relationshipsCreated).hasSize(2)
+
+        val restrictionsRemoved = relationshipsRemoved.map { relationship ->
+          relationship.prisonerContactRestrictionIds
+        }.flatten()
+
+        assertThat(restrictionsRemoved).hasSize(0)
+
+        val restrictionsCreated = relationshipsCreated.map { relationship ->
+          relationship.restrictions.map { it.dpsId }
+        }.flatten()
+
+        assertThat(restrictionsCreated).hasSize(2)
+
+        checkForExpectedEvents(relationshipsRemoved, relationshipsCreated, createdPrisonerNumber = "A4444AA")
+      }
+    }
+
+    private fun createResetRequest(
+      prisonerNumber: String,
+      prisonerContacts: List<SyncPrisonerRelationship> = emptyList(),
+    ) = ResetPrisonerContactRequest(prisonerNumber, prisonerContacts)
+  }
+
+  private fun aRelationship(
+    id: Long,
+    contactId: Long,
+    contactType: String = "S",
+    relationshipType: String = "BRO",
+    restrictions: List<SyncRelationshipRestriction> = emptyList(),
+  ) = SyncPrisonerRelationship(
+    id = id,
+    contactId = contactId,
+    contactType = CodedValue(code = contactType, description = "contact type"),
+    relationshipType = CodedValue(code = relationshipType, description = "relationship type"),
+    currentTerm = true,
+    active = true,
+    approvedVisitor = true,
+    nextOfKin = true,
+    emergencyContact = true,
+    prisonerNumber = "A3333AA",
+    comment = "comment",
+    restrictions = restrictions,
+  )
+
+  private fun aRestriction(
+    id: Long,
+    restrictionType: String = "BAN",
+    comment: String = "comment",
+    startDate: LocalDate,
+    expiryDate: LocalDate? = null,
+  ) = SyncRelationshipRestriction(
+    id = id,
+    restrictionType = CodedValue(code = restrictionType, description = "restriction type"),
+    comment = comment,
+    startDate = startDate,
+    expiryDate = expiryDate,
+  )
+
+  private fun checkForExpectedEvents(
+    relationshipsRemoved: List<PrisonerRelationshipIds>,
+    relationshipsCreated: List<PrisonerContactAndRestrictionIds>,
+    createdPrisonerNumber: String,
+  ) {
+    relationshipsRemoved.map { relationship ->
+      relationship.prisonerContactRestrictionIds.map { restrictionId ->
+        stubEvents.assertHasEvent(
+          event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED,
+          additionalInfo = PrisonerContactRestrictionInfo(restrictionId, Source.NOMIS),
+          personReference = PersonReference(
+            dpsContactId = relationship.contactId,
+            nomsNumber = relationship.prisonerNumber,
+          ),
+        )
+      }
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.PRISONER_CONTACT_DELETED,
+        additionalInfo = PrisonerContactInfo(relationship.prisonerContactId, Source.NOMIS),
+        personReference = PersonReference(
+          dpsContactId = relationship.contactId,
+          nomsNumber = relationship.prisonerNumber,
+        ),
+      )
+    }
+
+    relationshipsCreated.map { created ->
+      created.restrictions.map { restriction ->
+        stubEvents.assertHasEvent(
+          event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
+          additionalInfo = PrisonerContactRestrictionInfo(restriction.dpsId, Source.NOMIS),
+          personReference = PersonReference(
+            dpsContactId = created.contactId,
+            nomsNumber = createdPrisonerNumber,
+          ),
+        )
+      }
+
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.PRISONER_CONTACT_CREATED,
+        additionalInfo = PrisonerContactInfo(created.relationship.dpsId, Source.NOMIS),
+        personReference = PersonReference(
+          dpsContactId = created.contactId,
+          nomsNumber = createdPrisonerNumber,
+        ),
+      )
+    }
   }
 }
