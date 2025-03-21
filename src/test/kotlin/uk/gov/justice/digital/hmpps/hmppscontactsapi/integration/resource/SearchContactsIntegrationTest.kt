@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 
+import org.apache.commons.lang3.RandomStringUtils
+import org.apache.commons.lang3.RandomUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -8,7 +10,10 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.util.UriComponentsBuilder
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import java.net.URI
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
@@ -90,8 +95,8 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(totalElements).isEqualTo(1)
       assertThat(pageable.pageNumber).isEqualTo(0)
       assertThat(pageable.pageSize).isEqualTo(10)
-      assertThat(pageable.sort.sorted).isEqualTo(true)
-      assertThat(sort.sorted).isEqualTo(true)
+      assertThat(pageable.sort.sorted).isEqualTo(false)
+      assertThat(sort.sorted).isEqualTo(false)
       assertThat(first).isEqualTo(true)
       assertThat(size).isEqualTo(10)
       assertThat(number).isEqualTo(0)
@@ -192,7 +197,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  fun `should get the contacts with minimal addresses associated with them when searched by last name `() {
+  fun `should get the contacts with minimal addresses associated with them when searched by last name`() {
     val uri = UriComponentsBuilder.fromPath("contact/search")
       .queryParam("lastName", "Address")
       .queryParam("firstName", "Minimal")
@@ -224,6 +229,200 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(contact.countryCode).isNull()
       assertThat(contact.countryDescription).isNull()
     }
+  }
+
+  @Test
+  fun `should sort by date of birth with nulls as eldest`() {
+    val randomLastName = RandomStringUtils.secure().nextAlphabetic(35)
+    testAPIClient.createAContact(
+      CreateContactRequest(
+        lastName = randomLastName,
+        firstName = "Youngest",
+        dateOfBirth = LocalDate.of(2025, 1, 1),
+        createdBy = "USER1",
+      ),
+    )
+    testAPIClient.createAContact(
+      CreateContactRequest(
+        lastName = randomLastName,
+        firstName = "Eldest",
+        dateOfBirth = LocalDate.of(1990, 1, 1),
+        createdBy = "USER1",
+      ),
+    )
+    testAPIClient.createAContact(
+      CreateContactRequest(
+        lastName = randomLastName,
+        firstName = "None",
+        dateOfBirth = null,
+        createdBy = "USER1",
+      ),
+    )
+
+    val resultsEldestFirst = testAPIClient.getSearchContactResults(
+      UriComponentsBuilder.fromPath("contact/search")
+        .queryParam("lastName", randomLastName)
+        .queryParam("sort", "dateOfBirth,asc")
+        .build()
+        .toUri(),
+    )!!
+    assertThat(resultsEldestFirst.content).extracting("firstName").isEqualTo(
+      listOf("None", "Eldest", "Youngest"),
+    )
+
+    val resultsYoungestFirst = testAPIClient.getSearchContactResults(
+      UriComponentsBuilder.fromPath("contact/search")
+        .queryParam("lastName", randomLastName)
+        .queryParam("sort", "dateOfBirth,desc")
+        .build()
+        .toUri(),
+    )!!
+    assertThat(resultsYoungestFirst.content).extracting("firstName").isEqualTo(
+      listOf("Youngest", "Eldest", "None"),
+    )
+  }
+
+  @Test
+  fun `should sort by names is specified order`() {
+    val randomDob = LocalDate.now().minusDays(RandomUtils.secure().randomLong(100, 2000))
+    testAPIClient.createAContact(
+      CreateContactRequest(
+        lastName = "AA",
+        firstName = "B",
+        middleNames = "C",
+        dateOfBirth = randomDob,
+        createdBy = "USER1",
+      ),
+    )
+    testAPIClient.createAContact(
+      CreateContactRequest(
+        lastName = "AA",
+        firstName = "B",
+        dateOfBirth = randomDob,
+        createdBy = "USER1",
+      ),
+    )
+    testAPIClient.createAContact(
+      CreateContactRequest(
+        lastName = "AB",
+        firstName = "A",
+        dateOfBirth = randomDob,
+        createdBy = "USER1",
+      ),
+    )
+    testAPIClient.createAContact(
+      CreateContactRequest(
+        lastName = "AB",
+        firstName = "B",
+        dateOfBirth = randomDob,
+        createdBy = "USER1",
+      ),
+    )
+    testAPIClient.createAContact(
+      CreateContactRequest(
+        lastName = "AC",
+        firstName = "C",
+        middleNames = "A",
+        dateOfBirth = randomDob,
+        createdBy = "USER1",
+      ),
+    )
+    testAPIClient.createAContact(
+      CreateContactRequest(
+        lastName = "AC",
+        firstName = "C",
+        middleNames = "B",
+        dateOfBirth = randomDob,
+        createdBy = "USER1",
+      ),
+    )
+
+    val expectedOrder = listOf(
+      "AA, B C",
+      "AA, B",
+      "AB, A",
+      "AB, B",
+      "AC, C A",
+      "AC, C B",
+    )
+
+    val ascendingName = testAPIClient.getSearchContactResults(
+      UriComponentsBuilder.fromPath("contact/search")
+        .queryParam("lastName", "A")
+        .queryParam("dateOfBirth", randomDob.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+        .queryParam("sort", "lastName,asc")
+        .queryParam("sort", "firstName,asc")
+        .queryParam("sort", "middleNames,asc")
+        .build()
+        .toUri(),
+    )!!
+    assertThat(ascendingName.content.map { "${it.lastName}, ${it.firstName}${if (it.middleNames != null) " ${it.middleNames}" else ""}" })
+      .isEqualTo(expectedOrder)
+
+    val descendingName = testAPIClient.getSearchContactResults(
+      UriComponentsBuilder.fromPath("contact/search")
+        .queryParam("lastName", "A")
+        .queryParam("dateOfBirth", randomDob.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+        .queryParam("sort", "lastName,desc")
+        .queryParam("sort", "firstName,desc")
+        .queryParam("sort", "middleNames,desc")
+        .build()
+        .toUri(),
+    )!!
+    assertThat(descendingName.content.map { "${it.lastName}, ${it.firstName}${if (it.middleNames != null) " ${it.middleNames}" else ""}" })
+      .isEqualTo(expectedOrder.reversed())
+  }
+
+  @Test
+  fun `secondary sort by id should work`() {
+    val randomDob = LocalDate.now().minusDays(RandomUtils.secure().randomLong(100, 2000))
+    val lowestId = testAPIClient.createAContact(
+      CreateContactRequest(
+        lastName = "AA",
+        firstName = "B",
+        dateOfBirth = randomDob,
+        createdBy = "USER1",
+      ),
+    ).id
+    val highestId = testAPIClient.createAContact(
+      CreateContactRequest(
+        lastName = "AA",
+        firstName = "B",
+        dateOfBirth = randomDob,
+        createdBy = "USER1",
+      ),
+    ).id
+
+    val expectedOrder = listOf(
+      lowestId,
+      highestId,
+    )
+
+    val ascendingName = testAPIClient.getSearchContactResults(
+      UriComponentsBuilder.fromPath("contact/search")
+        .queryParam("lastName", "A")
+        .queryParam("dateOfBirth", randomDob.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+        .queryParam("sort", "lastName,asc")
+        .queryParam("sort", "firstName,asc")
+        .queryParam("sort", "middleNames,asc")
+        .queryParam("sort", "id,asc")
+        .build()
+        .toUri(),
+    )!!
+    assertThat(ascendingName.content).extracting("id").isEqualTo(expectedOrder)
+
+    val descendingName = testAPIClient.getSearchContactResults(
+      UriComponentsBuilder.fromPath("contact/search")
+        .queryParam("lastName", "A")
+        .queryParam("dateOfBirth", randomDob.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+        .queryParam("sort", "lastName,desc")
+        .queryParam("sort", "firstName,desc")
+        .queryParam("sort", "middleNames,desc")
+        .queryParam("sort", "id,desc")
+        .build()
+        .toUri(),
+    )!!
+    assertThat(descendingName.content).extracting("id").isEqualTo(expectedOrder.reversed())
   }
 
   @Test

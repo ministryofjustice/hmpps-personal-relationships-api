@@ -4,13 +4,17 @@ import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
 import jakarta.persistence.criteria.CriteriaBuilder
 import jakarta.persistence.criteria.CriteriaQuery
+import jakarta.persistence.criteria.Order
 import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
+import org.hibernate.query.NullPrecedence
+import org.hibernate.query.criteria.JpaOrder
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.mapSortPropertiesOfContactSearch
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import java.time.LocalDate
 
@@ -60,12 +64,24 @@ class ContactSearchRepository(
     contact: Root<ContactWithAddressEntity>,
   ) {
     if (pageable.sort.isSorted) {
-      pageable.sort.forEach {
-        when {
-          it.isAscending -> cq.orderBy(cb.asc(contact.get<String>(it.property)))
-          else -> cq.orderBy(cb.desc(contact.get<String>(it.property)))
+      val order = pageable.sort.map {
+        val property = mapSortPropertiesOfContactSearch(it.property)
+        var order: Order = if (it.isAscending) {
+          cb.asc(contact.get<String>(property))
+        } else {
+          cb.desc(contact.get<String>(property))
         }
-      }
+        // order date of birth with nulls as if they are the eldest.
+        if (property == ContactWithAddressEntity::dateOfBirth.name && order is JpaOrder) {
+          order = if (it.isAscending) {
+            order.nullPrecedence(NullPrecedence.FIRST)
+          } else {
+            order.nullPrecedence(NullPrecedence.LAST)
+          }
+        }
+        order
+      }.toList()
+      cq.orderBy(order)
     }
   }
 
