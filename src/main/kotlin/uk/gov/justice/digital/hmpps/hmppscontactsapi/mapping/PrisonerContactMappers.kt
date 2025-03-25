@@ -2,8 +2,9 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping
 
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactSummaryEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactSummary
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RestrictionsSummary
 
-fun PrisonerContactSummaryEntity.toModel(): PrisonerContactSummary = PrisonerContactSummary(
+fun PrisonerContactSummaryEntity.toModel(restrictionSummary: RestrictionsSummary): PrisonerContactSummary = PrisonerContactSummary(
   prisonerContactId = this.prisonerContactId,
   contactId = this.contactId,
   prisonerNumber = this.prisonerNumber,
@@ -38,4 +39,5 @@ fun PrisonerContactSummaryEntity.toModel(): PrisonerContactSummary = PrisonerCon
   isRelationshipActive = this.active,
   currentTerm = this.currentTerm,
   comments = this.comments,
+  restrictionSummary = restrictionSummary,
 )
