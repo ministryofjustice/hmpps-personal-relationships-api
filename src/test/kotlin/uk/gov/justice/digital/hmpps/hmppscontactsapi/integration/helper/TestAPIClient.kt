@@ -568,14 +568,14 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactAddressResponse::class.java)
     .returnResult().responseBody!!
 
-  fun getLinkedPrisoners(contactId: Long): List<LinkedPrisonerDetails> = webTestClient.get()
+  fun getLinkedPrisoners(contactId: Long): LinkedPrisonerResponse = webTestClient.get()
     .uri("/contact/$contactId/linked-prisoners")
     .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
     .exchange()
     .expectStatus()
     .isOk
     .expectHeader().contentType(MediaType.APPLICATION_JSON)
-    .expectBodyList(LinkedPrisonerDetails::class.java)
+    .expectBody(LinkedPrisonerResponse::class.java)
     .returnResult().responseBody!!
 
   fun patchEmployments(contactId: Long, request: PatchEmploymentsRequest, role: String = "ROLE_CONTACTS_ADMIN"): List<EmploymentDetails> = webTestClient.patch()
@@ -657,6 +657,20 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
 
   data class PrisonerContactSummaryResponse(
     val content: List<PrisonerContactSummary>,
+    val pageable: ReturnedPageable,
+    val last: Boolean,
+    val totalPages: Int,
+    val totalElements: Int,
+    val first: Boolean,
+    val size: Int,
+    val number: Int,
+    val sort: ReturnedSort,
+    val numberOfElements: Int,
+    val empty: Boolean,
+  )
+
+  data class LinkedPrisonerResponse(
+    val content: List<LinkedPrisonerDetails>,
     val pageable: ReturnedPageable,
     val last: Boolean,
     val totalPages: Int,

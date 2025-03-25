@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.LinkedPrisonerDetails
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.LinkedPrisonerRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 
 class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
@@ -60,9 +59,16 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
     val prisoner1OtherRelationship = addRelationship(prisoner1, "OTHER")
     val prisoner2FatherRelationship = addRelationship(prisoner2, "FA")
 
-    stubSearchPrisonersByPrisonerNumbers(setOf(prisoner1.prisonerNumber, prisoner2.prisonerNumber), listOf(prisoner1, prisoner2))
+    stubSearchPrisonersByPrisonerNumbers(
+      setOf(prisoner1.prisonerNumber, prisoner2.prisonerNumber),
+      listOf(prisoner1, prisoner2),
+    )
     val linkedPrisoners = testAPIClient.getLinkedPrisoners(savedContactId)
-    assertThat(linkedPrisoners).isEqualTo(
+    assertThat(linkedPrisoners.size).isEqualTo(10) // page size
+    assertThat(linkedPrisoners.totalElements).isEqualTo(3)
+    assertThat(linkedPrisoners.totalPages).isEqualTo(1)
+    assertThat(linkedPrisoners.pageable.pageNumber).isEqualTo(0)
+    assertThat(linkedPrisoners.content).isEqualTo(
       listOf(
         LinkedPrisonerDetails(
           prisonerNumber = prisoner2.prisonerNumber,
@@ -71,16 +77,12 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
           lastName = prisoner2.lastName,
           prisonId = prisoner2.prisonId,
           prisonName = prisoner2.prisonName,
-          relationships = listOf(
-            LinkedPrisonerRelationshipDetails(
-              prisonerContactId = prisoner2FatherRelationship.prisonerContactId,
-              relationshipTypeCode = "S",
-              relationshipTypeDescription = "Social",
-              relationshipToPrisonerCode = "FA",
-              relationshipToPrisonerDescription = "Father",
-              isRelationshipActive = true,
-            ),
-          ),
+          prisonerContactId = prisoner2FatherRelationship.prisonerContactId,
+          relationshipTypeCode = "S",
+          relationshipTypeDescription = "Social",
+          relationshipToPrisonerCode = "FA",
+          relationshipToPrisonerDescription = "Father",
+          isRelationshipActive = true,
         ),
         LinkedPrisonerDetails(
           prisonerNumber = prisoner1.prisonerNumber,
@@ -89,42 +91,59 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
           lastName = prisoner1.lastName,
           prisonId = prisoner1.prisonId,
           prisonName = prisoner1.prisonName,
-          relationships = listOf(
-            LinkedPrisonerRelationshipDetails(
-              prisonerContactId = prisoner1OtherRelationship.prisonerContactId,
-              relationshipTypeCode = "S",
-              relationshipTypeDescription = "Social",
-              relationshipToPrisonerCode = "OTHER",
-              relationshipToPrisonerDescription = "Other - Social",
-              isRelationshipActive = true,
-            ),
-            LinkedPrisonerRelationshipDetails(
-              prisonerContactId = prisoner1FriendRelationship.prisonerContactId,
-              relationshipTypeCode = "S",
-              relationshipTypeDescription = "Social",
-              relationshipToPrisonerCode = "FRI",
-              relationshipToPrisonerDescription = "Friend",
-              isRelationshipActive = true,
-            ),
-          ),
+          prisonerContactId = prisoner1OtherRelationship.prisonerContactId,
+          relationshipTypeCode = "S",
+          relationshipTypeDescription = "Social",
+          relationshipToPrisonerCode = "OTHER",
+          relationshipToPrisonerDescription = "Other - Social",
+          isRelationshipActive = true,
+        ),
+        LinkedPrisonerDetails(
+          prisonerNumber = prisoner1.prisonerNumber,
+          firstName = prisoner1.firstName,
+          middleNames = prisoner1.middleNames,
+          lastName = prisoner1.lastName,
+          prisonId = prisoner1.prisonId,
+          prisonName = prisoner1.prisonName,
+          prisonerContactId = prisoner1FriendRelationship.prisonerContactId,
+          relationshipTypeCode = "S",
+          relationshipTypeDescription = "Social",
+          relationshipToPrisonerCode = "FRI",
+          relationshipToPrisonerDescription = "Friend",
+          isRelationshipActive = true,
         ),
       ),
     )
   }
 
   @Test
-  fun `should return other linked prisoners even if one is missing in prisoner search`() {
+  fun `should return linked prisoners even if one is missing in prisoner search`() {
     stubPrisonerSearch(prisoner1)
     stubPrisonerSearch(prisoner2)
 
-    val prisoner1OtherRelationship = addRelationship(prisoner1, "OTHER")
-    addRelationship(prisoner2, "FA")
+    val prisoner1Relationship = addRelationship(prisoner1, "OTHER")
+    val prisoner2Relationship = addRelationship(prisoner2, "FA")
 
     stubSearchPrisonersByPrisonerNumbers(setOf(prisoner1.prisonerNumber, prisoner2.prisonerNumber), listOf(prisoner1))
 
     val linkedPrisoners = testAPIClient.getLinkedPrisoners(savedContactId)
-    assertThat(linkedPrisoners).isEqualTo(
+    assertThat(linkedPrisoners.totalElements).isEqualTo(2)
+    assertThat(linkedPrisoners.content).isEqualTo(
       listOf(
+        LinkedPrisonerDetails(
+          prisonerNumber = prisoner2.prisonerNumber,
+          firstName = null,
+          middleNames = null,
+          lastName = null,
+          prisonId = null,
+          prisonName = null,
+          prisonerContactId = prisoner2Relationship.prisonerContactId,
+          relationshipTypeCode = "S",
+          relationshipTypeDescription = "Social",
+          relationshipToPrisonerCode = "FA",
+          relationshipToPrisonerDescription = "Father",
+          isRelationshipActive = true,
+        ),
         LinkedPrisonerDetails(
           prisonerNumber = prisoner1.prisonerNumber,
           firstName = prisoner1.firstName,
@@ -132,16 +151,12 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
           lastName = prisoner1.lastName,
           prisonId = prisoner1.prisonId,
           prisonName = prisoner1.prisonName,
-          relationships = listOf(
-            LinkedPrisonerRelationshipDetails(
-              prisonerContactId = prisoner1OtherRelationship.prisonerContactId,
-              relationshipTypeCode = "S",
-              relationshipTypeDescription = "Social",
-              relationshipToPrisonerCode = "OTHER",
-              relationshipToPrisonerDescription = "Other - Social",
-              isRelationshipActive = true,
-            ),
-          ),
+          prisonerContactId = prisoner1Relationship.prisonerContactId,
+          relationshipTypeCode = "S",
+          relationshipTypeDescription = "Social",
+          relationshipToPrisonerCode = "OTHER",
+          relationshipToPrisonerDescription = "Other - Social",
+          isRelationshipActive = true,
         ),
       ),
     )
