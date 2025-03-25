@@ -12,9 +12,14 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.helper.TestAPIClient.PrisonerContactSummaryResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RestrictionTypeDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RestrictionsSummary
 import java.time.LocalDate
 
 class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
@@ -317,7 +322,8 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val withNoTypeSpecified = getForUrl("/prisoner/$prisonerNumber/contact")
     assertThat(withNoTypeSpecified.content).hasSize(4)
-    assertThat(withNoTypeSpecified.content).extracting("lastName").containsExactlyInAnyOrder("NOK Only", "EC Only", "NOK And EC", "Neither")
+    assertThat(withNoTypeSpecified.content).extracting("lastName")
+      .containsExactlyInAnyOrder("NOK Only", "EC Only", "NOK And EC", "Neither")
 
     val nextOfKin = getForUrl("/prisoner/$prisonerNumber/contact?nextOfKin=true")
     assertThat(nextOfKin.content).hasSize(2)
@@ -337,25 +343,31 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val emergencyContactOrNextOfKin = getForUrl("/prisoner/$prisonerNumber/contact?emergencyContactOrNextOfKin=true")
     assertThat(emergencyContactOrNextOfKin.content).hasSize(3)
-    assertThat(emergencyContactOrNextOfKin.content).extracting("lastName").containsExactlyInAnyOrder("EC Only", "NOK Only", "NOK And EC")
+    assertThat(emergencyContactOrNextOfKin.content).extracting("lastName")
+      .containsExactlyInAnyOrder("EC Only", "NOK Only", "NOK And EC")
 
-    val neitherEmergencyContactOrNextOfKin = getForUrl("/prisoner/$prisonerNumber/contact?emergencyContactOrNextOfKin=false")
+    val neitherEmergencyContactOrNextOfKin =
+      getForUrl("/prisoner/$prisonerNumber/contact?emergencyContactOrNextOfKin=false")
     assertThat(neitherEmergencyContactOrNextOfKin.content).hasSize(1)
     assertThat(neitherEmergencyContactOrNextOfKin.content).extracting("lastName").containsExactlyInAnyOrder("Neither")
 
-    val emergencyContactAndNextOfKin = getForUrl("/prisoner/$prisonerNumber/contact?emergencyContact=true&nextOfKin=true")
+    val emergencyContactAndNextOfKin =
+      getForUrl("/prisoner/$prisonerNumber/contact?emergencyContact=true&nextOfKin=true")
     assertThat(emergencyContactAndNextOfKin.content).hasSize(1)
     assertThat(emergencyContactAndNextOfKin.content).extracting("lastName").containsExactlyInAnyOrder("NOK And EC")
 
-    val notEmergencyContactAndNextOfKin = getForUrl("/prisoner/$prisonerNumber/contact?emergencyContact=false&nextOfKin=false")
+    val notEmergencyContactAndNextOfKin =
+      getForUrl("/prisoner/$prisonerNumber/contact?emergencyContact=false&nextOfKin=false")
     assertThat(notEmergencyContactAndNextOfKin.content).hasSize(1)
     assertThat(notEmergencyContactAndNextOfKin.content).extracting("lastName").containsExactlyInAnyOrder("Neither")
 
-    val emergencyContactAndNotNextOfKin = getForUrl("/prisoner/$prisonerNumber/contact?emergencyContact=true&nextOfKin=false")
+    val emergencyContactAndNotNextOfKin =
+      getForUrl("/prisoner/$prisonerNumber/contact?emergencyContact=true&nextOfKin=false")
     assertThat(emergencyContactAndNotNextOfKin.content).hasSize(1)
     assertThat(emergencyContactAndNotNextOfKin.content).extracting("lastName").containsExactlyInAnyOrder("EC Only")
 
-    val nextOfKinAndNotEmergencyContact = getForUrl("/prisoner/$prisonerNumber/contact?emergencyContact=false&nextOfKin=true")
+    val nextOfKinAndNotEmergencyContact =
+      getForUrl("/prisoner/$prisonerNumber/contact?emergencyContact=false&nextOfKin=true")
     assertThat(nextOfKinAndNotEmergencyContact.content).hasSize(1)
     assertThat(nextOfKinAndNotEmergencyContact.content).extracting("lastName").containsExactlyInAnyOrder("NOK Only")
   }
@@ -493,11 +505,13 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       "AC, C B",
     )
 
-    val ascendingName = getForUrl("/prisoner/$prisonerNumber/contact?sort=lastName,asc&sort=firstName,asc&sort=middleNames,asc")
+    val ascendingName =
+      getForUrl("/prisoner/$prisonerNumber/contact?sort=lastName,asc&sort=firstName,asc&sort=middleNames,asc")
     assertThat(ascendingName.content.map { "${it.lastName}, ${it.firstName}${if (it.middleNames != null) " ${it.middleNames}" else ""}" })
       .isEqualTo(expectedOrder)
 
-    val descendingName = getForUrl("/prisoner/$prisonerNumber/contact?sort=lastName,desc&sort=firstName,desc&sort=middleNames,desc")
+    val descendingName =
+      getForUrl("/prisoner/$prisonerNumber/contact?sort=lastName,desc&sort=firstName,desc&sort=middleNames,desc")
     assertThat(descendingName.content.map { "${it.lastName}, ${it.firstName}${if (it.middleNames != null) " ${it.middleNames}" else ""}" })
       .isEqualTo(expectedOrder.reversed())
   }
@@ -539,11 +553,186 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       highestId,
     )
 
-    val ascendingName = getForUrl("/prisoner/$prisonerNumber/contact?sort=lastName,asc&sort=firstName,asc&sort=middleNames,asc&sort=contactId,asc")
+    val ascendingName =
+      getForUrl("/prisoner/$prisonerNumber/contact?sort=lastName,asc&sort=firstName,asc&sort=middleNames,asc&sort=contactId,asc")
     assertThat(ascendingName.content).extracting("contactId").isEqualTo(expectedOrder)
 
-    val descendingName = getForUrl("/prisoner/$prisonerNumber/contact?sort=lastName,desc&sort=firstName,desc&sort=middleNames,desc&sort=contactId,desc")
+    val descendingName =
+      getForUrl("/prisoner/$prisonerNumber/contact?sort=lastName,desc&sort=firstName,desc&sort=middleNames,desc&sort=contactId,desc")
     assertThat(descendingName.content).extracting("contactId").isEqualTo(expectedOrder.reversed())
+  }
+
+  @Test
+  fun `get restriction summary includes global and relationship restrictions`() {
+    val prisonerOneNumber = "E1234EE"
+    val prisonerTwoNumber = "F1234FF"
+    stubPrisonSearchWithResponse(prisonerOneNumber)
+    stubPrisonSearchWithResponse(prisonerTwoNumber)
+
+    val relationship = ContactRelationship(
+      prisonerNumber = "temp",
+      relationshipTypeCode = "S",
+      relationshipToPrisonerCode = "FRI",
+      isNextOfKin = false,
+      isEmergencyContact = false,
+      isApprovedVisitor = false,
+    )
+    val contact = testAPIClient.createAContact(
+      CreateContactRequest(
+        lastName = "Has Global Restriction",
+        firstName = "Contact",
+        createdBy = "USER1",
+      ),
+    )
+    val relationshipToPrisonerOne = testAPIClient.addAContactRelationship(
+      AddContactRelationshipRequest(
+        contact.id,
+        relationship.copy(prisonerNumber = prisonerOneNumber),
+        "USER1",
+      ),
+    )
+    val relationshipToPrisonerTwo = testAPIClient.addAContactRelationship(
+      AddContactRelationshipRequest(
+        contact.id,
+        relationship.copy(prisonerNumber = prisonerTwoNumber),
+        "USER1",
+      ),
+    )
+
+    testAPIClient.createContactGlobalRestriction(
+      contact.id,
+      CreateContactRestrictionRequest(
+        "BAN",
+        LocalDate.now().minusDays(1),
+        null,
+        "global",
+        "USER1",
+      ),
+    )
+
+    testAPIClient.createPrisonerContactRestriction(
+      relationshipToPrisonerOne.prisonerContactId,
+      CreatePrisonerContactRestrictionRequest(
+        "CCTV",
+        LocalDate.now().minusDays(1),
+        null,
+        "rel1",
+        "USER1",
+      ),
+    )
+
+    testAPIClient.createPrisonerContactRestriction(
+      relationshipToPrisonerTwo.prisonerContactId,
+      CreatePrisonerContactRestrictionRequest(
+        "NONCON",
+        LocalDate.now().minusDays(1),
+        null,
+        "rel2",
+        "USER1",
+      ),
+    )
+
+    val prisonerOneContacts = testAPIClient.getPrisonerContacts(prisonerOneNumber)
+    assertThat(prisonerOneContacts.content).hasSize(1)
+    assertThat(prisonerOneContacts.content[0].restrictionSummary).isEqualTo(
+      RestrictionsSummary(
+        setOf(RestrictionTypeDetails("BAN", "Banned"), RestrictionTypeDetails("CCTV", "CCTV")),
+        2,
+        0,
+      ),
+    )
+
+    val prisonerTwoContacts = testAPIClient.getPrisonerContacts(prisonerTwoNumber)
+    assertThat(prisonerTwoContacts.content).hasSize(1)
+    assertThat(prisonerTwoContacts.content[0].restrictionSummary).isEqualTo(
+      RestrictionsSummary(
+        setOf(RestrictionTypeDetails("BAN", "Banned"), RestrictionTypeDetails("NONCON", "Non-contact visit")),
+        2,
+        0,
+      ),
+    )
+  }
+
+  @Test
+  fun `get restriction summary only includes active restrictions in active but counts inactive ones`() {
+    val prisonerOneNumber = "G1234GG"
+    stubPrisonSearchWithResponse(prisonerOneNumber)
+
+    val relationship = ContactRelationship(
+      prisonerNumber = "temp",
+      relationshipTypeCode = "S",
+      relationshipToPrisonerCode = "FRI",
+      isNextOfKin = false,
+      isEmergencyContact = false,
+      isApprovedVisitor = false,
+    )
+    val contact = testAPIClient.createAContact(
+      CreateContactRequest(
+        lastName = "Has Global Restriction",
+        firstName = "Contact",
+        createdBy = "USER1",
+      ),
+    )
+    val relationshipToPrisonerOne = testAPIClient.addAContactRelationship(
+      AddContactRelationshipRequest(
+        contact.id,
+        relationship.copy(prisonerNumber = prisonerOneNumber),
+        "USER1",
+      ),
+    )
+
+    testAPIClient.createContactGlobalRestriction(
+      contact.id,
+      CreateContactRestrictionRequest(
+        "BAN",
+        LocalDate.now().minusDays(2),
+        LocalDate.now().minusDays(1),
+        "expired",
+        "USER1",
+      ),
+    )
+    testAPIClient.createContactGlobalRestriction(
+      contact.id,
+      CreateContactRestrictionRequest(
+        "BAN",
+        LocalDate.now().minusDays(2),
+        LocalDate.now().plusDays(1),
+        "active",
+        "USER1",
+      ),
+    )
+
+    testAPIClient.createPrisonerContactRestriction(
+      relationshipToPrisonerOne.prisonerContactId,
+      CreatePrisonerContactRestrictionRequest(
+        "CCTV",
+        LocalDate.now().minusDays(2),
+        LocalDate.now().minusDays(1),
+        "expired cctb",
+        "USER1",
+      ),
+    )
+
+    testAPIClient.createPrisonerContactRestriction(
+      relationshipToPrisonerOne.prisonerContactId,
+      CreatePrisonerContactRestrictionRequest(
+        "BAN",
+        LocalDate.now().minusDays(2),
+        LocalDate.now().minusDays(1),
+        "expired ban",
+        "USER1",
+      ),
+    )
+
+    val prisonerOneContacts = testAPIClient.getPrisonerContacts(prisonerOneNumber)
+    assertThat(prisonerOneContacts.content).hasSize(1)
+    assertThat(prisonerOneContacts.content[0].restrictionSummary).isEqualTo(
+      RestrictionsSummary(
+        setOf(RestrictionTypeDetails("BAN", "Banned")),
+        1,
+        3,
+      ),
+    )
   }
 
   private fun getForUrl(url: String): PrisonerContactSummaryResponse {

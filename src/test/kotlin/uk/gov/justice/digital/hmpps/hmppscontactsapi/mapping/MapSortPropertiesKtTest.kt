@@ -12,6 +12,8 @@ import kotlin.reflect.full.memberProperties
 
 class MapSortPropertiesKtTest {
 
+  private val unsortablePrisonerContactProperties = setOf(PrisonerContactSummary::restrictionSummary.name)
+
   @Test
   fun `can map contact search result item fields to contact with address entity fields`() {
     ContactSearchResultItem::class.memberProperties.forEach { property ->
@@ -31,7 +33,7 @@ class MapSortPropertiesKtTest {
 
   @Test
   fun `can map prisoner contact search result item fields to entity fields`() {
-    PrisonerContactSummary::class.memberProperties.forEach { property ->
+    PrisonerContactSummary::class.memberProperties.filterNot { it.name in unsortablePrisonerContactProperties }.forEach { property ->
       val mapped = mapSortPropertiesOfPrisonerContactSearch(property.name)
       assertThat(mapped).isNotNull()
       assertThat(PrisonerContactSummaryEntity::class.memberProperties.find { it.name == mapped }).isNotNull()
@@ -39,10 +41,20 @@ class MapSortPropertiesKtTest {
   }
 
   @Test
-  fun `attempting to sort on an invalid field for prisoner contact search gives an error`() {
+  fun `attempting to sort on an unknown field for prisoner contact search gives an error`() {
     val expected = assertThrows<ValidationException> {
       mapSortPropertiesOfPrisonerContactSearch("foo")
     }
     assertThat(expected.message).isEqualTo("Unable to sort on foo")
+  }
+
+  @Test
+  fun `attempting to sort on an unsortable field for prisoner contact search gives an error`() {
+    unsortablePrisonerContactProperties.forEach { property ->
+      val expected = assertThrows<ValidationException> {
+        mapSortPropertiesOfPrisonerContactSearch(property)
+      }
+      assertThat(expected.message).isEqualTo("Unable to sort on $property")
+    }
   }
 }
