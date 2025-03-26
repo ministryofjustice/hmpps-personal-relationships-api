@@ -2,19 +2,20 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.resource
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.media.ArraySchema
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springdoc.core.converters.models.PageableAsQueryParam
+import org.springframework.data.domain.Pageable
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.LinkedPrisonerDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.LinkedPrisonerPage
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.LinkedPrisonersService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
@@ -38,7 +39,7 @@ class ContactLinkedPrisonersController(private val linkedPrisonersService: Linke
         content = [
           Content(
             mediaType = "application/json",
-            array = ArraySchema(schema = Schema(implementation = LinkedPrisonerDetails::class)),
+            schema = Schema(implementation = LinkedPrisonerPage::class),
           ),
         ],
       ),
@@ -50,11 +51,14 @@ class ContactLinkedPrisonersController(private val linkedPrisonersService: Linke
     ],
   )
   @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__R', 'ROLE_CONTACTS__RW')")
+  @PageableAsQueryParam
   fun getContactLinkedPrisoners(
     @PathVariable("contactId") @Parameter(
       name = "contactId",
       description = "The id of the contact",
       example = "123456",
     ) contactId: Long,
-  ) = linkedPrisonersService.getLinkedPrisoners(contactId)
+    @Parameter(description = "Pageable configurations", required = false)
+    pageable: Pageable,
+  ) = linkedPrisonersService.getLinkedPrisoners(contactId, pageable)
 }

@@ -4,8 +4,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.LinkedPrisonerDetails
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.LinkedPrisonerRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.LinkedPrisonersService
 
 class ContactLinkedPrisonersControllerTest {
@@ -21,20 +22,17 @@ class ContactLinkedPrisonersControllerTest {
         firstName = "Joe",
         middleNames = "Middle",
         lastName = "Bloggs",
-        relationships = listOf(
-          LinkedPrisonerRelationshipDetails(
-            prisonerContactId = 99,
-            relationshipTypeCode = "S",
-            relationshipTypeDescription = "Social",
-            relationshipToPrisonerCode = "FA",
-            relationshipToPrisonerDescription = "Father",
-            isRelationshipActive = true,
-          ),
-        ),
+        prisonerContactId = 99,
+        relationshipTypeCode = "S",
+        relationshipTypeDescription = "Social",
+        relationshipToPrisonerCode = "FA",
+        relationshipToPrisonerDescription = "Father",
+        isRelationshipActive = true,
       ),
     )
-    whenever(service.getLinkedPrisoners(123)).thenReturn(expected)
-    val response = controller.getContactLinkedPrisoners(123)
-    assertThat(response).isEqualTo(expected)
+    val pageable = Pageable.unpaged()
+    whenever(service.getLinkedPrisoners(123, pageable)).thenReturn(PageImpl(expected))
+    val response = controller.getContactLinkedPrisoners(123, pageable)
+    assertThat(response.content).isEqualTo(expected)
   }
 }
