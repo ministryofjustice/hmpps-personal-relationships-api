@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.helper
 
+import org.springframework.data.web.PagedModel
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -568,8 +569,8 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactAddressResponse::class.java)
     .returnResult().responseBody!!
 
-  fun getLinkedPrisoners(contactId: Long): LinkedPrisonerResponse = webTestClient.get()
-    .uri("/contact/$contactId/linked-prisoners")
+  fun getLinkedPrisoners(contactId: Long, page: Int? = null, size: Int? = null): LinkedPrisonerResponse = webTestClient.get()
+    .uri("/contact/$contactId/linked-prisoners?${page?.let { "page=$page&"} }${size?.let { "size=$size"} }")
     .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
     .exchange()
     .expectStatus()
@@ -643,72 +644,21 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
 
   data class ContactSearchResponse(
     val content: List<ContactSearchResultItem>,
-    val pageable: ReturnedPageable,
-    val last: Boolean,
-    val totalPages: Int,
-    val totalElements: Int,
-    val first: Boolean,
-    val size: Int,
-    val number: Int,
-    val sort: ReturnedSort,
-    val numberOfElements: Int,
-    val empty: Boolean,
+    val page: PagedModel.PageMetadata,
   )
 
   data class PrisonerContactSummaryResponse(
     val content: List<PrisonerContactSummary>,
-    val pageable: ReturnedPageable,
-    val last: Boolean,
-    val totalPages: Int,
-    val totalElements: Int,
-    val first: Boolean,
-    val size: Int,
-    val number: Int,
-    val sort: ReturnedSort,
-    val numberOfElements: Int,
-    val empty: Boolean,
+    val page: PagedModel.PageMetadata,
   )
 
   data class LinkedPrisonerResponse(
     val content: List<LinkedPrisonerDetails>,
-    val pageable: ReturnedPageable,
-    val last: Boolean,
-    val totalPages: Int,
-    val totalElements: Int,
-    val first: Boolean,
-    val size: Int,
-    val number: Int,
-    val sort: ReturnedSort,
-    val numberOfElements: Int,
-    val empty: Boolean,
-  )
-
-  data class ReturnedPageable(
-    val pageNumber: Int,
-    val pageSize: Int,
-    val sort: ReturnedSort,
-    val offset: Int,
-    val unpaged: Boolean,
-    val paged: Boolean,
-  )
-
-  data class ReturnedSort(
-    val empty: Boolean,
-    val unsorted: Boolean,
-    val sorted: Boolean,
+    val page: PagedModel.PageMetadata,
   )
 
   data class ContactIdsResponse(
     val content: List<SyncContactId>,
-    val pageable: ReturnedPageable,
-    val last: Boolean,
-    val totalPages: Int,
-    val totalElements: Int,
-    val first: Boolean,
-    val size: Int,
-    val number: Int,
-    val sort: ReturnedSort,
-    val numberOfElements: Int,
-    val empty: Boolean,
+    val page: PagedModel.PageMetadata,
   )
 }

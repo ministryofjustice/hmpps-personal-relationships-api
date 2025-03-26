@@ -1,8 +1,9 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 
 import org.slf4j.LoggerFactory
-import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PagedModel
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.LinkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactSummaryRepository
@@ -15,17 +16,20 @@ class LinkedPrisonersService(
 
   companion object {
     private val logger = LoggerFactory.getLogger(this::class.java)
+    private const val MAX_IDS_FOR_PRISONER_SEARCH = 1000
   }
 
-  fun getLinkedPrisoners(contactId: Long, pageable: Pageable): Page<LinkedPrisonerDetails> {
-    val relationships = prisonerContactSummaryRepository.findByContactId(contactId, pageable)
-    val prisoners = if (relationships.content.isNotEmpty()) {
-      prisonerService.getPrisoners(relationships.map { it.prisonerNumber }.toSet())
+  fun getLinkedPrisoners(contactId: Long, page: Int, size: Int): PagedModel<LinkedPrisonerDetails> {
+    val relationships = prisonerContactSummaryRepository.findByContactId(contactId)
+    val prisoners = if (relationships.isNotEmpty()) {
+      relationships.map { it.prisonerNumber }.toSet()
+        .chunked(MAX_IDS_FOR_PRISONER_SEARCH)
+        .flatMap { chunkOfPrisonerNumbers -> prisonerService.getPrisoners(chunkOfPrisonerNumbers.toSet()) }
     } else {
       emptyList()
     }
 
-    return relationships.map { relationship ->
+    val relationshipsWithPrisonerDetails = relationships.map { relationship ->
       val prisoner = prisoners.find { it.prisonerNumber == relationship.prisonerNumber }
       if (prisoner == null) {
         logger.info("Couldn't find linked prisoner (${relationship.prisonerNumber}) for contact ($contactId)")
@@ -44,6 +48,12 @@ class LinkedPrisonersService(
         relationshipToPrisonerDescription = relationship.relationshipToPrisonerDescription,
         isRelationshipActive = relationship.active,
       )
-    }
+    }.sortedWith(compareBy({ it.lastName }, { it.firstName }, { it.middleNames }, { it.prisonerNumber }))
+
+    val pageable = Pageable.ofSize(size).withPage(page)
+    val totalSize = relationshipsWithPrisonerDetails.size
+    val first = pageable.offset.toInt().coerceAtMost(totalSize)
+    val last = (first + pageable.pageSize).coerceAtMost(totalSize)
+    return PagedModel(PageImpl(relationshipsWithPrisonerDetails.subList(first, last), pageable, totalSize.toLong()))
   }
 }

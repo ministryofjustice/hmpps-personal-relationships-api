@@ -90,7 +90,7 @@ class PrisonerContactServiceTest {
     val result = prisonerContactService.getAllContacts(request)
 
     result.content hasSize 2
-    assertThat(result).containsAll(
+    assertThat(result.content).containsAll(
       listOf(
         c1.toModel(
           RestrictionsSummary(
@@ -149,7 +149,7 @@ class PrisonerContactServiceTest {
     val result = prisonerContactService.getAllContacts(request)
 
     result.content hasSize 2
-    assertThat(result).containsAll(
+    assertThat(result.content).containsAll(
       listOf(
         c1.toModel(
           RestrictionsSummary(

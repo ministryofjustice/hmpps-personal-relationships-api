@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PagedModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.LinkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.LinkedPrisonersService
 
@@ -30,9 +30,8 @@ class ContactLinkedPrisonersControllerTest {
         isRelationshipActive = true,
       ),
     )
-    val pageable = Pageable.unpaged()
-    whenever(service.getLinkedPrisoners(123, pageable)).thenReturn(PageImpl(expected))
-    val response = controller.getContactLinkedPrisoners(123, pageable)
+    whenever(service.getLinkedPrisoners(123, 0, 10)).thenReturn(PagedModel(PageImpl(expected)))
+    val response = controller.getContactLinkedPrisoners(123, 0, 10)
     assertThat(response.content).isEqualTo(expected)
   }
 }

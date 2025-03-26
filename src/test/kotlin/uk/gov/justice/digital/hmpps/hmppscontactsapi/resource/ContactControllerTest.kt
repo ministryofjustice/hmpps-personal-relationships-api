@@ -9,9 +9,9 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.whenever
 import org.openapitools.jackson.nullable.JsonNullable
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.web.PagedModel
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressDetails
@@ -164,14 +164,14 @@ class ContactControllerTest {
           pageable,
           ContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1)),
         ),
-      ).thenReturn(pageContacts)
+      ).thenReturn(PagedModel(pageContacts))
 
       // Act
-      val result: Page<ContactSearchResultItem> = controller.searchContacts(pageable, ContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1)))
+      val result: PagedModel<ContactSearchResultItem> = controller.searchContacts(pageable, ContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1)))
 
       // Then
       assertNotNull(result)
-      assertThat(result.totalElements).isEqualTo(1)
+      assertThat(result.metadata!!.totalElements).isEqualTo(1)
       assertThat(result.content[0].lastName).isEqualTo("last")
       assertThat(result.content[0].firstName).isEqualTo("first")
       assertThat(result.content[0].mailAddress).isEqualTo(true)
