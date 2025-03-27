@@ -1,8 +1,9 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 
 import jakarta.persistence.EntityNotFoundException
-import org.springframework.data.domain.Page
+import org.springframework.data.web.PagedModel
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactRestrictionCountsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.PrisonerContactSearchParams
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactSummary
@@ -18,7 +19,7 @@ class PrisonerContactService(
   private val prisonerContactRestrictionCountsRepository: PrisonerContactRestrictionCountsRepository,
   private val prisonerService: PrisonerService,
 ) {
-  fun getAllContacts(params: PrisonerContactSearchParams): Page<PrisonerContactSummary> {
+  fun getAllContacts(params: PrisonerContactSearchParams): PagedModel<PrisonerContactSummary> {
     prisonerService.getPrisoner(params.prisonerNumber)
       ?: throw EntityNotFoundException("Prisoner number ${params.prisonerNumber} - not found")
     val searchPrisonerContacts = prisonerContactSearchRepository.searchPrisonerContacts(params)
@@ -26,25 +27,30 @@ class PrisonerContactService(
     val restrictionsByPrisonerContactId =
       prisonerContactRestrictionCountsRepository.findAllByPrisonerContactIdIn(prisonerContactIds)
         .groupBy { it.prisonerContactId }
-    return searchPrisonerContacts.map { prisonerContactSummaryEntity ->
-      val restrictionCounts =
-        restrictionsByPrisonerContactId[prisonerContactSummaryEntity.prisonerContactId] ?: emptyList()
-      val restrictionSummary = if (restrictionCounts.isEmpty()) {
-        NO_RESTRICTIONS
-      } else {
-        RestrictionsSummary(
-          restrictionCounts
-            .filterNot { it.expired }
-            .map { RestrictionTypeDetails(it.restrictionType, it.restrictionTypeDescription) }.toSet(),
-          restrictionCounts
-            .filterNot { it.expired }
-            .sumOf { it.numberOfRestrictions },
-          restrictionCounts
-            .filter { it.expired }
-            .sumOf { it.numberOfRestrictions },
+    return PagedModel(
+      searchPrisonerContacts.map { prisonerContactSummaryEntity ->
+        prisonerContactSummaryEntity.toModel(
+          toRestrictionSummary(
+            restrictionsByPrisonerContactId[prisonerContactSummaryEntity.prisonerContactId] ?: emptyList(),
+          ),
         )
-      }
-      prisonerContactSummaryEntity.toModel(restrictionSummary)
-    }
+      },
+    )
+  }
+
+  private fun toRestrictionSummary(restrictionCounts: List<PrisonerContactRestrictionCountsEntity>) = if (restrictionCounts.isEmpty()) {
+    NO_RESTRICTIONS
+  } else {
+    RestrictionsSummary(
+      restrictionCounts
+        .filterNot { it.expired }
+        .map { RestrictionTypeDetails(it.restrictionType, it.restrictionTypeDescription) }.toSet(),
+      restrictionCounts
+        .filterNot { it.expired }
+        .sumOf { it.numberOfRestrictions },
+      restrictionCounts
+        .filter { it.expired }
+        .sumOf { it.numberOfRestrictions },
+    )
   }
 }

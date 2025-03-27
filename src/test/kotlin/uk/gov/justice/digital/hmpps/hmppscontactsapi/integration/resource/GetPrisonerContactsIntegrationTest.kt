@@ -120,9 +120,9 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(firstPage.content).hasSize(2)
-    assertThat(firstPage.totalPages).isEqualTo(2)
-    assertThat(firstPage.totalElements).isEqualTo(3)
-    assertThat(firstPage.number).isEqualTo(0)
+    assertThat(firstPage.page.totalPages).isEqualTo(2)
+    assertThat(firstPage.page.totalElements).isEqualTo(3)
+    assertThat(firstPage.page.number).isEqualTo(0)
 
     assertThat(firstPage.content[0].contactId).isEqualTo(1)
     assertThat(firstPage.content[1].contactId).isEqualTo(10)
@@ -130,9 +130,9 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     val contacts = getForUrl("$GET_PRISONER_CONTACT?size=2&page=1&sort=contactId")
 
     assertThat(contacts.content).hasSize(1)
-    assertThat(contacts.totalPages).isEqualTo(2)
-    assertThat(contacts.totalElements).isEqualTo(3)
-    assertThat(contacts.number).isEqualTo(1)
+    assertThat(contacts.page.totalPages).isEqualTo(2)
+    assertThat(contacts.page.totalElements).isEqualTo(3)
+    assertThat(contacts.page.number).isEqualTo(1)
 
     assertThat(contacts.content[0].contactId).isEqualTo(18)
   }
@@ -144,9 +144,9 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     val firstPage = getForUrl("$GET_PRISONER_CONTACT?sort=lastName")
 
     assertThat(firstPage.content).hasSize(3)
-    assertThat(firstPage.totalPages).isEqualTo(1)
-    assertThat(firstPage.totalElements).isEqualTo(3)
-    assertThat(firstPage.number).isEqualTo(0)
+    assertThat(firstPage.page.totalPages).isEqualTo(1)
+    assertThat(firstPage.page.totalElements).isEqualTo(3)
+    assertThat(firstPage.page.number).isEqualTo(0)
 
     assertThat(firstPage.content[0].lastName).isEqualTo("Address")
     assertThat(firstPage.content[1].lastName).isEqualTo("Last")

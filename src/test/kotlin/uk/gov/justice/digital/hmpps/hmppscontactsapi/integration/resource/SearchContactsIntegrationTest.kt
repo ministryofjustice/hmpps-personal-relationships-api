@@ -37,8 +37,8 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
     with(body!!) {
       assertThat(content).isEmpty()
-      assertThat(totalElements).isEqualTo(0)
-      assertThat(totalPages).isEqualTo(0)
+      assertThat(page.totalElements).isEqualTo(0)
+      assertThat(page.totalPages).isEqualTo(0)
     }
   }
 
@@ -55,9 +55,9 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     with(body!!) {
       assertThat(content).isNotEmpty()
       assertThat(content.size).isEqualTo(1)
-      assertThat(totalElements).isEqualTo(1)
+      assertThat(page.totalElements).isEqualTo(1)
 
-      assertThat(totalPages).isEqualTo(1)
+      assertThat(page.totalPages).isEqualTo(1)
 
       val contact = content.first()
       assertThat(contact.id).isEqualTo(12)
@@ -92,15 +92,10 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     with(body!!) {
       assertThat(content).isNotEmpty()
       assertThat(content.size).isEqualTo(1)
-      assertThat(totalElements).isEqualTo(1)
-      assertThat(pageable.pageNumber).isEqualTo(0)
-      assertThat(pageable.pageSize).isEqualTo(10)
-      assertThat(pageable.sort.sorted).isEqualTo(false)
-      assertThat(sort.sorted).isEqualTo(false)
-      assertThat(first).isEqualTo(true)
-      assertThat(size).isEqualTo(10)
-      assertThat(number).isEqualTo(0)
-      assertThat(totalPages).isEqualTo(1)
+      assertThat(page.totalElements).isEqualTo(1)
+      assertThat(page.number).isEqualTo(0)
+      assertThat(page.size).isEqualTo(10)
+      assertThat(page.totalPages).isEqualTo(1)
 
       val contact = content.first()
       assertThat(contact.id).isEqualTo(1)
@@ -141,9 +136,8 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     with(body!!) {
       assertThat(content).isNotEmpty()
       assertThat(content.size).isEqualTo(1)
-      assertThat(totalElements).isEqualTo(1)
-
-      assertThat(totalPages).isEqualTo(1)
+      assertThat(page.totalElements).isEqualTo(1)
+      assertThat(page.totalPages).isEqualTo(1)
 
       val contact = content.first()
       assertThat(contact.id).isEqualTo(1)
@@ -182,9 +176,8 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     with(body!!) {
       assertThat(content).isNotEmpty()
       assertThat(content.size).isEqualTo(2)
-      assertThat(totalElements).isEqualTo(2)
-
-      assertThat(totalPages).isEqualTo(1)
+      assertThat(page.totalElements).isEqualTo(2)
+      assertThat(page.totalPages).isEqualTo(1)
 
       val contact = content.first()
       assertThat(contact.id).isEqualTo(16)
@@ -209,9 +202,8 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     with(body!!) {
       assertThat(content).isNotEmpty()
       assertThat(content.size).isEqualTo(1)
-      assertThat(totalElements).isEqualTo(1)
-
-      assertThat(totalPages).isEqualTo(1)
+      assertThat(page.totalElements).isEqualTo(1)
+      assertThat(page.totalPages).isEqualTo(1)
 
       val contact = content.first()
       assertThat(contact.id).isEqualTo(18)

@@ -10,7 +10,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
+import org.springdoc.core.annotations.ParameterObject
+import org.springdoc.core.converters.models.PageableAsQueryParam
 import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PagedModel
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -29,7 +32,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactR
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameDetails
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItemPage
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PatchContactResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
@@ -182,12 +185,6 @@ class ContactController(
       ApiResponse(
         responseCode = "200",
         description = "Found contacts",
-        content = [
-          Content(
-            mediaType = "application/json",
-            schema = Schema(implementation = ContactSearchResultItemPage::class),
-          ),
-        ],
       ),
       ApiResponse(
         responseCode = "400",
@@ -197,11 +194,12 @@ class ContactController(
     ],
   )
   @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__R', 'ROLE_CONTACTS__RW')")
+  @PageableAsQueryParam
   fun searchContacts(
-    @Parameter(description = "Pageable configurations", required = false)
+    @Parameter(hidden = true)
     pageable: Pageable,
-    @ModelAttribute @Valid @Parameter(description = "Contact search criteria", required = true) request: ContactSearchRequest,
-  ) = contactFacade.searchContacts(pageable, request)
+    @ModelAttribute @Valid @ParameterObject request: ContactSearchRequest,
+  ): PagedModel<ContactSearchResultItem> = contactFacade.searchContacts(pageable, request)
 
   @PatchMapping("/{contactId}")
   @Operation(

@@ -8,11 +8,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import org.springdoc.core.annotations.ParameterObject
-import org.springframework.data.domain.Page
+import org.springdoc.core.converters.models.PageableAsQueryParam
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort.Direction
 import org.springframework.data.web.PageableDefault
+import org.springframework.data.web.PagedModel
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -187,9 +187,10 @@ class ContactSyncController(
     ],
   )
   @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
+  @PageableAsQueryParam
   fun reconcileContacts(
-    @ParameterObject
+    @Parameter(hidden = true)
     @PageableDefault(sort = ["contactId"], size = 100, direction = Direction.ASC)
     pageable: Pageable,
-  ): Page<SyncContactId> = syncFacade.getContactIds(pageable)
+  ): PagedModel<SyncContactId> = syncFacade.getContactIds(pageable)
 }

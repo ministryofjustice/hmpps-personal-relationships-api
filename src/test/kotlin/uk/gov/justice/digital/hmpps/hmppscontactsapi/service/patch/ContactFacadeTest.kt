@@ -10,6 +10,7 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PagedModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressPhoneDetails
@@ -318,7 +319,7 @@ class ContactFacadeTest {
 
     whenever(contactService.searchContacts(any(), any())).thenReturn(result)
 
-    assertThat(contactFacade.searchContacts(pageable, request)).isEqualTo(result)
+    assertThat(contactFacade.searchContacts(pageable, request)).isEqualTo(PagedModel(result))
 
     verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any())
   }

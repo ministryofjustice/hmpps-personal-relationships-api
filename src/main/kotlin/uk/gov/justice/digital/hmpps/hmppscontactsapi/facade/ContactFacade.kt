@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
 
 import org.slf4j.LoggerFactory
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PagedModel
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
@@ -121,7 +121,7 @@ class ContactFacade(
 
   fun getContactName(id: Long): ContactNameDetails? = contactService.getContactName(id)
 
-  fun searchContacts(pageable: Pageable, request: ContactSearchRequest): Page<ContactSearchResultItem> = contactService.searchContacts(pageable, request)
+  fun searchContacts(pageable: Pageable, request: ContactSearchRequest): PagedModel<ContactSearchResultItem> = PagedModel(contactService.searchContacts(pageable, request))
 
   fun patchRelationship(prisonerContactId: Long, request: PatchRelationshipRequest) {
     contactService.updateContactRelationship(prisonerContactId, request)

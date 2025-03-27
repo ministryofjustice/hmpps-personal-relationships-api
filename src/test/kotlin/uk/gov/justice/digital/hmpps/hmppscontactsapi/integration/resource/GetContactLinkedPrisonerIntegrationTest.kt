@@ -63,27 +63,13 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
       setOf(prisoner1.prisonerNumber, prisoner2.prisonerNumber),
       listOf(prisoner1, prisoner2),
     )
-    val linkedPrisoners = testAPIClient.getLinkedPrisoners(savedContactId)
-    assertThat(linkedPrisoners.size).isEqualTo(10) // page size
-    assertThat(linkedPrisoners.totalElements).isEqualTo(3)
-    assertThat(linkedPrisoners.totalPages).isEqualTo(1)
-    assertThat(linkedPrisoners.pageable.pageNumber).isEqualTo(0)
+    val linkedPrisoners = testAPIClient.getLinkedPrisoners(savedContactId, 0, 10)
+    assertThat(linkedPrisoners.page.size).isEqualTo(10)
+    assertThat(linkedPrisoners.page.totalElements).isEqualTo(3)
+    assertThat(linkedPrisoners.page.totalPages).isEqualTo(1)
+    assertThat(linkedPrisoners.page.number).isEqualTo(0)
     assertThat(linkedPrisoners.content).isEqualTo(
       listOf(
-        LinkedPrisonerDetails(
-          prisonerNumber = prisoner2.prisonerNumber,
-          firstName = prisoner2.firstName,
-          middleNames = prisoner2.middleNames,
-          lastName = prisoner2.lastName,
-          prisonId = prisoner2.prisonId,
-          prisonName = prisoner2.prisonName,
-          prisonerContactId = prisoner2FatherRelationship.prisonerContactId,
-          relationshipTypeCode = "S",
-          relationshipTypeDescription = "Social",
-          relationshipToPrisonerCode = "FA",
-          relationshipToPrisonerDescription = "Father",
-          isRelationshipActive = true,
-        ),
         LinkedPrisonerDetails(
           prisonerNumber = prisoner1.prisonerNumber,
           firstName = prisoner1.firstName,
@@ -112,6 +98,20 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
           relationshipToPrisonerDescription = "Friend",
           isRelationshipActive = true,
         ),
+        LinkedPrisonerDetails(
+          prisonerNumber = prisoner2.prisonerNumber,
+          firstName = prisoner2.firstName,
+          middleNames = prisoner2.middleNames,
+          lastName = prisoner2.lastName,
+          prisonId = prisoner2.prisonId,
+          prisonName = prisoner2.prisonName,
+          prisonerContactId = prisoner2FatherRelationship.prisonerContactId,
+          relationshipTypeCode = "S",
+          relationshipTypeDescription = "Social",
+          relationshipToPrisonerCode = "FA",
+          relationshipToPrisonerDescription = "Father",
+          isRelationshipActive = true,
+        ),
       ),
     )
   }
@@ -127,7 +127,7 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
     stubSearchPrisonersByPrisonerNumbers(setOf(prisoner1.prisonerNumber, prisoner2.prisonerNumber), listOf(prisoner1))
 
     val linkedPrisoners = testAPIClient.getLinkedPrisoners(savedContactId)
-    assertThat(linkedPrisoners.totalElements).isEqualTo(2)
+    assertThat(linkedPrisoners.page.totalElements).isEqualTo(2)
     assertThat(linkedPrisoners.content).isEqualTo(
       listOf(
         LinkedPrisonerDetails(

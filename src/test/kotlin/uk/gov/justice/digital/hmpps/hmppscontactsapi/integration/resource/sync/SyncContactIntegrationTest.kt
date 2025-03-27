@@ -267,20 +267,20 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
       val firstPage = testAPIClient.syncReconcileContacts(0, 2)
       with(firstPage) {
-        assertThat(totalElements).isGreaterThanOrEqualTo(3)
+        assertThat(page.totalElements).isGreaterThanOrEqualTo(3)
         assertThat(content).hasSize(2)
         assertThat(content).extracting("contactId").hasSize(2)
       }
 
       val secondPage = testAPIClient.syncReconcileContacts(1, 2)
       with(secondPage) {
-        assertThat(totalElements).isGreaterThanOrEqualTo(3)
+        assertThat(page.totalElements).isGreaterThanOrEqualTo(3)
         assertThat(content.size).isGreaterThanOrEqualTo(1)
       }
 
       val bigPage = testAPIClient.syncReconcileContacts(0, 100)
       with(bigPage) {
-        assertThat(totalElements).isGreaterThanOrEqualTo(3)
+        assertThat(page.totalElements).isGreaterThanOrEqualTo(3)
         assertThat(content.size).isGreaterThanOrEqualTo(3)
         assertThat(content).extracting("contactId").containsAll(listOf(5005L, 5006L, 5007L))
       }
