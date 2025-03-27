@@ -112,6 +112,7 @@ class PrisonerMergeService(
     }
   }
 }
+
 private fun PrisonerNumberOfChildren.toResponse(wasCreated: Boolean): MergeResponse = MergeResponse(
   id = prisonerNumberOfChildrenId,
   wasCreated = wasCreated,

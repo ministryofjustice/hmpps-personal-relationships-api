@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.resource.sync
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
-import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -14,10 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync.PrisonerMergeFacade
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerNumberOfChildrenResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 
-@Tag(name = "Merge a prisoner")
+@Tag(name = "Offender merge")
 @RestController
 @RequestMapping(value = ["/merge"], produces = [MediaType.APPLICATION_JSON_VALUE])
 class PrisonerMergeController(val prisonerMergeFacade: PrisonerMergeFacade) {
@@ -39,7 +37,6 @@ class PrisonerMergeController(val prisonerMergeFacade: PrisonerMergeFacade) {
         content = [
           Content(
             mediaType = "application/json",
-            schema = Schema(implementation = SyncPrisonerNumberOfChildrenResponse::class),
           ),
         ],
       ),
