@@ -67,5 +67,7 @@ class SyncPrisonerNumberOfChildrenService(
     )
   }
 
-  fun getPrisonerNumberOfChildrenActive(prisonerNumber: String) = numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
+  fun getPrisonerNumberOfChildrenActive(prisonerNumber: String) = numberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(
+    prisonerNumber,
+  )
 }

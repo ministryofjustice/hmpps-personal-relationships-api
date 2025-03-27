@@ -71,7 +71,9 @@ class SyncPrisonerDomesticStatusService(
     )
   }
 
-  fun getPrisonerDomesticStatusActive(prisonerNumber: String) = domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
+  fun getPrisonerDomesticStatusActive(prisonerNumber: String) = domesticStatusRepository.findByPrisonerNumberAndActiveTrue(
+    prisonerNumber,
+  )
 
   private fun validateReferenceDataExists(code: String) = referenceCodeRepository
     .findByGroupCodeAndCode(ReferenceCodeGroup.DOMESTIC_STS, code)

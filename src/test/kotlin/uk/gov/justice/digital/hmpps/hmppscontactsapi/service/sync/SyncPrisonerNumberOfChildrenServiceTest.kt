@@ -40,7 +40,7 @@ class SyncPrisonerNumberOfChildrenServiceTest {
       active = true,
     )
 
-    whenever(numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+    whenever(numberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
       .thenReturn(numberOfChildren)
 
     // When
@@ -52,14 +52,14 @@ class SyncPrisonerNumberOfChildrenServiceTest {
     assertThat(result.numberOfChildren).isEqualTo(numberOfChildren.numberOfChildren)
     assertThat(result.createdBy).isEqualTo(numberOfChildren.createdBy)
     assertThat(result.active).isEqualTo(numberOfChildren.active)
-    verify(numberOfChildrenRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
+    verify(numberOfChildrenRepository).findByPrisonerNumberAndActiveTrue(prisonerNumber)
   }
 
   @Test
   fun `getNumberOfChildrenByPrisonerNumber throws EntityNotFoundException when not found`() {
     // Given
     val prisonerNumber = "A1234BC"
-    whenever(numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+    whenever(numberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
       .thenReturn(null)
 
     // When/Then
@@ -88,7 +88,7 @@ class SyncPrisonerNumberOfChildrenServiceTest {
       createdTime = LocalDateTime.now(),
     )
 
-    whenever(numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+    whenever(numberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
       .thenReturn(existingNumberOfChildrenCount)
 
     val deactivatedNumberOfChildrenCount = existingNumberOfChildrenCount.copy(active = false)
@@ -98,7 +98,7 @@ class SyncPrisonerNumberOfChildrenServiceTest {
     val response = syncNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, updateRequest)
 
     // Then
-    verify(numberOfChildrenRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
+    verify(numberOfChildrenRepository).findByPrisonerNumberAndActiveTrue(prisonerNumber)
     assertThat(response.id).isEqualTo(1L)
   }
 
@@ -112,7 +112,7 @@ class SyncPrisonerNumberOfChildrenServiceTest {
       createdTime = LocalDateTime.now(),
     )
 
-    whenever(numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+    whenever(numberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
       .thenReturn(null)
 
     whenever(numberOfChildrenRepository.save(any())).thenReturn(
@@ -129,7 +129,7 @@ class SyncPrisonerNumberOfChildrenServiceTest {
     syncNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, updateRequest)
 
     // Then
-    verify(numberOfChildrenRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
+    verify(numberOfChildrenRepository).findByPrisonerNumberAndActiveTrue(prisonerNumber)
     val numberOfChildrenCaptor = argumentCaptor<PrisonerNumberOfChildren>()
     verify(numberOfChildrenRepository, times(1)).save(numberOfChildrenCaptor.capture())
     val savedNumberOfChildren = numberOfChildrenCaptor.firstValue
@@ -152,7 +152,7 @@ class SyncPrisonerNumberOfChildrenServiceTest {
       active = true,
     )
 
-    whenever(numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+    whenever(numberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
       .thenReturn(numberOfChildren)
 
     // When
@@ -160,14 +160,14 @@ class SyncPrisonerNumberOfChildrenServiceTest {
 
     // Then
     assertThat(result?.prisonerNumberOfChildrenId).isEqualTo(numberOfChildren.prisonerNumberOfChildrenId)
-    verify(numberOfChildrenRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
+    verify(numberOfChildrenRepository).findByPrisonerNumberAndActiveTrue(prisonerNumber)
   }
 
   @Test
   fun `should not return number of children when there are no active records`() {
     // Given
     val prisonerNumber = "A1234BC"
-    whenever(numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+    whenever(numberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
       .thenReturn(null)
 
     // When
@@ -175,6 +175,6 @@ class SyncPrisonerNumberOfChildrenServiceTest {
 
     // Then
     assertThat(result).isNull()
-    verify(numberOfChildrenRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
+    verify(numberOfChildrenRepository).findByPrisonerNumberAndActiveTrue(prisonerNumber)
   }
 }

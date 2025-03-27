@@ -98,7 +98,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     )
 
     // When
-    val response = webTestClient.put()
+    webTestClient.put()
       .uri("/sync/$prisonerNumber/number-of-children")
       .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
       .contentType(MediaType.APPLICATION_JSON)
@@ -262,16 +262,14 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     assertThat(numberOfChildren.createdTime).isNotNull
     assertThat(numberOfChildren.active).isTrue
 
-    val historicalRecord = numberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, false)
-    assertThat(historicalRecord?.numberOfChildren).isEqualTo("1")
-    assertThat(historicalRecord?.createdBy).isEqualTo("user")
-    if (historicalRecord != null) {
-      stubEvents.assertHasEvent(
-        event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_UPDATED,
-        additionalInfo = PrisonerNumberOfChildren(historicalRecord.prisonerNumberOfChildrenId, Source.NOMIS),
-        personReference = PersonReference(nomsNumber = prisonerNumber),
-      )
-    }
+    val historicalRecord = numberOfChildrenRepository.findByPrisonerNumberAndActiveFalse(prisonerNumber)
+    assertThat(historicalRecord[0].numberOfChildren).isEqualTo("1")
+    assertThat(historicalRecord[0].createdBy).isEqualTo("user")
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_UPDATED,
+      additionalInfo = PrisonerNumberOfChildren(historicalRecord[0].prisonerNumberOfChildrenId, Source.NOMIS),
+      personReference = PersonReference(nomsNumber = prisonerNumber),
+    )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
@@ -301,7 +299,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
       .expectBody(ErrorResponse::class.java)
       .returnResult().responseBody
 
-    assertThat(response.developerMessage).contains("numberOfChildren must be less than or equal to 50 characters")
+    assertThat(response!!.developerMessage).contains("numberOfChildren must be less than or equal to 50 characters")
   }
 
   @Test
