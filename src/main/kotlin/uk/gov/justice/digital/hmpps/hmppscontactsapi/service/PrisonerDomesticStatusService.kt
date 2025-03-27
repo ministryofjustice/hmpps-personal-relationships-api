@@ -71,7 +71,9 @@ class PrisonerDomesticStatusService(
     createdBy = createdBy,
   )
 
-  private fun getPrisonerDomesticStatusActive(prisonerNumber: String) = prisonerDomesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
+  private fun getPrisonerDomesticStatusActive(prisonerNumber: String) = prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(
+    prisonerNumber,
+  )
 
   private fun checkReferenceDataExists(code: String) = referenceCodeRepository
     .findByGroupCodeAndCode(ReferenceCodeGroup.DOMESTIC_STS, code)

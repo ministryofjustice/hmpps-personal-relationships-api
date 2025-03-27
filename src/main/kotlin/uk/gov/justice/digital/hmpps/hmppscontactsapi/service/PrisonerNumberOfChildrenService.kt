@@ -54,7 +54,9 @@ class PrisonerNumberOfChildrenService(
     return prisonerNumberOfChildrenRepository.save(newNumberOfChildren).toModel()
   }
 
-  private fun prisonerNumberOfChildrenActive(prisonerNumber: String) = prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true)
+  private fun prisonerNumberOfChildrenActive(prisonerNumber: String) = prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(
+    prisonerNumber,
+  )
 
   private fun PrisonerNumberOfChildren.toModel(): PrisonerNumberOfChildrenResponse = PrisonerNumberOfChildrenResponse(
     id = prisonerNumberOfChildrenId,

@@ -256,16 +256,14 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     assertThat(savedDomesticStatus.createdTime).isNotNull
     assertThat(savedDomesticStatus.active).isTrue
 
-    val historicalRecord = domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, false)
-    assertThat(historicalRecord?.domesticStatusCode).isEqualTo("D")
-    assertThat(historicalRecord?.createdBy).isEqualTo("user")
-    if (historicalRecord != null) {
-      stubEvents.assertHasEvent(
-        event = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
-        additionalInfo = PrisonerDomesticStatus(historicalRecord.prisonerDomesticStatusId, Source.NOMIS),
-        personReference = PersonReference(nomsNumber = prisonerNumber),
-      )
-    }
+    val historicalRecord = domesticStatusRepository.findByPrisonerNumberAndActiveFalse(prisonerNumber)
+    assertThat(historicalRecord[0].domesticStatusCode).isEqualTo("D")
+    assertThat(historicalRecord[0].createdBy).isEqualTo("user")
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
+      additionalInfo = PrisonerDomesticStatus(historicalRecord[0].prisonerDomesticStatusId, Source.NOMIS),
+      personReference = PersonReference(nomsNumber = prisonerNumber),
+    )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,

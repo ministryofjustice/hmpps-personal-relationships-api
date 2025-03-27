@@ -50,7 +50,7 @@ class PrisonerNumberOfChildrenServiceTest {
         createdTime = LocalDateTime.now(),
       )
 
-      whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
         .thenReturn(newNumberOfChildrenCount)
 
       // When
@@ -67,7 +67,7 @@ class PrisonerNumberOfChildrenServiceTest {
     @Test
     fun `should throws EntityNotFoundException when numberOfChildren does not exist`() {
       // Given
-      whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
         .thenReturn(null)
 
       // When/Then
@@ -88,7 +88,7 @@ class PrisonerNumberOfChildrenServiceTest {
         requestedBy = "USER1",
       )
 
-      whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
         .thenReturn(null)
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
       val newNumberOfChildrenCount = PrisonerNumberOfChildren(
@@ -126,7 +126,7 @@ class PrisonerNumberOfChildrenServiceTest {
         requestedBy = "USER1",
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
-      whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
         .thenReturn(null)
 
       val newNumberOfChildren = PrisonerNumberOfChildren(
@@ -172,7 +172,7 @@ class PrisonerNumberOfChildrenServiceTest {
         numberOfChildren = 1,
         requestedBy = "USER1",
       )
-      whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
         .thenReturn(existingNumberOfChildrenCount)
 
       whenever(prisonerNumberOfChildrenRepository.save(any()))

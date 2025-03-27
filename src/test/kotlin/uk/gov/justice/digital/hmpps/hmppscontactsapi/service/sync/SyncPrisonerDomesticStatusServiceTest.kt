@@ -52,7 +52,7 @@ class SyncPrisonerDomesticStatusServiceTest {
       active = true,
     )
 
-    whenever(domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+    whenever(domesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
       .thenReturn(domesticStatus)
 
     // When
@@ -66,14 +66,14 @@ class SyncPrisonerDomesticStatusServiceTest {
     assertThat(result.active).isEqualTo(domesticStatus.active)
     assertThat(result.createdTime).isInThePast()
 
-    verify(domesticStatusRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
+    verify(domesticStatusRepository).findByPrisonerNumberAndActiveTrue(prisonerNumber)
   }
 
   @Test
   fun `getDomesticStatusByPrisonerNumber throws EntityNotFoundException when not found`() {
     // Given
     val prisonerNumber = "A1234BC"
-    whenever(domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+    whenever(domesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
       .thenReturn(null)
 
     // When/Then
@@ -105,7 +105,7 @@ class SyncPrisonerDomesticStatusServiceTest {
       createdTime = LocalDateTime.now(),
     )
     whenever(referenceCodeRepository.findByGroupCodeAndCode(any(), any())).thenReturn(referenceData)
-    whenever(domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+    whenever(domesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
       .thenReturn(existingStatus)
 
     val deactivatedStatus = existingStatus.copy(active = false)
@@ -115,7 +115,7 @@ class SyncPrisonerDomesticStatusServiceTest {
     syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, updateRequest)
 
     // Then
-    verify(domesticStatusRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
+    verify(domesticStatusRepository).findByPrisonerNumberAndActiveTrue(prisonerNumber)
   }
 
   @Test
@@ -128,7 +128,7 @@ class SyncPrisonerDomesticStatusServiceTest {
       createdTime = LocalDateTime.now(),
     )
     whenever(referenceCodeRepository.findByGroupCodeAndCode(any(), any())).thenReturn(referenceData)
-    whenever(domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+    whenever(domesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
       .thenReturn(null)
 
     whenever(domesticStatusRepository.save(any())).thenReturn(
@@ -145,7 +145,7 @@ class SyncPrisonerDomesticStatusServiceTest {
     syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, updateRequest)
 
     // Then
-    verify(domesticStatusRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
+    verify(domesticStatusRepository).findByPrisonerNumberAndActiveTrue(prisonerNumber)
     val domesticStatusCaptor = argumentCaptor<PrisonerDomesticStatus>()
     verify(domesticStatusRepository, times(1)).save(domesticStatusCaptor.capture())
     val savedDomesticStatus = domesticStatusCaptor.firstValue
@@ -188,7 +188,7 @@ class SyncPrisonerDomesticStatusServiceTest {
       active = true,
     )
 
-    whenever(domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+    whenever(domesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
       .thenReturn(domesticStatus)
 
     // When
@@ -196,14 +196,14 @@ class SyncPrisonerDomesticStatusServiceTest {
 
     // Then
     assertThat(result?.prisonerDomesticStatusId).isEqualTo(domesticStatus.prisonerDomesticStatusId)
-    verify(domesticStatusRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
+    verify(domesticStatusRepository).findByPrisonerNumberAndActiveTrue(prisonerNumber)
   }
 
   @Test
   fun `should not return active existing status`() {
     // Given
     val prisonerNumber = "A1234BC"
-    whenever(domesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+    whenever(domesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
       .thenReturn(null)
 
     // When
@@ -211,6 +211,6 @@ class SyncPrisonerDomesticStatusServiceTest {
 
     // Then
     assertThat(result).isNull()
-    verify(domesticStatusRepository).findByPrisonerNumberAndActive(prisonerNumber, true)
+    verify(domesticStatusRepository).findByPrisonerNumberAndActiveTrue(prisonerNumber)
   }
 }

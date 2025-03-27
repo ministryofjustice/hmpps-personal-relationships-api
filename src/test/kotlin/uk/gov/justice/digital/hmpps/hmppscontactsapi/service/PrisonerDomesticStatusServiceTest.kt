@@ -56,7 +56,7 @@ class PrisonerDomesticStatusServiceTest {
         createdTime = LocalDateTime.now(),
       )
 
-      whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
         .thenReturn(domesticStatus)
 
       whenever(
@@ -81,7 +81,7 @@ class PrisonerDomesticStatusServiceTest {
     @Test
     fun `should throws EntityNotFoundException when status does not exist`() {
       // Given
-      whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
         .thenReturn(null)
 
       // When/Then
@@ -104,7 +104,7 @@ class PrisonerDomesticStatusServiceTest {
         requestedBy = "USER1",
       )
 
-      whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
         .thenReturn(null)
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
       whenever(
@@ -150,7 +150,7 @@ class PrisonerDomesticStatusServiceTest {
         requestedBy = "USER1",
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
-      whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
         .thenReturn(null)
 
       val newStatus = PrisonerDomesticStatus(
@@ -199,7 +199,7 @@ class PrisonerDomesticStatusServiceTest {
         requestedBy = "USER1",
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
-      whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActive(prisonerNumber, true))
+      whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
         .thenReturn(existingStatus)
 
       whenever(
