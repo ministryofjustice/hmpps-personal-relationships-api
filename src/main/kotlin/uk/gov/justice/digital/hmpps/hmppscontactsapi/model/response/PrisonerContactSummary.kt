@@ -28,6 +28,9 @@ data class PrisonerContactSummary(
   @Schema(description = "The date of birth of the contact", example = "1980-01-01")
   val dateOfBirth: LocalDate?,
 
+  @Schema(description = "The date the contact deceased, if known", example = "1980-01-01", nullable = true)
+  val deceasedDate: LocalDate?,
+
   @Schema(
     description =
     """

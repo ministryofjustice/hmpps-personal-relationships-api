@@ -190,6 +190,18 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
+  fun `should get contacts with a deceased date`() {
+    val uri = UriComponentsBuilder.fromPath("contact/search")
+      .queryParam("lastName", "Dead")
+      .build()
+      .toUri()
+
+    val body = testAPIClient.getSearchContactResults(uri)!!
+    assertThat(body.page.totalElements).isEqualTo(1)
+    assertThat(body.content[0].deceasedDate).isEqualTo(LocalDate.of(2000, 1, 1))
+  }
+
+  @Test
   fun `should get the contacts with minimal addresses associated with them when searched by last name`() {
     val uri = UriComponentsBuilder.fromPath("contact/search")
       .queryParam("lastName", "Address")

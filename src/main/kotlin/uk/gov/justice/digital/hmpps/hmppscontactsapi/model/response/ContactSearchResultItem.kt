@@ -23,6 +23,9 @@ data class ContactSearchResultItem(
   @Schema(description = "The date of birth of the contact, if known", example = "1980-01-01", nullable = true)
   val dateOfBirth: LocalDate? = null,
 
+  @Schema(description = "The date the contact deceased, if known", example = "1980-01-01", nullable = true)
+  val deceasedDate: LocalDate? = null,
+
   @Schema(description = "The id of the user who created the contact", example = "JD000001")
   val createdBy: String? = null,
 

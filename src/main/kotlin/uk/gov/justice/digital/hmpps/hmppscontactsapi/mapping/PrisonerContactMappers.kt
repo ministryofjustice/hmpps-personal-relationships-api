@@ -12,6 +12,7 @@ fun PrisonerContactSummaryEntity.toModel(restrictionSummary: RestrictionsSummary
   firstName = this.firstName,
   middleNames = this.middleNames,
   dateOfBirth = this.dateOfBirth,
+  deceasedDate = this.deceasedDate,
   relationshipTypeCode = this.relationshipType,
   relationshipTypeDescription = this.relationshipTypeDescription,
   relationshipToPrisonerCode = this.relationshipToPrisoner,

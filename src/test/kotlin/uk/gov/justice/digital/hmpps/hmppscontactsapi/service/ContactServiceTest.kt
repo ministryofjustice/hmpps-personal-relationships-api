@@ -990,6 +990,7 @@ class ContactServiceTest {
       middleNames = "middle",
       firstName = "first",
       dateOfBirth = LocalDate.of(1980, 2, 1),
+      deceasedDate = null,
       contactAddressId = 1L,
       primaryAddress = true,
       verified = false,

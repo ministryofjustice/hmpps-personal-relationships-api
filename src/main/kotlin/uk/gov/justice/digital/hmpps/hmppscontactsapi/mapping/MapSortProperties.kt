@@ -18,6 +18,7 @@ fun mapSortPropertiesOfContactSearch(property: String): String = when (property)
   ContactSearchResultItem::firstName.name -> ContactWithAddressEntity::firstName.name
   ContactSearchResultItem::middleNames.name -> ContactWithAddressEntity::middleNames.name
   ContactSearchResultItem::dateOfBirth.name -> ContactWithAddressEntity::dateOfBirth.name
+  ContactSearchResultItem::deceasedDate.name -> ContactWithAddressEntity::deceasedDate.name
   ContactSearchResultItem::createdBy.name -> ContactWithAddressEntity::createdBy.name
   ContactSearchResultItem::createdTime.name -> ContactWithAddressEntity::createdTime.name
   ContactSearchResultItem::flat.name -> ContactWithAddressEntity::flat.name
@@ -47,6 +48,7 @@ fun mapSortPropertiesOfPrisonerContactSearch(property: String): String = when (p
   PrisonerContactSummary::firstName.name -> PrisonerContactSummaryEntity::firstName.name
   PrisonerContactSummary::middleNames.name -> PrisonerContactSummaryEntity::middleNames.name
   PrisonerContactSummary::dateOfBirth.name -> PrisonerContactSummaryEntity::dateOfBirth.name
+  PrisonerContactSummary::deceasedDate.name -> PrisonerContactSummaryEntity::deceasedDate.name
   PrisonerContactSummary::relationshipTypeCode.name -> PrisonerContactSummaryEntity::relationshipType.name
   PrisonerContactSummary::relationshipTypeDescription.name -> PrisonerContactSummaryEntity::relationshipTypeDescription.name
   PrisonerContactSummary::relationshipToPrisonerCode.name -> PrisonerContactSummaryEntity::relationshipToPrisoner.name

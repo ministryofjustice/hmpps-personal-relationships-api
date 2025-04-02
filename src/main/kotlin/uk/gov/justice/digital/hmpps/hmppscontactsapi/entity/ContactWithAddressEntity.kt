@@ -24,6 +24,8 @@ data class ContactWithAddressEntity(
 
   val dateOfBirth: LocalDate?,
 
+  val deceasedDate: LocalDate?,
+
   val createdBy: String,
 
   val createdTime: LocalDateTime,
