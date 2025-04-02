@@ -735,6 +735,14 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     )
   }
 
+  @Test
+  fun `should return dead contact with deceased date`() {
+    stubPrisonSearchWithResponse("E4567FG")
+    val deadContacts = getForUrl("/prisoner/E4567FG/contact")
+    assertThat(deadContacts.content).hasSize(1)
+    assertThat(deadContacts.content[0].deceasedDate).isEqualTo(LocalDate.of(2000, 1, 1))
+  }
+
   private fun getForUrl(url: String): PrisonerContactSummaryResponse {
     val withActiveOnly = webTestClient.get()
       .uri(url)
