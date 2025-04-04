@@ -115,7 +115,9 @@ values (1, 1, 'A1234BB', 'S', true, 'FA', 'Comment', 'MDI', 'TIM', current_times
        -- Mike Toby
        (27, 1, 'A4385DZ', 'S', true, 'FA', 'Comment', 'MDI', 'TIM', current_timestamp),
        (28, 10, 'A4385DZ', 'S', true, 'MOT', 'Comment', 'MDI', 'TIM', current_timestamp),
-       (29, 18, 'A4385DZ', 'S', true, 'FRI', null, 'MDI', 'TIM', current_timestamp);
+       (29, 18, 'A4385DZ', 'S', true, 'FRI', null, 'MDI', 'TIM', current_timestamp),
+       -- Stubbed Prisoner With Dead Contact
+       (30, 19, 'E4567FG', 'S', true, 'FRI', 'Dead Contact', 'MDI', 'TIM', current_timestamp);
 
 insert into prisoner_contact_restriction (prisoner_contact_id, restriction_type, start_date, expiry_date, comments, created_by, created_time, updated_by, updated_time )
 values

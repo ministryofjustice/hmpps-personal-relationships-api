@@ -287,6 +287,7 @@ class LinkedPrisonersServiceTest {
     middleNames = "Any",
     lastName = "Last",
     dateOfBirth = null,
+    deceasedDate = null,
     contactAddressId = 3L,
     flat = "2B",
     property = "123",

@@ -15,6 +15,7 @@ fun ContactWithAddressEntity.toModel() = ContactSearchResultItem(
   firstName = this.firstName,
   middleNames = this.middleNames,
   dateOfBirth = this.dateOfBirth,
+  deceasedDate = this.deceasedDate,
   createdBy = this.createdBy,
   createdTime = this.createdTime,
   flat = this.flat,

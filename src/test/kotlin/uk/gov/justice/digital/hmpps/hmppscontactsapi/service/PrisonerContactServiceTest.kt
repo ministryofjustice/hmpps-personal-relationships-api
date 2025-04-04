@@ -203,6 +203,7 @@ class PrisonerContactServiceTest {
     middleNames = "Any",
     lastName = lastName,
     dateOfBirth = dateOfBirth,
+    deceasedDate = null,
     contactAddressId = 3L,
     flat = "2B",
     property = "123",

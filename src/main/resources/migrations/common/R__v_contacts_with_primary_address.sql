@@ -13,6 +13,7 @@ select
     c.created_by,
     c.created_time,
     c.date_of_birth,
+    c.deceased_date,
     c.first_name,
     c.last_name,
     c.middle_names,
