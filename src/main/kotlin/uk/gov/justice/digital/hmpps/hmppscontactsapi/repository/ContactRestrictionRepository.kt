@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Query
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactRestrictionEntity
 
 interface ContactRestrictionRepository : JpaRepository<ContactRestrictionEntity, Long> {
+  fun findByContactId(contactId: Long): List<ContactRestrictionEntity>
+
   @Modifying
   @Query("delete from ContactRestrictionEntity cr where cr.contactId = :contactId")
   fun deleteAllByContactId(contactId: Long): Int

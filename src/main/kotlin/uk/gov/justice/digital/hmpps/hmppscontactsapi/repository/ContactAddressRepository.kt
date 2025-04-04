@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressEntity
 
 @Repository
 interface ContactAddressRepository : JpaRepository<ContactAddressEntity, Long> {
+  fun findByContactId(contactId: Long): List<ContactAddressEntity>
 
   @Modifying
   @Query("delete from ContactAddressEntity ca where ca.contactId = :contactId")

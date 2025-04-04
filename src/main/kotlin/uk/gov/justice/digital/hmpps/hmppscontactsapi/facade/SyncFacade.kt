@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncContactAdd
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncContactEmailService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncContactIdentityService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncContactPhoneService
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncContactReconciliationService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncContactRestrictionService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncContactService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncEmploymentService
@@ -72,6 +73,7 @@ class SyncFacade(
   private val syncPrisonerContactRestrictionService: SyncPrisonerContactRestrictionService,
   private val syncEmploymentService: SyncEmploymentService,
   private val syncAdminService: SyncAdminService,
+  private val syncContactReconciliationService: SyncContactReconciliationService,
   private val outboundEventsService: OutboundEventsService,
 ) {
   // ================================================================
@@ -443,6 +445,13 @@ class SyncFacade(
         source = Source.NOMIS,
       )
     }
+
+  // ===============================================================================
+  // RECONCILE - a single contact by ID - returns a very basic summary of data for
+  // one contact and its sub-entities to reconcile against.
+  // ===============================================================================
+
+  fun reconcileSingleContact(contactId: Long) = syncContactReconciliationService.getContactDetailsById(contactId)
 
   // =====================================================================================
   //  MERGE - Replace the full set of relationships and restrictions for two prisoners
