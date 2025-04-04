@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCrea
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContact
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContactId
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContactReconcile
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
@@ -193,4 +194,30 @@ class ContactSyncController(
     @PageableDefault(sort = ["contactId"], size = 100, direction = Direction.ASC)
     pageable: Pageable,
   ): PagedModel<SyncContactId> = syncFacade.getContactIds(pageable)
+
+  @GetMapping("/contact/{contactId}/reconcile")
+  @Operation(
+    summary = "Reconciliation endpoint for a single contact by ID",
+    description = "Get a minimal version of a contact and its main sub-entities to reconcile against",
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = SyncContactReconcile::class),
+          ),
+        ],
+        description = "Reconciliation object for one contact",
+      ),
+    ],
+  )
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
+  @PageableAsQueryParam
+  fun reconcileSingleContact(
+    @Parameter(description = "The internal ID for the contact.", required = true)
+    @PathVariable contactId: Long,
+  ) = syncFacade.reconcileSingleContact(contactId)
 }
