@@ -215,7 +215,6 @@ class ContactSyncController(
     ],
   )
   @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
-  @PageableAsQueryParam
   fun reconcileSingleContact(
     @Parameter(description = "The internal ID for the contact.", required = true)
     @PathVariable contactId: Long,
