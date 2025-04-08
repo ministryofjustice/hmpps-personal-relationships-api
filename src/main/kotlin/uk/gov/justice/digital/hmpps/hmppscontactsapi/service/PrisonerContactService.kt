@@ -6,18 +6,22 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactRestrictionCountsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.PrisonerContactSearchParams
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipCount
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RestrictionTypeDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RestrictionsSummary
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RestrictionsSummary.Companion.NO_RESTRICTIONS
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRelationshipCountRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRestrictionCountsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactSearchRepository
+import kotlin.jvm.optionals.getOrNull
 
 @Service
 class PrisonerContactService(
   private val prisonerContactSearchRepository: PrisonerContactSearchRepository,
   private val prisonerContactRestrictionCountsRepository: PrisonerContactRestrictionCountsRepository,
   private val prisonerService: PrisonerService,
+  private val prisonerContactRelationshipCountRepository: PrisonerContactRelationshipCountRepository,
 ) {
   fun getAllContacts(params: PrisonerContactSearchParams): PagedModel<PrisonerContactSummary> {
     prisonerService.getPrisoner(params.prisonerNumber)
@@ -37,6 +41,11 @@ class PrisonerContactService(
       },
     )
   }
+
+  fun countContactRelationships(prisonerNumber: String): PrisonerContactRelationshipCount = prisonerContactRelationshipCountRepository.findById(prisonerNumber)
+    .getOrNull()
+    ?.let { PrisonerContactRelationshipCount(it.active, it.inactive) }
+    ?: PrisonerContactRelationshipCount(0, 0)
 
   private fun toRestrictionSummary(restrictionCounts: List<PrisonerContactRestrictionCountsEntity>) = if (restrictionCounts.isEmpty()) {
     NO_RESTRICTIONS
