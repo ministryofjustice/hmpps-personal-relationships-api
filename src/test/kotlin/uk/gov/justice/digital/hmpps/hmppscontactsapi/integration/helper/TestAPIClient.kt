@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearc
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.EmploymentDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.LinkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PatchContactResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipCount
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionsResponse
@@ -141,6 +142,16 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .isOk
     .expectHeader().contentType(MediaType.APPLICATION_JSON)
     .expectBody(PrisonerContactSummaryResponse::class.java)
+    .returnResult().responseBody!!
+
+  fun getPrisonerContactRelationshipCount(prisonerNumber: String): PrisonerContactRelationshipCount = webTestClient.get()
+    .uri("/prisoner/$prisonerNumber/contact/count")
+    .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+    .exchange()
+    .expectStatus()
+    .isOk
+    .expectHeader().contentType(MediaType.APPLICATION_JSON)
+    .expectBody(PrisonerContactRelationshipCount::class.java)
     .returnResult().responseBody!!
 
   fun getReferenceCodes(

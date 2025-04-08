@@ -15,6 +15,7 @@ import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.prisonersearch.Prisoner
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactRelationshipCountEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactRestrictionCountsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactSummaryEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.prisoner
@@ -22,11 +23,14 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.helper.hasSize
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.helper.isEqualTo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.PrisonerContactSearchParams
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipCount
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RestrictionTypeDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RestrictionsSummary
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRelationshipCountRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRestrictionCountsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactSearchRepository
 import java.time.LocalDate
+import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 class PrisonerContactServiceTest {
@@ -39,6 +43,9 @@ class PrisonerContactServiceTest {
 
   @Mock
   private lateinit var prisonerService: PrisonerService
+
+  @Mock
+  private lateinit var prisonerContactRelationshipCountRepository: PrisonerContactRelationshipCountRepository
 
   @InjectMocks
   private lateinit var prisonerContactService: PrisonerContactService
@@ -186,6 +193,23 @@ class PrisonerContactServiceTest {
       )
     }
     exception.message isEqualTo "Prisoner number $prisonerNumber - not found"
+  }
+
+  @Test
+  fun `should return count if found`() {
+    val prisonerNumber = "A1234BC"
+    whenever(prisonerContactRelationshipCountRepository.findById(prisonerNumber))
+      .thenReturn(Optional.of(PrisonerContactRelationshipCountEntity(prisonerNumber, 99, 1000)))
+    val count = prisonerContactService.countContactRelationships(prisonerNumber)
+    assertThat(count).isEqualTo(PrisonerContactRelationshipCount(99, 1000))
+  }
+
+  @Test
+  fun `should return 0 if count is not found`() {
+    val prisonerNumber = "A1234BC"
+    whenever(prisonerContactRelationshipCountRepository.findById(prisonerNumber)).thenReturn(Optional.empty())
+    val count = prisonerContactService.countContactRelationships(prisonerNumber)
+    assertThat(count).isEqualTo(PrisonerContactRelationshipCount(0, 0))
   }
 
   private fun makePrisonerContact(

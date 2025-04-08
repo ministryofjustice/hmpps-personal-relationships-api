@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.PrisonerContactSearchParams
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipCount
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.PrisonerContactService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
@@ -31,12 +32,12 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 @AuthApiResponses
 class PrisonerController(private val prisonerContactService: PrisonerContactService) {
 
-  @Operation(summary = "Endpoint to fetch all contacts for a specific prisoner by prisoner number and active status")
+  @Operation(summary = "Fetch contact relationships by prisoner number with the requested filtering applied with pagination")
   @ApiResponses(
     value = [
       ApiResponse(
         responseCode = "200",
-        description = "List of all contacts for the prisoner",
+        description = "A page of matching contact relationships for the prisoner",
       ),
       ApiResponse(
         responseCode = "404",
@@ -100,4 +101,17 @@ class PrisonerController(private val prisonerContactService: PrisonerContactServ
     )
     return prisonerContactService.getAllContacts(params)
   }
+
+  @Operation(summary = "Count of a prisoners contact relationships for their current term by active and inactive status")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Count of prisoner contact relationships",
+      ),
+    ],
+  )
+  @GetMapping(value = ["/{prisonNumber}/contact/count"], produces = [MediaType.APPLICATION_JSON_VALUE])
+  @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__R', 'ROLE_CONTACTS__RW')")
+  fun getContactRelationshipCount(@PathVariable("prisonNumber") @PrisonNumberDoc prisonerNumber: String): PrisonerContactRelationshipCount = prisonerContactService.countContactRelationships(prisonerNumber)
 }
