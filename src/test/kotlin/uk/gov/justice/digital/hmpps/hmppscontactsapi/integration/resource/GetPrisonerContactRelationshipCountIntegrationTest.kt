@@ -47,6 +47,8 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       isEmergencyContact = false,
       isApprovedVisitor = false,
     )
+    // Contact one has one active social and one active official relationship plus an inactive social relationship and
+    // another from a previous term
     val contactOne = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "Contact",
@@ -54,21 +56,7 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
         createdBy = "USER1",
       ),
     )
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "Contact",
-        firstName = "Two",
-        createdBy = "USER1",
-        relationship = ContactRelationship(
-          prisonerNumber = prisonerNumber,
-          relationshipTypeCode = "S",
-          relationshipToPrisonerCode = "MOT",
-          isNextOfKin = false,
-          isEmergencyContact = false,
-          isApprovedVisitor = false,
-        ),
-      ),
-    )
+    // Make from previous term
     val relationshipFromPreviousTerm = testAPIClient.addAContactRelationship(
       AddContactRelationshipRequest(
         contactOne.id,
@@ -76,10 +64,10 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
         "USER1",
       ),
     )
-    // Make from previous term
     val entity = prisonerContactRepository.findById(relationshipFromPreviousTerm.prisonerContactId).getOrNull()!!
     prisonerContactRepository.saveAndFlush(entity.copy(currentTerm = false))
 
+    // Inactive
     val relationshipToMakeInactive = testAPIClient.addAContactRelationship(
       AddContactRelationshipRequest(
         contactOne.id,
@@ -95,6 +83,7 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       ),
     )
 
+    // Active social
     testAPIClient.addAContactRelationship(
       AddContactRelationshipRequest(
         contactOne.id,
@@ -103,10 +92,53 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       ),
     )
 
+    // Active official
+    testAPIClient.addAContactRelationship(
+      AddContactRelationshipRequest(
+        contactOne.id,
+        relationship.copy(relationshipTypeCode = "O", relationshipToPrisonerCode = "DR"),
+        "USER1",
+      ),
+    )
+
+    // Another contact active social
+    testAPIClient.createAContact(
+      CreateContactRequest(
+        lastName = "Contact",
+        firstName = "Two",
+        createdBy = "USER1",
+        relationship = ContactRelationship(
+          prisonerNumber = prisonerNumber,
+          relationshipTypeCode = "S",
+          relationshipToPrisonerCode = "MOT",
+          isNextOfKin = false,
+          isEmergencyContact = false,
+          isApprovedVisitor = false,
+        ),
+      ),
+    )
+
+    // Another contact with active official
+    testAPIClient.createAContact(
+      CreateContactRequest(
+        lastName = "Contact",
+        firstName = "Three",
+        createdBy = "USER1",
+        relationship = ContactRelationship(
+          prisonerNumber = prisonerNumber,
+          relationshipTypeCode = "O",
+          relationshipToPrisonerCode = "POM",
+          isNextOfKin = false,
+          isEmergencyContact = false,
+          isApprovedVisitor = false,
+        ),
+      ),
+    )
+
     assertThat(testAPIClient.getPrisonerContactRelationshipCount(prisonerNumber)).isEqualTo(
       PrisonerContactRelationshipCount(
         2,
-        1,
+        2,
       ),
     )
   }

@@ -44,7 +44,7 @@ class PrisonerContactService(
 
   fun countContactRelationships(prisonerNumber: String): PrisonerContactRelationshipCount = prisonerContactRelationshipCountRepository.findById(prisonerNumber)
     .getOrNull()
-    ?.let { PrisonerContactRelationshipCount(it.active, it.inactive) }
+    ?.let { PrisonerContactRelationshipCount(it.social, it.official) }
     ?: PrisonerContactRelationshipCount(0, 0)
 
   private fun toRestrictionSummary(restrictionCounts: List<PrisonerContactRestrictionCountsEntity>) = if (restrictionCounts.isEmpty()) {
