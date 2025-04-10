@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(description = "A count of a prisoners contact relationships")
 data class PrisonerContactRelationshipCount(
-  @Schema(description = "The number of relationships with active status")
-  val active: Long,
-  @Schema(description = "The number of relationships with inactive status")
-  val inactive: Long,
+  @Schema(description = "The number of active social relationships")
+  val social: Long,
+  @Schema(description = "The number of active official relationships")
+  val official: Long,
 )

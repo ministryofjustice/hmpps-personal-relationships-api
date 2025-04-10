@@ -102,12 +102,12 @@ class PrisonerController(private val prisonerContactService: PrisonerContactServ
     return prisonerContactService.getAllContacts(params)
   }
 
-  @Operation(summary = "Count of a prisoners contact relationships for their current term by active and inactive status")
+  @Operation(summary = "Count of a prisoner's active contact relationships for their current term by relationship type")
   @ApiResponses(
     value = [
       ApiResponse(
         responseCode = "200",
-        description = "Count of prisoner contact relationships",
+        description = "Count of active prisoner contact relationships",
       ),
     ],
   )

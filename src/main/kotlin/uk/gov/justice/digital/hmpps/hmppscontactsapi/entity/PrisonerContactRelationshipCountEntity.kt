@@ -10,7 +10,7 @@ data class PrisonerContactRelationshipCountEntity(
   @Id
   val prisonerNumber: String,
 
-  val active: Long,
+  val social: Long,
 
-  val inactive: Long,
+  val official: Long,
 )
