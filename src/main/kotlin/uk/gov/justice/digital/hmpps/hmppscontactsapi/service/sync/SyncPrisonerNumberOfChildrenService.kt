@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerNumberOfChil
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerNumberOfChildrenRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerNumberOfChildrenResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerNumberOfChildrenRepository
-import java.time.LocalDateTime
 
 @Service
 @Transactional
@@ -53,7 +52,7 @@ class SyncPrisonerNumberOfChildrenService(
       prisonerNumber = prisonerNumber,
       numberOfChildren = request.numberOfChildren,
       createdBy = request.createdBy,
-      createdTime = LocalDateTime.now(),
+      createdTime = request.createdTime,
       active = true,
     )
     val saved = newNumberOfChildren.let { numberOfChildrenRepository.save(it) }

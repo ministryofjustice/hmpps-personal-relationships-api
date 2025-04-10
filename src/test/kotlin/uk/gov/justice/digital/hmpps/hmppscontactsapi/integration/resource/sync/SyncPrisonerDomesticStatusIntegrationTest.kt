@@ -188,7 +188,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
   }
 
   @Test
-  fun `should updates existing record as inactive and create new record`() {
+  fun `should updates existing record as inactive and create new record when existing status is different`() {
     // Given
     val existingDomesticStatus = SyncUpdatePrisonerDomesticStatusRequest(
       domesticStatusCode = "D",
@@ -269,6 +269,88 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
       additionalInfo = PrisonerDomesticStatus(savedDomesticStatus.id, Source.NOMIS),
       personReference = PersonReference(nomsNumber = prisonerNumber),
+    )
+  }
+
+  @Test
+  fun `should ignore request when existing status value is same`() {
+    // Given
+    val existingDomesticStatus = SyncUpdatePrisonerDomesticStatusRequest(
+      domesticStatusCode = "D",
+      createdBy = "user",
+      createdTime = LocalDateTime.now(),
+    )
+    val existingResponse = webTestClient.put()
+      .uri("/sync/$prisonerNumber/domestic-status")
+      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(existingDomesticStatus)
+      .exchange()
+      .expectStatus().isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(SyncPrisonerDomesticStatusResponse::class.java)
+      .returnResult().responseBody
+
+    assertThat(existingResponse).isNotNull
+
+    val updatedDomesticStatus = SyncUpdatePrisonerDomesticStatusRequest(
+      domesticStatusCode = "D",
+      createdBy = "user",
+      createdTime = LocalDateTime.now(),
+    )
+    stubEvents.reset()
+
+    // When
+    val response = webTestClient.put()
+      .uri("/sync/$prisonerNumber/domestic-status")
+      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(updatedDomesticStatus)
+      .exchange()
+      .expectStatus().isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(SyncPrisonerDomesticStatusResponse::class.java)
+      .returnResult().responseBody
+
+    assertThat(response).isNotNull
+    assertThat(response).usingRecursiveComparison()
+      .ignoringFields("id", "createdBy", "createdTime")
+      .isEqualTo(
+        SyncPrisonerDomesticStatusResponse(
+          id = 0,
+          domesticStatusCode = "D",
+          createdBy = "User",
+          createdTime = LocalDateTime.now(),
+          active = true,
+        ),
+      )
+
+    val savedDomesticStatus = webTestClient.get()
+      .uri("/sync/$prisonerNumber/domestic-status")
+      .accept(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(SyncPrisonerDomesticStatusResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(savedDomesticStatus.id).isGreaterThan(0)
+    assertThat(savedDomesticStatus.domesticStatusCode).isEqualTo("D")
+    assertThat(savedDomesticStatus.createdBy).isEqualTo("user")
+    assertThat(savedDomesticStatus.createdTime).isNotNull
+    assertThat(savedDomesticStatus.active).isTrue
+
+    val historicalRecord = domesticStatusRepository.findByPrisonerNumberAndActiveFalse(prisonerNumber)
+    assertThat(historicalRecord).isEmpty()
+
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
+    )
+
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
     )
   }
 

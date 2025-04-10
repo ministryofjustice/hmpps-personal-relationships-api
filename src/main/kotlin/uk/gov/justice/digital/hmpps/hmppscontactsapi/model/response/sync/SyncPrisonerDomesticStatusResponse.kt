@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -18,4 +19,18 @@ data class SyncPrisonerDomesticStatusResponse(
 
   @Schema(description = "Username of the creator")
   val createdBy: String? = null,
+
+  @Schema(hidden = true)
+  @JsonIgnore
+  val status: Status = Status.UNCHANGED,
+
+  @JsonIgnore
+  @Schema(hidden = true)
+  val updatedId: Long? = null,
 )
+
+enum class Status {
+  CREATED,
+  UPDATED,
+  UNCHANGED,
+}
