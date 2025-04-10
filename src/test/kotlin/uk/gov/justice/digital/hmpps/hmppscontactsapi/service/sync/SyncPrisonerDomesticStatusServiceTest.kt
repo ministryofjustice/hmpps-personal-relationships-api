@@ -87,13 +87,13 @@ class SyncPrisonerDomesticStatusServiceTest {
   }
 
   @Test
-  fun `createOrUpdateDomesticStatus deactivates existing status and creates new one`() {
+  fun `createOrUpdateDomesticStatus deactivates existing status and creates new one when existing value is different`() {
     // Given
     val prisonerNumber = "A1234BC"
     val existingStatus = PrisonerDomesticStatus(
       prisonerDomesticStatusId = 1L,
       prisonerNumber = prisonerNumber,
-      domesticStatusCode = "D",
+      domesticStatusCode = "M",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
       active = true,
@@ -116,6 +116,36 @@ class SyncPrisonerDomesticStatusServiceTest {
 
     // Then
     verify(domesticStatusRepository).findByPrisonerNumberAndActiveTrue(prisonerNumber)
+  }
+
+  @Test
+  fun `createOrUpdateDomesticStatus unchanged existing status when existing value is same`() {
+    // Given
+    val prisonerNumber = "A1234BC"
+    val existingStatus = PrisonerDomesticStatus(
+      prisonerDomesticStatusId = 1L,
+      prisonerNumber = prisonerNumber,
+      domesticStatusCode = "D",
+      createdBy = "user",
+      createdTime = LocalDateTime.now(),
+      active = true,
+    )
+
+    val updateRequest = SyncUpdatePrisonerDomesticStatusRequest(
+      domesticStatusCode = "D",
+      createdBy = "user",
+      createdTime = LocalDateTime.now(),
+    )
+    whenever(referenceCodeRepository.findByGroupCodeAndCode(any(), any())).thenReturn(referenceData)
+    whenever(domesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
+      .thenReturn(existingStatus)
+
+    // When
+    syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, updateRequest)
+
+    // Then
+    verify(domesticStatusRepository).findByPrisonerNumberAndActiveTrue(prisonerNumber)
+    verify(domesticStatusRepository, never()).save(any())
   }
 
   @Test
