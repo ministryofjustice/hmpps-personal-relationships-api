@@ -28,9 +28,3 @@ data class SyncPrisonerNumberOfChildrenData(
 
   val updatedId: Long? = null,
 )
-
-enum class Status {
-  CREATED,
-  UPDATED,
-  UNCHANGED,
-}
