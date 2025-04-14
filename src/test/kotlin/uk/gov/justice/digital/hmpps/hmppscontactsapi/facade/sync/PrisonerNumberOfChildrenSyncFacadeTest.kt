@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync
 
-import jakarta.persistence.EntityNotFoundException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -60,23 +59,18 @@ class PrisonerNumberOfChildrenSyncFacadeTest {
         createdBy = "User",
         createdTime = LocalDateTime.now(),
       )
-      val childrenData = SyncPrisonerNumberOfChildrenData(
-        SyncPrisonerNumberOfChildrenResponse(
-          id = 1L,
-          numberOfChildren = "1",
-          createdBy = "USER1",
-          createdTime = LocalDateTime.now(),
-          active = true,
-        ),
-        status = Status.CREATED,
+      val updatedNumberOfChildrenCount = SyncPrisonerNumberOfChildrenResponse(
+        id = 1L,
+        numberOfChildren = "1",
+        createdBy = "USER1",
+        createdTime = LocalDateTime.now(),
+        active = true,
       )
 
       whenever(syncNumberOfChildrenService.getPrisonerNumberOfChildrenActive(prisonerNumber))
         .thenReturn(null)
       whenever(syncNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, request))
-        .thenReturn(
-          childrenData,
-        )
+        .thenReturn(SyncPrisonerNumberOfChildrenData(updatedNumberOfChildrenCount, status = Status.CREATED))
 
       val response = facade.createOrUpdateNumberOfChildren(prisonerNumber, request)
 
@@ -107,38 +101,34 @@ class PrisonerNumberOfChildrenSyncFacadeTest {
         createdBy = "User",
         createdTime = createdTime,
       )
-      val response = SyncPrisonerNumberOfChildrenData(
-        SyncPrisonerNumberOfChildrenResponse(
-          id = 1L,
-          numberOfChildren = "1",
-          createdBy = "USER1",
-          createdTime = LocalDateTime.now(),
-          active = true,
-        ),
-        status = Status.UPDATED,
-        updatedId = 2L,
+      val response = SyncPrisonerNumberOfChildrenResponse(
+        id = 1L,
+        numberOfChildren = "1",
+        createdBy = "USER1",
+        createdTime = LocalDateTime.now(),
+        active = true,
       )
 
       whenever(syncNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, request))
-        .thenReturn(response)
+        .thenReturn(SyncPrisonerNumberOfChildrenData(response, status = Status.UPDATED, updatedId = 0L))
 
       // When
       val result = facade.createOrUpdateNumberOfChildren(prisonerNumber, request)
 
       // Then
+      assertThat(result).isEqualTo(response)
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_UPDATED,
-        identifier = response.updatedId!!,
+        identifier = 0L,
         noms = prisonerNumber,
         source = Source.NOMIS,
       )
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-        identifier = response.data.id,
+        identifier = 1L,
         noms = prisonerNumber,
         source = Source.NOMIS,
       )
-      assertThat(result).isEqualTo(response.data)
     }
 
     @Test
@@ -170,8 +160,6 @@ class PrisonerNumberOfChildrenSyncFacadeTest {
         active = true,
       )
 
-      whenever(syncNumberOfChildrenService.getPrisonerNumberOfChildrenActive(prisonerNumber))
-        .thenThrow(EntityNotFoundException("Not found"))
       whenever(syncNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, request))
         .thenReturn(response)
 

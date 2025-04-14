@@ -21,31 +21,32 @@ class PrisonerNumberOfChildrenSyncFacade(
     prisonerNumber: String,
     request: SyncUpdatePrisonerNumberOfChildrenRequest,
   ): SyncPrisonerNumberOfChildrenResponse = syncNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, request)
-    .also { response -> handleStatusEvents(response, prisonerNumber) }.data
+    .also { response -> hadleEvents(response, prisonerNumber) }
+    .data
 
-  private fun handleStatusEvents(
-    statusResponse: SyncPrisonerNumberOfChildrenData,
+  private fun hadleEvents(
+    response: SyncPrisonerNumberOfChildrenData,
     prisonerNumber: String,
   ) {
-    when (statusResponse.status) {
-      Status.UPDATED -> handleUpdatedStatus(statusResponse, prisonerNumber)
-      Status.CREATED -> sendCreatedEvent(statusResponse.data.id, prisonerNumber)
+    when (response.status) {
+      Status.UPDATED -> handleUpdatedStatus(response, prisonerNumber)
+      Status.CREATED -> sendCreatedEvent(response.data.id, prisonerNumber)
       else -> {} // No events for unchanged status
     }
   }
 
   private fun handleUpdatedStatus(
-    statusResponse: SyncPrisonerNumberOfChildrenData,
+    response: SyncPrisonerNumberOfChildrenData,
     prisonerNumber: String,
   ) {
-    statusResponse.updatedId?.let { updatedId ->
+    response.updatedId?.let { updatedId ->
       sendOutboundEvent(
         OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_UPDATED,
         updatedId,
         prisonerNumber,
       )
     }
-    sendCreatedEvent(statusResponse.data.id, prisonerNumber)
+    sendCreatedEvent(response.data.id, prisonerNumber)
   }
 
   private fun sendCreatedEvent(id: Long, prisonerNumber: String) {
