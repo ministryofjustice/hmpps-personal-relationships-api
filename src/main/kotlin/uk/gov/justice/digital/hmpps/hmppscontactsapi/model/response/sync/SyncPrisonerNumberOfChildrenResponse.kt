@@ -19,3 +19,18 @@ data class SyncPrisonerNumberOfChildrenResponse(
   @Schema(description = "Username of the creator")
   val createdBy: String? = null,
 )
+
+data class SyncPrisonerNumberOfChildrenData(
+
+  val data: SyncPrisonerNumberOfChildrenResponse,
+
+  val status: Status = Status.UNCHANGED,
+
+  val updatedId: Long? = null,
+)
+
+enum class Status {
+  CREATED,
+  UPDATED,
+  UNCHANGED,
+}
