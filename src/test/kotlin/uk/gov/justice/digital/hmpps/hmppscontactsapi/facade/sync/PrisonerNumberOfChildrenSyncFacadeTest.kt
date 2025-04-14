@@ -4,7 +4,6 @@ import jakarta.persistence.EntityNotFoundException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
@@ -12,6 +11,8 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerNumberOfChildren
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerNumberOfChildrenRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.Status
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerNumberOfChildrenData
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerNumberOfChildrenResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
@@ -49,7 +50,7 @@ class PrisonerNumberOfChildrenSyncFacadeTest {
   }
 
   @Nested
-  inner class UpdateNumberOfChildren {
+  inner class CreateOrUpdateNumberOfChildren {
     @Test
     fun `should create new record and send created event when no existing record`() {
       // Given
@@ -59,18 +60,23 @@ class PrisonerNumberOfChildrenSyncFacadeTest {
         createdBy = "User",
         createdTime = LocalDateTime.now(),
       )
-      val updatedNumberOfChildrenCount = SyncPrisonerNumberOfChildrenResponse(
-        id = 1L,
-        numberOfChildren = "1",
-        createdBy = "USER1",
-        createdTime = LocalDateTime.now(),
-        active = true,
+      val childrenData = SyncPrisonerNumberOfChildrenData(
+        SyncPrisonerNumberOfChildrenResponse(
+          id = 1L,
+          numberOfChildren = "1",
+          createdBy = "USER1",
+          createdTime = LocalDateTime.now(),
+          active = true,
+        ),
+        status = Status.CREATED,
       )
 
       whenever(syncNumberOfChildrenService.getPrisonerNumberOfChildrenActive(prisonerNumber))
         .thenReturn(null)
       whenever(syncNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, request))
-        .thenReturn(updatedNumberOfChildrenCount)
+        .thenReturn(
+          childrenData,
+        )
 
       val response = facade.createOrUpdateNumberOfChildren(prisonerNumber, request)
 
@@ -101,24 +107,18 @@ class PrisonerNumberOfChildrenSyncFacadeTest {
         createdBy = "User",
         createdTime = createdTime,
       )
-      val response = SyncPrisonerNumberOfChildrenResponse(
-        id = 1L,
-        numberOfChildren = "1",
-        createdBy = "USER1",
-        createdTime = LocalDateTime.now(),
-        active = true,
-      )
-      val existingRecord = PrisonerNumberOfChildren(
-        prisonerNumberOfChildrenId = 2L,
-        prisonerNumber = prisonerNumber,
-        numberOfChildren = "1",
-        createdBy = "USER1",
-        createdTime = createdTime,
-        active = true,
+      val response = SyncPrisonerNumberOfChildrenData(
+        SyncPrisonerNumberOfChildrenResponse(
+          id = 1L,
+          numberOfChildren = "1",
+          createdBy = "USER1",
+          createdTime = LocalDateTime.now(),
+          active = true,
+        ),
+        status = Status.UPDATED,
+        updatedId = 2L,
       )
 
-      whenever(syncNumberOfChildrenService.getPrisonerNumberOfChildrenActive(prisonerNumber))
-        .thenReturn(existingRecord)
       whenever(syncNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, request))
         .thenReturn(response)
 
@@ -128,21 +128,21 @@ class PrisonerNumberOfChildrenSyncFacadeTest {
       // Then
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_UPDATED,
-        identifier = existingRecord.prisonerNumberOfChildrenId,
+        identifier = response.updatedId!!,
         noms = prisonerNumber,
         source = Source.NOMIS,
       )
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-        identifier = response.id,
+        identifier = response.data.id,
         noms = prisonerNumber,
         source = Source.NOMIS,
       )
-      assertThat(result).isEqualTo(response)
+      assertThat(result).isEqualTo(response.data)
     }
 
     @Test
-    fun `should not send both updated and created event on create or update failure `() {
+    fun `should not send both updated and created event when status is unchanged `() {
       // Given
       val prisonerNumber = "A1234BC"
       val createdTime = LocalDateTime.now()
@@ -151,12 +151,15 @@ class PrisonerNumberOfChildrenSyncFacadeTest {
         createdBy = "User",
         createdTime = createdTime,
       )
-      val response = SyncPrisonerNumberOfChildrenResponse(
-        id = 1L,
-        numberOfChildren = "1",
-        createdBy = "USER1",
-        createdTime = LocalDateTime.now(),
-        active = true,
+      val response = SyncPrisonerNumberOfChildrenData(
+        SyncPrisonerNumberOfChildrenResponse(
+          id = 1L,
+          numberOfChildren = "1",
+          createdBy = "USER1",
+          createdTime = LocalDateTime.now(),
+          active = true,
+        ),
+        status = Status.UNCHANGED,
       )
       val existingRecord = PrisonerNumberOfChildren(
         prisonerNumberOfChildrenId = 2L,
@@ -173,10 +176,7 @@ class PrisonerNumberOfChildrenSyncFacadeTest {
         .thenReturn(response)
 
       // When
-      val error = assertThrows<EntityNotFoundException> {
-        facade.createOrUpdateNumberOfChildren(prisonerNumber, request)
-      }
-      assertThat(error.message).isEqualTo("Not found")
+      facade.createOrUpdateNumberOfChildren(prisonerNumber, request)
 
       // Then
       verify(outboundEventsService, never()).send(
@@ -187,7 +187,7 @@ class PrisonerNumberOfChildrenSyncFacadeTest {
       )
       verify(outboundEventsService, never()).send(
         outboundEvent = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-        identifier = response.id,
+        identifier = response.data.id,
         noms = prisonerNumber,
         source = Source.NOMIS,
       )

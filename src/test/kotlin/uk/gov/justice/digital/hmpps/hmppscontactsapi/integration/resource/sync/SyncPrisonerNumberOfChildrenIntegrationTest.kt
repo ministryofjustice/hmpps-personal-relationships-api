@@ -29,6 +29,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
   @BeforeEach
   fun setUp() {
     numberOfChildrenRepository.deleteAll()
+    stubEvents.reset()
   }
 
   @Test
@@ -91,7 +92,6 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
   @Test
   fun `should get an existing prisoner number of children`() {
     val numberOfChildrenToSync = SyncUpdatePrisonerNumberOfChildrenRequest(
-
       numberOfChildren = "1",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
@@ -162,6 +162,14 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
           active = true,
         ),
       )
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
+      additionalInfo = PrisonerNumberOfChildren(
+        response.id,
+        Source.NOMIS,
+      ),
+      personReference = PersonReference(nomsNumber = prisonerNumber),
+    )
 
     // Verify database state
     val savedNumberOfChildren = webTestClient.get()
@@ -180,24 +188,13 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     assertThat(savedNumberOfChildren.createdBy).isEqualTo("user")
     assertThat(savedNumberOfChildren.createdTime).isNotNull
     assertThat(savedNumberOfChildren.active).isTrue
-
-    // Removed duplicate assertions
-
-    stubEvents.assertHasEvent(
-      event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-      additionalInfo = PrisonerNumberOfChildren(
-        savedNumberOfChildren.id,
-        Source.NOMIS,
-      ),
-      personReference = PersonReference(nomsNumber = prisonerNumber),
-    )
   }
 
   @Test
-  fun `should update existing record as inactive and create new record`() {
+  fun `should updates existing record as inactive and create new record when existing status is different`() {
     // Given
     val existingNumberOfChildren = SyncUpdatePrisonerNumberOfChildrenRequest(
-      numberOfChildren = "1",
+      numberOfChildren = "0",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
     )
@@ -263,7 +260,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     assertThat(numberOfChildren.active).isTrue
 
     val historicalRecord = numberOfChildrenRepository.findByPrisonerNumberAndActiveFalse(prisonerNumber)
-    assertThat(historicalRecord[0].numberOfChildren).isEqualTo("1")
+    assertThat(historicalRecord[0].numberOfChildren).isEqualTo("0")
     assertThat(historicalRecord[0].createdBy).isEqualTo("user")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_UPDATED,
@@ -275,6 +272,88 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
       additionalInfo = PrisonerNumberOfChildren(numberOfChildren.id, Source.NOMIS),
       personReference = PersonReference(nomsNumber = prisonerNumber),
+    )
+  }
+
+  @Test
+  fun `should ignore request when existing status value is same`() {
+    // Given
+    val existingNumberOfChildren = SyncUpdatePrisonerNumberOfChildrenRequest(
+      numberOfChildren = "1",
+      createdBy = "user",
+      createdTime = LocalDateTime.now(),
+    )
+    val existingResponse = webTestClient.put()
+      .uri("/sync/$prisonerNumber/number-of-children")
+      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(existingNumberOfChildren)
+      .exchange()
+      .expectStatus().isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(SyncPrisonerNumberOfChildrenResponse::class.java)
+      .returnResult().responseBody
+
+    assertThat(existingResponse).isNotNull
+
+    val updatedNumberOfChildren = SyncUpdatePrisonerNumberOfChildrenRequest(
+      numberOfChildren = "1",
+      createdBy = "user",
+      createdTime = LocalDateTime.now(),
+    )
+    stubEvents.reset()
+
+    // When
+    val response = webTestClient.put()
+      .uri("/sync/$prisonerNumber/number-of-children")
+      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(updatedNumberOfChildren)
+      .exchange()
+      .expectStatus().isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(SyncPrisonerNumberOfChildrenResponse::class.java)
+      .returnResult().responseBody
+
+    assertThat(response).isNotNull
+    assertThat(response).usingRecursiveComparison()
+      .ignoringFields("id", "createdBy", "createdTime")
+      .isEqualTo(
+        SyncPrisonerNumberOfChildrenResponse(
+          id = 0,
+          numberOfChildren = "1",
+          createdBy = "User",
+          createdTime = LocalDateTime.now(),
+          active = true,
+        ),
+      )
+
+    val numberOfChildren = webTestClient.get()
+      .uri("/sync/$prisonerNumber/number-of-children")
+      .accept(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(SyncPrisonerNumberOfChildrenResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(numberOfChildren.id).isGreaterThan(0)
+    assertThat(numberOfChildren.numberOfChildren).isEqualTo("1")
+    assertThat(numberOfChildren.createdBy).isEqualTo("user")
+    assertThat(numberOfChildren.createdTime).isNotNull
+    assertThat(numberOfChildren.active).isTrue
+
+    val historicalRecord = numberOfChildrenRepository.findByPrisonerNumberAndActiveFalse(prisonerNumber)
+    assertThat(historicalRecord).isEmpty()
+
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_UPDATED,
+    )
+
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
     )
   }
 
