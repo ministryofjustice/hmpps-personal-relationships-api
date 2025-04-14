@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.Status
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponseData
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -22,20 +23,21 @@ class PrisonerDomesticStatusSyncFacade(
   ): SyncPrisonerDomesticStatusResponse = syncDomesticStatusService
     .createOrUpdateDomesticStatus(prisonerNumber, request)
     .also { response -> handleStatusEvents(response, prisonerNumber) }
+    .data
 
   private fun handleStatusEvents(
-    statusResponse: SyncPrisonerDomesticStatusResponse,
+    statusResponse: SyncPrisonerDomesticStatusResponseData,
     prisonerNumber: String,
   ) {
     when (statusResponse.status) {
       Status.UPDATED -> handleUpdatedStatus(statusResponse, prisonerNumber)
-      Status.CREATED -> sendCreatedEvent(statusResponse.id, prisonerNumber)
+      Status.CREATED -> sendCreatedEvent(statusResponse.data.id, prisonerNumber)
       else -> {} // No events for unchanged status
     }
   }
 
   private fun handleUpdatedStatus(
-    statusResponse: SyncPrisonerDomesticStatusResponse,
+    statusResponse: SyncPrisonerDomesticStatusResponseData,
     prisonerNumber: String,
   ) {
     statusResponse.updatedId?.let { updatedId ->
@@ -45,7 +47,7 @@ class PrisonerDomesticStatusSyncFacade(
         prisonerNumber,
       )
     }
-    sendCreatedEvent(statusResponse.id, prisonerNumber)
+    sendCreatedEvent(statusResponse.data.id, prisonerNumber)
   }
 
   private fun sendCreatedEvent(id: Long, prisonerNumber: String) {

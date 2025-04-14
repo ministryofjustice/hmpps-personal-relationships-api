@@ -11,6 +11,7 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.Status
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponseData
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -64,11 +65,10 @@ class PrisonerDomesticStatusSyncFacadeTest {
         createdBy = "User",
         createdTime = LocalDateTime.now(),
         active = true,
-        status = Status.CREATED,
       )
 
       whenever(syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request))
-        .thenReturn(response)
+        .thenReturn(SyncPrisonerDomesticStatusResponseData(response, status = Status.CREATED))
 
       // When
       val result = facade.createOrUpdateDomesticStatus(prisonerNumber, request)
@@ -99,12 +99,10 @@ class PrisonerDomesticStatusSyncFacadeTest {
         createdBy = "User",
         createdTime = LocalDateTime.now(),
         active = true,
-        status = Status.UPDATED,
-        updatedId = 2L,
       )
 
       whenever(syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request))
-        .thenReturn(response)
+        .thenReturn(SyncPrisonerDomesticStatusResponseData(response, Status.UPDATED, updatedId = 0L))
 
       // When
       val result = facade.createOrUpdateDomesticStatus(prisonerNumber, request)
@@ -113,13 +111,13 @@ class PrisonerDomesticStatusSyncFacadeTest {
       assertThat(result).isEqualTo(response)
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-        identifier = response.id,
+        identifier = 1L,
         noms = prisonerNumber,
         source = Source.NOMIS,
       )
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
-        identifier = response.updatedId!!,
+        identifier = 0L,
         noms = prisonerNumber,
         source = Source.NOMIS,
       )
@@ -131,7 +129,7 @@ class PrisonerDomesticStatusSyncFacadeTest {
       val prisonerNumber = "A1234BC"
       val createdTime = LocalDateTime.now()
       val request = SyncUpdatePrisonerDomesticStatusRequest(
-        domesticStatusCode = "S",
+        domesticStatusCode = "D",
         createdBy = "User",
         createdTime = createdTime,
       )
@@ -141,11 +139,10 @@ class PrisonerDomesticStatusSyncFacadeTest {
         createdBy = "User",
         createdTime = LocalDateTime.now(),
         active = true,
-        status = Status.UNCHANGED,
       )
 
       whenever(syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request))
-        .thenReturn(response)
+        .thenReturn(SyncPrisonerDomesticStatusResponseData(response, status = Status.UNCHANGED))
 
       // When
       facade.createOrUpdateDomesticStatus(prisonerNumber, request)

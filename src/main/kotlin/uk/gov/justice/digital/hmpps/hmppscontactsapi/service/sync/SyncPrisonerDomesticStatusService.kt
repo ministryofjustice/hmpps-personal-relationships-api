@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.Status
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponseData
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerDomesticStatusRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ReferenceCodeRepository
 import java.time.LocalDateTime
@@ -20,14 +21,12 @@ class SyncPrisonerDomesticStatusService(
 ) {
   companion object {
     const val NOT_FOUND_MESSAGE = "No active domestic status found for prisoner: %s"
-    fun from(numberOfChildren: PrisonerDomesticStatus, status: Status = Status.UNCHANGED, updatedId: Long? = null) = SyncPrisonerDomesticStatusResponse(
+    fun from(numberOfChildren: PrisonerDomesticStatus) = SyncPrisonerDomesticStatusResponse(
       id = numberOfChildren.prisonerDomesticStatusId,
       domesticStatusCode = numberOfChildren.domesticStatusCode,
       createdBy = numberOfChildren.createdBy,
       createdTime = numberOfChildren.createdTime,
       active = numberOfChildren.active,
-      status = status,
-      updatedId = updatedId,
     )
   }
 
@@ -39,7 +38,7 @@ class SyncPrisonerDomesticStatusService(
   fun createOrUpdateDomesticStatus(
     prisonerNumber: String,
     request: SyncUpdatePrisonerDomesticStatusRequest,
-  ): SyncPrisonerDomesticStatusResponse {
+  ): SyncPrisonerDomesticStatusResponseData {
     request.domesticStatusCode?.let { validateReferenceDataExists(it) }
 
     val existingStatus = getPrisonerDomesticStatusActive(prisonerNumber)
@@ -53,7 +52,7 @@ class SyncPrisonerDomesticStatusService(
 
     if (existingStatus != null) {
       if (existingStatus.domesticStatusCode == request.domesticStatusCode) {
-        return from(existingStatus, Status.UNCHANGED)
+        return SyncPrisonerDomesticStatusResponseData(from(existingStatus), Status.UNCHANGED)
       }
 
       val deactivatedStatus = existingStatus.copy(
@@ -76,9 +75,9 @@ class SyncPrisonerDomesticStatusService(
 
     // set UPDATED status if existingStatus is not null and request domestic status value is not same as existing value , return created if existing status is null
     if (existingStatus != null) {
-      return from(saved, Status.UPDATED, updatedId = existingStatus.prisonerDomesticStatusId)
+      return SyncPrisonerDomesticStatusResponseData(from(saved), Status.UPDATED, updatedId = existingStatus.prisonerDomesticStatusId)
     }
-    return from(saved, Status.CREATED)
+    return SyncPrisonerDomesticStatusResponseData(from(saved), Status.CREATED)
   }
 
   fun getPrisonerDomesticStatusActive(prisonerNumber: String) = domesticStatusRepository.findByPrisonerNumberAndActiveTrue(
