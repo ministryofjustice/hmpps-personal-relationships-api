@@ -80,6 +80,7 @@ class PrisonerNumberOfChildrenSyncFacadeTest {
 
       val response = facade.createOrUpdateNumberOfChildren(prisonerNumber, request)
 
+      assertThat(response).isEqualTo(response)
       verify(syncNumberOfChildrenService).createOrUpdateNumberOfChildren(prisonerNumber, request)
       // Then
       verify(outboundEventsService, never()).send(
@@ -94,7 +95,6 @@ class PrisonerNumberOfChildrenSyncFacadeTest {
         noms = prisonerNumber,
         source = Source.NOMIS,
       )
-      assertThat(response).isEqualTo(response)
     }
 
     @Test

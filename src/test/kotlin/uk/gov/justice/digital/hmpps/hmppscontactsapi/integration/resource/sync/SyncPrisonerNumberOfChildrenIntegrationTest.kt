@@ -29,7 +29,6 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
   @BeforeEach
   fun setUp() {
     numberOfChildrenRepository.deleteAll()
-    stubEvents.reset()
   }
 
   @Test
