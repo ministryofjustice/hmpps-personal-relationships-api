@@ -2,7 +2,9 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerDomesticStatusRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.Status
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponseData
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -18,26 +20,54 @@ class PrisonerDomesticStatusSyncFacade(
   fun createOrUpdateDomesticStatus(
     prisonerNumber: String,
     request: SyncUpdatePrisonerDomesticStatusRequest,
-  ): SyncPrisonerDomesticStatusResponse {
-    val existingRecord = syncDomesticStatusService.getPrisonerDomesticStatusActive(prisonerNumber)
+  ): SyncPrisonerDomesticStatusResponse = syncDomesticStatusService
+    .createOrUpdateDomesticStatus(prisonerNumber, request)
+    .also { response -> handleStatusEvents(response, prisonerNumber) }
+    .data
 
-    return syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request)
-      .also {
-        existingRecord?.prisonerDomesticStatusId?.let { identifier ->
-          outboundEventsService.send(
-            outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
-            identifier = identifier,
-            noms = prisonerNumber,
-            source = Source.NOMIS,
-          )
-        }
+  private fun handleStatusEvents(
+    statusResponse: SyncPrisonerDomesticStatusResponseData,
+    prisonerNumber: String,
+  ) {
+    when (statusResponse.status) {
+      Status.UPDATED -> handleUpdatedStatus(statusResponse, prisonerNumber)
+      Status.CREATED -> sendCreatedEvent(statusResponse.data.id, prisonerNumber)
+      else -> {} // No events for unchanged status
+    }
+  }
 
-        outboundEventsService.send(
-          outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-          identifier = it.id,
-          noms = prisonerNumber,
-          source = Source.NOMIS,
-        )
-      }
+  private fun handleUpdatedStatus(
+    statusResponse: SyncPrisonerDomesticStatusResponseData,
+    prisonerNumber: String,
+  ) {
+    statusResponse.updatedId?.let { updatedId ->
+      sendOutboundEvent(
+        OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
+        updatedId,
+        prisonerNumber,
+      )
+    }
+    sendCreatedEvent(statusResponse.data.id, prisonerNumber)
+  }
+
+  private fun sendCreatedEvent(id: Long, prisonerNumber: String) {
+    sendOutboundEvent(
+      OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
+      id,
+      prisonerNumber,
+    )
+  }
+
+  private fun sendOutboundEvent(
+    outboundEvent: OutboundEvent,
+    identifier: Long,
+    prisonerNumber: String,
+  ) {
+    outboundEventsService.send(
+      outboundEvent = outboundEvent,
+      identifier = identifier,
+      noms = prisonerNumber,
+      source = Source.NOMIS,
+    )
   }
 }

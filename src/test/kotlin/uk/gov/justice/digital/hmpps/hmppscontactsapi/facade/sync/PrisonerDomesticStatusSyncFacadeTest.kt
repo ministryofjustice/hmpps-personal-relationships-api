@@ -1,18 +1,17 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync
 
-import jakarta.persistence.EntityNotFoundException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerDomesticStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerDomesticStatusRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.Status
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponseData
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -69,7 +68,7 @@ class PrisonerDomesticStatusSyncFacadeTest {
       )
 
       whenever(syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request))
-        .thenReturn(response)
+        .thenReturn(SyncPrisonerDomesticStatusResponseData(response, status = Status.CREATED))
 
       // When
       val result = facade.createOrUpdateDomesticStatus(prisonerNumber, request)
@@ -101,38 +100,36 @@ class PrisonerDomesticStatusSyncFacadeTest {
         createdTime = LocalDateTime.now(),
         active = true,
       )
-      val existingRecord = PrisonerDomesticStatus(
-        prisonerDomesticStatusId = 2L,
-        prisonerNumber = prisonerNumber,
-        domesticStatusCode = "D",
-        createdBy = "USER1",
-        createdTime = createdTime,
-        active = true,
-      )
 
       whenever(syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request))
-        .thenReturn(response)
+        .thenReturn(SyncPrisonerDomesticStatusResponseData(response, Status.UPDATED, updatedId = 0L))
 
       // When
       val result = facade.createOrUpdateDomesticStatus(prisonerNumber, request)
 
       // Then
+      assertThat(result).isEqualTo(response)
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-        identifier = response.id,
+        identifier = 1L,
         noms = prisonerNumber,
         source = Source.NOMIS,
       )
-      assertThat(result).isEqualTo(response)
+      verify(outboundEventsService).send(
+        outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
+        identifier = 0L,
+        noms = prisonerNumber,
+        source = Source.NOMIS,
+      )
     }
 
     @Test
-    fun `should not send both updated and created event on create or update failure `() {
+    fun `should not send both updated and created event when status is unchanged `() {
       // Given
       val prisonerNumber = "A1234BC"
       val createdTime = LocalDateTime.now()
       val request = SyncUpdatePrisonerDomesticStatusRequest(
-        domesticStatusCode = "S",
+        domesticStatusCode = "D",
         createdBy = "User",
         createdTime = createdTime,
       )
@@ -143,25 +140,12 @@ class PrisonerDomesticStatusSyncFacadeTest {
         createdTime = LocalDateTime.now(),
         active = true,
       )
-      val existingRecord = PrisonerDomesticStatus(
-        prisonerDomesticStatusId = 2L,
-        prisonerNumber = prisonerNumber,
-        domesticStatusCode = "D",
-        createdBy = "USER1",
-        createdTime = createdTime,
-        active = true,
-      )
 
-      whenever(syncDomesticStatusService.getPrisonerDomesticStatusActive(prisonerNumber))
-        .thenThrow(EntityNotFoundException("Not found"))
       whenever(syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request))
-        .thenReturn(response)
+        .thenReturn(SyncPrisonerDomesticStatusResponseData(response, status = Status.UNCHANGED))
 
       // When
-      val error = assertThrows<EntityNotFoundException> {
-        facade.createOrUpdateDomesticStatus(prisonerNumber, request)
-      }
-      assertThat(error.message).isEqualTo("Not found")
+      facade.createOrUpdateDomesticStatus(prisonerNumber, request)
 
       // Then
       verify(outboundEventsService, never()).send(

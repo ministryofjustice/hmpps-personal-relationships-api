@@ -6,7 +6,9 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerDomesticStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerDomesticStatusRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.Status
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponseData
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerDomesticStatusRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ReferenceCodeRepository
 import java.time.LocalDateTime
@@ -36,16 +38,24 @@ class SyncPrisonerDomesticStatusService(
   fun createOrUpdateDomesticStatus(
     prisonerNumber: String,
     request: SyncUpdatePrisonerDomesticStatusRequest,
-  ): SyncPrisonerDomesticStatusResponse {
-    // Find existing status
-
+  ): SyncPrisonerDomesticStatusResponseData {
     request.domesticStatusCode?.let { validateReferenceDataExists(it) }
 
     val existingStatus = getPrisonerDomesticStatusActive(prisonerNumber)
 
-    // If exists, deactivate it
-    existingStatus?.let {
-      val deactivatedStatus = it.copy(
+    // If an existing domestic status is found and differs from the request:
+    //   - Deactivate the existing status and create a new one
+    // If no existing domestic status is found:
+    //   - Create a new domestic status
+    // If existing domestic status matches the request:
+    //   - Return the existing status unchanged
+
+    if (existingStatus != null) {
+      if (existingStatus.domesticStatusCode == request.domesticStatusCode) {
+        return SyncPrisonerDomesticStatusResponseData(from(existingStatus), Status.UNCHANGED)
+      }
+
+      val deactivatedStatus = existingStatus.copy(
         active = false,
       )
       domesticStatusRepository.save(deactivatedStatus)
@@ -62,13 +72,12 @@ class SyncPrisonerDomesticStatusService(
 
     val saved = domesticStatusRepository.save(newDomesticStatus)
       ?: throw IllegalArgumentException("Cannot save domestic status for prisoner")
-    return SyncPrisonerDomesticStatusResponse(
-      id = saved.prisonerDomesticStatusId,
-      domesticStatusCode = saved.domesticStatusCode,
-      createdBy = saved.createdBy,
-      createdTime = saved.createdTime,
-      active = saved.active,
-    )
+
+    // set UPDATED status if existingStatus is not null and request domestic status value is not same as existing value , return created if existing status is null
+    if (existingStatus != null) {
+      return SyncPrisonerDomesticStatusResponseData(from(saved), Status.UPDATED, updatedId = existingStatus.prisonerDomesticStatusId)
+    }
+    return SyncPrisonerDomesticStatusResponseData(from(saved), Status.CREATED)
   }
 
   fun getPrisonerDomesticStatusActive(prisonerNumber: String) = domesticStatusRepository.findByPrisonerNumberAndActiveTrue(

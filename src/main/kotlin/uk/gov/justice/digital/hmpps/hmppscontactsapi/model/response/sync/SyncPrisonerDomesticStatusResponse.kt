@@ -19,3 +19,18 @@ data class SyncPrisonerDomesticStatusResponse(
   @Schema(description = "Username of the creator")
   val createdBy: String? = null,
 )
+
+data class SyncPrisonerDomesticStatusResponseData(
+
+  val data: SyncPrisonerDomesticStatusResponse,
+
+  val status: Status = Status.UNCHANGED,
+
+  val updatedId: Long? = null,
+)
+
+enum class Status {
+  CREATED,
+  UPDATED,
+  UNCHANGED,
+}
