@@ -104,11 +104,9 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
   fun `should merge when removing prisoner's active record is newer than retaining prisoner's active record`() {
     val latestCreatedDate = LocalDateTime.now()
     val olderCreatedDate = latestCreatedDate.minusDays(1)
-    val keepingPrisonerNumber = "A1234AA"
-    val removingPrisonerNumber = "B1234BB"
     createDomesticStatusRecords(
       MigratePrisonerDomesticStatusRequest(
-        prisonerNumber = keepingPrisonerNumber,
+        prisonerNumber = KEEP_PRISONER,
         current = DomesticStatusDetailsRequest(
           domesticStatusCode = "D",
           createdBy = "Admin",
@@ -120,7 +118,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
     val keepingDomesticStatus = "P"
     createDomesticStatusRecords(
       MigratePrisonerDomesticStatusRequest(
-        prisonerNumber = removingPrisonerNumber,
+        prisonerNumber = REMOVE_PRISONER,
         current = DomesticStatusDetailsRequest(
           domesticStatusCode = keepingDomesticStatus,
           createdBy = "Admin",
@@ -131,7 +129,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
 
     createNumberOfChildrenRecords(
       MigratePrisonerNumberOfChildrenRequest(
-        prisonerNumber = keepingPrisonerNumber,
+        prisonerNumber = KEEP_PRISONER,
         current = NumberOfChildrenDetailsRequest(
           numberOfChildren = "2",
           createdBy = "Admin",
@@ -143,7 +141,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
     val keepingNumberOfChildren = "3"
     createNumberOfChildrenRecords(
       MigratePrisonerNumberOfChildrenRequest(
-        prisonerNumber = removingPrisonerNumber,
+        prisonerNumber = REMOVE_PRISONER,
         current = NumberOfChildrenDetailsRequest(
           numberOfChildren = keepingNumberOfChildren,
           createdBy = "Admin",
@@ -159,22 +157,22 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
       .exchange()
       .expectStatus().isOk
 
-    val retainedDomesticStatus = assertDomesticStatusPresent(keepingPrisonerNumber, keepingDomesticStatus)
-    assertDomesticStatusNotPresent(removingPrisonerNumber)
+    val retainedDomesticStatus = assertDomesticStatusPresent(KEEP_PRISONER, keepingDomesticStatus)
+    assertDomesticStatusNotPresent(REMOVE_PRISONER)
 
-    val retainedNumberOfChildren = assertNumberOfChildrenPresent(keepingPrisonerNumber, keepingNumberOfChildren)
-    assertNumberOfChildrenNotPresent(removingPrisonerNumber)
+    val retainedNumberOfChildren = assertNumberOfChildrenPresent(KEEP_PRISONER, keepingNumberOfChildren)
+    assertNumberOfChildrenNotPresent(REMOVE_PRISONER)
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
       additionalInfo = PrisonerNumberOfChildren(retainedNumberOfChildren.id, Source.DPS),
-      personReference = PersonReference(nomsNumber = keepingPrisonerNumber),
+      personReference = PersonReference(nomsNumber = KEEP_PRISONER),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
       additionalInfo = PrisonerDomesticStatus(retainedDomesticStatus.id, Source.DPS),
-      personReference = PersonReference(nomsNumber = keepingPrisonerNumber),
+      personReference = PersonReference(nomsNumber = KEEP_PRISONER),
     )
   }
 
