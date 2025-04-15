@@ -26,10 +26,13 @@ class GetContactByIdIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @Autowired
   private lateinit var employmentRepository: EmploymentRepository
+
   @Autowired
   private lateinit var contactPhoneRepository: ContactPhoneRepository
+
   @Autowired
   private lateinit var contactAddressRepository: ContactAddressRepository
+
   @Autowired
   private lateinit var contactAddressPhoneRepository: ContactAddressPhoneRepository
 
@@ -256,73 +259,79 @@ class GetContactByIdIntegrationTest : SecureAPIIntegrationTestBase() {
     val newContact =
       testAPIClient.createAContact(CreateContactRequest(firstName = "First", lastName = "Bob", createdBy = "TEST"))
 
-    val phones = contactPhoneRepository.saveAllAndFlush(listOf(
-      ContactPhoneEntity(
-        contactPhoneId = 0,
+    val phones = contactPhoneRepository.saveAllAndFlush(
+      listOf(
+        ContactPhoneEntity(
+          contactPhoneId = 0,
+          contactId = newContact.id,
+          phoneType = "ALTH",
+          phoneNumber = "1111",
+          createdBy = "TEST",
+          createdTime = LocalDateTime.now(),
+        ),
+        ContactPhoneEntity(
+          contactPhoneId = 0,
+          contactId = newContact.id,
+          phoneType = "MOB",
+          phoneNumber = "2222",
+          createdBy = "TEST",
+          createdTime = LocalDateTime.now(),
+        ),
+        ContactPhoneEntity(
+          contactPhoneId = 0,
+          contactId = newContact.id,
+          phoneType = "HOME",
+          phoneNumber = "3333",
+          createdBy = "TEST",
+          createdTime = LocalDateTime.now(),
+        ),
+        ContactPhoneEntity(
+          contactPhoneId = 0,
+          contactId = newContact.id,
+          phoneType = "ALTB",
+          phoneNumber = "4444",
+          createdBy = "TEST",
+          createdTime = LocalDateTime.now(),
+        ),
+        ContactPhoneEntity(
+          contactPhoneId = 0,
+          contactId = newContact.id,
+          phoneType = "BUS",
+          phoneNumber = "5555",
+          createdBy = "TEST",
+          createdTime = LocalDateTime.now(),
+        ),
+      ),
+    )
+    val address = contactAddressRepository.saveAndFlush(
+      ContactAddressEntity(
+        contactAddressId = 0,
         contactId = newContact.id,
-        phoneType = "ALTH",
-        phoneNumber = "1111",
         createdBy = "TEST",
         createdTime = LocalDateTime.now(),
       ),
-      ContactPhoneEntity(
-        contactPhoneId = 0,
-        contactId = newContact.id,
-        phoneType = "MOB",
-        phoneNumber = "2222",
-        createdBy = "TEST",
-        createdTime = LocalDateTime.now(),
-      ),
-      ContactPhoneEntity(
-        contactPhoneId = 0,
-        contactId = newContact.id,
-        phoneType = "HOME",
-        phoneNumber = "3333",
-        createdBy = "TEST",
-        createdTime = LocalDateTime.now(),
-      ),
-      ContactPhoneEntity(
-        contactPhoneId = 0,
-        contactId = newContact.id,
-        phoneType = "ALTB",
-        phoneNumber = "4444",
-        createdBy = "TEST",
-        createdTime = LocalDateTime.now(),
-      ),
-      ContactPhoneEntity(
-        contactPhoneId = 0,
-        contactId = newContact.id,
-        phoneType = "BUS",
-        phoneNumber = "5555",
-        createdBy = "TEST",
-        createdTime = LocalDateTime.now(),
-      )
-    ))
-    val address = contactAddressRepository.saveAndFlush(ContactAddressEntity(
-      contactAddressId = 0,
-      contactId = newContact.id,
-      createdBy = "TEST",
-      createdTime = LocalDateTime.now(),
-    ))
+    )
 
-    contactAddressPhoneRepository.saveAllAndFlush(listOf(
-      ContactAddressPhoneEntity(
-        contactAddressPhoneId = 0,
-        contactId = newContact.id,
-        contactAddressId = address.contactAddressId,
-        contactPhoneId = phones[3].contactPhoneId,
-        createdBy = "TEST",
-        createdTime = LocalDateTime.now(),
+    contactAddressPhoneRepository.saveAllAndFlush(
+      listOf(
+        ContactAddressPhoneEntity(
+          contactAddressPhoneId = 0,
+          contactId = newContact.id,
+          contactAddressId = address.contactAddressId,
+          contactPhoneId = phones[3].contactPhoneId,
+          createdBy = "TEST",
+          createdTime = LocalDateTime.now(),
+        ),
+        ContactAddressPhoneEntity(
+          contactAddressPhoneId = 0,
+          contactId = newContact.id,
+          contactAddressId = address.contactAddressId,
+          contactPhoneId = phones[4].contactPhoneId,
+          createdBy = "TEST",
+          createdTime = LocalDateTime.now(),
+        ),
       ),
-      ContactAddressPhoneEntity(
-        contactAddressPhoneId = 0,
-        contactId = newContact.id,
-        contactAddressId = address.contactAddressId,
-        contactPhoneId = phones[4].contactPhoneId,
-        createdBy = "TEST",
-        createdTime = LocalDateTime.now(),
-      )
-    ))
+    )
     val contact = testAPIClient.getContact(newContact.id)
     assertThat(contact.phoneNumbers[0].phoneTypeDescription).isEqualTo("Home")
     assertThat(contact.phoneNumbers[1].phoneTypeDescription).isEqualTo("Alternate home")
