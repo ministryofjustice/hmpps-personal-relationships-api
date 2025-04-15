@@ -115,12 +115,12 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
       ),
     )
 
-    val expectedDomesticStatus = "P"
+    val keepingDomesticStatus = "P"
     createDomesticStatusRecords(
       MigratePrisonerDomesticStatusRequest(
         prisonerNumber = REMOVE_PRISONER,
         current = DomesticStatusDetailsRequest(
-          domesticStatusCode = expectedDomesticStatus,
+          domesticStatusCode = keepingDomesticStatus,
           createdBy = "Admin",
           createdTime = latestCreatedDate,
         ),
@@ -138,12 +138,12 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
       ),
     )
 
-    val expectedNumberOfChildren = "3"
+    val keepingNumberOfChildren = "3"
     createNumberOfChildrenRecords(
       MigratePrisonerNumberOfChildrenRequest(
         prisonerNumber = REMOVE_PRISONER,
         current = NumberOfChildrenDetailsRequest(
-          numberOfChildren = expectedNumberOfChildren,
+          numberOfChildren = keepingNumberOfChildren,
           createdBy = "Admin",
           createdTime = latestCreatedDate,
         ),
@@ -157,21 +157,21 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
       .exchange()
       .expectStatus().isOk
 
-    val retainedDomesticStatus = assertDomesticStatusPresent(KEEP_PRISONER, expectedDomesticStatus)
+    val retainedDomesticStatus = assertDomesticStatusPresent(KEEP_PRISONER, keepingDomesticStatus)
     assertDomesticStatusNotPresent(REMOVE_PRISONER)
 
-    val retainedNumberOfChildren = assertNumberOfChildrenPresent(KEEP_PRISONER, expectedNumberOfChildren)
+    val retainedNumberOfChildren = assertNumberOfChildrenPresent(KEEP_PRISONER, keepingNumberOfChildren)
     assertNumberOfChildrenNotPresent(REMOVE_PRISONER)
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-      additionalInfo = PrisonerNumberOfChildren(retainedDomesticStatus.id, Source.DPS),
+      additionalInfo = PrisonerNumberOfChildren(retainedNumberOfChildren.id, Source.DPS),
       personReference = PersonReference(nomsNumber = KEEP_PRISONER),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(retainedNumberOfChildren.id, Source.DPS),
+      additionalInfo = PrisonerDomesticStatus(retainedDomesticStatus.id, Source.DPS),
       personReference = PersonReference(nomsNumber = KEEP_PRISONER),
     )
   }

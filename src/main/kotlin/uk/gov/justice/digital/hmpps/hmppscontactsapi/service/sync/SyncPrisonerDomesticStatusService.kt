@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPri
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponseData
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerDomesticStatusRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ReferenceCodeRepository
-import java.time.LocalDateTime
 
 @Service
 @Transactional
@@ -66,7 +65,7 @@ class SyncPrisonerDomesticStatusService(
       prisonerNumber = prisonerNumber,
       domesticStatusCode = request.domesticStatusCode,
       createdBy = request.createdBy,
-      createdTime = LocalDateTime.now(),
+      createdTime = request.createdTime,
       active = true,
     )
 

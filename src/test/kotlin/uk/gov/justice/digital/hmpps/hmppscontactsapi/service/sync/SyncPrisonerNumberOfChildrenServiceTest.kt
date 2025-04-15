@@ -10,6 +10,7 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -70,13 +71,13 @@ class SyncPrisonerNumberOfChildrenServiceTest {
   }
 
   @Test
-  fun `createOrUpdateNumberOfChildren deactivates existing numberOfChildren and creates new one`() {
+  fun `createOrUpdateDomesticStatus deactivates existing status and creates new one when existing value is different`() {
     // Given
     val prisonerNumber = "A1234BC"
     val existingNumberOfChildrenCount = PrisonerNumberOfChildren(
       prisonerNumberOfChildrenId = 1L,
       prisonerNumber = prisonerNumber,
-      numberOfChildren = "1",
+      numberOfChildren = "0",
       createdBy = "user",
       createdTime = LocalDateTime.now(),
       active = true,
@@ -99,7 +100,37 @@ class SyncPrisonerNumberOfChildrenServiceTest {
 
     // Then
     verify(numberOfChildrenRepository).findByPrisonerNumberAndActiveTrue(prisonerNumber)
-    assertThat(response.id).isEqualTo(1L)
+    assertThat(response.data.id).isEqualTo(1L)
+  }
+
+  @Test
+  fun `createOrUpdateDomesticStatus unchanged existing status when existing value is same`() {
+    // Given
+    val prisonerNumber = "A1234BC"
+    val existingNumberOfChildrenCount = PrisonerNumberOfChildren(
+      prisonerNumberOfChildrenId = 1L,
+      prisonerNumber = prisonerNumber,
+      numberOfChildren = "1",
+      createdBy = "user",
+      createdTime = LocalDateTime.now(),
+      active = true,
+    )
+
+    val updateRequest = SyncUpdatePrisonerNumberOfChildrenRequest(
+      numberOfChildren = "1",
+      createdBy = "user",
+      createdTime = LocalDateTime.now(),
+    )
+
+    whenever(numberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
+      .thenReturn(existingNumberOfChildrenCount)
+
+    // When
+    syncNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, updateRequest)
+
+    // Then
+    verify(numberOfChildrenRepository).findByPrisonerNumberAndActiveTrue(prisonerNumber)
+    verify(numberOfChildrenRepository, never()).save(any())
   }
 
   @Test
