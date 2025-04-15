@@ -9,9 +9,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.organisationsapi.model.OrganisationSummary
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressPhoneEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactPhoneEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.EmploymentEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPhoneRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.EmploymentRepository
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -20,6 +26,12 @@ class GetContactByIdIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @Autowired
   private lateinit var employmentRepository: EmploymentRepository
+  @Autowired
+  private lateinit var contactPhoneRepository: ContactPhoneRepository
+  @Autowired
+  private lateinit var contactAddressRepository: ContactAddressRepository
+  @Autowired
+  private lateinit var contactAddressPhoneRepository: ContactAddressPhoneRepository
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
@@ -237,6 +249,86 @@ class GetContactByIdIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(id).isEqualTo(1)
       assertThat(isStaff).isTrue()
     }
+  }
+
+  @Test
+  fun `should get the contact with sorted phone numbers`() {
+    val newContact =
+      testAPIClient.createAContact(CreateContactRequest(firstName = "First", lastName = "Bob", createdBy = "TEST"))
+
+    val phones = contactPhoneRepository.saveAllAndFlush(listOf(
+      ContactPhoneEntity(
+        contactPhoneId = 0,
+        contactId = newContact.id,
+        phoneType = "ALTH",
+        phoneNumber = "1111",
+        createdBy = "TEST",
+        createdTime = LocalDateTime.now(),
+      ),
+      ContactPhoneEntity(
+        contactPhoneId = 0,
+        contactId = newContact.id,
+        phoneType = "MOB",
+        phoneNumber = "2222",
+        createdBy = "TEST",
+        createdTime = LocalDateTime.now(),
+      ),
+      ContactPhoneEntity(
+        contactPhoneId = 0,
+        contactId = newContact.id,
+        phoneType = "HOME",
+        phoneNumber = "3333",
+        createdBy = "TEST",
+        createdTime = LocalDateTime.now(),
+      ),
+      ContactPhoneEntity(
+        contactPhoneId = 0,
+        contactId = newContact.id,
+        phoneType = "ALTB",
+        phoneNumber = "4444",
+        createdBy = "TEST",
+        createdTime = LocalDateTime.now(),
+      ),
+      ContactPhoneEntity(
+        contactPhoneId = 0,
+        contactId = newContact.id,
+        phoneType = "BUS",
+        phoneNumber = "5555",
+        createdBy = "TEST",
+        createdTime = LocalDateTime.now(),
+      )
+    ))
+    val address = contactAddressRepository.saveAndFlush(ContactAddressEntity(
+      contactAddressId = 0,
+      contactId = newContact.id,
+      createdBy = "TEST",
+      createdTime = LocalDateTime.now(),
+    ))
+
+    contactAddressPhoneRepository.saveAllAndFlush(listOf(
+      ContactAddressPhoneEntity(
+        contactAddressPhoneId = 0,
+        contactId = newContact.id,
+        contactAddressId = address.contactAddressId,
+        contactPhoneId = phones[3].contactPhoneId,
+        createdBy = "TEST",
+        createdTime = LocalDateTime.now(),
+      ),
+      ContactAddressPhoneEntity(
+        contactAddressPhoneId = 0,
+        contactId = newContact.id,
+        contactAddressId = address.contactAddressId,
+        contactPhoneId = phones[4].contactPhoneId,
+        createdBy = "TEST",
+        createdTime = LocalDateTime.now(),
+      )
+    ))
+    val contact = testAPIClient.getContact(newContact.id)
+    assertThat(contact.phoneNumbers[0].phoneTypeDescription).isEqualTo("Home")
+    assertThat(contact.phoneNumbers[1].phoneTypeDescription).isEqualTo("Alternate home")
+    assertThat(contact.phoneNumbers[2].phoneTypeDescription).isEqualTo("Mobile")
+    assertThat(contact.addresses[0].phoneNumbers[0].phoneTypeDescription).isEqualTo("Business")
+    assertThat(contact.addresses[0].phoneNumbers[1].phoneTypeDescription).isEqualTo("Alternate business")
   }
 
   @Test

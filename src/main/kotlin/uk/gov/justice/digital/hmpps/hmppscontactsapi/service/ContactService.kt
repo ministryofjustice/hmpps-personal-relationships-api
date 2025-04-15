@@ -123,8 +123,7 @@ class ContactService(
     }
   }
 
-  fun getContact(id: Long): ContactDetails? = contactRepository.findById(id).getOrNull()
-    ?.let { enrichContact(it) }
+  fun getContact(id: Long): ContactDetails? = contactRepository.findById(id).getOrNull()?.let { enrichContact(it) }
 
   private fun createAddresses(contactId: Long, createdBy: String, addresses: List<Address>) {
     addresses.forEach { address ->
@@ -154,18 +153,17 @@ class ContactService(
     }
   }
 
-  fun getContactName(id: Long): ContactNameDetails? = contactRepository.findById(id).getOrNull()
-    ?.let { contactEntity ->
-      ContactNameDetails(
-        titleCode = contactEntity.title,
-        titleDescription = contactEntity.title?.let {
-          referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.TITLE, it)?.description
-        },
-        lastName = contactEntity.lastName,
-        firstName = contactEntity.firstName,
-        middleNames = contactEntity.middleNames,
-      )
-    }
+  fun getContactName(id: Long): ContactNameDetails? = contactRepository.findById(id).getOrNull()?.let { contactEntity ->
+    ContactNameDetails(
+      titleCode = contactEntity.title,
+      titleDescription = contactEntity.title?.let {
+        referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.TITLE, it)?.description
+      },
+      lastName = contactEntity.lastName,
+      firstName = contactEntity.firstName,
+      middleNames = contactEntity.middleNames,
+    )
+  }
 
   fun searchContacts(pageable: Pageable, request: ContactSearchRequest): Page<ContactSearchResultItem> = contactSearchRepository.searchContacts(request, pageable).toModel()
 
@@ -200,16 +198,15 @@ class ContactService(
     val addressPhoneNumbers = contactAddressPhoneRepository.findByContactId(contactEntity.id())
 
     // Match address phone numbers with addresses
-    val addresses = contactAddressDetailsRepository.findByContactId(contactEntity.id())
-      .map { address ->
-        address.toModel(
-          getAddressPhoneNumbers(
-            address.contactAddressId,
-            addressPhoneNumbers,
-            phoneNumbers,
-          ),
-        )
-      }
+    val addresses = contactAddressDetailsRepository.findByContactId(contactEntity.id()).map { address ->
+      address.toModel(
+        getAddressPhoneNumbers(
+          address.contactAddressId,
+          addressPhoneNumbers,
+          phoneNumbers,
+        ),
+      )
+    }
 
     val emailAddresses = contactEmailRepository.findByContactId(contactEntity.id()).map { it.toModel() }
     val identities = contactIdentityDetailsRepository.findByContactId(contactEntity.id()).map { it.toModel() }
@@ -272,9 +269,9 @@ class ContactService(
     contactAddressId: Long,
     addressPhoneNumbers: List<ContactAddressPhoneEntity>,
     phoneNumbers: List<ContactPhoneDetails>,
-  ): List<ContactAddressPhoneDetails> = addressPhoneNumbers.filter { it.contactAddressId == contactAddressId }
-    .mapNotNull { addressPhone ->
-      phoneNumbers.find { it.contactPhoneId == addressPhone.contactPhoneId }?.let { phoneNumber ->
+  ): List<ContactAddressPhoneDetails> = addressPhoneNumbers.filter { it.contactAddressId == contactAddressId }.let { filteredAddressPhoneNumbers ->
+    phoneNumbers.mapNotNull { phoneNumber ->
+      filteredAddressPhoneNumbers.find { it.contactPhoneId == phoneNumber.contactPhoneId }?.let { addressPhone ->
         ContactAddressPhoneDetails(
           contactAddressPhoneId = addressPhone.contactAddressPhoneId,
           contactPhoneId = addressPhone.contactPhoneId,
@@ -291,6 +288,7 @@ class ContactService(
         )
       }
     }
+  }
 
   @Transactional
   fun updateContactRelationship(
