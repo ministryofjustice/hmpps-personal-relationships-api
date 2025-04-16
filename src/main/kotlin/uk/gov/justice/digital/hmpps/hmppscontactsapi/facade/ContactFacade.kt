@@ -106,7 +106,7 @@ class ContactFacade(
     }
 
   fun addContactRelationship(request: AddContactRelationshipRequest, user: User): PrisonerContactRelationshipDetails {
-    val createdRelationship = contactService.addContactRelationship(request)
+    val createdRelationship = contactService.addContactRelationship(request, user)
     outboundEventsService.send(
       outboundEvent = OutboundEvent.PRISONER_CONTACT_CREATED,
       identifier = createdRelationship.prisonerContactId,
@@ -117,7 +117,7 @@ class ContactFacade(
     return createdRelationship
   }
 
-  fun patch(id: Long, request: PatchContactRequest, user: User): PatchContactResponse = contactPatchService.patch(id, request)
+  fun patch(id: Long, request: PatchContactRequest, user: User): PatchContactResponse = contactPatchService.patch(id, request, user)
     .also {
       logger.info("Send patch domain event to {} {} ", OutboundEvent.CONTACT_UPDATED, id)
       outboundEventsService.send(
@@ -135,7 +135,7 @@ class ContactFacade(
   fun searchContacts(pageable: Pageable, request: ContactSearchRequest): PagedModel<ContactSearchResultItem> = PagedModel(contactService.searchContacts(pageable, request))
 
   fun patchRelationship(prisonerContactId: Long, request: PatchRelationshipRequest, user: User) {
-    contactService.updateContactRelationship(prisonerContactId, request)
+    contactService.updateContactRelationship(prisonerContactId, request, user)
       .also {
         logger.info("Send patch relationship domain event to {} {} ", OutboundEvent.PRISONER_CONTACT_UPDATED, it.contactId)
         outboundEventsService.send(

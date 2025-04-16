@@ -103,7 +103,6 @@ class PrisonerContactControllerTest {
 
     private fun patchContactRelationshipRequest() = PatchRelationshipRequest(
       relationshipToPrisonerCode = JsonNullable.of("ENG"),
-      updatedBy = "system",
     )
   }
 
@@ -120,7 +119,7 @@ class PrisonerContactControllerTest {
       comments = "Foo",
     )
     private val user = aUser("created")
-    private val request = AddContactRelationshipRequest(contactId, relationship, "USER")
+    private val request = AddContactRelationshipRequest(contactId, relationship)
 
     @Test
     fun `should create a contact relationship successfully`() {

@@ -172,7 +172,6 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
         isEmergencyContact = true,
         isApprovedVisitor = false,
       ),
-      createdBy = "created",
     ),
   )
 }

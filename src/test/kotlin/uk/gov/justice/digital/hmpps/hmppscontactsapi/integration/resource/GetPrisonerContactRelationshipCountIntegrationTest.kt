@@ -60,7 +60,6 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       AddContactRelationshipRequest(
         contactOne.id,
         relationship.copy(relationshipToPrisonerCode = "FRI"),
-        "USER1",
       ),
     )
     val entity = prisonerContactRepository.findById(relationshipFromPreviousTerm.prisonerContactId).getOrNull()!!
@@ -71,14 +70,12 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       AddContactRelationshipRequest(
         contactOne.id,
         relationship.copy(relationshipToPrisonerCode = "GIF"),
-        "USER1",
       ),
     )
     testAPIClient.updateRelationship(
       relationshipToMakeInactive.prisonerContactId,
       PatchRelationshipRequest(
         isRelationshipActive = JsonNullable.of(false),
-        updatedBy = "USER1",
       ),
     )
 
@@ -87,7 +84,6 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       AddContactRelationshipRequest(
         contactOne.id,
         relationship.copy(relationshipToPrisonerCode = "WIFE"),
-        "USER1",
       ),
     )
 
@@ -96,7 +92,6 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       AddContactRelationshipRequest(
         contactOne.id,
         relationship.copy(relationshipTypeCode = "O", relationshipToPrisonerCode = "DR"),
-        "USER1",
       ),
     )
 

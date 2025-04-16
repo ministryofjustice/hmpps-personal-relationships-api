@@ -217,7 +217,6 @@ class ContactControllerTest {
 
     private fun patchContactRequest() = PatchContactRequest(
       languageCode = JsonNullable.of("ENG"),
-      updatedBy = "system",
     )
 
     private fun patchContactResponse(id: Long) = PatchContactResponse(

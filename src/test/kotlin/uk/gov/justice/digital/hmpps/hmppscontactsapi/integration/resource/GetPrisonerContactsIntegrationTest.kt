@@ -187,7 +187,7 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     ).createdRelationship!!.prisonerContactId
     testAPIClient.updateRelationship(
       prisonerContactIdToDeactivate,
-      PatchRelationshipRequest(isRelationshipActive = JsonNullable.of(false), updatedBy = "USER1"),
+      PatchRelationshipRequest(isRelationshipActive = JsonNullable.of(false)),
     )
 
     val withActiveOnly = getForUrl("/prisoner/$prisonerNumber/contact?active=true")
@@ -568,14 +568,12 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       AddContactRelationshipRequest(
         contact.id,
         relationship.copy(prisonerNumber = prisonerOneNumber),
-        "USER1",
       ),
     )
     val relationshipToPrisonerTwo = testAPIClient.addAContactRelationship(
       AddContactRelationshipRequest(
         contact.id,
         relationship.copy(prisonerNumber = prisonerTwoNumber),
-        "USER1",
       ),
     )
 
@@ -656,7 +654,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       AddContactRelationshipRequest(
         contact.id,
         relationship.copy(prisonerNumber = prisonerOneNumber),
-        "USER1",
       ),
     )
 

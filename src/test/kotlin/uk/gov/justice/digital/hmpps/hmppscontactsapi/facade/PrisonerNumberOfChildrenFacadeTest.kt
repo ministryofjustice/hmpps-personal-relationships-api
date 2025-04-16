@@ -157,7 +157,7 @@ class PrisonerNumberOfChildrenFacadeTest {
       }.message isEqualTo "Prisoner's number of children could not updated!"
 
       verify(prisonerNumberOfChildrenService).createOrUpdateNumberOfChildren(prisonerNumber, request)
-      verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any())
+      verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
     }
   }
 }

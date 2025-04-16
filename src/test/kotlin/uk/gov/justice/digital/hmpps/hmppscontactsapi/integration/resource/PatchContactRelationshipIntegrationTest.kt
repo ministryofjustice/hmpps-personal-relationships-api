@@ -30,7 +30,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     .uri("/prisoner-contact/99")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .bodyValue(PatchRelationshipRequest(updatedBy = "Admin"))
+    .bodyValue(PatchRelationshipRequest())
 
   @ParameterizedTest
   @CsvSource(
@@ -102,7 +102,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val updateRequest = PatchRelationshipRequest(
       relationshipToPrisonerCode = JsonNullable.of("SIS"),
-      updatedBy = "Admin",
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -128,7 +127,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     val updateRequest = PatchRelationshipRequest(
       relationshipTypeCode = JsonNullable.of("O"),
       relationshipToPrisonerCode = JsonNullable.of("DR"),
-      updatedBy = "Admin",
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -154,7 +152,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val updateRequest = PatchRelationshipRequest(
       isNextOfKin = JsonNullable.of(true),
-      updatedBy = "Admin",
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -179,7 +176,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val updateRequest = PatchRelationshipRequest(
       isApprovedVisitor = JsonNullable.of(true),
-      updatedBy = "Admin",
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -204,7 +200,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val updateRequest = PatchRelationshipRequest(
       isEmergencyContact = JsonNullable.of(true),
-      updatedBy = "Admin",
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -229,7 +224,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val updateRequest = PatchRelationshipRequest(
       isRelationshipActive = JsonNullable.of(true),
-      updatedBy = "Admin",
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -254,7 +248,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val updateRequest = PatchRelationshipRequest(
       comments = JsonNullable.of("New comment"),
-      updatedBy = "Admin",
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -277,9 +270,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     stubPrisonSearchWithResponse(prisonerNumber)
     val prisonerContact = cretePrisonerContact(prisonerNumber)
 
-    val updateRequest = PatchRelationshipRequest(
-      updatedBy = "Admin",
-    )
+    val updateRequest = PatchRelationshipRequest()
 
     val prisonerContactId = prisonerContact.prisonerContactId
 
@@ -308,7 +299,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       isEmergencyContact = JsonNullable.of(true),
       isRelationshipActive = JsonNullable.of(true),
       comments = JsonNullable.of("comments added"),
-      updatedBy = "Admin",
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -394,11 +384,9 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         isEmergencyContact = JsonNullable.of(true),
         isRelationshipActive = JsonNullable.of(true),
         comments = JsonNullable.of("comments added"),
-        updatedBy = "Admin",
       )
       return listOf(
         Arguments.of("comments must be <= 240 characters", relationship.copy(comments = JsonNullable.of("".padStart(241, 'X')))),
-        Arguments.of("updatedBy must be <= 100 characters", relationship.copy(updatedBy = "".padStart(101, 'X'))),
       )
     }
   }

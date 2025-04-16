@@ -36,7 +36,7 @@ class ContactAddressPhoneFacadeTest {
     val response = createContactAddressPhoneDetails(contactAddressPhoneId, contactAddressId, contactPhoneId, contactId)
 
     whenever(addressPhoneService.create(any(), any(), any())).thenReturn(response)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val result = facade.create(contactId, contactAddressId, request)
 
@@ -57,7 +57,7 @@ class ContactAddressPhoneFacadeTest {
     val request = createContactAddressPhoneRequest(contactAddressId)
 
     whenever(addressPhoneService.create(any(), any(), any())).thenThrow(expectedException)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val exception = assertThrows<RuntimeException> {
       facade.create(contactId, contactAddressId, request)
@@ -66,7 +66,7 @@ class ContactAddressPhoneFacadeTest {
     assertThat(exception.message).isEqualTo(expectedException.message)
 
     verify(addressPhoneService).create(contactId, contactAddressId, request)
-    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -93,7 +93,7 @@ class ContactAddressPhoneFacadeTest {
     )
 
     whenever(addressPhoneService.createMultiple(any(), any(), any())).thenReturn(response)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val result = facade.createMultiple(contactId, contactAddressId, request)
 
@@ -121,7 +121,7 @@ class ContactAddressPhoneFacadeTest {
     val request = updateContactAddressPhoneRequest()
 
     whenever(addressPhoneService.update(any(), any(), any())).thenReturn(response)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val result = facade.update(
       contactId = contactId,
@@ -146,7 +146,7 @@ class ContactAddressPhoneFacadeTest {
     val request = updateContactAddressPhoneRequest()
 
     whenever(addressPhoneService.update(any(), any(), any())).thenThrow(expectedException)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val exception = assertThrows<RuntimeException> {
       facade.update(contactId, contactAddressPhoneId, request)
@@ -154,7 +154,7 @@ class ContactAddressPhoneFacadeTest {
 
     assertThat(exception).isEqualTo(exception)
     verify(addressPhoneService).update(contactId, contactAddressPhoneId, request)
-    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -166,7 +166,7 @@ class ContactAddressPhoneFacadeTest {
 
     assertThat(result).isEqualTo(response)
     verify(addressPhoneService).get(contactId, contactAddressPhoneId)
-    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -180,14 +180,14 @@ class ContactAddressPhoneFacadeTest {
 
     assertThat(exception.message).isEqualTo(expectedException.message)
     verify(addressPhoneService).get(contactId, contactAddressPhoneId)
-    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
   fun `should send event if delete success`() {
     val response = createContactAddressPhoneDetails(contactAddressPhoneId, contactAddressId, contactPhoneId, contactId)
     whenever(addressPhoneService.delete(any(), any())).thenReturn(response)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     facade.delete(contactId, contactAddressPhoneId)
 
@@ -205,7 +205,7 @@ class ContactAddressPhoneFacadeTest {
   fun `should not send event if delete throws exception`() {
     val expectedException = RuntimeException("Bang!")
     whenever(addressPhoneService.delete(any(), any())).thenThrow(expectedException)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val exception = assertThrows<RuntimeException> {
       facade.delete(contactId, contactAddressPhoneId)
@@ -213,6 +213,6 @@ class ContactAddressPhoneFacadeTest {
 
     assertThat(exception.message).isEqualTo(expectedException.message)
     verify(addressPhoneService).delete(contactId, contactAddressPhoneId)
-    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 }

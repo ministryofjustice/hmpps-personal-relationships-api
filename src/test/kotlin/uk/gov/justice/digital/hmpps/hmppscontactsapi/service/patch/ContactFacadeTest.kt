@@ -51,12 +51,12 @@ class ContactFacadeTest {
     val request = mock(PatchContactRequest::class.java)
     val response = mock(PatchContactResponse::class.java)
 
-    whenever(contactPatchService.patch(contactId, request)).thenReturn(response)
+    whenever(contactPatchService.patch(contactId, request, user)).thenReturn(response)
 
     val result = contactFacade.patch(contactId, request, user)
 
     assertThat(response).isEqualTo(result)
-    verify(contactPatchService).patch(contactId, request)
+    verify(contactPatchService).patch(contactId, request, user)
     verify(outboundEventsService).send(OutboundEvent.CONTACT_UPDATED, contactId, contactId, user = user)
   }
 
@@ -77,7 +77,7 @@ class ContactFacadeTest {
       val result = contactFacade.createContact(request, user)
 
       assertThat(result).isEqualTo(expected)
-      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
+      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id, user = user)
     }
 
     @Test
@@ -103,8 +103,8 @@ class ContactFacadeTest {
       val result = contactFacade.createContact(request, user)
 
       assertThat(result).isEqualTo(expected)
-      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
-      verify(outboundEventsService).send(OutboundEvent.PRISONER_CONTACT_CREATED, 123456, createdContact.id, "A1234BC")
+      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id, user = user)
+      verify(outboundEventsService).send(OutboundEvent.PRISONER_CONTACT_CREATED, 123456, createdContact.id, "A1234BC", user = user)
     }
 
     @Test
@@ -120,11 +120,12 @@ class ContactFacadeTest {
       val result = contactFacade.createContact(request, user)
 
       assertThat(result).isEqualTo(expected)
-      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
+      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id, user = user)
       verify(outboundEventsService, never()).send(
         outboundEvent = OutboundEvent.CONTACT_IDENTITY_CREATED,
         identifier = 1L,
         contactId = createdContact.id,
+        user = user,
       )
     }
 
@@ -141,13 +142,14 @@ class ContactFacadeTest {
       val result = contactFacade.createContact(request, user)
 
       assertThat(result).isEqualTo(expected)
-      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
+      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id, user = user)
 
       result.createdContact.identities.forEach { identityId ->
         verify(outboundEventsService).send(
           outboundEvent = OutboundEvent.CONTACT_IDENTITY_CREATED,
           identifier = identityId.contactIdentityId,
           contactId = createdContact.id,
+          user = user,
         )
       }
     }
@@ -181,17 +183,19 @@ class ContactFacadeTest {
       val result = contactFacade.createContact(request, user)
 
       assertThat(result).isEqualTo(expected)
-      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
+      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id, user = user)
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.CONTACT_ADDRESS_CREATED,
         identifier = 123456,
         contactId = createdContact.id,
+        user = user,
       )
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
         identifier = 987654,
         secondIdentifier = 123456,
         contactId = createdContact.id,
+        user = user,
       )
     }
 
@@ -211,16 +215,18 @@ class ContactFacadeTest {
       val result = contactFacade.createContact(request, user)
 
       assertThat(result).isEqualTo(expected)
-      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
+      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id, user = user)
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
         identifier = 999,
         contactId = createdContact.id,
+        user = user,
       )
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
         identifier = 777,
         contactId = createdContact.id,
+        user = user,
       )
     }
 
@@ -240,16 +246,18 @@ class ContactFacadeTest {
       val result = contactFacade.createContact(request, user)
 
       assertThat(result).isEqualTo(expected)
-      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
+      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id, user = user)
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.CONTACT_EMAIL_CREATED,
         identifier = 999,
         contactId = createdContact.id,
+        user = user,
       )
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.CONTACT_EMAIL_CREATED,
         identifier = 777,
         contactId = createdContact.id,
+        user = user,
       )
     }
 
@@ -269,16 +277,18 @@ class ContactFacadeTest {
       val result = contactFacade.createContact(request, user)
 
       assertThat(result).isEqualTo(expected)
-      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id)
+      verify(outboundEventsService).send(OutboundEvent.CONTACT_CREATED, createdContact.id, createdContact.id, user = user)
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.EMPLOYMENT_CREATED,
         identifier = 999,
         contactId = createdContact.id,
+        user = user,
       )
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.EMPLOYMENT_CREATED,
         identifier = 777,
         contactId = createdContact.id,
+        user = user,
       )
     }
   }
@@ -297,11 +307,10 @@ class ContactFacadeTest {
         isApprovedVisitor = false,
         comments = null,
       ),
-      "user",
     )
     val prisonerContactId = 123456L
     val createdRelationship = createPrisonerContactRelationshipDetails(id = prisonerContactId)
-    whenever(contactService.addContactRelationship(request)).thenReturn(createdRelationship)
+    whenever(contactService.addContactRelationship(request, user)).thenReturn(createdRelationship)
 
     contactFacade.addContactRelationship(request, user)
 
@@ -318,7 +327,7 @@ class ContactFacadeTest {
 
     assertThat(contactFacade.searchContacts(pageable, request)).isEqualTo(PagedModel(result))
 
-    verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -329,7 +338,7 @@ class ContactFacadeTest {
 
     assertThat(contactFacade.getContact(99L)).isEqualTo(expectedContact)
 
-    verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -340,13 +349,13 @@ class ContactFacadeTest {
     val request = mock(PatchRelationshipRequest::class.java)
     val user = aUser("updated")
 
-    whenever(contactService.updateContactRelationship(prisonerContactId, request)).thenReturn(
+    whenever(contactService.updateContactRelationship(prisonerContactId, request, user)).thenReturn(
       createPrisonerContactRelationshipDetails(prisonerContactId, contactId, prisonerNumber),
     )
 
     contactFacade.patchRelationship(prisonerContactId, request, user)
 
-    verify(contactService).updateContactRelationship(prisonerContactId, request)
+    verify(contactService).updateContactRelationship(prisonerContactId, request, user)
     verify(outboundEventsService).send(
       OutboundEvent.PRISONER_CONTACT_UPDATED,
       prisonerContactId,

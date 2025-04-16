@@ -174,10 +174,10 @@ class ContactService(
   fun searchContacts(pageable: Pageable, request: ContactSearchRequest): Page<ContactSearchResultItem> = contactSearchRepository.searchContacts(request, pageable).toModel()
 
   @Transactional
-  fun addContactRelationship(request: AddContactRelationshipRequest): PrisonerContactRelationshipDetails {
+  fun addContactRelationship(request: AddContactRelationshipRequest, user: User): PrisonerContactRelationshipDetails {
     validateNewRelationship(request.relationship)
     getContact(request.contactId) ?: throw EntityNotFoundException("Contact (${request.contactId}) could not be found")
-    val newRelationship = request.relationship.toEntity(request.contactId, request.createdBy)
+    val newRelationship = request.relationship.toEntity(request.contactId, user.username)
     prisonerContactRepository.saveAndFlush(newRelationship)
     return enrichRelationship(newRelationship)
   }
@@ -300,13 +300,14 @@ class ContactService(
   fun updateContactRelationship(
     prisonerContactId: Long,
     request: PatchRelationshipRequest,
+    user: User,
   ): PrisonerContactRelationshipDetails {
     val prisonerContactEntity = getPrisonerContactEntity(prisonerContactId)
 
     validateRequest(request)
     validateRelationshipCodes(request, prisonerContactEntity)
 
-    val changedPrisonerContact = prisonerContactEntity.applyUpdate(request)
+    val changedPrisonerContact = prisonerContactEntity.applyUpdate(request, user)
 
     prisonerContactRepository.saveAndFlush(changedPrisonerContact)
     return enrichRelationship(prisonerContactEntity)
@@ -329,6 +330,7 @@ class ContactService(
 
   private fun PrisonerContactEntity.applyUpdate(
     request: PatchRelationshipRequest,
+    user: User,
   ) = this.copy(
     contactId = this.contactId,
     prisonerNumber = this.prisonerNumber,
@@ -345,7 +347,7 @@ class ContactService(
     it.approvedTime = this.approvedTime
     it.expiryDate = this.expiryDate
     it.createdAtPrison = this.createdAtPrison
-    it.updatedBy = request.updatedBy
+    it.updatedBy = user.username
     it.updatedTime = LocalDateTime.now()
   }
 
