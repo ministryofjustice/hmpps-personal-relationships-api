@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers
 import org.openapitools.jackson.nullable.JsonNullable
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.organisationsapi.model.OrganisationSummary
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.prisonersearch.Prisoner
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEmailEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactIdentityDetailsEntity
@@ -714,3 +715,5 @@ fun createOrganisationSummary(
   businessPhoneNumber,
   businessPhoneNumberExtension,
 )
+
+fun aUser(username: String = "USER1"): User = User(username)

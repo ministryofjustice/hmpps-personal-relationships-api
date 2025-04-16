@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressPhoneE
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.contactAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createAddress
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressDetailsEntity
@@ -105,6 +106,8 @@ class ContactServiceTest {
 
   @Nested
   inner class CreateContact {
+    private val user = aUser("created")
+
     @Test
     fun `should create a contact with all fields successfully`() {
       val identities = listOf(
@@ -121,7 +124,6 @@ class ContactServiceTest {
         firstName = "first",
         middleNames = "middle",
         dateOfBirth = LocalDate.of(1982, 6, 15),
-        createdBy = "created",
         identities = identities,
         addresses = listOf(addressWithPhoneNumber),
         phoneNumbers = listOf(phoneNumber),
@@ -147,7 +149,7 @@ class ContactServiceTest {
       whenever(contactPhoneService.createMultiple(any(), any(), any())).thenReturn(listOf(createContactPhoneNumberDetails()))
       whenever(contactEmailService.createMultiple(any(), any(), any())).thenReturn(listOf(createContactEmailDetails()))
 
-      val result = service.createContact(request)
+      val result = service.createContact(request, user)
 
       verify(contactIdentityService).createMultiple(123, CreateMultipleIdentitiesRequest(identities, "created"))
       val contactCaptor = argumentCaptor<ContactEntity>()
@@ -163,7 +165,7 @@ class ContactServiceTest {
         assertThat(gender).isEqualTo(request.genderCode)
         assertThat(domesticStatus).isEqualTo(request.domesticStatusCode)
         assertThat(staffFlag).isEqualTo(request.isStaff)
-        assertThat(createdBy).isEqualTo(request.createdBy)
+        assertThat(createdBy).isEqualTo(user.username)
         assertThat(createdTime).isNotNull()
       }
       with(result) {
@@ -178,7 +180,7 @@ class ContactServiceTest {
           assertThat(genderCode).isEqualTo(request.genderCode)
           assertThat(domesticStatusCode).isEqualTo(request.domesticStatusCode)
           assertThat(isStaff).isEqualTo(request.isStaff)
-          assertThat(createdBy).isEqualTo(request.createdBy)
+          assertThat(createdBy).isEqualTo(user.username)
           assertThat(createdTime).isNotNull()
           assertThat(addresses).isEqualTo(listOf(aContactAddressDetailsEntity.toModel(emptyList())))
         }
@@ -208,13 +210,13 @@ class ContactServiceTest {
         assertThat(noFixedAddress).isEqualTo(addressWithPhoneNumber.noFixedAddress)
         assertThat(phoneNumbers).isEqualTo(addressWithPhoneNumber.phoneNumbers)
         assertThat(comments).isEqualTo(addressWithPhoneNumber.comments)
-        assertThat(createdBy).isEqualTo(request.createdBy)
+        assertThat(createdBy).isEqualTo(user.username)
       }
 
-      verify(contactPhoneService).createMultiple(123L, request.createdBy, listOf(phoneNumber))
-      verify(contactEmailService).createMultiple(123L, request.createdBy, listOf(EmailAddress("test@example.com")))
-      verify(employmentService).createEmployment(123L, 1, true, request.createdBy)
-      verify(employmentService).createEmployment(123L, 2, false, request.createdBy)
+      verify(contactPhoneService).createMultiple(123L, user.username, listOf(phoneNumber))
+      verify(contactEmailService).createMultiple(123L, user.username, listOf(EmailAddress("test@example.com")))
+      verify(employmentService).createEmployment(123L, 1, true, user.username)
+      verify(employmentService).createEmployment(123L, 2, false, user.username)
     }
 
     @Test
@@ -235,7 +237,6 @@ class ContactServiceTest {
         firstName = "first",
         middleNames = "middle",
         dateOfBirth = LocalDate.of(1982, 6, 15),
-        createdBy = "created",
         identities = identities,
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123L) }
@@ -257,7 +258,7 @@ class ContactServiceTest {
         ),
       )
 
-      val result = service.createContact(request)
+      val result = service.createContact(request, user)
 
       verify(contactIdentityService).createMultiple(123L, CreateMultipleIdentitiesRequest(identities, "created"))
       val contactCaptor = argumentCaptor<ContactEntity>()
@@ -279,16 +280,15 @@ class ContactServiceTest {
         firstName = "first",
         middleNames = "middle",
         dateOfBirth = null,
+        isStaff = false,
         languageCode = null,
         interpreterRequired = false,
-        genderCode = null,
         domesticStatusCode = null,
-        isStaff = false,
-        createdBy = "created",
+        genderCode = null,
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
 
-      val result = service.createContact(request)
+      val result = service.createContact(request, user)
 
       verify(contactIdentityService, never()).createMultiple(any(), any())
 
@@ -305,7 +305,7 @@ class ContactServiceTest {
         assertNull(gender)
         assertNull(domesticStatus)
         assertThat(staffFlag).isEqualTo(request.isStaff)
-        assertThat(createdBy).isEqualTo(request.createdBy)
+        assertThat(createdBy).isEqualTo(user.username)
         assertThat(createdTime).isNotNull()
       }
       with(result) {
@@ -320,7 +320,7 @@ class ContactServiceTest {
           assertNull(genderCode)
           assertNull(domesticStatusCode)
           assertThat(isStaff).isEqualTo(request.isStaff)
-          assertThat(createdBy).isEqualTo(request.createdBy)
+          assertThat(createdBy).isEqualTo(user.username)
           assertThat(createdTime).isNotNull()
         }
       }
@@ -349,7 +349,6 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         relationship = relationshipRequest,
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(
@@ -372,7 +371,7 @@ class ContactServiceTest {
         ),
       ).thenReturn(referenceCode)
 
-      service.createContact(request)
+      service.createContact(request, user)
 
       verify(contactRepository).saveAndFlush(any())
 
@@ -413,7 +412,6 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         relationship = relationshipRequest,
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(
@@ -438,7 +436,7 @@ class ContactServiceTest {
       ).thenThrow(expectedException)
 
       val exception = assertThrows<RuntimeException>("Bang!") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
 
       assertThat(exception).isEqualTo(expectedException)
@@ -452,12 +450,11 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
       )
       whenever(contactRepository.saveAndFlush(any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
     }
 
@@ -466,7 +463,6 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         identities = listOf(
           IdentityDocument(
             identityType = "PNC",
@@ -479,7 +475,7 @@ class ContactServiceTest {
       whenever(contactIdentityService.createMultiple(any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
     }
 
@@ -488,7 +484,6 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         addresses = listOf(createAddress()),
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
@@ -496,7 +491,7 @@ class ContactServiceTest {
       whenever(contactAddressService.create(any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
     }
 
@@ -505,7 +500,6 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         phoneNumbers = listOf(createPhoneNumber()),
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
@@ -513,7 +507,7 @@ class ContactServiceTest {
       whenever(contactPhoneService.createMultiple(any(), any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
     }
 
@@ -522,7 +516,6 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         emailAddresses = listOf(EmailAddress("test@example.com")),
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
@@ -530,7 +523,7 @@ class ContactServiceTest {
       whenever(contactEmailService.createMultiple(any(), any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
     }
 
@@ -539,14 +532,13 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         employments = listOf(Employment(1, true)),
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(employmentService.createEmployment(any(), any(), any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
     }
 
@@ -555,7 +547,6 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         relationship = ContactRelationship(
           prisonerNumber = "A1234BC",
           relationshipTypeCode = "S",
@@ -571,7 +562,7 @@ class ContactServiceTest {
       whenever(prisonerContactRepository.saveAndFlush(any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
 
       verify(contactRepository).saveAndFlush(any())
@@ -583,7 +574,6 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         relationship = ContactRelationship(
           prisonerNumber = "A1234BC",
           relationshipTypeCode = "S",
@@ -599,7 +589,7 @@ class ContactServiceTest {
       whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
       assertThrows<EntityNotFoundException>("Prisoner number A1234BC - not found") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
 
       verify(contactRepository, never()).saveAndFlush(any())

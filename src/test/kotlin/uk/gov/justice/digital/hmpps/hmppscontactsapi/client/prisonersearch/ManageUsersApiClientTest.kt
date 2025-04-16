@@ -5,7 +5,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.ManageUsersApiClient
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.User
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.wiremock.ManageUsersApiMockServer
 
 class ManageUsersApiClientTest {
@@ -15,9 +15,9 @@ class ManageUsersApiClientTest {
 
   @Test
   fun `should get user`() {
-    server.stubGetUser(User("USER1", "User One"))
+    server.stubGetUser(UserDetails("USER1", "User One"))
 
-    assertThat(client.getUserByUsername("USER1")).isEqualTo(User("USER1", "User One"))
+    assertThat(client.getUserByUsername("USER1")).isEqualTo(UserDetails("USER1", "User One"))
   }
 
   @Test

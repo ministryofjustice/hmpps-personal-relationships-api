@@ -336,7 +336,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_DELETED,
-        additionalInfo = PrisonerContactInfo(relationship.prisonerContactId, Source.NOMIS),
+        additionalInfo = PrisonerContactInfo(relationship.prisonerContactId, Source.NOMIS, "SYS"),
         personReference = PersonReference(
           dpsContactId = relationship.contactId,
           nomsNumber = relationship.prisonerNumber,
@@ -358,7 +358,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_CREATED,
-        additionalInfo = PrisonerContactInfo(created.relationship.dpsId, Source.NOMIS),
+        additionalInfo = PrisonerContactInfo(created.relationship.dpsId, Source.NOMIS, "SYS"),
         personReference = PersonReference(
           dpsContactId = created.contactId,
           nomsNumber = createdPrisonerNumber,

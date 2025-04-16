@@ -34,7 +34,6 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       CreateContactRequest(
         lastName = "address",
         firstName = "has",
-        createdBy = "created",
       ),
 
     ).id

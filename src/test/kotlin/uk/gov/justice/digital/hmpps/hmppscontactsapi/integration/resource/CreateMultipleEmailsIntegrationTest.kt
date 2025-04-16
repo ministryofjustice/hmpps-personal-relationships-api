@@ -32,7 +32,6 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
       CreateContactRequest(
         lastName = "email",
         firstName = "has",
-        createdBy = "created",
       ),
     ).id
   }

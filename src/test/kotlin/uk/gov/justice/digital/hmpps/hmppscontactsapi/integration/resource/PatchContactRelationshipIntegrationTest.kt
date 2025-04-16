@@ -114,7 +114,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].relationshipToPrisonerCode).isEqualTo("SIS")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "AUTH_ADM"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -141,7 +141,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].relationshipToPrisonerCode).isEqualTo("DR")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "AUTH_ADM"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -166,7 +166,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].isNextOfKin).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "AUTH_ADM"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -191,7 +191,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].isApprovedVisitor).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "AUTH_ADM"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -216,7 +216,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].isEmergencyContact).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "AUTH_ADM"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -241,7 +241,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].isRelationshipActive).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "AUTH_ADM"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -266,7 +266,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].comments).isEqualTo("New comment")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "AUTH_ADM"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -289,7 +289,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts).hasSize(1)
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "AUTH_ADM"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -321,7 +321,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertUpdatedPrisonerContactEquals(updatedPrisonerContacts[0], updateRequest)
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "AUTH_ADM"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -360,7 +360,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     val request = CreateContactRequest(
       lastName = RandomStringUtils.secure().next(35),
       firstName = "a new guy",
-      createdBy = "created",
       relationship = requestedRelationship,
     )
 

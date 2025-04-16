@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.User
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.organisationsapi.model.OrganisationSummary
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createOrganisationSummary
@@ -74,7 +74,7 @@ abstract class IntegrationTestBase {
     prisonerSearchApiServer.stubGetPrisonerReturnNoResults(prisonerNumber)
   }
 
-  protected fun stubGetUserByUsername(user: User) {
+  protected fun stubGetUserByUsername(user: UserDetails) {
     manageUsersApiMockServer.stubGetUser(user)
   }
 

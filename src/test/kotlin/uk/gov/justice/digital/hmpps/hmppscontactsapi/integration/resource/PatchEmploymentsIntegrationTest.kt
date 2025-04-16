@@ -40,7 +40,6 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
       CreateContactRequest(
         lastName = "employments",
         firstName = "has",
-        createdBy = "created",
       ),
     ).id
     stubOrganisationSummary(123)

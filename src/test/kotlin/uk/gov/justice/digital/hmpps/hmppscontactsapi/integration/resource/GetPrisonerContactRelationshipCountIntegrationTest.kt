@@ -53,7 +53,6 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       CreateContactRequest(
         lastName = "Contact",
         firstName = "One",
-        createdBy = "USER1",
       ),
     )
     // Make from previous term
@@ -106,7 +105,6 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       CreateContactRequest(
         lastName = "Contact",
         firstName = "Two",
-        createdBy = "USER1",
         relationship = ContactRelationship(
           prisonerNumber = prisonerNumber,
           relationshipTypeCode = "S",
@@ -123,7 +121,6 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       CreateContactRequest(
         lastName = "Contact",
         firstName = "Three",
-        createdBy = "USER1",
         relationship = ContactRelationship(
           prisonerNumber = prisonerNumber,
           relationshipTypeCode = "O",

@@ -10,7 +10,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.User
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
@@ -45,7 +45,6 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
           isApprovedVisitor = false,
           comments = "Some comments",
         ),
-        createdBy = "created",
       ),
     )
     savedPrisonerContactId = created.createdRelationship!!.prisonerContactId
@@ -152,7 +151,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
 
   @Test
   fun `should create the restriction with minimal fields`() {
-    stubGetUserByUsername(User("created", "Created User"))
+    stubGetUserByUsername(UserDetails("created", "Created User"))
     val request = CreatePrisonerContactRestrictionRequest(
       restrictionType = "BAN",
       startDate = LocalDate.of(2020, 1, 1),
@@ -188,7 +187,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create the restriction with all fields`(role: String) {
-    stubGetUserByUsername(User("created", "Created User"))
+    stubGetUserByUsername(UserDetails("created", "Created User"))
     val request = CreatePrisonerContactRestrictionRequest(
       restrictionType = "BAN",
       startDate = LocalDate.of(2020, 1, 1),

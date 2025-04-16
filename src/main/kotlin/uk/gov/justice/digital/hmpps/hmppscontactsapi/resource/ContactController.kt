@@ -22,9 +22,11 @@ import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestAttribute
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
@@ -86,8 +88,8 @@ class ContactController(
     ],
   )
   @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__RW')")
-  fun createContact(@Valid @RequestBody createContactRequest: CreateContactRequest): ResponseEntity<Any> {
-    val created = contactFacade.createContact(createContactRequest)
+  fun createContact(@Valid @RequestBody createContactRequest: CreateContactRequest, @RequestAttribute user: User): ResponseEntity<Any> {
+    val created = contactFacade.createContact(createContactRequest, user)
     return ResponseEntity
       .created(URI.create("/contact/${created.createdContact.id}"))
       .body(created)
@@ -240,5 +242,6 @@ class ContactController(
       example = "123456",
     ) contactId: Long,
     @Valid @RequestBody patchContactRequest: PatchContactRequest,
-  ) = contactFacade.patch(contactId, patchContactRequest)
+    @RequestAttribute user: User,
+  ) = contactFacade.patch(contactId, patchContactRequest, user)
 }

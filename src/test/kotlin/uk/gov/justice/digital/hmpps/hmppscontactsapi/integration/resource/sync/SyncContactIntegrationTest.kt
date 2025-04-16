@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdateContactRequest
@@ -161,7 +162,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_CREATED,
-        additionalInfo = ContactInfo(contact.id, Source.NOMIS),
+        additionalInfo = ContactInfo(contact.id, Source.NOMIS, User.SYS_USER.username),
         personReference = PersonReference(dpsContactId = contact.id),
       )
     }
@@ -182,7 +183,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_CREATED,
-        additionalInfo = ContactInfo(contact.id, Source.NOMIS),
+        additionalInfo = ContactInfo(contact.id, Source.NOMIS, User.SYS_USER.username),
         personReference = PersonReference(dpsContactId = contact.id),
       )
 
@@ -221,7 +222,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contact.id, Source.NOMIS),
+        additionalInfo = ContactInfo(contact.id, Source.NOMIS, User.SYS_USER.username),
         personReference = PersonReference(dpsContactId = contact.id),
       )
     }
@@ -248,13 +249,13 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_CREATED,
-        additionalInfo = ContactInfo(contact.id, Source.NOMIS),
+        additionalInfo = ContactInfo(contact.id, Source.NOMIS, User.SYS_USER.username),
         personReference = PersonReference(dpsContactId = contact.id),
       )
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_DELETED,
-        additionalInfo = ContactInfo(contact.id, Source.NOMIS),
+        additionalInfo = ContactInfo(contact.id, Source.NOMIS, User.SYS_USER.username),
         personReference = PersonReference(dpsContactId = contact.id),
       )
     }

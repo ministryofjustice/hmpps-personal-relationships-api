@@ -10,7 +10,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.User
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRestrictionRequest
@@ -32,10 +32,9 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
       ),
     ).id
-    stubGetUserByUsername(User("created", "Created User"))
+    stubGetUserByUsername(UserDetails("created", "Created User"))
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.post()

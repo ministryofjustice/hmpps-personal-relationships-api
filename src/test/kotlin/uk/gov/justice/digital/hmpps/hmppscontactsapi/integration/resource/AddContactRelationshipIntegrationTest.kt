@@ -32,9 +32,8 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
   fun setUp() {
     contact = testAPIClient.createAContact(
       CreateContactRequest(
-        firstName = RandomStringUtils.secure().nextAlphabetic(10),
         lastName = RandomStringUtils.secure().nextAlphabetic(10),
-        createdBy = "USER",
+        firstName = RandomStringUtils.secure().nextAlphabetic(10),
       ),
     )
   }
@@ -149,7 +148,7 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_CREATED,
-      additionalInfo = PrisonerContactInfo(createdRelationship.prisonerContactId, source = Source.DPS),
+      additionalInfo = PrisonerContactInfo(createdRelationship.prisonerContactId, source = Source.DPS, "AUTH_ADM"),
       personReference = PersonReference(dpsContactId = contact.id, nomsNumber = request.relationship.prisonerNumber),
     )
   }
@@ -204,7 +203,7 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_CREATED,
-      additionalInfo = PrisonerContactInfo(createdRelationship.prisonerContactId, source = Source.DPS),
+      additionalInfo = PrisonerContactInfo(createdRelationship.prisonerContactId, source = Source.DPS, "AUTH_ADM"),
       personReference = PersonReference(dpsContactId = contact.id, nomsNumber = request.relationship.prisonerNumber),
     )
   }

@@ -243,7 +243,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         lastName = randomLastName,
         firstName = "Youngest",
         dateOfBirth = LocalDate.of(2025, 1, 1),
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContact(
@@ -251,7 +250,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         lastName = randomLastName,
         firstName = "Eldest",
         dateOfBirth = LocalDate.of(1990, 1, 1),
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContact(
@@ -259,7 +257,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         lastName = randomLastName,
         firstName = "None",
         dateOfBirth = null,
-        createdBy = "USER1",
       ),
     )
 
@@ -295,7 +292,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         firstName = "B",
         middleNames = "C",
         dateOfBirth = randomDob,
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContact(
@@ -303,7 +299,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         lastName = "AA",
         firstName = "B",
         dateOfBirth = randomDob,
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContact(
@@ -311,7 +306,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         lastName = "AB",
         firstName = "A",
         dateOfBirth = randomDob,
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContact(
@@ -319,7 +313,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         lastName = "AB",
         firstName = "B",
         dateOfBirth = randomDob,
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContact(
@@ -328,7 +321,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         firstName = "C",
         middleNames = "A",
         dateOfBirth = randomDob,
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContact(
@@ -337,7 +329,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         firstName = "C",
         middleNames = "B",
         dateOfBirth = randomDob,
-        createdBy = "USER1",
       ),
     )
 
@@ -385,7 +376,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         lastName = "AA",
         firstName = "B",
         dateOfBirth = randomDob,
-        createdBy = "USER1",
       ),
     ).id
     val highestId = testAPIClient.createAContact(
@@ -393,7 +383,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         lastName = "AA",
         firstName = "B",
         dateOfBirth = randomDob,
-        createdBy = "USER1",
       ),
     ).id
 

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressPhoneEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
@@ -63,7 +64,7 @@ class ContactService(
   }
 
   @Transactional
-  fun createContact(request: CreateContactRequest): ContactCreationResult {
+  fun createContact(request: CreateContactRequest, user: User): ContactCreationResult {
     if (request.relationship != null) {
       validateNewRelationship(request.relationship)
     }
@@ -72,16 +73,16 @@ class ContactService(
     validateOptionalCode(request.languageCode, ReferenceCodeGroup.LANGUAGE)
     validateOptionalCode(request.domesticStatusCode, ReferenceCodeGroup.DOMESTIC_STS)
 
-    val newContact = request.toModel()
+    val newContact = request.toModel(user)
     val createdContact = contactRepository.saveAndFlush(newContact)
-    val newRelationship = request.relationship?.toEntity(createdContact.id(), request.createdBy)
+    val newRelationship = request.relationship?.toEntity(createdContact.id(), user.username)
       ?.let { prisonerContactRepository.saveAndFlush(it) }
 
     createIdentityInformation(createdContact, request)
-    createAddresses(createdContact.id(), request.createdBy, request.addresses)
-    createPhoneNumbers(request, createdContact)
-    createEmailAddresses(request, createdContact)
-    createEmployments(request, createdContact)
+    createAddresses(createdContact.id(), user.username, request.addresses)
+    createPhoneNumbers(request, createdContact, user)
+    createEmailAddresses(request, createdContact, user)
+    createEmployments(request, createdContact, user)
 
     logger.info("Created new contact {}", createdContact)
     newRelationship?.let { logger.info("Created new relationship {}", newRelationship) }
@@ -94,31 +95,34 @@ class ContactService(
   private fun createPhoneNumbers(
     request: CreateContactRequest,
     createdContact: ContactEntity,
+    user: User,
   ) {
     if (request.phoneNumbers.isNotEmpty()) {
-      contactPhoneService.createMultiple(createdContact.id(), request.createdBy, request.phoneNumbers)
+      contactPhoneService.createMultiple(createdContact.id(), user.username, request.phoneNumbers)
     }
   }
 
   private fun createEmailAddresses(
     request: CreateContactRequest,
     createdContact: ContactEntity,
+    user: User,
   ) {
     if (request.emailAddresses.isNotEmpty()) {
-      contactEmailService.createMultiple(createdContact.id(), request.createdBy, request.emailAddresses)
+      contactEmailService.createMultiple(createdContact.id(), user.username, request.emailAddresses)
     }
   }
 
   private fun createEmployments(
     request: CreateContactRequest,
     createdContact: ContactEntity,
+    user: User,
   ) {
     request.employments.forEach { employment ->
       employmentService.createEmployment(
         createdContact.id(),
         employment.organisationId,
         employment.isActive,
-        request.createdBy,
+        user.username,
       )
     }
   }
