@@ -32,7 +32,7 @@ class ContactIdentityFacadeTest {
   @Test
   fun `should send event if create success`() {
     whenever(identityService.create(any(), any())).thenReturn(contactIdentityDetails)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
     val request = CreateIdentityRequest(
       identityType = "DL",
       identityValue = "DL123456789",
@@ -55,7 +55,7 @@ class ContactIdentityFacadeTest {
   fun `should not send event if create throws exception and propagate the exception`() {
     val expectedException = RuntimeException("Bang!")
     whenever(identityService.create(any(), any())).thenThrow(expectedException)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
     val request = CreateIdentityRequest(
       identityType = "DL",
       identityValue = "DL123456789",
@@ -68,7 +68,7 @@ class ContactIdentityFacadeTest {
 
     assertThat(exception).isEqualTo(exception)
     verify(identityService).create(contactId, request)
-    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -77,7 +77,7 @@ class ContactIdentityFacadeTest {
     val second = createContactIdentityDetails(id = 8888, contactId = contactId)
 
     whenever(identityService.createMultiple(any(), any())).thenReturn(listOf(first, second))
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
     val request = CreateMultipleIdentitiesRequest(
       identities = listOf(
         IdentityDocument(
@@ -115,7 +115,7 @@ class ContactIdentityFacadeTest {
   @Test
   fun `should send event if update success`() {
     whenever(identityService.update(any(), any(), any())).thenReturn(contactIdentityDetails)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
     val request = UpdateIdentityRequest(
       identityType = "PASS",
       identityValue = "P978654312",
@@ -138,7 +138,7 @@ class ContactIdentityFacadeTest {
   fun `should not send event if update throws exception and propagate the exception`() {
     val expectedException = RuntimeException("Bang!")
     whenever(identityService.update(any(), any(), any())).thenThrow(expectedException)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
     val request = UpdateIdentityRequest(
       identityType = "PASS",
       identityValue = "P978654312",
@@ -151,7 +151,7 @@ class ContactIdentityFacadeTest {
 
     assertThat(exception).isEqualTo(exception)
     verify(identityService).update(contactId, contactIdentityId, request)
-    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -162,7 +162,7 @@ class ContactIdentityFacadeTest {
 
     assertThat(result).isEqualTo(contactIdentityDetails)
     verify(identityService).get(contactId, contactIdentityId)
-    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -175,13 +175,13 @@ class ContactIdentityFacadeTest {
 
     assertThat(exception.message).isEqualTo("Contact identity with id (99) not found for contact (11)")
     verify(identityService).get(contactId, contactIdentityId)
-    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
   fun `should send event if delete success`() {
     whenever(identityService.delete(any(), any())).then {}
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     facade.delete(contactId, contactIdentityId)
 
@@ -198,7 +198,7 @@ class ContactIdentityFacadeTest {
   fun `should not send event if delete throws exception and propagate the exception`() {
     val expectedException = RuntimeException("Bang!")
     whenever(identityService.delete(any(), any())).thenThrow(expectedException)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val exception = assertThrows<RuntimeException> {
       facade.delete(contactId, contactIdentityId)
@@ -206,6 +206,6 @@ class ContactIdentityFacadeTest {
 
     assertThat(exception).isEqualTo(exception)
     verify(identityService).delete(contactId, contactIdentityId)
-    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 }

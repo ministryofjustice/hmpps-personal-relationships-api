@@ -86,7 +86,7 @@ class ContactGlobalRestrictionsFacadeTest {
 
     assertThat(result).isEqualTo(expected)
     verify(restrictionService).createContactGlobalRestriction(contactId, request)
-    verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -148,6 +148,6 @@ class ContactGlobalRestrictionsFacadeTest {
 
     assertThat(result).isEqualTo(expected)
     verify(restrictionService).updateContactGlobalRestriction(contactId, contactRestrictionId, request)
-    verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 }

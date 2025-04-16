@@ -14,6 +14,7 @@ import org.mockito.kotlin.whenever
 import org.openapitools.jackson.nullable.JsonNullable
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.PrisonerContactRestrictionsFacade
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createPrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createPrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
@@ -80,28 +81,28 @@ class PrisonerContactControllerTest {
   inner class PatchContactRelationship {
     private val prisonerContactId = 2L
     private val request = patchContactRelationshipRequest()
+    private val user = aUser("updated")
 
     @Test
     fun `should update a contact relationship successfully`() {
-      doNothing().whenever(contactFacade).patchRelationship(prisonerContactId, request)
+      doNothing().whenever(contactFacade).patchRelationship(prisonerContactId, request, user)
 
-      controller.patchContactRelationship(prisonerContactId, request)
+      controller.patchContactRelationship(prisonerContactId, request, user)
 
-      Mockito.verify(contactFacade).patchRelationship(prisonerContactId, request)
+      Mockito.verify(contactFacade).patchRelationship(prisonerContactId, request, user)
     }
 
     @Test
     fun `should propagate exceptions patching a contact relationship`() {
-      whenever(contactFacade.patchRelationship(prisonerContactId, request)).thenThrow(RuntimeException("Bang!"))
+      whenever(contactFacade.patchRelationship(prisonerContactId, request, user)).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        controller.patchContactRelationship(prisonerContactId, request)
+        controller.patchContactRelationship(prisonerContactId, request, user)
       }
     }
 
     private fun patchContactRelationshipRequest() = PatchRelationshipRequest(
       relationshipToPrisonerCode = JsonNullable.of("ENG"),
-      updatedBy = "system",
     )
   }
 
@@ -117,25 +118,26 @@ class PrisonerContactControllerTest {
       isApprovedVisitor = false,
       comments = "Foo",
     )
-    private val request = AddContactRelationshipRequest(contactId, relationship, "USER")
+    private val user = aUser("created")
+    private val request = AddContactRelationshipRequest(contactId, relationship)
 
     @Test
     fun `should create a contact relationship successfully`() {
       val created = createPrisonerContactRelationshipDetails()
-      whenever(contactFacade.addContactRelationship(request)).thenReturn(created)
+      whenever(contactFacade.addContactRelationship(request, user)).thenReturn(created)
 
-      val result = controller.addContactRelationship(request)
+      val result = controller.addContactRelationship(request, user)
 
       assertThat(result).isEqualTo(created)
-      Mockito.verify(contactFacade).addContactRelationship(request)
+      Mockito.verify(contactFacade).addContactRelationship(request, user)
     }
 
     @Test
     fun `should propagate exceptions getting a contact`() {
-      whenever(contactFacade.addContactRelationship(request)).thenThrow(RuntimeException("Bang!"))
+      whenever(contactFacade.addContactRelationship(request, user)).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        controller.addContactRelationship(request)
+        controller.addContactRelationship(request, user)
       }
     }
   }

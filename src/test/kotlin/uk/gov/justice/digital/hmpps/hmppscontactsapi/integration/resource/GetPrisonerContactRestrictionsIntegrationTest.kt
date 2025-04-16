@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.User
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
@@ -32,9 +32,9 @@ class GetPrisonerContactRestrictionsIntegrationTest : SecureAPIIntegrationTestBa
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should return all relationship and global restrictions for a contact`(role: String) {
-    stubGetUserByUsername(User("officer", "The Officer"))
-    stubGetUserByUsername(User("editor", "The Editor"))
-    stubGetUserByUsername(User("JBAKER_GEN", "James Test"))
+    stubGetUserByUsername(UserDetails("officer", "The Officer"))
+    stubGetUserByUsername(UserDetails("editor", "The Editor"))
+    stubGetUserByUsername(UserDetails("JBAKER_GEN", "James Test"))
 
     val restrictions = testAPIClient.getPrisonerContactRestrictions(10, role)
 
@@ -103,9 +103,8 @@ class GetPrisonerContactRestrictionsIntegrationTest : SecureAPIIntegrationTestBa
     stubPrisonSearchWithResponse(prisonerNumber)
     val created = testAPIClient.createAContactWithARelationship(
       CreateContactRequest(
-        firstName = "First",
         lastName = "Last",
-        createdBy = "USER1",
+        firstName = "First",
         relationship = ContactRelationship(
           prisonerNumber = prisonerNumber,
           relationshipTypeCode = "S",

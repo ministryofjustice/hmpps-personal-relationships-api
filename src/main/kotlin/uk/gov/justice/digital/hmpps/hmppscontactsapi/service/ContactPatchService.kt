@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.patch.mapToResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
@@ -19,7 +20,7 @@ class ContactPatchService(
 ) {
 
   @Transactional
-  fun patch(id: Long, request: PatchContactRequest): PatchContactResponse {
+  fun patch(id: Long, request: PatchContactRequest, user: User): PatchContactResponse {
     val contact = contactRepository.findById(id)
       .orElseThrow { EntityNotFoundException("Contact not found") }
 
@@ -30,7 +31,7 @@ class ContactPatchService(
     validateTitle(request)
     validateGender(request)
 
-    val changedContact = contact.patchRequest(request)
+    val changedContact = contact.patchRequest(request, user)
 
     val savedContact = contactRepository.saveAndFlush(changedContact)
     return savedContact.mapToResponse()
@@ -38,6 +39,7 @@ class ContactPatchService(
 
   private fun ContactEntity.patchRequest(
     request: PatchContactRequest,
+    user: User,
   ): ContactEntity {
     val changedContact = this.copy(
       staffFlag = request.isStaff.orElse(this.staffFlag),
@@ -49,7 +51,7 @@ class ContactPatchService(
       middleNames = request.middleNames.orElse(this.middleNames),
       gender = request.genderCode.orElse(this.gender),
       deceasedDate = request.deceasedDate.orElse(this.deceasedDate),
-      updatedBy = request.updatedBy,
+      updatedBy = user.username,
       updatedTime = LocalDateTime.now(),
     )
 

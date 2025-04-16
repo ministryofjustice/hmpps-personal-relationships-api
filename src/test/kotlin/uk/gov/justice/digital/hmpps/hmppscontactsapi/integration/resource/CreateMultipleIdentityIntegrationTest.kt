@@ -31,7 +31,6 @@ class CreateMultipleIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       CreateContactRequest(
         lastName = "identity",
         firstName = "has",
-        createdBy = "created",
       ),
     ).id
   }

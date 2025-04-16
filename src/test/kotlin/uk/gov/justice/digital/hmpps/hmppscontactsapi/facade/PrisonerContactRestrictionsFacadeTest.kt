@@ -90,7 +90,7 @@ class PrisonerContactRestrictionsFacadeTest {
 
     assertThat(result).isEqualTo(expected)
     verify(restrictionService).createPrisonerContactRestriction(prisonerContactId, request)
-    verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -154,6 +154,6 @@ class PrisonerContactRestrictionsFacadeTest {
 
     assertThat(result).isEqualTo(expected)
     verify(restrictionService).updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request)
-    verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 }

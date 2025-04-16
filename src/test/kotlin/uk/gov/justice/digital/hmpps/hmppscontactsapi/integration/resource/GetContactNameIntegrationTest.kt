@@ -34,7 +34,6 @@ class GetContactNameIntegrationTest : SecureAPIIntegrationTestBase() {
         lastName = "Last",
         firstName = "First",
         middleNames = "Middle Names",
-        createdBy = "USER1",
       ),
     )
 
@@ -57,7 +56,6 @@ class GetContactNameIntegrationTest : SecureAPIIntegrationTestBase() {
         lastName = "Last",
         firstName = "First",
         middleNames = null,
-        createdBy = "USER1",
       ),
     )
 

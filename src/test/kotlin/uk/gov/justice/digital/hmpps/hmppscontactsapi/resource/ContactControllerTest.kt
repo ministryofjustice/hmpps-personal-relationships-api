@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.web.PagedModel
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactEmailDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactIdentityDetails
@@ -34,6 +35,7 @@ class ContactControllerTest {
 
   private val contactFacade: ContactFacade = mock()
   private val controller = ContactController(contactFacade)
+  private val user = aUser("created")
 
   @Nested
   inner class CreateContact {
@@ -42,7 +44,6 @@ class ContactControllerTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
       )
       val createdContact = ContactDetails(
         id = 99,
@@ -61,19 +62,19 @@ class ContactControllerTest {
         domesticStatusDescription = "Single",
         genderCode = null,
         genderDescription = null,
-        createdBy = request.createdBy,
+        createdBy = "created",
         createdTime = LocalDateTime.now(),
       )
       val createdRelationship = createPrisonerContactRelationshipDetails(id = 123456)
       val expected = ContactCreationResult(createdContact, createdRelationship)
-      whenever(contactFacade.createContact(request)).thenReturn(expected)
+      whenever(contactFacade.createContact(request, user)).thenReturn(expected)
 
-      val response = controller.createContact(request)
+      val response = controller.createContact(request, user)
 
       assertThat(response.statusCode).isEqualTo(HttpStatus.CREATED)
       assertThat(response.body).isEqualTo(expected)
       assertThat(response.headers.location).isEqualTo(URI.create("/contact/99"))
-      verify(contactFacade).createContact(request)
+      verify(contactFacade).createContact(request, user)
     }
 
     @Test
@@ -81,12 +82,11 @@ class ContactControllerTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
       )
-      whenever(contactFacade.createContact(request)).thenThrow(RuntimeException("Bang!"))
+      whenever(contactFacade.createContact(request, user)).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        controller.createContact(request)
+        controller.createContact(request, user)
       }
     }
   }
@@ -183,13 +183,14 @@ class ContactControllerTest {
   inner class PatchContact {
     private val id = 123456L
     private val contact = patchContactResponse(id)
+    private val user = aUser("updated")
 
     @Test
     fun `should patch a contact successfully`() {
       val request = patchContactRequest()
-      whenever(contactFacade.patch(id, request)).thenReturn(contact)
+      whenever(contactFacade.patch(id, request, user)).thenReturn(contact)
 
-      val result = controller.patchContact(id, request)
+      val result = controller.patchContact(id, request, user)
 
       assertThat(result).isEqualTo(contact)
     }
@@ -197,9 +198,9 @@ class ContactControllerTest {
     @Test
     fun `should return 404 if contact not found`() {
       val request = patchContactRequest()
-      whenever(contactFacade.patch(id, request)).thenReturn(null)
+      whenever(contactFacade.patch(id, request, user)).thenReturn(null)
 
-      val response = controller.patchContact(id, request)
+      val response = controller.patchContact(id, request, user)
 
       assertThat(response).isEqualTo(null)
     }
@@ -207,16 +208,15 @@ class ContactControllerTest {
     @Test
     fun `should propagate exceptions getting a contact`() {
       val request = patchContactRequest()
-      whenever(contactFacade.patch(id, request)).thenThrow(RuntimeException("Bang!"))
+      whenever(contactFacade.patch(id, request, user)).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        controller.patchContact(id, request)
+        controller.patchContact(id, request, user)
       }
     }
 
     private fun patchContactRequest() = PatchContactRequest(
       languageCode = JsonNullable.of("ENG"),
-      updatedBy = "system",
     )
 
     private fun patchContactResponse(id: Long) = PatchContactResponse(

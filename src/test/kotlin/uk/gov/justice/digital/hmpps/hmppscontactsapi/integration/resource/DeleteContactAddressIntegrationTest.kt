@@ -28,7 +28,6 @@ class DeleteContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       CreateContactRequest(
         lastName = "address",
         firstName = "has",
-        createdBy = "created",
       ),
     ).id
 

@@ -166,7 +166,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_CREATED,
-        additionalInfo = PrisonerContactInfo(prisonerContact.id, Source.NOMIS),
+        additionalInfo = PrisonerContactInfo(prisonerContact.id, Source.NOMIS, "SYS"),
         personReference = PersonReference(dpsContactId = prisonerContact.contactId, nomsNumber = prisonerContact.prisonerNumber),
       )
     }
@@ -239,7 +239,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS),
+        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "SYS"),
         personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
       )
     }
@@ -276,7 +276,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .isNotFound
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_DELETED,
-        additionalInfo = PrisonerContactInfo(prisonerContact.id, Source.NOMIS),
+        additionalInfo = PrisonerContactInfo(prisonerContact.id, Source.NOMIS, "SYS"),
         personReference = PersonReference(dpsContactId = prisonerContact.contactId, nomsNumber = prisonerContact.prisonerNumber),
       )
     }

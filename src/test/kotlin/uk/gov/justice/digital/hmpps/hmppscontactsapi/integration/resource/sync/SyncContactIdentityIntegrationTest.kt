@@ -264,6 +264,5 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
   private fun aMinimalCreateContactRequest() = CreateContactRequest(
     lastName = "last",
     firstName = "first",
-    createdBy = "created",
   )
 }

@@ -10,7 +10,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.User
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
@@ -47,7 +47,6 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
           isApprovedVisitor = false,
           comments = "Some comments",
         ),
-        createdBy = "created",
       ),
 
     )
@@ -197,7 +196,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
 
   @Test
   fun `should update the restriction with minimal fields`() {
-    stubGetUserByUsername(User("updated", "Updated User"))
+    stubGetUserByUsername(UserDetails("updated", "Updated User"))
     val request = UpdatePrisonerContactRestrictionRequest(
       restrictionType = "CCTV",
       startDate = LocalDate.of(1990, 1, 1),
@@ -240,7 +239,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should update the restriction with all fields`(role: String) {
-    stubGetUserByUsername(User("updated", "Updated User"))
+    stubGetUserByUsername(UserDetails("updated", "Updated User"))
     val request = UpdatePrisonerContactRestrictionRequest(
       restrictionType = "CCTV",
       startDate = LocalDate.of(1990, 1, 1),

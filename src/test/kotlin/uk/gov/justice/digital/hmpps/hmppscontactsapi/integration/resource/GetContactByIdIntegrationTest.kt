@@ -242,7 +242,7 @@ class GetContactByIdIntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should get the contact with employments`() {
     val newContact =
-      testAPIClient.createAContact(CreateContactRequest(firstName = "First", lastName = "Bob", createdBy = "TEST"))
+      testAPIClient.createAContact(CreateContactRequest(lastName = "Bob", firstName = "First"))
     val org1 = createOrg()
     val org2 = createOrg()
 

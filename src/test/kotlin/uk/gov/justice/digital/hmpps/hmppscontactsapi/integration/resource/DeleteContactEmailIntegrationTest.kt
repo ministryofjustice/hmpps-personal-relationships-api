@@ -28,7 +28,6 @@ class DeleteContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
       CreateContactRequest(
         lastName = "email",
         firstName = "has",
-        createdBy = "created",
       ),
     ).id
     savedContactEmailId = testAPIClient.createAContactEmail(

@@ -37,7 +37,7 @@ class ContactAddressFacadeTest {
     val response = contactAddressResponse(contactAddressId, contactId, phoneNumberIds = listOf(addressSpecificPhoneId1, addressSpecificPhoneId2))
 
     whenever(addressService.create(any(), any())).thenReturn(CreateAddressResponse(response, emptySet()))
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val result = facade.create(contactId, request)
 
@@ -72,7 +72,7 @@ class ContactAddressFacadeTest {
     val request = createContactAddressRequest()
 
     whenever(addressService.create(any(), any())).thenThrow(expectedException)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val exception = assertThrows<RuntimeException> {
       facade.create(contactId, request)
@@ -81,7 +81,7 @@ class ContactAddressFacadeTest {
     assertThat(exception.message).isEqualTo(expectedException.message)
 
     verify(addressService).create(contactId, request)
-    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -90,7 +90,7 @@ class ContactAddressFacadeTest {
     val request = updateContactAddressRequest()
 
     whenever(addressService.update(any(), any(), any())).thenReturn(UpdateAddressResponse(response, emptySet()))
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val result = facade.update(
       contactId = contactId,
@@ -114,7 +114,7 @@ class ContactAddressFacadeTest {
     val request = updateContactAddressRequest()
 
     whenever(addressService.update(any(), any(), any())).thenThrow(expectedException)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val exception = assertThrows<RuntimeException> {
       facade.update(contactId, contactAddressId, request)
@@ -122,7 +122,7 @@ class ContactAddressFacadeTest {
 
     assertThat(exception).isEqualTo(exception)
     verify(addressService).update(contactId, contactAddressId, request)
-    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -131,7 +131,7 @@ class ContactAddressFacadeTest {
     val request = patchContactAddressRequest()
 
     whenever(addressService.patch(any(), any(), any())).thenReturn(UpdateAddressResponse(response, emptySet()))
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val result = facade.patch(
       contactId = contactId,
@@ -155,7 +155,7 @@ class ContactAddressFacadeTest {
     val request = patchContactAddressRequest()
 
     whenever(addressService.patch(any(), any(), any())).thenThrow(expectedException)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val exception = assertThrows<RuntimeException> {
       facade.patch(contactId, contactAddressId, request)
@@ -163,7 +163,7 @@ class ContactAddressFacadeTest {
 
     assertThat(exception).isEqualTo(exception)
     verify(addressService).patch(contactId, contactAddressId, request)
-    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -175,7 +175,7 @@ class ContactAddressFacadeTest {
 
     assertThat(result).isEqualTo(response)
     verify(addressService).get(contactId, contactAddressId)
-    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -189,14 +189,14 @@ class ContactAddressFacadeTest {
 
     assertThat(exception.message).isEqualTo(expectedException.message)
     verify(addressService).get(contactId, contactAddressId)
-    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
   fun `should send event if delete success`() {
     val response = contactAddressResponse(contactAddressId, contactId)
     whenever(addressService.delete(any(), any())).thenReturn(response)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     facade.delete(contactId, contactAddressId)
 
@@ -208,7 +208,7 @@ class ContactAddressFacadeTest {
   fun `should not send event if delete throws exception`() {
     val expectedException = RuntimeException("Bang!")
     whenever(addressService.delete(any(), any())).thenThrow(expectedException)
-    whenever(eventsService.send(any(), any(), any(), any(), any(), any())).then {}
+    whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val exception = assertThrows<RuntimeException> {
       facade.delete(contactId, contactAddressId)
@@ -216,6 +216,6 @@ class ContactAddressFacadeTest {
 
     assertThat(exception.message).isEqualTo(expectedException.message)
     verify(addressService).delete(contactId, contactAddressId)
-    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any())
+    verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 }

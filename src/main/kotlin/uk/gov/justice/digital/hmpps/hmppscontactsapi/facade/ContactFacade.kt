@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PagedModel
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
@@ -30,12 +31,13 @@ class ContactFacade(
     private val logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun createContact(request: CreateContactRequest): ContactCreationResult = contactService.createContact(request)
+  fun createContact(request: CreateContactRequest, user: User): ContactCreationResult = contactService.createContact(request, user)
     .also { creationResult ->
       outboundEventsService.send(
         outboundEvent = OutboundEvent.CONTACT_CREATED,
         identifier = creationResult.createdContact.id,
         contactId = creationResult.createdContact.id,
+        user = user,
       )
 
       creationResult.createdRelationship?.let {
@@ -44,6 +46,7 @@ class ContactFacade(
           identifier = it.prisonerContactId,
           contactId = creationResult.createdContact.id,
           noms = request.relationship?.prisonerNumber.let { request.relationship!!.prisonerNumber },
+          user = user,
         )
       }
 
@@ -52,6 +55,7 @@ class ContactFacade(
           outboundEvent = OutboundEvent.CONTACT_IDENTITY_CREATED,
           identifier = it.contactIdentityId,
           contactId = creationResult.createdContact.id,
+          user = user,
         )
       }
 
@@ -60,6 +64,7 @@ class ContactFacade(
           outboundEvent = OutboundEvent.CONTACT_ADDRESS_CREATED,
           identifier = createdAddress.contactAddressId,
           contactId = creationResult.createdContact.id,
+          user = user,
         )
         createdAddress.phoneNumbers.forEach {
           outboundEventsService.send(
@@ -67,6 +72,7 @@ class ContactFacade(
             identifier = it.contactAddressPhoneId,
             secondIdentifier = it.contactAddressId,
             contactId = creationResult.createdContact.id,
+            user = user,
           )
         }
       }
@@ -76,6 +82,7 @@ class ContactFacade(
           outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
           identifier = it.contactPhoneId,
           contactId = creationResult.createdContact.id,
+          user = user,
         )
       }
 
@@ -84,6 +91,7 @@ class ContactFacade(
           outboundEvent = OutboundEvent.CONTACT_EMAIL_CREATED,
           identifier = it.contactEmailId,
           contactId = creationResult.createdContact.id,
+          user = user,
         )
       }
 
@@ -92,28 +100,31 @@ class ContactFacade(
           outboundEvent = OutboundEvent.EMPLOYMENT_CREATED,
           identifier = it.employmentId,
           contactId = creationResult.createdContact.id,
+          user = user,
         )
       }
     }
 
-  fun addContactRelationship(request: AddContactRelationshipRequest): PrisonerContactRelationshipDetails {
-    val createdRelationship = contactService.addContactRelationship(request)
+  fun addContactRelationship(request: AddContactRelationshipRequest, user: User): PrisonerContactRelationshipDetails {
+    val createdRelationship = contactService.addContactRelationship(request, user)
     outboundEventsService.send(
       outboundEvent = OutboundEvent.PRISONER_CONTACT_CREATED,
       identifier = createdRelationship.prisonerContactId,
       contactId = createdRelationship.contactId,
       noms = request.relationship.prisonerNumber,
+      user = user,
     )
     return createdRelationship
   }
 
-  fun patch(id: Long, request: PatchContactRequest): PatchContactResponse = contactPatchService.patch(id, request)
+  fun patch(id: Long, request: PatchContactRequest, user: User): PatchContactResponse = contactPatchService.patch(id, request, user)
     .also {
       logger.info("Send patch domain event to {} {} ", OutboundEvent.CONTACT_UPDATED, id)
       outboundEventsService.send(
         outboundEvent = OutboundEvent.CONTACT_UPDATED,
         identifier = id,
         contactId = id,
+        user = user,
       )
     }
 
@@ -123,8 +134,8 @@ class ContactFacade(
 
   fun searchContacts(pageable: Pageable, request: ContactSearchRequest): PagedModel<ContactSearchResultItem> = PagedModel(contactService.searchContacts(pageable, request))
 
-  fun patchRelationship(prisonerContactId: Long, request: PatchRelationshipRequest) {
-    contactService.updateContactRelationship(prisonerContactId, request)
+  fun patchRelationship(prisonerContactId: Long, request: PatchRelationshipRequest, user: User) {
+    contactService.updateContactRelationship(prisonerContactId, request, user)
       .also {
         logger.info("Send patch relationship domain event to {} {} ", OutboundEvent.PRISONER_CONTACT_UPDATED, it.contactId)
         outboundEventsService.send(
@@ -132,6 +143,7 @@ class ContactFacade(
           identifier = it.prisonerContactId,
           contactId = it.contactId,
           noms = it.prisonerNumber,
+          user = user,
         )
       }
   }

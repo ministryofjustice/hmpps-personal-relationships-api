@@ -41,7 +41,6 @@ class MostRelevantAddressTest : PostgresIntegrationTestBase() {
           isApprovedVisitor = false,
           comments = null,
         ),
-        createdBy = "created",
       ),
     ).id
   }
