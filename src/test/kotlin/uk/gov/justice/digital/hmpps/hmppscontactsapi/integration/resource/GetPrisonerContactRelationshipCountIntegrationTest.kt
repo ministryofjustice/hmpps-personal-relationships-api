@@ -53,7 +53,6 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       CreateContactRequest(
         lastName = "Contact",
         firstName = "One",
-        createdBy = "USER1",
       ),
     )
     // Make from previous term
@@ -61,7 +60,6 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       AddContactRelationshipRequest(
         contactOne.id,
         relationship.copy(relationshipToPrisonerCode = "FRI"),
-        "USER1",
       ),
     )
     val entity = prisonerContactRepository.findById(relationshipFromPreviousTerm.prisonerContactId).getOrNull()!!
@@ -72,14 +70,12 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       AddContactRelationshipRequest(
         contactOne.id,
         relationship.copy(relationshipToPrisonerCode = "GIF"),
-        "USER1",
       ),
     )
     testAPIClient.updateRelationship(
       relationshipToMakeInactive.prisonerContactId,
       PatchRelationshipRequest(
         isRelationshipActive = JsonNullable.of(false),
-        updatedBy = "USER1",
       ),
     )
 
@@ -88,7 +84,6 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       AddContactRelationshipRequest(
         contactOne.id,
         relationship.copy(relationshipToPrisonerCode = "WIFE"),
-        "USER1",
       ),
     )
 
@@ -97,7 +92,6 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       AddContactRelationshipRequest(
         contactOne.id,
         relationship.copy(relationshipTypeCode = "O", relationshipToPrisonerCode = "DR"),
-        "USER1",
       ),
     )
 
@@ -106,7 +100,6 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       CreateContactRequest(
         lastName = "Contact",
         firstName = "Two",
-        createdBy = "USER1",
         relationship = ContactRelationship(
           prisonerNumber = prisonerNumber,
           relationshipTypeCode = "S",
@@ -123,7 +116,6 @@ class GetPrisonerContactRelationshipCountIntegrationTest : SecureAPIIntegrationT
       CreateContactRequest(
         lastName = "Contact",
         firstName = "Three",
-        createdBy = "USER1",
         relationship = ContactRelationship(
           prisonerNumber = prisonerNumber,
           relationshipTypeCode = "O",

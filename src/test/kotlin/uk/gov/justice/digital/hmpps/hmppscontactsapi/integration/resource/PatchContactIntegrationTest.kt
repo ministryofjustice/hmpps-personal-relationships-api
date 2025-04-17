@@ -4,8 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 import org.openapitools.jackson.nullable.JsonNullable
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
@@ -20,13 +18,12 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
-import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 
 class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
   private val contactId = 21L
-  private val updatedByUser = "JD000001"
+  private val updatedByUser = "AUTH_ADM"
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
@@ -37,56 +34,25 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     .uri("/contact/123456")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .bodyValue(PatchContactRequest(updatedBy = updatedByUser))
-
-  @Nested
-  inner class ErrorScenarios {
-
-    @Test
-    fun ` should return bad request when request is empty`() {
-      webTestClient.patch()
-        .uri("/contact/$contactId")
-        .accept(MediaType.APPLICATION_JSON)
-        .contentType(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
-        .bodyValue(
-          """{
-                  }""",
-        )
-        .exchange()
-        .expectStatus()
-        .isBadRequest
-        .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(ErrorResponse::class.java)
-        .returnResult().responseBody!!
-    }
-
-    private fun aPatchContactRequest() = PatchContactRequest(
-      languageCode = JsonNullable.of("BEN"),
-      updatedBy = updatedByUser,
-    )
-  }
+    .bodyValue(PatchContactRequest())
 
   @Nested
   inner class LanguageCode {
 
-    @ParameterizedTest
-    @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
-    fun `should not patch the language code when not provided`(role: String) {
+    @Test
+    fun `should not patch the language code when not provided`() {
       resetLanguageCode()
 
-      val req = PatchContactRequest(
-        updatedBy = updatedByUser,
-      )
+      val req = PatchContactRequest()
 
-      val res = testAPIClient.patchAContact(req, "/contact/$contactId", role)
+      val res = testAPIClient.patchAContact(req, "/contact/$contactId")
 
       assertThat(res.languageCode).isEqualTo("ENG")
       assertThat(res.updatedBy).isEqualTo(updatedByUser)
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -97,7 +63,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       val req = PatchContactRequest(
         languageCode = JsonNullable.of(null),
-        updatedBy = updatedByUser,
       )
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactId")
@@ -107,7 +72,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -116,7 +81,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     fun `should not patch the language code with an invalid value`() {
       val req = PatchContactRequest(
         languageCode = JsonNullable.of("FOO"),
-        updatedBy = updatedByUser,
       )
 
       val uri = UriComponentsBuilder.fromPath("/contact/$contactId")
@@ -125,7 +89,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       val errors = testAPIClient.getBadResponseErrorsWithPatch(req, uri)
       assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported language (FOO)")
 
-      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS))
+      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS, "AUTH_ADM"))
     }
 
     @Test
@@ -134,7 +98,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       val req = PatchContactRequest(
         languageCode = JsonNullable.of("FRE-FRA"),
-        updatedBy = updatedByUser,
       )
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactId")
@@ -144,7 +107,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -152,7 +115,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     private fun resetLanguageCode() {
       val req = PatchContactRequest(
         languageCode = JsonNullable.of("ENG"),
-        updatedBy = updatedByUser,
       )
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactId")
@@ -173,7 +135,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       val req = PatchContactRequest(
         interpreterRequired = JsonNullable.of(true),
-        updatedBy = updatedByUser,
       )
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactId")
@@ -183,7 +144,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -192,9 +153,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     fun `should not patch the interpreter required when not provided`() {
       resetInterpreterRequired(true)
 
-      val req = PatchContactRequest(
-        updatedBy = updatedByUser,
-      )
+      val req = PatchContactRequest()
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactId")
 
@@ -203,7 +162,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -214,7 +173,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       val req = PatchContactRequest(
         interpreterRequired = JsonNullable.of(null),
-        updatedBy = updatedByUser,
       )
       val uri = UriComponentsBuilder.fromPath("/contact/$contactId")
         .build()
@@ -224,13 +182,12 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported interpreter required type null.")
 
-      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS))
+      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS, "AUTH_ADM"))
     }
 
     private fun resetInterpreterRequired(resetValue: Boolean) {
       val req = PatchContactRequest(
         interpreterRequired = JsonNullable.of(resetValue),
-        updatedBy = updatedByUser,
       )
       val res =
         testAPIClient.patchAContact(req, "/contact/$contactId")
@@ -249,9 +206,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     fun `should not patch the domestic status code when not provided`() {
       resetDomesticStatus()
 
-      val req = PatchContactRequest(
-        updatedBy = updatedByUser,
-      )
+      val req = PatchContactRequest()
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactId")
 
@@ -260,7 +215,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -271,7 +226,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       val req = PatchContactRequest(
         domesticStatusCode = JsonNullable.of(null),
-        updatedBy = updatedByUser,
       )
       val res = testAPIClient.patchAContact(req, "/contact/$contactId")
 
@@ -280,7 +234,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -291,7 +245,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       val req = PatchContactRequest(
         domesticStatusCode = JsonNullable.of("M"),
-        updatedBy = updatedByUser,
       )
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactId")
@@ -301,7 +254,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -310,7 +263,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     fun `should not patch the domestic status code with an invalid value`() {
       val req = PatchContactRequest(
         domesticStatusCode = JsonNullable.of("FOO"),
-        updatedBy = updatedByUser,
       )
 
       val uri = UriComponentsBuilder.fromPath("/contact/$contactId")
@@ -319,13 +271,12 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       val errors = testAPIClient.getBadResponseErrorsWithPatch(req, uri)
       assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported domestic status (FOO)")
 
-      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS))
+      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS, "AUTH_ADM"))
     }
 
     private fun resetDomesticStatus() {
       val req = PatchContactRequest(
         domesticStatusCode = JsonNullable.of("P"),
-        updatedBy = updatedByUser,
       )
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactId")
@@ -346,7 +297,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       val req = PatchContactRequest(
         isStaff = JsonNullable.of(true),
-        updatedBy = updatedByUser,
       )
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactId")
@@ -356,7 +306,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -365,9 +315,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     fun `should not patch the staff flag when not provided`() {
       resetStaffFlag(true)
 
-      val req = PatchContactRequest(
-        updatedBy = updatedByUser,
-      )
+      val req = PatchContactRequest()
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactId")
 
@@ -376,7 +324,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -387,7 +335,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       val req = PatchContactRequest(
         isStaff = JsonNullable.of(null),
-        updatedBy = updatedByUser,
       )
       val uri = UriComponentsBuilder.fromPath("/contact/$contactId")
         .build()
@@ -397,13 +344,12 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported staff flag value null.")
 
-      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS))
+      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS, "AUTH_ADM"))
     }
 
     private fun resetStaffFlag(resetValue: Boolean) {
       val req = PatchContactRequest(
         isStaff = JsonNullable.of(resetValue),
-        updatedBy = updatedByUser,
       )
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactId")
@@ -425,7 +371,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
           lastName = "Date of birth",
           firstName = "Has",
           dateOfBirth = LocalDate.of(1982, 6, 15),
-          createdBy = "created",
         ),
 
       ).id
@@ -433,9 +378,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     @Test
     fun `should not patch the date of birth when not provided`() {
-      val req = PatchContactRequest(
-        updatedBy = updatedByUser,
-      )
+      val req = PatchContactRequest()
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactIdThatHasDOB")
 
@@ -444,7 +387,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactIdThatHasDOB, Source.DPS),
+        additionalInfo = ContactInfo(contactIdThatHasDOB, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactIdThatHasDOB),
       )
     }
@@ -453,7 +396,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     fun `should successfully patch the date of birth with null value`() {
       val req = PatchContactRequest(
         dateOfBirth = JsonNullable.of(null),
-        updatedBy = updatedByUser,
       )
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactIdThatHasDOB")
@@ -463,7 +405,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactIdThatHasDOB, Source.DPS),
+        additionalInfo = ContactInfo(contactIdThatHasDOB, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactIdThatHasDOB),
       )
     }
@@ -472,7 +414,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     fun `should successfully patch the date of birth with a value`() {
       val req = PatchContactRequest(
         dateOfBirth = JsonNullable.of(LocalDate.of(2000, 12, 25)),
-        updatedBy = updatedByUser,
       )
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactIdThatHasDOB")
@@ -482,7 +423,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactIdThatHasDOB, Source.DPS),
+        additionalInfo = ContactInfo(contactIdThatHasDOB, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactIdThatHasDOB),
       )
     }
@@ -496,11 +437,10 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     fun createContactWithDob() {
       contactThatHasAllNameFields = testAPIClient.createAContact(
         CreateContactRequest(
+          titleCode = "MR",
           lastName = "Last",
           firstName = "First",
           middleNames = "Middle Names",
-          titleCode = "MR",
-          createdBy = "created",
         ),
 
       ).id
@@ -508,9 +448,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     @Test
     fun `should not patch names when not provided`() {
-      val req = PatchContactRequest(
-        updatedBy = updatedByUser,
-      )
+      val req = PatchContactRequest()
       val res = testAPIClient.patchAContact(req, "/contact/$contactThatHasAllNameFields")
 
       assertThat(res.firstName).isEqualTo("First")
@@ -521,7 +459,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS),
+        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactThatHasAllNameFields),
       )
     }
@@ -553,7 +491,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS),
+        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactThatHasAllNameFields),
       )
     }
@@ -563,7 +501,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       val req = PatchContactRequest(
         titleCode = JsonNullable.of(null),
         middleNames = JsonNullable.of(null),
-        updatedBy = updatedByUser,
       )
       val res = testAPIClient.patchAContact(req, "/contact/$contactThatHasAllNameFields")
 
@@ -575,7 +512,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS),
+        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactThatHasAllNameFields),
       )
     }
@@ -585,7 +522,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       val req = PatchContactRequest(
         titleCode = JsonNullable.of("MRS"),
         middleNames = JsonNullable.of("Updated Middle"),
-        updatedBy = updatedByUser,
       )
       val res = testAPIClient.patchAContact(req, "/contact/$contactThatHasAllNameFields")
 
@@ -597,7 +533,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS),
+        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactThatHasAllNameFields),
       )
     }
@@ -606,7 +542,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     fun `should not be able to patch to an invalid title value`() {
       val req = PatchContactRequest(
         titleCode = JsonNullable.of("FOO"),
-        updatedBy = updatedByUser,
       )
 
       val uri = UriComponentsBuilder.fromPath("/contact/$contactThatHasAllNameFields")
@@ -617,7 +552,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasNoEvents(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS),
+        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "AUTH_ADM"),
       )
     }
 
@@ -625,7 +560,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     fun `should not be able to patch middle name when it's too long`() {
       val req = PatchContactRequest(
         middleNames = JsonNullable.of("".padEnd(36, 'X')),
-        updatedBy = updatedByUser,
       )
 
       val uri = UriComponentsBuilder.fromPath("/contact/$contactThatHasAllNameFields")
@@ -636,7 +570,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasNoEvents(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS),
+        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "AUTH_ADM"),
       )
     }
   }
@@ -651,7 +585,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         CreateContactRequest(
           lastName = "Last",
           firstName = "First",
-          createdBy = "created",
         ),
 
       ).id
@@ -661,9 +594,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     @Test
     fun `should not patch gender if undefined`() {
-      val req = PatchContactRequest(
-        updatedBy = updatedByUser,
-      )
+      val req = PatchContactRequest()
       val res = testAPIClient.patchAContact(req, "/contact/$contactWithAGender")
 
       assertThat(res.genderCode).isEqualTo("NS")
@@ -671,7 +602,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactWithAGender, Source.DPS),
+        additionalInfo = ContactInfo(contactWithAGender, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactWithAGender),
       )
     }
@@ -680,7 +611,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     fun `should successfully patch gender with null values`() {
       val req = PatchContactRequest(
         genderCode = JsonNullable.of(null),
-        updatedBy = updatedByUser,
       )
       val res = testAPIClient.patchAContact(req, "/contact/$contactWithAGender")
 
@@ -689,7 +619,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactWithAGender, Source.DPS),
+        additionalInfo = ContactInfo(contactWithAGender, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactWithAGender),
       )
     }
@@ -698,7 +628,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     fun `should successfully patch gender with a value`() {
       val req = PatchContactRequest(
         genderCode = JsonNullable.of("M"),
-        updatedBy = updatedByUser,
       )
       val res = testAPIClient.patchAContact(req, "/contact/$contactWithAGender")
 
@@ -707,7 +636,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactWithAGender, Source.DPS),
+        additionalInfo = ContactInfo(contactWithAGender, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactWithAGender),
       )
     }
@@ -716,7 +645,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     fun `should not be able to patch to an invalid gender value`() {
       val req = PatchContactRequest(
         genderCode = JsonNullable.of("FOO"),
-        updatedBy = updatedByUser,
       )
 
       val uri = UriComponentsBuilder.fromPath("/contact/$contactWithAGender")
@@ -725,7 +653,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       val errors = testAPIClient.getBadResponseErrorsWithPatch(req, uri)
       assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported gender (FOO)")
 
-      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactWithAGender, Source.DPS))
+      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactWithAGender, Source.DPS, "AUTH_ADM"))
     }
   }
 
@@ -740,13 +668,11 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         CreateContactRequest(
           lastName = "Date of death",
           firstName = "Has",
-          createdBy = "created",
         ),
       ).id
       testAPIClient.patchAContact(
         PatchContactRequest(
           deceasedDate = JsonNullable.of(originalDeceasedDate),
-          updatedBy = "INITIAL",
         ),
         "/contact/$contactWithDeceasedDate",
       )
@@ -755,7 +681,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     @Test
     fun `should not patch the deceased date when not provided`() {
       val res = testAPIClient.patchAContact(
-        PatchContactRequest(updatedBy = updatedByUser),
+        PatchContactRequest(),
         "/contact/$contactWithDeceasedDate",
       )
 
@@ -764,7 +690,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactWithDeceasedDate, Source.DPS),
+        additionalInfo = ContactInfo(contactWithDeceasedDate, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactWithDeceasedDate),
       )
     }
@@ -774,7 +700,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       val res = testAPIClient.patchAContact(
         PatchContactRequest(
           deceasedDate = JsonNullable.of(null),
-          updatedBy = updatedByUser,
         ),
         "/contact/$contactWithDeceasedDate",
       )
@@ -784,7 +709,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactWithDeceasedDate, Source.DPS),
+        additionalInfo = ContactInfo(contactWithDeceasedDate, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactWithDeceasedDate),
       )
     }
@@ -793,7 +718,6 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     fun `should successfully patch the deceased date with a value`() {
       val req = PatchContactRequest(
         deceasedDate = JsonNullable.of(LocalDate.of(2000, 12, 25)),
-        updatedBy = updatedByUser,
       )
 
       val res = testAPIClient.patchAContact(req, "/contact/$contactWithDeceasedDate")
@@ -803,7 +727,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactWithDeceasedDate, Source.DPS),
+        additionalInfo = ContactInfo(contactWithDeceasedDate, Source.DPS, "AUTH_ADM"),
         personReference = PersonReference(dpsContactId = contactWithDeceasedDate),
       )
     }

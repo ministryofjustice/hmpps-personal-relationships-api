@@ -32,7 +32,6 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       CreateContactRequest(
         lastName = "identity",
         firstName = "has",
-        createdBy = "created",
       ),
 
     ).id

@@ -274,7 +274,6 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
       firstName = "first",
       middleNames = "middle",
       dateOfBirth = LocalDate.of(1982, 6, 15),
-      createdBy = "created",
     )
 
     val response = testAPIClient.createAContact(request)

@@ -88,7 +88,6 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
     val request = CreateContactRequest(
       lastName = RandomStringUtils.secure().nextAlphabetic(35),
       firstName = "a new guy",
-      createdBy = "created",
       relationship = ContactRelationship(
         prisonerNumber = prisonerNumber,
         relationshipTypeCode = "S",
@@ -134,7 +133,6 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
     val request = CreateContactRequest(
       lastName = RandomStringUtils.secure().nextAlphabetic(35),
       firstName = "a new guy",
-      createdBy = "created",
       relationship = requestedRelationship,
     )
 
@@ -176,7 +174,6 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
     val request = CreateContactRequest(
       lastName = RandomStringUtils.secure().nextAlphabetic(35),
       firstName = "a new guy",
-      createdBy = "created",
       relationship = requestedRelationship,
     )
 
@@ -187,13 +184,13 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(created.createdContact.id, Source.DPS),
+      additionalInfo = ContactInfo(created.createdContact.id, Source.DPS, "AUTH_ADM"),
       personReference = PersonReference(dpsContactId = created.createdContact.id),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_CREATED,
-      additionalInfo = PrisonerContactInfo(created.createdRelationship!!.prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(created.createdRelationship!!.prisonerContactId, Source.DPS, "AUTH_ADM"),
       personReference = PersonReference(dpsContactId = created.createdContact.id, nomsNumber = request.relationship!!.prisonerNumber),
     )
   }
@@ -215,7 +212,6 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
     val request = CreateContactRequest(
       lastName = RandomStringUtils.secure().nextAlphabetic(35),
       firstName = "a new guy",
-      createdBy = "created",
       relationship = requestedRelationship,
     )
 
@@ -226,13 +222,13 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(created.createdContact.id, Source.DPS),
+      additionalInfo = ContactInfo(created.createdContact.id, Source.DPS, "AUTH_ADM"),
       personReference = PersonReference(dpsContactId = created.createdContact.id),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_CREATED,
-      additionalInfo = PrisonerContactInfo(created.createdRelationship!!.prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(created.createdRelationship!!.prisonerContactId, Source.DPS, "AUTH_ADM"),
       personReference = PersonReference(dpsContactId = created.createdContact.id, nomsNumber = request.relationship!!.prisonerNumber),
     )
   }
@@ -269,7 +265,6 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
           CreateContactRequest(
             lastName = RandomStringUtils.secure().nextAlphabetic(35),
             firstName = "a new guy",
-            createdBy = "created",
             relationship = relationship.copy(comments = "".padStart(241, 'X')),
           ),
         ),

@@ -11,7 +11,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.User
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactRestrictionEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
@@ -96,8 +96,8 @@ class RestrictionsServiceTest {
     fun `get global restrictions successfully`() {
       val now = now()
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
-      whenever(manageUsersService.getUserByUsername("created")).thenReturn(User("created", "Created User"))
-      whenever(manageUsersService.getUserByUsername("updated")).thenReturn(User("updated", "Updated User"))
+      whenever(manageUsersService.getUserByUsername("created")).thenReturn(UserDetails("created", "Created User"))
+      whenever(manageUsersService.getUserByUsername("updated")).thenReturn(UserDetails("updated", "Updated User"))
       whenever(contactRestrictionDetailsRepository.findAllByContactId(contactId)).thenReturn(
         listOf(
           createContactRestrictionDetailsEntity(
@@ -192,7 +192,7 @@ class RestrictionsServiceTest {
     fun `only lookup once if same username is required multiple times`() {
       val now = now()
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
-      whenever(manageUsersService.getUserByUsername("created")).thenReturn(User("created", "Created User"))
+      whenever(manageUsersService.getUserByUsername("created")).thenReturn(UserDetails("created", "Created User"))
       whenever(contactRestrictionDetailsRepository.findAllByContactId(contactId)).thenReturn(
         listOf(
           createContactRestrictionDetailsEntity(
@@ -255,19 +255,19 @@ class RestrictionsServiceTest {
       whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(aPrisonerContact))
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
       whenever(manageUsersService.getUserByUsername("created_global")).thenReturn(
-        User(
+        UserDetails(
           "created_global",
           "Created User Global",
         ),
       )
       whenever(manageUsersService.getUserByUsername("updated_global")).thenReturn(
-        User(
+        UserDetails(
           "updated_global",
           "Updated User Global",
         ),
       )
-      whenever(manageUsersService.getUserByUsername("created_pc")).thenReturn(User("created_pc", "Created PC"))
-      whenever(manageUsersService.getUserByUsername("updated_pc")).thenReturn(User("updated_pc", "Updated PC"))
+      whenever(manageUsersService.getUserByUsername("created_pc")).thenReturn(UserDetails("created_pc", "Created PC"))
+      whenever(manageUsersService.getUserByUsername("updated_pc")).thenReturn(UserDetails("updated_pc", "Updated PC"))
       whenever(contactRestrictionDetailsRepository.findAllByContactId(contactId)).thenReturn(
         listOf(
           createContactRestrictionDetailsEntity(
@@ -358,7 +358,7 @@ class RestrictionsServiceTest {
       val now = now()
       whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(aPrisonerContact))
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
-      whenever(manageUsersService.getUserByUsername("created_pc")).thenReturn(User("created_pc", "Created PC"))
+      whenever(manageUsersService.getUserByUsername("created_pc")).thenReturn(UserDetails("created_pc", "Created PC"))
       whenever(contactRestrictionDetailsRepository.findAllByContactId(contactId)).thenReturn(emptyList())
       whenever(prisonerContactRestrictionDetailsRepository.findAllByPrisonerContactId(prisonerContactId)).thenReturn(
         listOf(
@@ -474,7 +474,7 @@ class RestrictionsServiceTest {
     @Test
     fun `create global restriction`() {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
-      whenever(manageUsersService.getUserByUsername("created")).thenReturn(User("created", "Created User"))
+      whenever(manageUsersService.getUserByUsername("created")).thenReturn(UserDetails("created", "Created User"))
       whenever(
         referenceCodeService.validateReferenceCode(
           ReferenceCodeGroup.RESTRICTION,
@@ -615,7 +615,7 @@ class RestrictionsServiceTest {
     fun `updated global restriction`() {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
       whenever(contactRestrictionRepository.findById(contactRestrictionId)).thenReturn(Optional.of(existingEntity))
-      whenever(manageUsersService.getUserByUsername("updated")).thenReturn(User("updated", "Updated User"))
+      whenever(manageUsersService.getUserByUsername("updated")).thenReturn(UserDetails("updated", "Updated User"))
       whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.RESTRICTION, "CCTV", allowInactive = true)).thenReturn(
         ReferenceCode(
           referenceCodeId = 0,
@@ -703,7 +703,7 @@ class RestrictionsServiceTest {
 
     @Test
     fun `create prisoner contact restriction`() {
-      whenever(manageUsersService.getUserByUsername("created")).thenReturn(User("created", "Created User"))
+      whenever(manageUsersService.getUserByUsername("created")).thenReturn(UserDetails("created", "Created User"))
       whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(aPrisonerContact))
       whenever(
         referenceCodeService.validateReferenceCode(
@@ -830,7 +830,7 @@ class RestrictionsServiceTest {
 
     @Test
     fun `updated prisoner contact restriction`() {
-      whenever(manageUsersService.getUserByUsername("updated")).thenReturn(User("updated", "Updated User"))
+      whenever(manageUsersService.getUserByUsername("updated")).thenReturn(UserDetails("updated", "Updated User"))
       whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(aPrisonerContact))
       whenever(prisonerContactRestrictionRepository.findById(prisonerContactRestrictionId)).thenReturn(
         Optional.of(

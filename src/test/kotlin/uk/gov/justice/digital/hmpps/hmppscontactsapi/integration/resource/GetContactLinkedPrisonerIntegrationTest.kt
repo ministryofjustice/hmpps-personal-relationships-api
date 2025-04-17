@@ -42,7 +42,6 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
       CreateContactRequest(
         lastName = "Contact",
         firstName = "Linked",
-        createdBy = "created",
       ),
     ).id
   }
@@ -173,7 +172,6 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
         isEmergencyContact = true,
         isApprovedVisitor = false,
       ),
-      createdBy = "created",
     ),
   )
 }

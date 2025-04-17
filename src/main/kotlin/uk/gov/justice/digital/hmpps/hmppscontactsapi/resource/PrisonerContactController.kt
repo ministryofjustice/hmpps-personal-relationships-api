@@ -17,10 +17,12 @@ import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestAttribute
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.PrisonerContactRestrictionsFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
@@ -112,8 +114,9 @@ class PrisonerContactController(
       example = "123456",
     ) prisonerContactId: Long,
     @Valid @RequestBody relationshipRequest: PatchRelationshipRequest,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    contactFacade.patchRelationship(prisonerContactId, relationshipRequest)
+    contactFacade.patchRelationship(prisonerContactId, relationshipRequest, user)
     return ResponseEntity.noContent().build()
   }
 
@@ -151,7 +154,8 @@ class PrisonerContactController(
   @ResponseStatus(HttpStatus.CREATED)
   fun addContactRelationship(
     @Valid @RequestBody relationshipRequest: AddContactRelationshipRequest,
-  ): PrisonerContactRelationshipDetails = contactFacade.addContactRelationship(relationshipRequest)
+    @RequestAttribute user: User,
+  ): PrisonerContactRelationshipDetails = contactFacade.addContactRelationship(relationshipRequest, user)
 
   @Operation(
     summary = "Get the prisoner contact restrictions",

@@ -173,7 +173,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           isEmergencyContact = false,
           isApprovedVisitor = false,
         ),
-        createdBy = "USER1",
       ),
     )
     val prisonerContactIdToDeactivate = testAPIClient.createAContactWithARelationship(
@@ -188,12 +187,11 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           isEmergencyContact = false,
           isApprovedVisitor = false,
         ),
-        createdBy = "USER1",
       ),
     ).createdRelationship!!.prisonerContactId
     testAPIClient.updateRelationship(
       prisonerContactIdToDeactivate,
-      PatchRelationshipRequest(isRelationshipActive = JsonNullable.of(false), updatedBy = "USER1"),
+      PatchRelationshipRequest(isRelationshipActive = JsonNullable.of(false)),
     )
 
     val withActiveOnly = getForUrl("/prisoner/$prisonerNumber/contact?active=true")
@@ -226,7 +224,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           isEmergencyContact = false,
           isApprovedVisitor = false,
         ),
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContactWithARelationship(
@@ -241,7 +238,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           isEmergencyContact = false,
           isApprovedVisitor = false,
         ),
-        createdBy = "USER1",
       ),
     )
 
@@ -275,7 +271,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           isEmergencyContact = false,
           isApprovedVisitor = false,
         ),
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContactWithARelationship(
@@ -290,7 +285,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           isEmergencyContact = true,
           isApprovedVisitor = false,
         ),
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContactWithARelationship(
@@ -305,7 +299,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           isEmergencyContact = true,
           isApprovedVisitor = false,
         ),
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContactWithARelationship(
@@ -320,7 +313,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           isEmergencyContact = false,
           isApprovedVisitor = false,
         ),
-        createdBy = "USER1",
       ),
     )
 
@@ -395,7 +387,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         firstName = "Youngest",
         dateOfBirth = LocalDate.of(2025, 1, 1),
         relationship = relationship,
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContact(
@@ -404,7 +395,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         firstName = "Eldest",
         dateOfBirth = LocalDate.of(1990, 1, 1),
         relationship = relationship,
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContact(
@@ -413,7 +403,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         firstName = "None",
         dateOfBirth = null,
         relationship = relationship,
-        createdBy = "USER1",
       ),
     )
 
@@ -449,7 +438,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         middleNames = "C",
         dateOfBirth = randomDob,
         relationship = relationship,
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContact(
@@ -458,7 +446,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         firstName = "B",
         dateOfBirth = randomDob,
         relationship = relationship,
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContact(
@@ -467,7 +454,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         firstName = "A",
         dateOfBirth = randomDob,
         relationship = relationship,
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContact(
@@ -476,7 +462,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         firstName = "B",
         dateOfBirth = randomDob,
         relationship = relationship,
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContact(
@@ -486,7 +471,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         middleNames = "A",
         dateOfBirth = randomDob,
         relationship = relationship,
-        createdBy = "USER1",
       ),
     )
     testAPIClient.createAContact(
@@ -496,7 +480,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         middleNames = "B",
         dateOfBirth = randomDob,
         relationship = relationship,
-        createdBy = "USER1",
       ),
     )
 
@@ -539,7 +522,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         firstName = "B",
         dateOfBirth = randomDob,
         relationship = relationship,
-        createdBy = "USER1",
       ),
     ).id
     val highestId = testAPIClient.createAContact(
@@ -548,7 +530,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         firstName = "B",
         dateOfBirth = randomDob,
         relationship = relationship,
-        createdBy = "USER1",
       ),
     ).id
 
@@ -585,21 +566,18 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       CreateContactRequest(
         lastName = "Has Global Restriction",
         firstName = "Contact",
-        createdBy = "USER1",
       ),
     )
     val relationshipToPrisonerOne = testAPIClient.addAContactRelationship(
       AddContactRelationshipRequest(
         contact.id,
         relationship.copy(prisonerNumber = prisonerOneNumber),
-        "USER1",
       ),
     )
     val relationshipToPrisonerTwo = testAPIClient.addAContactRelationship(
       AddContactRelationshipRequest(
         contact.id,
         relationship.copy(prisonerNumber = prisonerTwoNumber),
-        "USER1",
       ),
     )
 
@@ -674,14 +652,12 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       CreateContactRequest(
         lastName = "Has Global Restriction",
         firstName = "Contact",
-        createdBy = "USER1",
       ),
     )
     val relationshipToPrisonerOne = testAPIClient.addAContactRelationship(
       AddContactRelationshipRequest(
         contact.id,
         relationship.copy(prisonerNumber = prisonerOneNumber),
-        "USER1",
       ),
     )
 

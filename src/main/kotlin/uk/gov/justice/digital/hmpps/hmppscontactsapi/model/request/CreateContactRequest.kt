@@ -86,7 +86,11 @@ data class CreateContactRequest(
   @field:Size(max = 12, message = "genderCode must be <= 12 characters")
   val genderCode: String? = null,
 
-  @Schema(description = "A description of the relationship if the contact should be linked to a prisoner", nullable = true, exampleClasses = [ContactRelationship::class])
+  @Schema(
+    description = "A description of the relationship if the contact should be linked to a prisoner",
+    nullable = true,
+    exampleClasses = [ContactRelationship::class],
+  )
   @field:Valid
   val relationship: ContactRelationship? = null,
 
@@ -109,8 +113,4 @@ data class CreateContactRequest(
   @Schema(description = "Employments", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @field:Valid
   val employments: List<Employment> = emptyList(),
-
-  @Schema(description = "The id of the user creating the contact", example = "JD000001", maxLength = 100)
-  @field:Size(max = 100, message = "createdBy must be <= 100 characters")
-  val createdBy: String,
 )

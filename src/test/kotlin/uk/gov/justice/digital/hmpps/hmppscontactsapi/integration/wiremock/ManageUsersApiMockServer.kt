@@ -5,11 +5,11 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.User
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 
 class ManageUsersApiMockServer : MockServer(8093) {
 
-  fun stubGetUser(user: User) {
+  fun stubGetUser(user: UserDetails) {
     stubFor(
       WireMock.get("/users/${user.username}")
         .willReturn(

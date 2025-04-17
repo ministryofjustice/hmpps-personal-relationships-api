@@ -24,7 +24,6 @@ class GetEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
       CreateContactRequest(
         lastName = "employment",
         firstName = "has",
-        createdBy = "created",
       ),
     ).id
     stubOrganisationSummary(999)

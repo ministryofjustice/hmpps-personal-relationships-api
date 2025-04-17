@@ -14,11 +14,11 @@ class ManageUsersApiClient(private val manageUsersApiWebClient: WebClient) {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun getUserByUsername(username: String): User? = manageUsersApiWebClient
+  fun getUserByUsername(username: String): UserDetails? = manageUsersApiWebClient
     .get()
     .uri("/users/{username}", username)
     .retrieve()
-    .bodyToMono(User::class.java)
+    .bodyToMono(UserDetails::class.java)
     .onErrorResume(WebClientResponseException.NotFound::class.java) {
       log.debug("Couldn't find user with username: {}", username)
       Mono.empty()

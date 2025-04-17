@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.FeatureSwitches
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 
 @Service
 class OutboundEventsService(
@@ -21,6 +22,7 @@ class OutboundEventsService(
     noms: String = "",
     source: Source = Source.DPS,
     secondIdentifier: Long? = 0,
+    user: User = User.SYS_USER,
   ) {
     if (featureSwitches.isEnabled(outboundEvent)) {
       log.info("Sending outbound event $outboundEvent with source $source for identifier $identifier (contactId $contactId, noms $noms, secondIdentifier ${secondIdentifier ?: "N/A"})")
@@ -32,7 +34,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactInfo(identifier, source),
+            ContactInfo(identifier, source, user.username),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }
@@ -109,7 +111,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            PrisonerContactInfo(identifier, source),
+            PrisonerContactInfo(identifier, source, user.username),
             contactId?.let { PersonReference(dpsContactId = it, nomsNumber = noms) },
           )
         }
