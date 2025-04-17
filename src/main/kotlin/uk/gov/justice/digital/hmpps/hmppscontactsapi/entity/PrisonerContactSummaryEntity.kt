@@ -17,6 +17,8 @@ data class PrisonerContactSummaryEntity(
 
   val title: String?,
 
+  val titleDescription: String?,
+
   val firstName: String,
 
   val middleNames: String?,
@@ -50,6 +52,8 @@ data class PrisonerContactSummaryEntity(
   val countryCode: String?,
 
   val countryDescription: String?,
+
+  val noFixedAddress: Boolean?,
 
   val primaryAddress: Boolean?,
 

@@ -16,6 +16,24 @@ data class PrisonerContactSummary(
   @Schema(description = "Prisoner number (NOMS ID)", example = "A1234BC")
   val prisonerNumber: String,
 
+  @Schema(
+    description =
+    """
+      The title code for the contact.
+      This is a coded value (from the group code TITLE in reference data).
+      """,
+    example = "MR",
+    nullable = true,
+  )
+  val titleCode: String? = null,
+
+  @Schema(
+    description = "The description of the title code, if present",
+    example = "Mr",
+    nullable = true,
+  )
+  val titleDescription: String? = null,
+
   @Schema(description = "The last name of the contact", example = "Doe")
   val lastName: String,
 
@@ -83,6 +101,9 @@ data class PrisonerContactSummary(
 
   @Schema(description = "The description of country code", example = "England")
   val countryDescription: String?,
+
+  @Schema(description = "Flag to indicate whether this address indicates no fixed address", example = "false")
+  val noFixedAddress: Boolean?,
 
   @Schema(description = "If true this address should be considered as the primary residential address", nullable = true, example = "true")
   val primaryAddress: Boolean?,

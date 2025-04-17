@@ -71,6 +71,8 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(contacts.content).hasSize(3)
 
     val contact = contacts.content.first()
+    assertThat(contact.titleCode).isEqualTo("MR")
+    assertThat(contact.titleDescription).isEqualTo("Mr")
     assertThat(contact.lastName).isEqualTo("Last")
     assertThat(contact.cityCode).isEqualTo("25343")
     assertThat(contact.cityDescription).isEqualTo("Sheffield")
@@ -78,6 +80,7 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(contact.countyDescription).isEqualTo("South Yorkshire")
     assertThat(contact.countryCode).isEqualTo("ENG")
     assertThat(contact.countryDescription).isEqualTo("England")
+    assertThat(contact.noFixedAddress).isFalse()
 
     val minimal = contacts.content.find { it.firstName == "Minimal" } ?: fail("Couldn't find 'Minimal' contact")
     assertThat(minimal.firstName).isEqualTo("Minimal")
@@ -87,6 +90,7 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(minimal.countyDescription).isNull()
     assertThat(minimal.countryCode).isNull()
     assertThat(minimal.countryDescription).isNull()
+    assertThat(minimal.noFixedAddress).isTrue()
   }
 
   @Test

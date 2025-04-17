@@ -44,6 +44,8 @@ fun mapSortPropertiesOfPrisonerContactSearch(property: String): String = when (p
   PrisonerContactSummary::prisonerContactId.name -> PrisonerContactSummaryEntity::prisonerContactId.name
   PrisonerContactSummary::contactId.name -> PrisonerContactSummaryEntity::contactId.name
   PrisonerContactSummary::prisonerNumber.name -> PrisonerContactSummaryEntity::prisonerNumber.name
+  PrisonerContactSummary::titleCode.name -> PrisonerContactSummaryEntity::title.name
+  PrisonerContactSummary::titleDescription.name -> PrisonerContactSummaryEntity::titleDescription.name
   PrisonerContactSummary::lastName.name -> PrisonerContactSummaryEntity::lastName.name
   PrisonerContactSummary::firstName.name -> PrisonerContactSummaryEntity::firstName.name
   PrisonerContactSummary::middleNames.name -> PrisonerContactSummaryEntity::middleNames.name
@@ -64,6 +66,7 @@ fun mapSortPropertiesOfPrisonerContactSearch(property: String): String = when (p
   PrisonerContactSummary::postcode.name -> PrisonerContactSummaryEntity::postCode.name
   PrisonerContactSummary::countryCode.name -> PrisonerContactSummaryEntity::countryCode.name
   PrisonerContactSummary::countryDescription.name -> PrisonerContactSummaryEntity::countryDescription.name
+  PrisonerContactSummary::noFixedAddress.name -> PrisonerContactSummaryEntity::noFixedAddress.name
   PrisonerContactSummary::primaryAddress.name -> PrisonerContactSummaryEntity::primaryAddress.name
   PrisonerContactSummary::mailAddress.name -> PrisonerContactSummaryEntity::mailFlag.name
   PrisonerContactSummary::phoneType.name -> PrisonerContactSummaryEntity::phoneType.name

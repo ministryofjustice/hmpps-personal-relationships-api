@@ -282,7 +282,8 @@ class LinkedPrisonersServiceTest {
   ): PrisonerContactSummaryEntity = PrisonerContactSummaryEntity(
     prisonerContactId,
     contactId = contactId,
-    title = "Mr.",
+    title = "MR",
+    titleDescription = "Mr",
     firstName = "First",
     middleNames = "Any",
     lastName = "Last",
@@ -300,6 +301,7 @@ class LinkedPrisonersServiceTest {
     postCode = "NW1 6XE",
     countryCode = "UK",
     countryDescription = "United Kingdom",
+    noFixedAddress = false,
     primaryAddress = false,
     mailFlag = false,
     contactPhoneId = 4L,
