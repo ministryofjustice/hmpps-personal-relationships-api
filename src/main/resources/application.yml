@@ -43,6 +43,9 @@ spring:
               timeout: 30000
   flyway:
     locations: classpath:/migrations/common,classpath:/migrations/prod
+    placeholders:
+      dpr_user: ${DPR_USER}
+      dpr_password: ${DPR_PASSWORD}
 
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"

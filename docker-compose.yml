@@ -11,6 +11,8 @@ services:
       POSTGRES_DB: personal-relationships-db
       POSTGRES_USER: contacts
       POSTGRES_PASSWORD: contacts
+      DPR_USER: dpr_user
+      DPR_PASSWORD: dpr_password
 
 networks:
   hmpps:
