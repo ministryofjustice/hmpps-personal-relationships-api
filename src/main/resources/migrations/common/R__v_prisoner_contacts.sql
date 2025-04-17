@@ -29,6 +29,7 @@ AS
       ca.post_code,
       ca.country_code,
       country_ref.description as country_description,
+      ca.no_fixed_address,
       ca.primary_address,
       ca.mail_flag,
       cp.contact_phone_id,

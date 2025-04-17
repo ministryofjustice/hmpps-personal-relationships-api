@@ -222,7 +222,8 @@ class PrisonerContactServiceTest {
   ): PrisonerContactSummaryEntity = PrisonerContactSummaryEntity(
     prisonerContactId,
     contactId = contactId,
-    title = "Mr.",
+    title = "MR",
+    titleDescription = "Mr",
     firstName = firstName,
     middleNames = "Any",
     lastName = lastName,
@@ -240,6 +241,7 @@ class PrisonerContactServiceTest {
     postCode = "NW1 6XE",
     countryCode = "UK",
     countryDescription = "United Kingdom",
+    noFixedAddress = false,
     primaryAddress = false,
     mailFlag = false,
     contactPhoneId = 4L,
