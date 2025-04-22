@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressPhoneE
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.contactAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createAddress
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressDetailsEntity
@@ -105,6 +106,8 @@ class ContactServiceTest {
 
   @Nested
   inner class CreateContact {
+    private val user = aUser("created")
+
     @Test
     fun `should create a contact with all fields successfully`() {
       val identities = listOf(
@@ -121,7 +124,6 @@ class ContactServiceTest {
         firstName = "first",
         middleNames = "middle",
         dateOfBirth = LocalDate.of(1982, 6, 15),
-        createdBy = "created",
         identities = identities,
         addresses = listOf(addressWithPhoneNumber),
         phoneNumbers = listOf(phoneNumber),
@@ -147,7 +149,7 @@ class ContactServiceTest {
       whenever(contactPhoneService.createMultiple(any(), any(), any())).thenReturn(listOf(createContactPhoneNumberDetails()))
       whenever(contactEmailService.createMultiple(any(), any(), any())).thenReturn(listOf(createContactEmailDetails()))
 
-      val result = service.createContact(request)
+      val result = service.createContact(request, user)
 
       verify(contactIdentityService).createMultiple(123, CreateMultipleIdentitiesRequest(identities, "created"))
       val contactCaptor = argumentCaptor<ContactEntity>()
@@ -163,7 +165,7 @@ class ContactServiceTest {
         assertThat(gender).isEqualTo(request.genderCode)
         assertThat(domesticStatus).isEqualTo(request.domesticStatusCode)
         assertThat(staffFlag).isEqualTo(request.isStaff)
-        assertThat(createdBy).isEqualTo(request.createdBy)
+        assertThat(createdBy).isEqualTo(user.username)
         assertThat(createdTime).isNotNull()
       }
       with(result) {
@@ -178,7 +180,7 @@ class ContactServiceTest {
           assertThat(genderCode).isEqualTo(request.genderCode)
           assertThat(domesticStatusCode).isEqualTo(request.domesticStatusCode)
           assertThat(isStaff).isEqualTo(request.isStaff)
-          assertThat(createdBy).isEqualTo(request.createdBy)
+          assertThat(createdBy).isEqualTo(user.username)
           assertThat(createdTime).isNotNull()
           assertThat(addresses).isEqualTo(listOf(aContactAddressDetailsEntity.toModel(emptyList())))
         }
@@ -208,13 +210,13 @@ class ContactServiceTest {
         assertThat(noFixedAddress).isEqualTo(addressWithPhoneNumber.noFixedAddress)
         assertThat(phoneNumbers).isEqualTo(addressWithPhoneNumber.phoneNumbers)
         assertThat(comments).isEqualTo(addressWithPhoneNumber.comments)
-        assertThat(createdBy).isEqualTo(request.createdBy)
+        assertThat(createdBy).isEqualTo(user.username)
       }
 
-      verify(contactPhoneService).createMultiple(123L, request.createdBy, listOf(phoneNumber))
-      verify(contactEmailService).createMultiple(123L, request.createdBy, listOf(EmailAddress("test@example.com")))
-      verify(employmentService).createEmployment(123L, 1, true, request.createdBy)
-      verify(employmentService).createEmployment(123L, 2, false, request.createdBy)
+      verify(contactPhoneService).createMultiple(123L, user.username, listOf(phoneNumber))
+      verify(contactEmailService).createMultiple(123L, user.username, listOf(EmailAddress("test@example.com")))
+      verify(employmentService).createEmployment(123L, 1, true, user.username)
+      verify(employmentService).createEmployment(123L, 2, false, user.username)
     }
 
     @Test
@@ -235,7 +237,6 @@ class ContactServiceTest {
         firstName = "first",
         middleNames = "middle",
         dateOfBirth = LocalDate.of(1982, 6, 15),
-        createdBy = "created",
         identities = identities,
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123L) }
@@ -257,7 +258,7 @@ class ContactServiceTest {
         ),
       )
 
-      val result = service.createContact(request)
+      val result = service.createContact(request, user)
 
       verify(contactIdentityService).createMultiple(123L, CreateMultipleIdentitiesRequest(identities, "created"))
       val contactCaptor = argumentCaptor<ContactEntity>()
@@ -279,16 +280,15 @@ class ContactServiceTest {
         firstName = "first",
         middleNames = "middle",
         dateOfBirth = null,
+        isStaff = false,
         languageCode = null,
         interpreterRequired = false,
-        genderCode = null,
         domesticStatusCode = null,
-        isStaff = false,
-        createdBy = "created",
+        genderCode = null,
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
 
-      val result = service.createContact(request)
+      val result = service.createContact(request, user)
 
       verify(contactIdentityService, never()).createMultiple(any(), any())
 
@@ -305,7 +305,7 @@ class ContactServiceTest {
         assertNull(gender)
         assertNull(domesticStatus)
         assertThat(staffFlag).isEqualTo(request.isStaff)
-        assertThat(createdBy).isEqualTo(request.createdBy)
+        assertThat(createdBy).isEqualTo(user.username)
         assertThat(createdTime).isNotNull()
       }
       with(result) {
@@ -320,7 +320,7 @@ class ContactServiceTest {
           assertNull(genderCode)
           assertNull(domesticStatusCode)
           assertThat(isStaff).isEqualTo(request.isStaff)
-          assertThat(createdBy).isEqualTo(request.createdBy)
+          assertThat(createdBy).isEqualTo(user.username)
           assertThat(createdTime).isNotNull()
         }
       }
@@ -349,7 +349,6 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         relationship = relationshipRequest,
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(
@@ -372,7 +371,7 @@ class ContactServiceTest {
         ),
       ).thenReturn(referenceCode)
 
-      service.createContact(request)
+      service.createContact(request, user)
 
       verify(contactRepository).saveAndFlush(any())
 
@@ -413,7 +412,6 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         relationship = relationshipRequest,
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(
@@ -438,7 +436,7 @@ class ContactServiceTest {
       ).thenThrow(expectedException)
 
       val exception = assertThrows<RuntimeException>("Bang!") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
 
       assertThat(exception).isEqualTo(expectedException)
@@ -452,12 +450,11 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
       )
       whenever(contactRepository.saveAndFlush(any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
     }
 
@@ -466,7 +463,6 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         identities = listOf(
           IdentityDocument(
             identityType = "PNC",
@@ -479,7 +475,7 @@ class ContactServiceTest {
       whenever(contactIdentityService.createMultiple(any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
     }
 
@@ -488,7 +484,6 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         addresses = listOf(createAddress()),
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
@@ -496,7 +491,7 @@ class ContactServiceTest {
       whenever(contactAddressService.create(any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
     }
 
@@ -505,7 +500,6 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         phoneNumbers = listOf(createPhoneNumber()),
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
@@ -513,7 +507,7 @@ class ContactServiceTest {
       whenever(contactPhoneService.createMultiple(any(), any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
     }
 
@@ -522,7 +516,6 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         emailAddresses = listOf(EmailAddress("test@example.com")),
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
@@ -530,7 +523,7 @@ class ContactServiceTest {
       whenever(contactEmailService.createMultiple(any(), any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
     }
 
@@ -539,14 +532,13 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         employments = listOf(Employment(1, true)),
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(employmentService.createEmployment(any(), any(), any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
     }
 
@@ -555,7 +547,6 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         relationship = ContactRelationship(
           prisonerNumber = "A1234BC",
           relationshipTypeCode = "S",
@@ -571,7 +562,7 @@ class ContactServiceTest {
       whenever(prisonerContactRepository.saveAndFlush(any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
 
       verify(contactRepository).saveAndFlush(any())
@@ -583,7 +574,6 @@ class ContactServiceTest {
       val request = CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
         relationship = ContactRelationship(
           prisonerNumber = "A1234BC",
           relationshipTypeCode = "S",
@@ -599,7 +589,7 @@ class ContactServiceTest {
       whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
       assertThrows<EntityNotFoundException>("Prisoner number A1234BC - not found") {
-        service.createContact(request)
+        service.createContact(request, user)
       }
 
       verify(contactRepository, never()).saveAndFlush(any())
@@ -862,6 +852,7 @@ class ContactServiceTest {
 
   @Nested
   inner class AddContactRelationship {
+    private val user = aUser("RELATIONSHIP_USER")
     private val contactId = 123456L
     private val relationship = ContactRelationship(
       prisonerNumber = "A1234BC",
@@ -872,7 +863,7 @@ class ContactServiceTest {
       isApprovedVisitor = false,
       comments = "Foo",
     )
-    private val request = AddContactRelationshipRequest(contactId, relationship, "RELATIONSHIP_USER")
+    private val request = AddContactRelationshipRequest(contactId, relationship)
     private val contact = ContactEntity(
       contactId = contactId,
       title = null,
@@ -899,7 +890,7 @@ class ContactServiceTest {
       whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "MOT")).thenReturn(referenceCode)
       whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "MOT", allowInactive = false)).thenReturn(referenceCode)
 
-      service.addContactRelationship(request)
+      service.addContactRelationship(request, user)
 
       val prisonerContactCaptor = argumentCaptor<PrisonerContactEntity>()
       verify(prisonerContactRepository).saveAndFlush(prisonerContactCaptor.capture())
@@ -919,7 +910,7 @@ class ContactServiceTest {
       whenever(prisonerService.getPrisoner(any())).thenReturn(null)
 
       assertThrows<EntityNotFoundException>("Prisoner (A1234BC) could not be found") {
-        service.addContactRelationship(request)
+        service.addContactRelationship(request, user)
       }
     }
 
@@ -928,7 +919,7 @@ class ContactServiceTest {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
 
       assertThrows<EntityNotFoundException>("Contact ($contactId) could not be found") {
-        service.addContactRelationship(request)
+        service.addContactRelationship(request, user)
       }
     }
 
@@ -944,7 +935,7 @@ class ContactServiceTest {
       whenever(prisonerContactRepository.saveAndFlush(any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        service.addContactRelationship(request)
+        service.addContactRelationship(request, user)
       }
     }
   }
@@ -1021,6 +1012,7 @@ class ContactServiceTest {
 
     @Nested
     inner class RelationshipTypeAndRelationshipToPrisoner {
+      private val user = aUser("Admin")
 
       @ParameterizedTest
       @CsvSource(
@@ -1042,7 +1034,6 @@ class ContactServiceTest {
         val request = PatchRelationshipRequest(
           relationshipTypeCode = JsonNullable.undefined(),
           relationshipToPrisonerCode = JsonNullable.of(relationShipTypeCode),
-          updatedBy = "Admin",
         )
         mockBrotherRelationshipReferenceCode()
         whenever(referenceCodeService.getReferenceDataByGroupAndCode(expectedReferenceCodeGroup, relationShipTypeCode)).thenReturn(
@@ -1056,7 +1047,7 @@ class ContactServiceTest {
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
-        service.updateContactRelationship(prisonerContactId, request)
+        service.updateContactRelationship(prisonerContactId, request, user)
 
         val prisonerContactCaptor = argumentCaptor<PrisonerContactEntity>()
         verify(referenceCodeService).validateReferenceCode(expectedReferenceCodeGroup, "FRI", allowInactive = true)
@@ -1097,7 +1088,6 @@ class ContactServiceTest {
         val request = PatchRelationshipRequest(
           relationshipTypeCode = JsonNullable.of(newRelationshipType),
           relationshipToPrisonerCode = JsonNullable.of(relationshipToPrisonerCode),
-          updatedBy = "Admin",
         )
         mockBrotherRelationshipReferenceCode()
         whenever(referenceCodeService.getReferenceDataByGroupAndCode(expectedReferenceCodeGroup, relationshipToPrisonerCode)).thenReturn(
@@ -1111,7 +1101,7 @@ class ContactServiceTest {
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
-        service.updateContactRelationship(prisonerContactId, request)
+        service.updateContactRelationship(prisonerContactId, request, user)
 
         val prisonerContactCaptor = argumentCaptor<PrisonerContactEntity>()
         verify(referenceCodeService).validateReferenceCode(expectedReferenceCodeGroup, "FRI", allowInactive = true)
@@ -1151,7 +1141,6 @@ class ContactServiceTest {
         val request = PatchRelationshipRequest(
           relationshipTypeCode = JsonNullable.of(newRelationshipType),
           relationshipToPrisonerCode = JsonNullable.undefined(),
-          updatedBy = "Admin",
         )
         mockBrotherRelationshipReferenceCode()
         whenever(referenceCodeService.getReferenceDataByGroupAndCode(expectedReferenceCodeGroup, "BRO")).thenReturn(
@@ -1165,7 +1154,7 @@ class ContactServiceTest {
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
-        service.updateContactRelationship(prisonerContactId, request)
+        service.updateContactRelationship(prisonerContactId, request, user)
 
         val prisonerContactCaptor = argumentCaptor<PrisonerContactEntity>()
         verify(referenceCodeService).validateReferenceCode(expectedReferenceCodeGroup, "BRO", allowInactive = true)
@@ -1190,14 +1179,13 @@ class ContactServiceTest {
       fun `should not update relationship to prisoner with null`() {
         val request = PatchRelationshipRequest(
           relationshipToPrisonerCode = JsonNullable.of(null),
-          updatedBy = "Admin",
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
         val exception = assertThrows<ValidationException> {
-          service.updateContactRelationship(prisonerContactId, request)
+          service.updateContactRelationship(prisonerContactId, request, user)
         }
         assertThat(exception.message).isEqualTo("Unsupported relationship to prisoner null.")
       }
@@ -1206,14 +1194,13 @@ class ContactServiceTest {
       fun `should not update relationship type with null`() {
         val request = PatchRelationshipRequest(
           relationshipTypeCode = JsonNullable.of(null),
-          updatedBy = "Admin",
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
         val exception = assertThrows<ValidationException> {
-          service.updateContactRelationship(prisonerContactId, request)
+          service.updateContactRelationship(prisonerContactId, request, user)
         }
         assertThat(exception.message).isEqualTo("Unsupported relationship type null.")
       }
@@ -1222,7 +1209,6 @@ class ContactServiceTest {
       fun `should not update relationship type with invalid type`() {
         val request = PatchRelationshipRequest(
           relationshipToPrisonerCode = JsonNullable.of("OOO"),
-          updatedBy = "Admin",
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
@@ -1231,7 +1217,7 @@ class ContactServiceTest {
         whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "OOO", allowInactive = true)).thenThrow(expectedException)
 
         val exception = assertThrows<ValidationException> {
-          service.updateContactRelationship(prisonerContactId, request)
+          service.updateContactRelationship(prisonerContactId, request, user)
         }
         assertThat(exception).isEqualTo(expectedException)
       }
@@ -1239,18 +1225,18 @@ class ContactServiceTest {
 
     @Nested
     inner class ApprovedVisitor {
+      private val user = aUser("Admin")
 
       @Test
       fun `should update the approved visitor`() {
         val request = PatchRelationshipRequest(
           isApprovedVisitor = JsonNullable.of(false),
-          updatedBy = "Admin",
         )
         mockBrotherRelationshipReferenceCode()
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
-        service.updateContactRelationship(prisonerContactId, request)
+        service.updateContactRelationship(prisonerContactId, request, user)
 
         val prisonerContactCaptor = argumentCaptor<PrisonerContactEntity>()
         verify(prisonerContactRepository).saveAndFlush(prisonerContactCaptor.capture())
@@ -1266,14 +1252,13 @@ class ContactServiceTest {
       fun `should not update approved visitor with null`() {
         val request = PatchRelationshipRequest(
           isApprovedVisitor = JsonNullable.of(null),
-          updatedBy = "Admin",
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
         val exception = assertThrows<ValidationException> {
-          service.updateContactRelationship(prisonerContactId, request)
+          service.updateContactRelationship(prisonerContactId, request, user)
         }
         assertThat(exception.message).isEqualTo("Unsupported approved visitor value null.")
       }
@@ -1281,18 +1266,18 @@ class ContactServiceTest {
 
     @Nested
     inner class NextOfKin {
+      private val user = aUser("Admin")
 
       @Test
       fun `should update the next of kin`() {
         val request = PatchRelationshipRequest(
           isNextOfKin = JsonNullable.of(false),
-          updatedBy = "Admin",
         )
         mockBrotherRelationshipReferenceCode()
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
-        service.updateContactRelationship(prisonerContactId, request)
+        service.updateContactRelationship(prisonerContactId, request, user)
 
         val prisonerContactCaptor = argumentCaptor<PrisonerContactEntity>()
         verify(prisonerContactRepository).saveAndFlush(prisonerContactCaptor.capture())
@@ -1316,14 +1301,13 @@ class ContactServiceTest {
       fun `should not update relationship next of kin with null`() {
         val request = PatchRelationshipRequest(
           isNextOfKin = JsonNullable.of(null),
-          updatedBy = "Admin",
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
         val exception = assertThrows<ValidationException> {
-          service.updateContactRelationship(prisonerContactId, request)
+          service.updateContactRelationship(prisonerContactId, request, user)
         }
         assertThat(exception.message).isEqualTo("Unsupported next of kin null.")
       }
@@ -1331,18 +1315,18 @@ class ContactServiceTest {
 
     @Nested
     inner class EmergencyContactStatus {
+      private val user = aUser("Admin")
 
       @Test
       fun `should update the emergency contact status`() {
         val request = PatchRelationshipRequest(
           isEmergencyContact = JsonNullable.of(false),
-          updatedBy = "Admin",
         )
         mockBrotherRelationshipReferenceCode()
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
-        service.updateContactRelationship(prisonerContactId, request)
+        service.updateContactRelationship(prisonerContactId, request, user)
 
         val prisonerContactCaptor = argumentCaptor<PrisonerContactEntity>()
         verify(prisonerContactRepository).saveAndFlush(prisonerContactCaptor.capture())
@@ -1366,14 +1350,13 @@ class ContactServiceTest {
       fun `should not update relationship emergency contact with null`() {
         val request = PatchRelationshipRequest(
           isEmergencyContact = JsonNullable.of(null),
-          updatedBy = "Admin",
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
         val exception = assertThrows<ValidationException> {
-          service.updateContactRelationship(prisonerContactId, request)
+          service.updateContactRelationship(prisonerContactId, request, user)
         }
         assertThat(exception.message).isEqualTo("Unsupported emergency contact null.")
       }
@@ -1381,18 +1364,18 @@ class ContactServiceTest {
 
     @Nested
     inner class RelationshipActiveStatus {
+      private val user = aUser("Admin")
 
       @Test
       fun `should update the relationship active status`() {
         val request = PatchRelationshipRequest(
           isRelationshipActive = JsonNullable.of(false),
-          updatedBy = "Admin",
         )
         mockBrotherRelationshipReferenceCode()
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
-        service.updateContactRelationship(prisonerContactId, request)
+        service.updateContactRelationship(prisonerContactId, request, user)
 
         val prisonerContactCaptor = argumentCaptor<PrisonerContactEntity>()
         verify(prisonerContactRepository).saveAndFlush(prisonerContactCaptor.capture())
@@ -1416,14 +1399,13 @@ class ContactServiceTest {
       fun `should not update relationship active status with null`() {
         val request = PatchRelationshipRequest(
           isRelationshipActive = JsonNullable.of(null),
-          updatedBy = "Admin",
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
         val exception = assertThrows<ValidationException> {
-          service.updateContactRelationship(prisonerContactId, request)
+          service.updateContactRelationship(prisonerContactId, request, user)
         }
         assertThat(exception.message).isEqualTo("Unsupported relationship status null.")
       }
@@ -1431,13 +1413,13 @@ class ContactServiceTest {
 
     @Nested
     inner class RelationshipComment {
+      private val user = aUser("Admin")
 
       @Test
       fun `should update the contact relationship comment`() {
         val relationShipTypeCode = "FRI"
         val request = PatchRelationshipRequest(
           comments = JsonNullable.of("a comment"),
-          updatedBy = "Admin",
         )
         mockBrotherRelationshipReferenceCode()
         whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, relationShipTypeCode)).thenReturn(
@@ -1447,7 +1429,7 @@ class ContactServiceTest {
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
-        service.updateContactRelationship(prisonerContactId, request)
+        service.updateContactRelationship(prisonerContactId, request, user)
 
         val prisonerContactCaptor = argumentCaptor<PrisonerContactEntity>()
         verify(prisonerContactRepository).saveAndFlush(prisonerContactCaptor.capture())
@@ -1472,7 +1454,6 @@ class ContactServiceTest {
         val relationShipTypeCode = "FRI"
         val request = PatchRelationshipRequest(
           comments = JsonNullable.of(null),
-          updatedBy = "Admin",
         )
         mockBrotherRelationshipReferenceCode()
         whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, relationShipTypeCode)).thenReturn(
@@ -1482,7 +1463,7 @@ class ContactServiceTest {
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
-        service.updateContactRelationship(prisonerContactId, request)
+        service.updateContactRelationship(prisonerContactId, request, user)
 
         val prisonerContactCaptor = argumentCaptor<PrisonerContactEntity>()
         verify(prisonerContactRepository).saveAndFlush(prisonerContactCaptor.capture())
@@ -1505,15 +1486,14 @@ class ContactServiceTest {
 
     @Test
     fun `should update when only updated by filed is provided`() {
-      val request = PatchRelationshipRequest(
-        updatedBy = "Admin",
-      )
+      val user = aUser("Admin")
+      val request = PatchRelationshipRequest()
 
       mockBrotherRelationshipReferenceCode()
       whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
       whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
-      service.updateContactRelationship(prisonerContactId, request)
+      service.updateContactRelationship(prisonerContactId, request, user)
 
       val prisonerContactCaptor = argumentCaptor<PrisonerContactEntity>()
       verify(prisonerContactRepository).saveAndFlush(prisonerContactCaptor.capture())
@@ -1536,23 +1516,25 @@ class ContactServiceTest {
 
     @Test
     fun `should blow up if prisoner contact not found`() {
+      val user = aUser("Admin")
       val request = updateRelationshipRequest()
       whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.empty())
 
       val exception = assertThrows<EntityNotFoundException> {
-        service.updateContactRelationship(prisonerContactId, request)
+        service.updateContactRelationship(prisonerContactId, request, user)
       }
       assertThat(exception.message).isEqualTo("Prisoner contact with prisoner contact ID 2 not found")
     }
 
     @Test
     fun `should propagate exceptions updating a prisoner contact relationship`() {
+      val user = aUser("Admin")
       val request = updateRelationshipRequest()
       whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
       whenever(prisonerContactRepository.saveAndFlush(any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
-        service.updateContactRelationship(prisonerContactId, request)
+        service.updateContactRelationship(prisonerContactId, request, user)
       }
     }
 
@@ -1650,7 +1632,6 @@ class ContactServiceTest {
       isNextOfKin = JsonNullable.of(true),
       isRelationshipActive = JsonNullable.of(false),
       comments = JsonNullable.of("Foo"),
-      updatedBy = "Admin",
     )
   }
 

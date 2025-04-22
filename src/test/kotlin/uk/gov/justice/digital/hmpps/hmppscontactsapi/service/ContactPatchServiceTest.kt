@@ -15,6 +15,7 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.whenever
 import org.openapitools.jackson.nullable.JsonNullable
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PatchContactResponse
@@ -34,6 +35,7 @@ class ContactPatchServiceTest {
 
   private val contactRepository: ContactRepository = mock()
   private val referenceCodeService: ReferenceCodeService = mock()
+  private val user = aUser("updated")
 
   private val service = ContactPatchService(contactRepository, referenceCodeService)
 
@@ -41,26 +43,23 @@ class ContactPatchServiceTest {
   fun `should throw EntityNotFoundException when contact does not exist`() {
     val patchRequest = PatchContactRequest(
       languageCode = JsonNullable.of("ENG"),
-      updatedBy = "system",
     )
 
     whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
 
     assertThrows<EntityNotFoundException> {
-      service.patch(contactId, patchRequest)
+      service.patch(contactId, patchRequest, user)
     }
   }
 
   @Test
   fun `should patch when only the updated by field is provided`() {
-    val patchRequest = PatchContactRequest(
-      updatedBy = "Modifier",
-    )
+    val patchRequest = PatchContactRequest()
 
     whenContactExists()
     whenUpdateIsSuccessful()
 
-    val updatedContact = service.patch(contactId, patchRequest)
+    val updatedContact = service.patch(contactId, patchRequest, user)
 
     val contactCaptor = argumentCaptor<ContactEntity>()
 
@@ -69,7 +68,7 @@ class ContactPatchServiceTest {
 
     assertUnchangedFields(updatedContact)
 
-    assertThat(updatedContact.updatedBy).isEqualTo(patchRequest.updatedBy)
+    assertThat(updatedContact.updatedBy).isEqualTo("updated")
   }
 
   @Nested
@@ -79,29 +78,27 @@ class ContactPatchServiceTest {
     fun `should patch when language code is null`() {
       val patchRequest = PatchContactRequest(
         languageCode = JsonNullable.of(null),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      val updatedContact = service.patch(contactId, patchRequest)
+      val updatedContact = service.patch(contactId, patchRequest, user)
 
       assertThat(updatedContact.languageCode).isEqualTo(null)
-      assertThat(updatedContact.updatedBy).isEqualTo(patchRequest.updatedBy)
+      assertThat(updatedContact.updatedBy).isEqualTo("updated")
     }
 
     @Test
     fun `should patch without validating a null language code `() {
       val patchRequest = PatchContactRequest(
         languageCode = JsonNullable.of(null),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      service.patch(contactId, patchRequest)
+      service.patch(contactId, patchRequest, user)
 
       verify(referenceCodeService, never()).validateReferenceCode(any(), any(), any())
       verify(contactRepository, times(1)).saveAndFlush(any())
@@ -109,14 +106,12 @@ class ContactPatchServiceTest {
 
     @Test
     fun `should patch without validating undefined language code`() {
-      val patchRequest = PatchContactRequest(
-        updatedBy = "Modifier",
-      )
+      val patchRequest = PatchContactRequest()
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      service.patch(contactId, patchRequest)
+      service.patch(contactId, patchRequest, user)
 
       verify(referenceCodeService, never()).validateReferenceCode(any(), any(), any())
       verify(contactRepository, times(1)).saveAndFlush(any())
@@ -128,7 +123,6 @@ class ContactPatchServiceTest {
 
       val patchRequest = PatchContactRequest(
         languageCode = JsonNullable.of(languageCode),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
@@ -137,7 +131,7 @@ class ContactPatchServiceTest {
         ReferenceCode(1, ReferenceCodeGroup.LANGUAGE, languageCode, "French", 1, true),
       )
 
-      val updatedContact = service.patch(contactId, patchRequest)
+      val updatedContact = service.patch(contactId, patchRequest, user)
 
       val contactCaptor = argumentCaptor<ContactEntity>()
 
@@ -145,20 +139,19 @@ class ContactPatchServiceTest {
       verify(referenceCodeService, times(1)).validateReferenceCode(ReferenceCodeGroup.LANGUAGE, languageCode, allowInactive = true)
 
       assertThat(updatedContact.languageCode).isEqualTo(languageCode)
-      assertThat(updatedContact.updatedBy).isEqualTo(patchRequest.updatedBy)
+      assertThat(updatedContact.updatedBy).isEqualTo("updated")
     }
 
     @Test
     fun `should patch when language code is valid`() {
       val patchRequest = PatchContactRequest(
         languageCode = JsonNullable.of("FR"),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      val response = service.patch(contactId, patchRequest)
+      val response = service.patch(contactId, patchRequest, user)
 
       val contactCaptor = argumentCaptor<ContactEntity>()
 
@@ -168,10 +161,10 @@ class ContactPatchServiceTest {
       val updatingEntity = contactCaptor.firstValue
 
       assertThat(updatingEntity.languageCode).isEqualTo(patchRequest.languageCode.get())
-      assertThat(updatingEntity.updatedBy).isEqualTo(patchRequest.updatedBy)
+      assertThat(updatingEntity.updatedBy).isEqualTo("updated")
 
       assertThat(response.languageCode).isEqualTo(patchRequest.languageCode.get())
-      assertThat(response.updatedBy).isEqualTo(patchRequest.updatedBy)
+      assertThat(response.updatedBy).isEqualTo("updated")
     }
   }
 
@@ -182,13 +175,12 @@ class ContactPatchServiceTest {
     fun `should patch when interpreter required is valid`() {
       val patchRequest = PatchContactRequest(
         interpreterRequired = JsonNullable.of(TRUE),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      val response = service.patch(contactId, patchRequest)
+      val response = service.patch(contactId, patchRequest, user)
 
       val contactCaptor = argumentCaptor<ContactEntity>()
 
@@ -197,23 +189,22 @@ class ContactPatchServiceTest {
       val updatingEntity = contactCaptor.firstValue
 
       assertThat(updatingEntity.interpreterRequired).isEqualTo(patchRequest.interpreterRequired.get())
-      assertThat(updatingEntity.updatedBy).isEqualTo(patchRequest.updatedBy)
+      assertThat(updatingEntity.updatedBy).isEqualTo("updated")
 
       assertThat(response.interpreterRequired).isEqualTo(patchRequest.interpreterRequired.get())
-      assertThat(response.updatedBy).isEqualTo(patchRequest.updatedBy)
+      assertThat(response.updatedBy).isEqualTo("updated")
     }
 
     @Test
     fun `should throw validation error when interpreter required is null`() {
       val patchRequest = PatchContactRequest(
         interpreterRequired = JsonNullable.of(null),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
 
       val exception = assertThrows<ValidationException> {
-        service.patch(contactId, patchRequest)
+        service.patch(contactId, patchRequest, user)
       }
       assertThat(exception.message).isEqualTo("Unsupported interpreter required type null.")
     }
@@ -226,29 +217,27 @@ class ContactPatchServiceTest {
     fun `should patch when domestic status code is null`() {
       val patchRequest = PatchContactRequest(
         domesticStatusCode = JsonNullable.of(null),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      val updatedContact = service.patch(contactId, patchRequest)
+      val updatedContact = service.patch(contactId, patchRequest, user)
 
       assertThat(updatedContact.domesticStatusCode).isEqualTo(null)
-      assertThat(updatedContact.updatedBy).isEqualTo(patchRequest.updatedBy)
+      assertThat(updatedContact.updatedBy).isEqualTo("updated")
     }
 
     @Test
     fun `should patch without validating a null domestic status code `() {
       val patchRequest = PatchContactRequest(
         domesticStatusCode = JsonNullable.of(null),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      service.patch(contactId, patchRequest)
+      service.patch(contactId, patchRequest, user)
 
       verify(referenceCodeService, never()).validateReferenceCode(any(), any(), any())
       verify(contactRepository, times(1)).saveAndFlush(any())
@@ -256,14 +245,12 @@ class ContactPatchServiceTest {
 
     @Test
     fun `should patch without validating undefined domestic status code`() {
-      val patchRequest = PatchContactRequest(
-        updatedBy = "Modifier",
-      )
+      val patchRequest = PatchContactRequest()
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      service.patch(contactId, patchRequest)
+      service.patch(contactId, patchRequest, user)
 
       verify(referenceCodeService, never()).validateReferenceCode(any(), any(), any())
       verify(contactRepository, times(1)).saveAndFlush(any())
@@ -275,7 +262,6 @@ class ContactPatchServiceTest {
 
       val patchRequest = PatchContactRequest(
         domesticStatusCode = JsonNullable.of(domesticStatusCode),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
@@ -291,7 +277,7 @@ class ContactPatchServiceTest {
         ),
       )
 
-      val updatedContact = service.patch(contactId, patchRequest)
+      val updatedContact = service.patch(contactId, patchRequest, user)
 
       val contactCaptor = argumentCaptor<ContactEntity>()
 
@@ -299,14 +285,13 @@ class ContactPatchServiceTest {
       verify(referenceCodeService, times(1)).validateReferenceCode(ReferenceCodeGroup.DOMESTIC_STS, domesticStatusCode, allowInactive = true)
 
       assertThat(updatedContact.domesticStatusCode).isEqualTo(domesticStatusCode)
-      assertThat(updatedContact.updatedBy).isEqualTo(patchRequest.updatedBy)
+      assertThat(updatedContact.updatedBy).isEqualTo("updated")
     }
 
     @Test
     fun `should patch when domestic status code is valid`() {
       val patchRequest = PatchContactRequest(
         domesticStatusCode = JsonNullable.of(domesticStatusCode),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
@@ -315,7 +300,7 @@ class ContactPatchServiceTest {
         ReferenceCode(1, ReferenceCodeGroup.DOMESTIC_STS, "P", "Single", 1, true),
       )
 
-      val response = service.patch(contactId, patchRequest)
+      val response = service.patch(contactId, patchRequest, user)
 
       val contactCaptor = argumentCaptor<ContactEntity>()
 
@@ -325,10 +310,10 @@ class ContactPatchServiceTest {
       val updatingEntity = contactCaptor.firstValue
 
       assertThat(updatingEntity.domesticStatus).isEqualTo(patchRequest.domesticStatusCode.get())
-      assertThat(updatingEntity.updatedBy).isEqualTo(patchRequest.updatedBy)
+      assertThat(updatingEntity.updatedBy).isEqualTo("updated")
 
       assertThat(response.domesticStatusCode).isEqualTo(patchRequest.domesticStatusCode.get())
-      assertThat(response.updatedBy).isEqualTo(patchRequest.updatedBy)
+      assertThat(response.updatedBy).isEqualTo("updated")
     }
   }
 
@@ -339,13 +324,12 @@ class ContactPatchServiceTest {
     fun `should patch when is staff flag is valid`() {
       val patchRequest = PatchContactRequest(
         isStaff = JsonNullable.of(true),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      val response = service.patch(contactId, patchRequest)
+      val response = service.patch(contactId, patchRequest, user)
 
       val contactCaptor = argumentCaptor<ContactEntity>()
 
@@ -354,23 +338,22 @@ class ContactPatchServiceTest {
       val updatingEntity = contactCaptor.firstValue
 
       assertThat(updatingEntity.staffFlag).isEqualTo(patchRequest.isStaff.get())
-      assertThat(updatingEntity.updatedBy).isEqualTo(patchRequest.updatedBy)
+      assertThat(updatingEntity.updatedBy).isEqualTo("updated")
 
       assertThat(response.isStaff).isEqualTo(patchRequest.isStaff.get())
-      assertThat(response.updatedBy).isEqualTo(patchRequest.updatedBy)
+      assertThat(response.updatedBy).isEqualTo("updated")
     }
 
     @Test
     fun `should throw validation error when is staff flag is null`() {
       val patchRequest = PatchContactRequest(
         isStaff = JsonNullable.of(null),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
 
       val exception = assertThrows<ValidationException> {
-        service.patch(contactId, patchRequest)
+        service.patch(contactId, patchRequest, user)
       }
       assertThat(exception.message).isEqualTo("Unsupported staff flag value null.")
     }
@@ -379,13 +362,12 @@ class ContactPatchServiceTest {
     fun `should patch staff flag is undefined`() {
       val patchRequest = PatchContactRequest(
         isStaff = JsonNullable.undefined(),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      service.patch(contactId, patchRequest)
+      service.patch(contactId, patchRequest, user)
 
       verify(contactRepository, times(1)).saveAndFlush(any())
     }
@@ -409,13 +391,12 @@ class ContactPatchServiceTest {
 
       val patchRequest = PatchContactRequest(
         titleCode = JsonNullable.of("MRS"),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      val response = service.patch(contactId, patchRequest)
+      val response = service.patch(contactId, patchRequest, user)
 
       val contactCaptor = argumentCaptor<ContactEntity>()
 
@@ -424,23 +405,22 @@ class ContactPatchServiceTest {
       val updatingEntity = contactCaptor.firstValue
 
       assertThat(updatingEntity.title).isEqualTo("MRS")
-      assertThat(updatingEntity.updatedBy).isEqualTo("Modifier")
+      assertThat(updatingEntity.updatedBy).isEqualTo("updated")
 
       assertThat(response.titleCode).isEqualTo("MRS")
-      assertThat(response.updatedBy).isEqualTo("Modifier")
+      assertThat(response.updatedBy).isEqualTo("updated")
     }
 
     @Test
     fun `should patch when title is null`() {
       val patchRequest = PatchContactRequest(
         titleCode = JsonNullable.of(null),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      val response = service.patch(contactId, patchRequest)
+      val response = service.patch(contactId, patchRequest, user)
 
       val contactCaptor = argumentCaptor<ContactEntity>()
 
@@ -449,10 +429,10 @@ class ContactPatchServiceTest {
       val updatingEntity = contactCaptor.firstValue
 
       assertThat(updatingEntity.title).isNull()
-      assertThat(updatingEntity.updatedBy).isEqualTo("Modifier")
+      assertThat(updatingEntity.updatedBy).isEqualTo("updated")
 
       assertThat(response.titleCode).isNull()
-      assertThat(response.updatedBy).isEqualTo("Modifier")
+      assertThat(response.updatedBy).isEqualTo("updated")
       verify(referenceCodeService, never()).validateReferenceCode(any(), any(), any())
     }
 
@@ -462,14 +442,13 @@ class ContactPatchServiceTest {
       whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.TITLE, "FOO", allowInactive = true)).thenThrow(expectedException)
       val patchRequest = PatchContactRequest(
         titleCode = JsonNullable.of("FOO"),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
       val exception = assertThrows<ValidationException> {
-        service.patch(contactId, patchRequest)
+        service.patch(contactId, patchRequest, user)
       }
       assertThat(exception).isEqualTo(expectedException)
       verify(contactRepository, never()).saveAndFlush(any())
@@ -483,13 +462,12 @@ class ContactPatchServiceTest {
     fun `should patch when middle names is valid`() {
       val patchRequest = PatchContactRequest(
         middleNames = JsonNullable.of("Some Middle Names Updated"),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      val response = service.patch(contactId, patchRequest)
+      val response = service.patch(contactId, patchRequest, user)
 
       val contactCaptor = argumentCaptor<ContactEntity>()
 
@@ -498,23 +476,22 @@ class ContactPatchServiceTest {
       val updatingEntity = contactCaptor.firstValue
 
       assertThat(updatingEntity.middleNames).isEqualTo("Some Middle Names Updated")
-      assertThat(updatingEntity.updatedBy).isEqualTo("Modifier")
+      assertThat(updatingEntity.updatedBy).isEqualTo("updated")
 
       assertThat(response.middleNames).isEqualTo("Some Middle Names Updated")
-      assertThat(response.updatedBy).isEqualTo("Modifier")
+      assertThat(response.updatedBy).isEqualTo("updated")
     }
 
     @Test
     fun `should patch when middle names is null`() {
       val patchRequest = PatchContactRequest(
         middleNames = JsonNullable.of(null),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      val response = service.patch(contactId, patchRequest)
+      val response = service.patch(contactId, patchRequest, user)
 
       val contactCaptor = argumentCaptor<ContactEntity>()
 
@@ -523,10 +500,10 @@ class ContactPatchServiceTest {
       val updatingEntity = contactCaptor.firstValue
 
       assertThat(updatingEntity.middleNames).isNull()
-      assertThat(updatingEntity.updatedBy).isEqualTo("Modifier")
+      assertThat(updatingEntity.updatedBy).isEqualTo("updated")
 
       assertThat(response.middleNames).isNull()
-      assertThat(response.updatedBy).isEqualTo("Modifier")
+      assertThat(response.updatedBy).isEqualTo("updated")
       verify(referenceCodeService, never()).validateReferenceCode(any(), any(), any())
     }
   }
@@ -539,16 +516,15 @@ class ContactPatchServiceTest {
       originalContact = createDummyContactEntity().copy(dateOfBirth = LocalDate.of(1982, 6, 15))
       val patchRequest = PatchContactRequest(
         dateOfBirth = JsonNullable.of(null),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      val updatedContact = service.patch(contactId, patchRequest)
+      val updatedContact = service.patch(contactId, patchRequest, user)
 
       assertThat(updatedContact.dateOfBirth).isNull()
-      assertThat(updatedContact.updatedBy).isEqualTo("Modifier")
+      assertThat(updatedContact.updatedBy).isEqualTo("updated")
     }
 
     @Test
@@ -557,20 +533,19 @@ class ContactPatchServiceTest {
 
       val patchRequest = PatchContactRequest(
         dateOfBirth = JsonNullable.of(LocalDate.of(2000, 12, 25)),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      val updatedContact = service.patch(contactId, patchRequest)
+      val updatedContact = service.patch(contactId, patchRequest, user)
 
       val contactCaptor = argumentCaptor<ContactEntity>()
 
       verify(contactRepository).saveAndFlush(contactCaptor.capture())
 
       assertThat(updatedContact.dateOfBirth).isEqualTo(LocalDate.of(2000, 12, 25))
-      assertThat(updatedContact.updatedBy).isEqualTo("Modifier")
+      assertThat(updatedContact.updatedBy).isEqualTo("updated")
     }
   }
 
@@ -624,30 +599,27 @@ class ContactPatchServiceTest {
 
       val patchRequest = PatchContactRequest(
         genderCode = JsonNullable.of(null),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      val updatedContact = service.patch(contactId, patchRequest)
+      val updatedContact = service.patch(contactId, patchRequest, user)
 
       assertThat(updatedContact.genderCode).isEqualTo(null)
-      assertThat(updatedContact.updatedBy).isEqualTo(patchRequest.updatedBy)
+      assertThat(updatedContact.updatedBy).isEqualTo("updated")
     }
 
     @Test
     fun `should patch without validating undefined gender`() {
       originalContact = createDummyContactEntity().copy(gender = "NS")
 
-      val patchRequest = PatchContactRequest(
-        updatedBy = "Modifier",
-      )
+      val patchRequest = PatchContactRequest()
 
       whenContactExists()
       whenUpdateIsSuccessful()
 
-      val patched = service.patch(contactId, patchRequest)
+      val patched = service.patch(contactId, patchRequest, user)
 
       assertThat(patched.genderCode).isEqualTo("NS")
       verify(referenceCodeService, never()).validateReferenceCode(any(), any(), any())
@@ -660,7 +632,6 @@ class ContactPatchServiceTest {
 
       val patchRequest = PatchContactRequest(
         genderCode = JsonNullable.of("NS"),
-        updatedBy = "Modifier",
       )
 
       whenContactExists()
@@ -669,7 +640,7 @@ class ContactPatchServiceTest {
         ReferenceCode(1, ReferenceCodeGroup.GENDER, "NS", "Not specified", 99, true),
       )
 
-      val updatedContact = service.patch(contactId, patchRequest)
+      val updatedContact = service.patch(contactId, patchRequest, user)
 
       val contactCaptor = argumentCaptor<ContactEntity>()
 
@@ -677,7 +648,7 @@ class ContactPatchServiceTest {
       verify(referenceCodeService, times(1)).validateReferenceCode(ReferenceCodeGroup.GENDER, "NS", allowInactive = true)
 
       assertThat(updatedContact.genderCode).isEqualTo("NS")
-      assertThat(updatedContact.updatedBy).isEqualTo(patchRequest.updatedBy)
+      assertThat(updatedContact.updatedBy).isEqualTo("updated")
     }
 
     @Test
@@ -686,7 +657,6 @@ class ContactPatchServiceTest {
 
       val patchRequest = PatchContactRequest(
         genderCode = JsonNullable.of("NS"),
-        updatedBy = "Modifier",
       )
       val expectedException = ValidationException("Invalid")
       whenContactExists()
@@ -694,7 +664,7 @@ class ContactPatchServiceTest {
       whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.GENDER, "NS", allowInactive = true)).thenThrow(expectedException)
 
       val exception = assertThrows<ValidationException> {
-        service.patch(contactId, patchRequest)
+        service.patch(contactId, patchRequest, user)
       }
       assertThat(exception).isEqualTo(expectedException)
     }

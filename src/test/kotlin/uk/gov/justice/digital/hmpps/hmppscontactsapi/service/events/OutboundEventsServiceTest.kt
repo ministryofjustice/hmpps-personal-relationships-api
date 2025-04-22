@@ -15,6 +15,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.FeatureSwitches
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -27,10 +28,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact created event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_CREATED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_CREATED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_CREATED, 1L, 1L, user = aUser("foo"))
     verify(
       expectedEventType = "contacts-api.contact.created",
-      expectedAdditionalInformation = ContactInfo(contactId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = ContactInfo(contactId = 1L, source = Source.DPS, "foo"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact has been created",
     )
@@ -39,10 +40,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact updated event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_UPDATED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_UPDATED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_UPDATED, 1L, 1L, user = aUser("foo"))
     verify(
       expectedEventType = "contacts-api.contact.updated",
-      expectedAdditionalInformation = ContactInfo(contactId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = ContactInfo(contactId = 1L, source = Source.DPS, "foo"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact has been updated",
     )
@@ -51,10 +52,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact deleted event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_DELETED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_DELETED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_DELETED, 1L, 1L, user = aUser("foo"))
     verify(
       expectedEventType = "contacts-api.contact.deleted",
-      expectedAdditionalInformation = ContactInfo(contactId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = ContactInfo(contactId = 1L, source = Source.DPS, "foo"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact has been deleted",
     )
@@ -243,10 +244,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `prisoner contact created event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_CREATED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_CREATED, 1L, 1L, "A1234AA")
+    outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_CREATED, 1L, 1L, "A1234AA", user = aUser("foo"))
     verify(
       expectedEventType = "contacts-api.prisoner-contact.created",
-      expectedAdditionalInformation = PrisonerContactInfo(prisonerContactId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = PrisonerContactInfo(prisonerContactId = 1L, source = Source.DPS, username = "foo"),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact has been created",
     )
@@ -255,10 +256,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `prisoner contact updated event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_UPDATED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_UPDATED, 1L, 1L, "A1234AA")
+    outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_UPDATED, 1L, 1L, "A1234AA", user = aUser("foo"))
     verify(
       expectedEventType = "contacts-api.prisoner-contact.updated",
-      expectedAdditionalInformation = PrisonerContactInfo(prisonerContactId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = PrisonerContactInfo(prisonerContactId = 1L, source = Source.DPS, username = "foo"),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact has been updated",
     )
@@ -267,10 +268,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `prisoner contact deleted event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_DELETED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_DELETED, 1L, 1L, "A1234AA")
+    outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_DELETED, 1L, 1L, "A1234AA", user = aUser("foo"))
     verify(
       expectedEventType = "contacts-api.prisoner-contact.deleted",
-      expectedAdditionalInformation = PrisonerContactInfo(prisonerContactId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = PrisonerContactInfo(prisonerContactId = 1L, source = Source.DPS, username = "foo"),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact has been deleted",
     )

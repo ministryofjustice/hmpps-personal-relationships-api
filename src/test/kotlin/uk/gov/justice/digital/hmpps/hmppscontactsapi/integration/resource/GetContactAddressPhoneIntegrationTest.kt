@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContact
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 
@@ -24,39 +25,41 @@ class GetContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
-    savedContactId = testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "address-phone",
-        firstName = "has",
-        createdBy = "created",
-      ),
+    doWithTemporaryWritePermission {
+      savedContactId = testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "address-phone",
+          firstName = "has",
+        ),
 
-    ).id
+      ).id
 
-    savedAddressId = testAPIClient.createAContactAddress(
-      savedContactId,
-      CreateContactAddressRequest(
-        addressType = "HOME",
-        primaryAddress = true,
-        property = "27",
-        street = "Hello Road",
-        createdBy = "created",
-      ),
+      savedAddressId = testAPIClient.createAContactAddress(
+        savedContactId,
+        CreateContactAddressRequest(
+          addressType = "HOME",
+          primaryAddress = true,
+          property = "27",
+          street = "Hello Road",
+          createdBy = "created",
+        ),
 
-    ).contactAddressId
+      ).contactAddressId
 
-    savedAddressPhoneId = testAPIClient.createAContactAddressPhone(
-      savedContactId,
-      savedAddressId,
-      CreateContactAddressPhoneRequest(
-        contactAddressId = savedAddressId,
-        phoneType = "HOME",
-        phoneNumber = "123456",
-        extNumber = "2",
-        createdBy = "CREATED",
-      ),
+      savedAddressPhoneId = testAPIClient.createAContactAddressPhone(
+        savedContactId,
+        savedAddressId,
+        CreateContactAddressPhoneRequest(
+          contactAddressId = savedAddressId,
+          phoneType = "HOME",
+          phoneNumber = "123456",
+          extNumber = "2",
+          createdBy = "CREATED",
+        ),
 
-    ).contactAddressPhoneId
+      ).contactAddressPhoneId
+    }
+    setCurrentUser(StubUser.READ_ONLY_USER)
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()

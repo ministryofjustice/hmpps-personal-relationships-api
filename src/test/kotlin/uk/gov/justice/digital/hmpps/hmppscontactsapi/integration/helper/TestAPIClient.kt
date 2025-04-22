@@ -53,16 +53,17 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCod
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.MigrateContactResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContact
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContactId
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 import java.net.URI
 
-class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAuthHelper: JwtAuthorisationHelper) {
+class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAuthHelper: JwtAuthorisationHelper, var currentUser: StubUser?) {
 
   fun syncReconcileContacts(page: Long = 0, size: Long = 10) = webTestClient.get()
     .uri("/sync/contact/reconcile?page=$page&size=$size")
     .accept(MediaType.APPLICATION_JSON)
-    .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+    .headers(setAuthorisationUsingCurrentUser())
     .exchange()
     .expectStatus()
     .isOk
@@ -74,7 +75,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/sync/contact")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -89,7 +90,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -103,7 +104,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri(url)
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -115,7 +116,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
   fun getContact(id: Long, role: String = "ROLE_CONTACTS_ADMIN"): ContactDetails = webTestClient.get()
     .uri("/contact/$id")
     .accept(MediaType.APPLICATION_JSON)
-    .headers(setAuthorisation(roles = listOf(role)))
+    .headers(setAuthorisationUsingCurrentUser())
     .exchange()
     .expectStatus()
     .isOk
@@ -126,7 +127,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
   fun getContactName(id: Long, role: String = "ROLE_CONTACTS_ADMIN"): ContactNameDetails = webTestClient.get()
     .uri("/contact/$id/name")
     .accept(MediaType.APPLICATION_JSON)
-    .headers(setAuthorisation(roles = listOf(role)))
+    .headers(setAuthorisationUsingCurrentUser())
     .exchange()
     .expectStatus()
     .isOk
@@ -136,7 +137,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
 
   fun getPrisonerContacts(prisonerNumber: String): PrisonerContactSummaryResponse = webTestClient.get()
     .uri("/prisoner/$prisonerNumber/contact")
-    .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+    .headers(setAuthorisationUsingCurrentUser())
     .exchange()
     .expectStatus()
     .isOk
@@ -146,7 +147,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
 
   fun getPrisonerContactRelationshipCount(prisonerNumber: String): PrisonerContactRelationshipCount = webTestClient.get()
     .uri("/prisoner/$prisonerNumber/contact/count")
-    .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+    .headers(setAuthorisationUsingCurrentUser())
     .exchange()
     .expectStatus()
     .isOk
@@ -162,7 +163,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
   ): MutableList<ReferenceCode>? = webTestClient.get()
     .uri("/reference-codes/group/$groupCode?${sort?.let { "sort=$sort&" } ?: ""}${activeOnly?.let { "&activeOnly=$activeOnly" } ?: ""}")
     .accept(MediaType.APPLICATION_JSON)
-    .headers(setAuthorisation(roles = listOf(role)))
+    .headers(setAuthorisationUsingCurrentUser())
     .exchange()
     .expectStatus().isOk
     .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -173,7 +174,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/prisoner-contact")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -185,7 +186,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
   fun getSearchContactResults(uri: URI, role: String = "ROLE_CONTACTS_ADMIN") = webTestClient.get()
     .uri(uri.toString())
     .accept(MediaType.APPLICATION_JSON)
-    .headers(setAuthorisation(roles = listOf(role)))
+    .headers(setAuthorisationUsingCurrentUser())
     .exchange()
     .expectStatus().isOk
     .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -195,7 +196,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
   fun getBadResponseErrors(uri: URI) = webTestClient.get()
     .uri(uri.toString())
     .accept(MediaType.APPLICATION_JSON)
-    .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+    .headers(setAuthorisationUsingCurrentUser())
     .exchange()
     .expectStatus()
     .isBadRequest
@@ -206,7 +207,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
   fun <T> getBadResponseErrorsWithPatch(request: T, uri: URI) = webTestClient.patch()
     .uri(uri.toString())
     .accept(MediaType.APPLICATION_JSON)
-    .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request!!)
     .exchange()
     .expectStatus()
@@ -219,7 +220,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/phone")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -232,7 +233,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/phones")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -245,7 +246,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/phone/$contactPhoneId")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -257,7 +258,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
   fun getContactPhone(contactId: Long, contactPhoneId: Long, role: String = "ROLE_CONTACTS_ADMIN"): ContactPhoneDetails = webTestClient.get()
     .uri("/contact/$contactId/phone/$contactPhoneId")
     .accept(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .exchange()
     .expectStatus()
     .isOk
@@ -274,7 +275,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/address/$contactAddressId/phone")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -287,7 +288,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/address/$contactAddressId/phones")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -306,7 +307,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/address/$contactAddressId/phone/$contactAddressPhoneId")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -319,7 +320,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/identity")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -332,7 +333,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/identities")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -350,7 +351,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/identity/$contactIdentityId")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -362,7 +363,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
   fun getContactIdentity(contactId: Long, contactIdentityId: Long, role: String = "ROLE_CONTACTS_ADMIN"): ContactIdentityDetails = webTestClient.get()
     .uri("/contact/$contactId/identity/$contactIdentityId")
     .accept(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .exchange()
     .expectStatus()
     .isOk
@@ -374,7 +375,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/email")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -387,7 +388,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/emails")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -400,7 +401,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/email/$contactEmailId")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -414,7 +415,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
       .uri("/prisoner-contact/$prisonerContactId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -424,7 +425,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
   fun getContactEmail(contactId: Long, contactEmailId: Long, role: String = "ROLE_CONTACTS_ADMIN"): ContactEmailDetails = webTestClient.get()
     .uri("/contact/$contactId/email/$contactEmailId")
     .accept(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .exchange()
     .expectStatus()
     .isOk
@@ -438,11 +439,19 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     scopes: List<String> = listOf("read"),
   ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisationHeader(username = username, scope = scopes, roles = roles)
 
+  fun setAuthorisationUsingCurrentUser(): (HttpHeaders) -> Unit = currentUser?.let {
+    jwtAuthHelper.setAuthorisationHeader(
+      username = if (it.isSystemUser) null else it.username,
+      scope = listOf("read"),
+      roles = it.roles,
+    )
+  } ?: {}
+
   fun migrateAContact(request: MigrateContactRequest, authRole: String = "PERSONAL_RELATIONSHIPS_MIGRATION") = webTestClient.post()
     .uri("/migrate/contact")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(setAuthorisation(roles = listOf(authRole)))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -454,7 +463,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
   fun getContactGlobalRestrictions(contactId: Long, role: String = "ROLE_CONTACTS_ADMIN"): List<ContactRestrictionDetails> = webTestClient.get()
     .uri("/contact/$contactId/restriction")
     .accept(MediaType.APPLICATION_JSON)
-    .headers(setAuthorisation(roles = listOf(role)))
+    .headers(setAuthorisationUsingCurrentUser())
     .exchange()
     .expectStatus().isOk
     .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -469,7 +478,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/restriction")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -487,7 +496,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/restriction/$contactRestrictionId")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -499,7 +508,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
   fun getPrisonerContactRestrictions(prisonerContactId: Long, role: String = "ROLE_CONTACTS_ADMIN"): PrisonerContactRestrictionsResponse = webTestClient.get()
     .uri("/prisoner-contact/$prisonerContactId/restriction")
     .accept(MediaType.APPLICATION_JSON)
-    .headers(setAuthorisation(roles = listOf(role)))
+    .headers(setAuthorisationUsingCurrentUser())
     .exchange()
     .expectStatus().isOk
     .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -514,7 +523,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/prisoner-contact/$prisonerContactId/restriction")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -532,7 +541,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/prisoner-contact/$prisonerContactId/restriction/$prisonerRestrictionContactId")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -545,7 +554,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/address")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -558,7 +567,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/address/$contactAddressId")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -571,7 +580,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/address/$contactAddressId")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -582,7 +591,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
 
   fun getLinkedPrisoners(contactId: Long, page: Int? = null, size: Int? = null): LinkedPrisonerResponse = webTestClient.get()
     .uri("/contact/$contactId/linked-prisoners?${page?.let { "page=$page&"} }${size?.let { "size=$size"} }")
-    .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+    .headers(setAuthorisationUsingCurrentUser())
     .exchange()
     .expectStatus()
     .isOk
@@ -594,7 +603,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/employment")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -607,7 +616,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/employment")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -620,7 +629,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
   fun getAnEmployment(contactId: Long, employmentId: Long, role: String = "ROLE_CONTACTS_ADMIN"): EmploymentDetails = webTestClient.get()
     .uri("/contact/$contactId/employment/$employmentId")
     .accept(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .exchange()
     .expectStatus()
     .isOk
@@ -632,7 +641,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .uri("/contact/$contactId/employment/$employmentId")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .headers(authorised(role))
+    .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(request)
     .exchange()
     .expectStatus()
@@ -645,13 +654,11 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     webTestClient.delete()
       .uri("/contact/$contactId/employment/$employmentId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(authorised(role))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNoContent
   }
-
-  private fun authorised(role: String = "ROLE_CONTACTS_ADMIN") = setAuthorisation(roles = listOf(role))
 
   data class ContactSearchResponse(
     val content: List<ContactSearchResultItem>,

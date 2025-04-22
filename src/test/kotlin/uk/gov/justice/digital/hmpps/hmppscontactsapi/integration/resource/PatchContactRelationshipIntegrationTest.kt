@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 
 import org.apache.commons.lang3.RandomStringUtils
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -20,17 +21,23 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEven
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerContactInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.READ_WRITE_USER)
+  }
+
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.patch()
     .uri("/prisoner-contact/99")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
-    .bodyValue(PatchRelationshipRequest(updatedBy = "Admin"))
+    .bodyValue(PatchRelationshipRequest())
 
   @ParameterizedTest
   @CsvSource(
@@ -102,7 +109,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val updateRequest = PatchRelationshipRequest(
       relationshipToPrisonerCode = JsonNullable.of("SIS"),
-      updatedBy = "Admin",
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -114,7 +120,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].relationshipToPrisonerCode).isEqualTo("SIS")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -128,7 +134,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     val updateRequest = PatchRelationshipRequest(
       relationshipTypeCode = JsonNullable.of("O"),
       relationshipToPrisonerCode = JsonNullable.of("DR"),
-      updatedBy = "Admin",
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -141,7 +146,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].relationshipToPrisonerCode).isEqualTo("DR")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -154,7 +159,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val updateRequest = PatchRelationshipRequest(
       isNextOfKin = JsonNullable.of(true),
-      updatedBy = "Admin",
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -166,7 +170,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].isNextOfKin).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -179,7 +183,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val updateRequest = PatchRelationshipRequest(
       isApprovedVisitor = JsonNullable.of(true),
-      updatedBy = "Admin",
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -191,7 +194,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].isApprovedVisitor).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -204,7 +207,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val updateRequest = PatchRelationshipRequest(
       isEmergencyContact = JsonNullable.of(true),
-      updatedBy = "Admin",
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -216,7 +218,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].isEmergencyContact).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -229,7 +231,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val updateRequest = PatchRelationshipRequest(
       isRelationshipActive = JsonNullable.of(true),
-      updatedBy = "Admin",
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -241,7 +242,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].isRelationshipActive).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -254,7 +255,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val updateRequest = PatchRelationshipRequest(
       comments = JsonNullable.of("New comment"),
-      updatedBy = "Admin",
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -266,7 +266,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].comments).isEqualTo("New comment")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -277,9 +277,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     stubPrisonSearchWithResponse(prisonerNumber)
     val prisonerContact = cretePrisonerContact(prisonerNumber)
 
-    val updateRequest = PatchRelationshipRequest(
-      updatedBy = "Admin",
-    )
+    val updateRequest = PatchRelationshipRequest()
 
     val prisonerContactId = prisonerContact.prisonerContactId
 
@@ -289,7 +287,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts).hasSize(1)
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -308,7 +306,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       isEmergencyContact = JsonNullable.of(true),
       isRelationshipActive = JsonNullable.of(true),
       comments = JsonNullable.of("comments added"),
-      updatedBy = "Admin",
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -321,7 +318,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertUpdatedPrisonerContactEquals(updatedPrisonerContacts[0], updateRequest)
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
   }
@@ -360,7 +357,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     val request = CreateContactRequest(
       lastName = RandomStringUtils.secure().next(35),
       firstName = "a new guy",
-      createdBy = "created",
       relationship = requestedRelationship,
     )
 
@@ -395,11 +391,9 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         isEmergencyContact = JsonNullable.of(true),
         isRelationshipActive = JsonNullable.of(true),
         comments = JsonNullable.of("comments added"),
-        updatedBy = "Admin",
       )
       return listOf(
         Arguments.of("comments must be <= 240 characters", relationship.copy(comments = JsonNullable.of("".padStart(241, 'X')))),
-        Arguments.of("updatedBy must be <= 100 characters", relationship.copy(updatedBy = "".padStart(101, 'X'))),
       )
     }
   }

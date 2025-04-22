@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -27,11 +28,17 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.EmploymentIn
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
 class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.CREATING_USER)
+  }
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
@@ -48,8 +55,6 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       "firstName must not be null;{\"lastName\": \"last\", \"createdBy\": \"created\"}",
       "lastName must not be null;{\"firstName\": \"first\", \"lastName\": null, \"createdBy\": \"created\"}",
       "lastName must not be null;{\"firstName\": \"first\", \"createdBy\": \"created\"}",
-      "createdBy must not be null;{\"firstName\": \"first\", \"lastName\": \"last\", \"createdBy\": null}",
-      "createdBy must not be null;{\"firstName\": \"first\", \"lastName\": \"last\"}",
     ],
     delimiter = ';',
   )
@@ -194,7 +199,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactReturnedOnCreate.id, Source.DPS),
+      additionalInfo = ContactInfo(contactReturnedOnCreate.id, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactReturnedOnCreate.id),
     )
   }
@@ -226,7 +231,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactReturnedOnCreate.id, Source.DPS),
+      additionalInfo = ContactInfo(contactReturnedOnCreate.id, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactReturnedOnCreate.id),
     )
 
@@ -342,7 +347,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactId, Source.DPS),
+      additionalInfo = ContactInfo(contactId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
@@ -440,7 +445,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactId, Source.DPS),
+      additionalInfo = ContactInfo(contactId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
@@ -496,7 +501,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactId, Source.DPS),
+      additionalInfo = ContactInfo(contactId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
@@ -556,7 +561,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactId, Source.DPS),
+      additionalInfo = ContactInfo(contactId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
@@ -612,7 +617,6 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       interpreterRequired = true,
       domesticStatusCode = "S",
       genderCode = "M",
-      createdBy = "created",
     )
 
     val contact = testAPIClient.createAContact(request, role)
@@ -621,7 +625,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contact.id, Source.DPS),
+      additionalInfo = ContactInfo(contact.id, Source.DPS, "created"),
       personReference = PersonReference(contact.id),
     )
   }
@@ -633,7 +637,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(firstName).isEqualTo(request.firstName)
       assertThat(middleNames).isEqualTo(request.middleNames)
       assertThat(dateOfBirth).isEqualTo(request.dateOfBirth)
-      assertThat(createdBy).isEqualTo(request.createdBy)
+      assertThat(createdBy).isEqualTo("created")
       assertThat(isStaff).isEqualTo(request.isStaff)
       assertThat(languageCode).isEqualTo(request.languageCode)
       assertThat(interpreterRequired).isEqualTo(request.interpreterRequired)
@@ -695,10 +699,6 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
         Arguments.of(
           "middleNames must be <= 35 characters",
           aMinimalCreateContactRequest().copy(middleNames = "".padStart(36, 'X')),
-        ),
-        Arguments.of(
-          "createdBy must be <= 100 characters",
-          aMinimalCreateContactRequest().copy(createdBy = "".padStart(101, 'X')),
         ),
         Arguments.of(
           "identities[0].identityType must be <= 12 characters",
@@ -937,7 +937,6 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
     private fun aMinimalCreateContactRequest(identityDocuments: List<IdentityDocument> = emptyList()) = CreateContactRequest(
       lastName = "last",
       firstName = "first",
-      createdBy = "created",
       identities = identityDocuments,
     )
 

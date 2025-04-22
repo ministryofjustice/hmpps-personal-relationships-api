@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping
 
 import org.springframework.data.domain.Page
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
@@ -57,7 +58,7 @@ fun ContactRelationship.toEntity(
   currentTerm = true,
 )
 
-fun CreateContactRequest.toModel() = ContactEntity(
+fun CreateContactRequest.toModel(user: User) = ContactEntity(
   contactId = null,
   title = this.titleCode,
   firstName = this.firstName,
@@ -65,7 +66,7 @@ fun CreateContactRequest.toModel() = ContactEntity(
   middleNames = this.middleNames,
   dateOfBirth = this.dateOfBirth,
   deceasedDate = null,
-  createdBy = this.createdBy,
+  createdBy = user.username,
   createdTime = LocalDateTime.now(),
   staffFlag = this.isStaff,
   remitterFlag = false,

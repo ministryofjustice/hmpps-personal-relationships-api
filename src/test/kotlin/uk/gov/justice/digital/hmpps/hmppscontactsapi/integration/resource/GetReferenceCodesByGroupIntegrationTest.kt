@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -12,11 +13,17 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegr
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.helper.hasSize
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ReferenceCodeRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 class GetReferenceCodesByGroupIntegrationTest : SecureAPIIntegrationTestBase() {
   @Autowired
   private lateinit var referenceCodeRepository: ReferenceCodeRepository
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.READ_ONLY_USER)
+  }
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 

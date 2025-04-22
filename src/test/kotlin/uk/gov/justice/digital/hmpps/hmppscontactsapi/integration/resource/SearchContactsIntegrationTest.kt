@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.RandomUtils
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -11,11 +12,17 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.util.UriComponentsBuilder
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.net.URI
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.READ_ONLY_USER)
+  }
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
@@ -238,30 +245,29 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should sort by date of birth with nulls as eldest`() {
     val randomLastName = RandomStringUtils.secure().nextAlphabetic(35)
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = randomLastName,
-        firstName = "Youngest",
-        dateOfBirth = LocalDate.of(2025, 1, 1),
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = randomLastName,
-        firstName = "Eldest",
-        dateOfBirth = LocalDate.of(1990, 1, 1),
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = randomLastName,
-        firstName = "None",
-        dateOfBirth = null,
-        createdBy = "USER1",
-      ),
-    )
+    doWithTemporaryWritePermission {
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = randomLastName,
+          firstName = "Youngest",
+          dateOfBirth = LocalDate.of(2025, 1, 1),
+        ),
+      )
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = randomLastName,
+          firstName = "Eldest",
+          dateOfBirth = LocalDate.of(1990, 1, 1),
+        ),
+      )
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = randomLastName,
+          firstName = "None",
+          dateOfBirth = null,
+        ),
+      )
+    }
 
     val resultsEldestFirst = testAPIClient.getSearchContactResults(
       UriComponentsBuilder.fromPath("contact/search")
@@ -289,58 +295,53 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should sort by names is specified order`() {
     val randomDob = LocalDate.now().minusDays(RandomUtils.secure().randomLong(100, 2000))
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "AA",
-        firstName = "B",
-        middleNames = "C",
-        dateOfBirth = randomDob,
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "AA",
-        firstName = "B",
-        dateOfBirth = randomDob,
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "AB",
-        firstName = "A",
-        dateOfBirth = randomDob,
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "AB",
-        firstName = "B",
-        dateOfBirth = randomDob,
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "AC",
-        firstName = "C",
-        middleNames = "A",
-        dateOfBirth = randomDob,
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "AC",
-        firstName = "C",
-        middleNames = "B",
-        dateOfBirth = randomDob,
-        createdBy = "USER1",
-      ),
-    )
-
+    doWithTemporaryWritePermission {
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AA",
+          firstName = "B",
+          middleNames = "C",
+          dateOfBirth = randomDob,
+        ),
+      )
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AA",
+          firstName = "B",
+          dateOfBirth = randomDob,
+        ),
+      )
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AB",
+          firstName = "A",
+          dateOfBirth = randomDob,
+        ),
+      )
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AB",
+          firstName = "B",
+          dateOfBirth = randomDob,
+        ),
+      )
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AC",
+          firstName = "C",
+          middleNames = "A",
+          dateOfBirth = randomDob,
+        ),
+      )
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AC",
+          firstName = "C",
+          middleNames = "B",
+          dateOfBirth = randomDob,
+        ),
+      )
+    }
     val expectedOrder = listOf(
       "AA, B C",
       "AA, B",
@@ -380,27 +381,27 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `secondary sort by id should work`() {
     val randomDob = LocalDate.now().minusDays(RandomUtils.secure().randomLong(100, 2000))
-    val lowestId = testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "AA",
-        firstName = "B",
-        dateOfBirth = randomDob,
-        createdBy = "USER1",
-      ),
-    ).id
-    val highestId = testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "AA",
-        firstName = "B",
-        dateOfBirth = randomDob,
-        createdBy = "USER1",
-      ),
-    ).id
+    val expectedOrder = doWithTemporaryWritePermission {
+      val lowestId = testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AA",
+          firstName = "B",
+          dateOfBirth = randomDob,
+        ),
+      ).id
+      val highestId = testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AA",
+          firstName = "B",
+          dateOfBirth = randomDob,
+        ),
+      ).id
 
-    val expectedOrder = listOf(
-      lowestId,
-      highestId,
-    )
+      listOf(
+        lowestId,
+        highestId,
+      )
+    }
 
     val ascendingName = testAPIClient.getSearchContactResults(
       UriComponentsBuilder.fromPath("contact/search")

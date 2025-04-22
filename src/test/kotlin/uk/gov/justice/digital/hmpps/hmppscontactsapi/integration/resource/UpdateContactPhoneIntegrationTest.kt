@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdateP
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactPhoneInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
@@ -27,11 +28,11 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
+    setCurrentUser(StubUser.CREATING_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "phone",
         firstName = "has",
-        createdBy = "created",
       ),
 
     ).id
@@ -45,6 +46,7 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       ),
 
     ).contactPhoneId
+    setCurrentUser(StubUser.UPDATING_USER)
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.put()

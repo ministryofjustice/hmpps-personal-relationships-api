@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegra
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -27,6 +28,7 @@ class MostRelevantAddressTest : PostgresIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
+    setCurrentUser(StubUser.READ_WRITE_USER)
     stubPrisonSearchWithResponse(prisonerNumber)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
@@ -41,9 +43,9 @@ class MostRelevantAddressTest : PostgresIntegrationTestBase() {
           isApprovedVisitor = false,
           comments = null,
         ),
-        createdBy = "created",
       ),
     ).id
+    setCurrentUser(StubUser.READ_ONLY_USER)
   }
 
   @ParameterizedTest

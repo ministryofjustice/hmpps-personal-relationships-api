@@ -10,7 +10,6 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRestrictionRequest
@@ -19,6 +18,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactRestr
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 
@@ -30,11 +30,11 @@ class UpdateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
+    setCurrentUser(StubUser.CREATING_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "last",
         firstName = "first",
-        createdBy = "created",
       ),
 
     ).id
@@ -49,8 +49,7 @@ class UpdateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       ),
 
     ).contactRestrictionId
-    stubGetUserByUsername(User("created", "Created User"))
-    stubGetUserByUsername(User("updated", "Updated User"))
+    setCurrentUser(StubUser.UPDATING_USER)
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.put()
@@ -195,7 +194,7 @@ class UpdateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(expiryDate).isNull()
       assertThat(comments).isNull()
       assertThat(enteredByUsername).isEqualTo("updated")
-      assertThat(enteredByDisplayName).isEqualTo("Updated User")
+      assertThat(enteredByDisplayName).isEqualTo("Updated")
       assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
       assertThat(updatedBy).isEqualTo("updated")
@@ -235,7 +234,7 @@ class UpdateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(expiryDate).isEqualTo(request.expiryDate)
       assertThat(comments).isEqualTo(request.comments)
       assertThat(enteredByUsername).isEqualTo("updated")
-      assertThat(enteredByDisplayName).isEqualTo("Updated User")
+      assertThat(enteredByDisplayName).isEqualTo("Updated")
       assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
       assertThat(updatedBy).isEqualTo("updated")

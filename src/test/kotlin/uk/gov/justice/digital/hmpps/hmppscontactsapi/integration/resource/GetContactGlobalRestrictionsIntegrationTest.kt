@@ -1,16 +1,23 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.User
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDate
 
 class GetContactGlobalRestrictionsIntegrationTest : SecureAPIIntegrationTestBase() {
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.READ_ONLY_USER)
+  }
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
@@ -30,7 +37,7 @@ class GetContactGlobalRestrictionsIntegrationTest : SecureAPIIntegrationTestBase
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should return all global restrictions for a contact`(role: String) {
-    stubGetUserByUsername(User("JBAKER_GEN", "James Baker"))
+    stubGetUserByUsername(UserDetails("JBAKER_GEN", "James Baker"))
     val restrictions = testAPIClient.getContactGlobalRestrictions(3, role)
     assertThat(restrictions).hasSize(2)
     with(restrictions[0]) {
@@ -59,10 +66,9 @@ class GetContactGlobalRestrictionsIntegrationTest : SecureAPIIntegrationTestBase
 
   @Test
   fun `should return empty list if no restrictions for a contact`() {
-    val createdContact = testAPIClient.createAContact(
-      CreateContactRequest(firstName = "First", lastName = "Last", createdBy = "USER1"),
-
-    )
+    val createdContact = doWithTemporaryWritePermission {
+      testAPIClient.createAContact(CreateContactRequest(lastName = "Last", firstName = "First"))
+    }
     val restrictions = testAPIClient.getContactGlobalRestrictions(createdContact.id)
     assertThat(restrictions).isEmpty()
   }

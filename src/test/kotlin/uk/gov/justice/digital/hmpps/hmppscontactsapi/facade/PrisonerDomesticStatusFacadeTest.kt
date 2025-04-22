@@ -155,7 +155,7 @@ class PrisonerDomesticStatusFacadeTest {
       }.message isEqualTo "Prisoner's domestic status could not updated!"
 
       verify(prisonerDomesticStatusService).createOrUpdateDomesticStatus(prisonerNumber, request)
-      verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any())
+      verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
     }
   }
 }

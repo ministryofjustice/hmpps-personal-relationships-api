@@ -4,6 +4,7 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.RandomUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -20,11 +21,17 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePrisone
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RestrictionTypeDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RestrictionsSummary
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDate
 
 class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   companion object {
     private const val GET_PRISONER_CONTACT = "/prisoner/A4385DZ/contact"
+  }
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.READ_ONLY_USER)
   }
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
@@ -38,7 +45,7 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
     webTestClient.get()
       .uri("/prisoner/A4385DZ/contact")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -161,40 +168,40 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   fun `should return with active or inactive correctly`() {
     val prisonerNumber = "Z1234ZZ"
     stubPrisonSearchWithResponse(prisonerNumber)
-    testAPIClient.createAContactWithARelationship(
-      CreateContactRequest(
-        lastName = "Active",
-        firstName = "Contact",
-        relationship = ContactRelationship(
-          prisonerNumber = prisonerNumber,
-          relationshipTypeCode = "S",
-          relationshipToPrisonerCode = "MOT",
-          isNextOfKin = false,
-          isEmergencyContact = false,
-          isApprovedVisitor = false,
+    doWithTemporaryWritePermission {
+      testAPIClient.createAContactWithARelationship(
+        CreateContactRequest(
+          lastName = "Active",
+          firstName = "Contact",
+          relationship = ContactRelationship(
+            prisonerNumber = prisonerNumber,
+            relationshipTypeCode = "S",
+            relationshipToPrisonerCode = "MOT",
+            isNextOfKin = false,
+            isEmergencyContact = false,
+            isApprovedVisitor = false,
+          ),
         ),
-        createdBy = "USER1",
-      ),
-    )
-    val prisonerContactIdToDeactivate = testAPIClient.createAContactWithARelationship(
-      CreateContactRequest(
-        lastName = "Inactive",
-        firstName = "Contact",
-        relationship = ContactRelationship(
-          prisonerNumber = prisonerNumber,
-          relationshipTypeCode = "S",
-          relationshipToPrisonerCode = "MOT",
-          isNextOfKin = false,
-          isEmergencyContact = false,
-          isApprovedVisitor = false,
+      )
+      val prisonerContactIdToDeactivate = testAPIClient.createAContactWithARelationship(
+        CreateContactRequest(
+          lastName = "Inactive",
+          firstName = "Contact",
+          relationship = ContactRelationship(
+            prisonerNumber = prisonerNumber,
+            relationshipTypeCode = "S",
+            relationshipToPrisonerCode = "MOT",
+            isNextOfKin = false,
+            isEmergencyContact = false,
+            isApprovedVisitor = false,
+          ),
         ),
-        createdBy = "USER1",
-      ),
-    ).createdRelationship!!.prisonerContactId
-    testAPIClient.updateRelationship(
-      prisonerContactIdToDeactivate,
-      PatchRelationshipRequest(isRelationshipActive = JsonNullable.of(false), updatedBy = "USER1"),
-    )
+      ).createdRelationship!!.prisonerContactId
+      testAPIClient.updateRelationship(
+        prisonerContactIdToDeactivate,
+        PatchRelationshipRequest(isRelationshipActive = JsonNullable.of(false)),
+      )
+    }
 
     val withActiveOnly = getForUrl("/prisoner/$prisonerNumber/contact?active=true")
     assertThat(withActiveOnly.content).hasSize(1)
@@ -214,36 +221,36 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   fun `should return with relationship type filtered correctly`() {
     val prisonerNumber = "Z4567ZZ"
     stubPrisonSearchWithResponse(prisonerNumber)
-    testAPIClient.createAContactWithARelationship(
-      CreateContactRequest(
-        lastName = "Social",
-        firstName = "Contact",
-        relationship = ContactRelationship(
-          prisonerNumber = prisonerNumber,
-          relationshipTypeCode = "S",
-          relationshipToPrisonerCode = "MOT",
-          isNextOfKin = false,
-          isEmergencyContact = false,
-          isApprovedVisitor = false,
+    doWithTemporaryWritePermission {
+      testAPIClient.createAContactWithARelationship(
+        CreateContactRequest(
+          lastName = "Social",
+          firstName = "Contact",
+          relationship = ContactRelationship(
+            prisonerNumber = prisonerNumber,
+            relationshipTypeCode = "S",
+            relationshipToPrisonerCode = "MOT",
+            isNextOfKin = false,
+            isEmergencyContact = false,
+            isApprovedVisitor = false,
+          ),
         ),
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContactWithARelationship(
-      CreateContactRequest(
-        lastName = "Official",
-        firstName = "Contact",
-        relationship = ContactRelationship(
-          prisonerNumber = prisonerNumber,
-          relationshipTypeCode = "O",
-          relationshipToPrisonerCode = "DR",
-          isNextOfKin = false,
-          isEmergencyContact = false,
-          isApprovedVisitor = false,
+      )
+      testAPIClient.createAContactWithARelationship(
+        CreateContactRequest(
+          lastName = "Official",
+          firstName = "Contact",
+          relationship = ContactRelationship(
+            prisonerNumber = prisonerNumber,
+            relationshipTypeCode = "O",
+            relationshipToPrisonerCode = "DR",
+            isNextOfKin = false,
+            isEmergencyContact = false,
+            isApprovedVisitor = false,
+          ),
         ),
-        createdBy = "USER1",
-      ),
-    )
+      )
+    }
 
     val withNoTypeSpecified = getForUrl("/prisoner/$prisonerNumber/contact?sort=lastName")
     assertThat(withNoTypeSpecified.content).hasSize(2)
@@ -263,66 +270,64 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   fun `should return with emergency contact and next of kin filtered correctly`() {
     val prisonerNumber = "X4567XX"
     stubPrisonSearchWithResponse(prisonerNumber)
-    testAPIClient.createAContactWithARelationship(
-      CreateContactRequest(
-        lastName = "NOK Only",
-        firstName = "Contact",
-        relationship = ContactRelationship(
-          prisonerNumber = prisonerNumber,
-          relationshipTypeCode = "S",
-          relationshipToPrisonerCode = "MOT",
-          isNextOfKin = true,
-          isEmergencyContact = false,
-          isApprovedVisitor = false,
+    doWithTemporaryWritePermission {
+      testAPIClient.createAContactWithARelationship(
+        CreateContactRequest(
+          lastName = "NOK Only",
+          firstName = "Contact",
+          relationship = ContactRelationship(
+            prisonerNumber = prisonerNumber,
+            relationshipTypeCode = "S",
+            relationshipToPrisonerCode = "MOT",
+            isNextOfKin = true,
+            isEmergencyContact = false,
+            isApprovedVisitor = false,
+          ),
         ),
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContactWithARelationship(
-      CreateContactRequest(
-        lastName = "EC Only",
-        firstName = "Contact",
-        relationship = ContactRelationship(
-          prisonerNumber = prisonerNumber,
-          relationshipTypeCode = "S",
-          relationshipToPrisonerCode = "FRI",
-          isNextOfKin = false,
-          isEmergencyContact = true,
-          isApprovedVisitor = false,
+      )
+      testAPIClient.createAContactWithARelationship(
+        CreateContactRequest(
+          lastName = "EC Only",
+          firstName = "Contact",
+          relationship = ContactRelationship(
+            prisonerNumber = prisonerNumber,
+            relationshipTypeCode = "S",
+            relationshipToPrisonerCode = "FRI",
+            isNextOfKin = false,
+            isEmergencyContact = true,
+            isApprovedVisitor = false,
+          ),
         ),
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContactWithARelationship(
-      CreateContactRequest(
-        lastName = "NOK And EC",
-        firstName = "Contact",
-        relationship = ContactRelationship(
-          prisonerNumber = prisonerNumber,
-          relationshipTypeCode = "S",
-          relationshipToPrisonerCode = "FRI",
-          isNextOfKin = true,
-          isEmergencyContact = true,
-          isApprovedVisitor = false,
+      )
+      testAPIClient.createAContactWithARelationship(
+        CreateContactRequest(
+          lastName = "NOK And EC",
+          firstName = "Contact",
+          relationship = ContactRelationship(
+            prisonerNumber = prisonerNumber,
+            relationshipTypeCode = "S",
+            relationshipToPrisonerCode = "FRI",
+            isNextOfKin = true,
+            isEmergencyContact = true,
+            isApprovedVisitor = false,
+          ),
         ),
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContactWithARelationship(
-      CreateContactRequest(
-        lastName = "Neither",
-        firstName = "Contact",
-        relationship = ContactRelationship(
-          prisonerNumber = prisonerNumber,
-          relationshipTypeCode = "S",
-          relationshipToPrisonerCode = "FRI",
-          isNextOfKin = false,
-          isEmergencyContact = false,
-          isApprovedVisitor = false,
+      )
+      testAPIClient.createAContactWithARelationship(
+        CreateContactRequest(
+          lastName = "Neither",
+          firstName = "Contact",
+          relationship = ContactRelationship(
+            prisonerNumber = prisonerNumber,
+            relationshipTypeCode = "S",
+            relationshipToPrisonerCode = "FRI",
+            isNextOfKin = false,
+            isEmergencyContact = false,
+            isApprovedVisitor = false,
+          ),
         ),
-        createdBy = "USER1",
-      ),
-    )
+      )
+    }
 
     val withNoTypeSpecified = getForUrl("/prisoner/$prisonerNumber/contact")
     assertThat(withNoTypeSpecified.content).hasSize(4)
@@ -389,33 +394,32 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       isApprovedVisitor = false,
     )
     val randomLastName = RandomStringUtils.secure().nextAlphabetic(35)
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = randomLastName,
-        firstName = "Youngest",
-        dateOfBirth = LocalDate.of(2025, 1, 1),
-        relationship = relationship,
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = randomLastName,
-        firstName = "Eldest",
-        dateOfBirth = LocalDate.of(1990, 1, 1),
-        relationship = relationship,
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = randomLastName,
-        firstName = "None",
-        dateOfBirth = null,
-        relationship = relationship,
-        createdBy = "USER1",
-      ),
-    )
+    doWithTemporaryWritePermission {
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = randomLastName,
+          firstName = "Youngest",
+          dateOfBirth = LocalDate.of(2025, 1, 1),
+          relationship = relationship,
+        ),
+      )
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = randomLastName,
+          firstName = "Eldest",
+          dateOfBirth = LocalDate.of(1990, 1, 1),
+          relationship = relationship,
+        ),
+      )
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = randomLastName,
+          firstName = "None",
+          dateOfBirth = null,
+          relationship = relationship,
+        ),
+      )
+    }
 
     val resultsEldestFirst = getForUrl("/prisoner/$prisonerNumber/contact?sort=dateOfBirth,asc")
     assertThat(resultsEldestFirst.content).extracting("firstName").isEqualTo(
@@ -442,63 +446,59 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     )
 
     val randomDob = LocalDate.now().minusDays(RandomUtils.secure().randomLong(100, 2000))
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "AA",
-        firstName = "B",
-        middleNames = "C",
-        dateOfBirth = randomDob,
-        relationship = relationship,
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "AA",
-        firstName = "B",
-        dateOfBirth = randomDob,
-        relationship = relationship,
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "AB",
-        firstName = "A",
-        dateOfBirth = randomDob,
-        relationship = relationship,
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "AB",
-        firstName = "B",
-        dateOfBirth = randomDob,
-        relationship = relationship,
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "AC",
-        firstName = "C",
-        middleNames = "A",
-        dateOfBirth = randomDob,
-        relationship = relationship,
-        createdBy = "USER1",
-      ),
-    )
-    testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "AC",
-        firstName = "C",
-        middleNames = "B",
-        dateOfBirth = randomDob,
-        relationship = relationship,
-        createdBy = "USER1",
-      ),
-    )
+    doWithTemporaryWritePermission {
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AA",
+          firstName = "B",
+          middleNames = "C",
+          dateOfBirth = randomDob,
+          relationship = relationship,
+        ),
+      )
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AA",
+          firstName = "B",
+          dateOfBirth = randomDob,
+          relationship = relationship,
+        ),
+      )
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AB",
+          firstName = "A",
+          dateOfBirth = randomDob,
+          relationship = relationship,
+        ),
+      )
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AB",
+          firstName = "B",
+          dateOfBirth = randomDob,
+          relationship = relationship,
+        ),
+      )
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AC",
+          firstName = "C",
+          middleNames = "A",
+          dateOfBirth = randomDob,
+          relationship = relationship,
+        ),
+      )
+      testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AC",
+          firstName = "C",
+          middleNames = "B",
+          dateOfBirth = randomDob,
+          relationship = relationship,
+        ),
+      )
+    }
 
     val expectedOrder = listOf(
       "AA, B C",
@@ -533,29 +533,29 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       isApprovedVisitor = false,
     )
     val randomDob = LocalDate.now().minusDays(RandomUtils.secure().randomLong(100, 2000))
-    val lowestId = testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "AA",
-        firstName = "B",
-        dateOfBirth = randomDob,
-        relationship = relationship,
-        createdBy = "USER1",
-      ),
-    ).id
-    val highestId = testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "AA",
-        firstName = "B",
-        dateOfBirth = randomDob,
-        relationship = relationship,
-        createdBy = "USER1",
-      ),
-    ).id
 
-    val expectedOrder = listOf(
-      lowestId,
-      highestId,
-    )
+    val expectedOrder = doWithTemporaryWritePermission {
+      val lowestId = testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AA",
+          firstName = "B",
+          dateOfBirth = randomDob,
+          relationship = relationship,
+        ),
+      ).id
+      val highestId = testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AA",
+          firstName = "B",
+          dateOfBirth = randomDob,
+          relationship = relationship,
+        ),
+      ).id
+      listOf(
+        lowestId,
+        highestId,
+      )
+    }
 
     val ascendingName =
       getForUrl("/prisoner/$prisonerNumber/contact?sort=lastName,asc&sort=firstName,asc&sort=middleNames,asc&sort=contactId,asc")
@@ -573,68 +573,67 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     stubPrisonSearchWithResponse(prisonerOneNumber)
     stubPrisonSearchWithResponse(prisonerTwoNumber)
 
-    val relationship = ContactRelationship(
-      prisonerNumber = "temp",
-      relationshipTypeCode = "S",
-      relationshipToPrisonerCode = "FRI",
-      isNextOfKin = false,
-      isEmergencyContact = false,
-      isApprovedVisitor = false,
-    )
-    val contact = testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "Has Global Restriction",
-        firstName = "Contact",
-        createdBy = "USER1",
-      ),
-    )
-    val relationshipToPrisonerOne = testAPIClient.addAContactRelationship(
-      AddContactRelationshipRequest(
+    doWithTemporaryWritePermission {
+      val relationship = ContactRelationship(
+        prisonerNumber = "temp",
+        relationshipTypeCode = "S",
+        relationshipToPrisonerCode = "FRI",
+        isNextOfKin = false,
+        isEmergencyContact = false,
+        isApprovedVisitor = false,
+      )
+      val contact = testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "Has Global Restriction",
+          firstName = "Contact",
+        ),
+      )
+      val relationshipToPrisonerOne = testAPIClient.addAContactRelationship(
+        AddContactRelationshipRequest(
+          contact.id,
+          relationship.copy(prisonerNumber = prisonerOneNumber),
+        ),
+      )
+      val relationshipToPrisonerTwo = testAPIClient.addAContactRelationship(
+        AddContactRelationshipRequest(
+          contact.id,
+          relationship.copy(prisonerNumber = prisonerTwoNumber),
+        ),
+      )
+
+      testAPIClient.createContactGlobalRestriction(
         contact.id,
-        relationship.copy(prisonerNumber = prisonerOneNumber),
-        "USER1",
-      ),
-    )
-    val relationshipToPrisonerTwo = testAPIClient.addAContactRelationship(
-      AddContactRelationshipRequest(
-        contact.id,
-        relationship.copy(prisonerNumber = prisonerTwoNumber),
-        "USER1",
-      ),
-    )
+        CreateContactRestrictionRequest(
+          "BAN",
+          LocalDate.now().minusDays(1),
+          null,
+          "global",
+          "USER1",
+        ),
+      )
 
-    testAPIClient.createContactGlobalRestriction(
-      contact.id,
-      CreateContactRestrictionRequest(
-        "BAN",
-        LocalDate.now().minusDays(1),
-        null,
-        "global",
-        "USER1",
-      ),
-    )
+      testAPIClient.createPrisonerContactRestriction(
+        relationshipToPrisonerOne.prisonerContactId,
+        CreatePrisonerContactRestrictionRequest(
+          "CCTV",
+          LocalDate.now().minusDays(1),
+          null,
+          "rel1",
+          "USER1",
+        ),
+      )
 
-    testAPIClient.createPrisonerContactRestriction(
-      relationshipToPrisonerOne.prisonerContactId,
-      CreatePrisonerContactRestrictionRequest(
-        "CCTV",
-        LocalDate.now().minusDays(1),
-        null,
-        "rel1",
-        "USER1",
-      ),
-    )
-
-    testAPIClient.createPrisonerContactRestriction(
-      relationshipToPrisonerTwo.prisonerContactId,
-      CreatePrisonerContactRestrictionRequest(
-        "NONCON",
-        LocalDate.now().minusDays(1),
-        null,
-        "rel2",
-        "USER1",
-      ),
-    )
+      testAPIClient.createPrisonerContactRestriction(
+        relationshipToPrisonerTwo.prisonerContactId,
+        CreatePrisonerContactRestrictionRequest(
+          "NONCON",
+          LocalDate.now().minusDays(1),
+          null,
+          "rel2",
+          "USER1",
+        ),
+      )
+    }
 
     val prisonerOneContacts = testAPIClient.getPrisonerContacts(prisonerOneNumber)
     assertThat(prisonerOneContacts.content).hasSize(1)
@@ -670,64 +669,63 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       isEmergencyContact = false,
       isApprovedVisitor = false,
     )
-    val contact = testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "Has Global Restriction",
-        firstName = "Contact",
-        createdBy = "USER1",
-      ),
-    )
-    val relationshipToPrisonerOne = testAPIClient.addAContactRelationship(
-      AddContactRelationshipRequest(
+    doWithTemporaryWritePermission {
+      val contact = testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "Has Global Restriction",
+          firstName = "Contact",
+        ),
+      )
+      val relationshipToPrisonerOne = testAPIClient.addAContactRelationship(
+        AddContactRelationshipRequest(
+          contact.id,
+          relationship.copy(prisonerNumber = prisonerOneNumber),
+        ),
+      )
+
+      testAPIClient.createContactGlobalRestriction(
         contact.id,
-        relationship.copy(prisonerNumber = prisonerOneNumber),
-        "USER1",
-      ),
-    )
+        CreateContactRestrictionRequest(
+          "BAN",
+          LocalDate.now().minusDays(2),
+          LocalDate.now().minusDays(1),
+          "expired",
+          "USER1",
+        ),
+      )
+      testAPIClient.createContactGlobalRestriction(
+        contact.id,
+        CreateContactRestrictionRequest(
+          "BAN",
+          LocalDate.now().minusDays(2),
+          LocalDate.now().plusDays(1),
+          "active",
+          "USER1",
+        ),
+      )
 
-    testAPIClient.createContactGlobalRestriction(
-      contact.id,
-      CreateContactRestrictionRequest(
-        "BAN",
-        LocalDate.now().minusDays(2),
-        LocalDate.now().minusDays(1),
-        "expired",
-        "USER1",
-      ),
-    )
-    testAPIClient.createContactGlobalRestriction(
-      contact.id,
-      CreateContactRestrictionRequest(
-        "BAN",
-        LocalDate.now().minusDays(2),
-        LocalDate.now().plusDays(1),
-        "active",
-        "USER1",
-      ),
-    )
+      testAPIClient.createPrisonerContactRestriction(
+        relationshipToPrisonerOne.prisonerContactId,
+        CreatePrisonerContactRestrictionRequest(
+          "CCTV",
+          LocalDate.now().minusDays(2),
+          LocalDate.now().minusDays(1),
+          "expired cctb",
+          "USER1",
+        ),
+      )
 
-    testAPIClient.createPrisonerContactRestriction(
-      relationshipToPrisonerOne.prisonerContactId,
-      CreatePrisonerContactRestrictionRequest(
-        "CCTV",
-        LocalDate.now().minusDays(2),
-        LocalDate.now().minusDays(1),
-        "expired cctb",
-        "USER1",
-      ),
-    )
-
-    testAPIClient.createPrisonerContactRestriction(
-      relationshipToPrisonerOne.prisonerContactId,
-      CreatePrisonerContactRestrictionRequest(
-        "BAN",
-        LocalDate.now().minusDays(2),
-        LocalDate.now().minusDays(1),
-        "expired ban",
-        "USER1",
-      ),
-    )
-
+      testAPIClient.createPrisonerContactRestriction(
+        relationshipToPrisonerOne.prisonerContactId,
+        CreatePrisonerContactRestrictionRequest(
+          "BAN",
+          LocalDate.now().minusDays(2),
+          LocalDate.now().minusDays(1),
+          "expired ban",
+          "USER1",
+        ),
+      )
+    }
     val prisonerOneContacts = testAPIClient.getPrisonerContacts(prisonerOneNumber)
     assertThat(prisonerOneContacts.content).hasSize(1)
     assertThat(prisonerOneContacts.content[0].restrictionSummary).isEqualTo(

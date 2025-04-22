@@ -10,6 +10,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.CreateEmploymentRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 class GetEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
@@ -20,22 +21,24 @@ class GetEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
-    savedContactId = testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "employment",
-        firstName = "has",
-        createdBy = "created",
-      ),
-    ).id
-    stubOrganisationSummary(999)
-    savedEmploymentId = testAPIClient.createAnEmployment(
-      savedContactId,
-      CreateEmploymentRequest(
-        organisationId = 999,
-        isActive = true,
-        createdBy = "created",
-      ),
-    ).employmentId
+    setCurrentUser(StubUser.READ_ONLY_USER)
+    doWithTemporaryWritePermission {
+      savedContactId = testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "employment",
+          firstName = "has",
+        ),
+      ).id
+      stubOrganisationSummary(999)
+      savedEmploymentId = testAPIClient.createAnEmployment(
+        savedContactId,
+        CreateEmploymentRequest(
+          organisationId = 999,
+          isActive = true,
+          createdBy = "created",
+        ),
+      ).employmentId
+    }
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()

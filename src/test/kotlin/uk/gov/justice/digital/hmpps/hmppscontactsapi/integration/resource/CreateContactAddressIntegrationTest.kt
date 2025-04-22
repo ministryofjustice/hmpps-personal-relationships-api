@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddre
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
@@ -29,11 +30,11 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
+    setCurrentUser(StubUser.READ_WRITE_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "address",
         firstName = "has",
-        createdBy = "created",
       ),
     ).id
   }
@@ -43,19 +44,6 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
     .bodyValue(aMinimalAddressRequest())
-
-  @Test
-  fun `should return forbidden if wrong role`() {
-    webTestClient.post()
-      .uri("/contact/$savedContactId/address")
-      .accept(MediaType.APPLICATION_JSON)
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(aMinimalAddressRequest())
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
-      .exchange()
-      .expectStatus()
-      .isForbidden
-  }
 
   @ParameterizedTest
   @CsvSource(
