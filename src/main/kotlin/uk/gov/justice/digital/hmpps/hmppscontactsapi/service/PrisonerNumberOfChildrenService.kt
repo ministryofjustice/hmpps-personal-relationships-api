@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerNumberOfChildren
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateOrUpdatePrisonerNumberOfChildrenRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerNumberOfChildrenResponse
@@ -30,6 +31,7 @@ class PrisonerNumberOfChildrenService(
   fun createOrUpdateNumberOfChildren(
     prisonerNumber: String,
     request: CreateOrUpdatePrisonerNumberOfChildrenRequest,
+    user: User,
   ): PrisonerNumberOfChildrenResponse {
     prisonerService.getPrisoner(prisonerNumber)
       ?: throw EntityNotFoundException("Prisoner number $prisonerNumber - not found")
@@ -46,7 +48,7 @@ class PrisonerNumberOfChildrenService(
     val newNumberOfChildren = PrisonerNumberOfChildren(
       prisonerNumber = prisonerNumber,
       numberOfChildren = request.numberOfChildren?.toString(),
-      createdBy = request.requestedBy,
+      createdBy = user.username,
       createdTime = LocalDateTime.now(),
       active = true,
     )

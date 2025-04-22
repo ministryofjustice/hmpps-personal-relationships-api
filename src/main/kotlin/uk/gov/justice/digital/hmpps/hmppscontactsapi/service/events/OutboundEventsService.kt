@@ -153,7 +153,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            PrisonerNumberOfChildren(identifier, source),
+            PrisonerNumberOfChildren(identifier, source, user.username),
             PersonReference(noms),
           )
         }
