@@ -132,7 +132,7 @@ class ContactServiceTest {
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(contactAddressDetailsRepository.findByContactId(any())).thenReturn(listOf(aContactAddressDetailsEntity))
-      whenever(contactIdentityService.createMultiple(any(), any())).thenReturn(listOf(createContactIdentityDetails()))
+      whenever(contactIdentityService.createMultiple(any(), any(), any())).thenReturn(listOf(createContactIdentityDetails()))
       val identityEntity1 =
         createContactIdentityDetailsEntity(id = 1, identityType = "PNC", identityValue = "1923/1Z34567A")
       whenever(contactIdentityDetailsRepository.findByContactId(123L)).thenReturn(listOf(identityEntity1))
@@ -151,7 +151,7 @@ class ContactServiceTest {
 
       val result = service.createContact(request, user)
 
-      verify(contactIdentityService).createMultiple(123, CreateMultipleIdentitiesRequest(identities, "created"))
+      verify(contactIdentityService).createMultiple(123, CreateMultipleIdentitiesRequest(identities), user)
       val contactCaptor = argumentCaptor<ContactEntity>()
       verify(contactRepository).saveAndFlush(contactCaptor.capture())
       with(contactCaptor.firstValue) {
@@ -241,7 +241,7 @@ class ContactServiceTest {
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123L) }
       whenever(contactAddressDetailsRepository.findByContactId(123L)).thenReturn(listOf(aContactAddressDetailsEntity))
-      whenever(contactIdentityService.createMultiple(any(), any())).thenReturn(
+      whenever(contactIdentityService.createMultiple(any(), any(), any())).thenReturn(
         listOf(
           createContactIdentityDetails(),
           createContactIdentityDetails(2L),
@@ -260,7 +260,7 @@ class ContactServiceTest {
 
       val result = service.createContact(request, user)
 
-      verify(contactIdentityService).createMultiple(123L, CreateMultipleIdentitiesRequest(identities, "created"))
+      verify(contactIdentityService).createMultiple(123L, CreateMultipleIdentitiesRequest(identities), user)
       val contactCaptor = argumentCaptor<ContactEntity>()
       verify(contactRepository).saveAndFlush(contactCaptor.capture())
       assertThat(contactCaptor.firstValue).isNotNull()
@@ -290,7 +290,7 @@ class ContactServiceTest {
 
       val result = service.createContact(request, user)
 
-      verify(contactIdentityService, never()).createMultiple(any(), any())
+      verify(contactIdentityService, never()).createMultiple(any(), any(), any())
 
       val contactCaptor = argumentCaptor<ContactEntity>()
       verify(contactRepository).saveAndFlush(contactCaptor.capture())
@@ -472,7 +472,7 @@ class ContactServiceTest {
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(contactAddressDetailsRepository.findByContactId(any())).thenReturn(listOf(aContactAddressDetailsEntity))
-      whenever(contactIdentityService.createMultiple(any(), any())).thenThrow(RuntimeException("Bang!"))
+      whenever(contactIdentityService.createMultiple(any(), any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
         service.createContact(request, user)

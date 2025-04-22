@@ -16,8 +16,4 @@ data class UpdateIdentityRequest(
   @Schema(description = "The authority who issued the identity", example = "DVLA", nullable = true)
   @field:Size(max = 40, message = "issuingAuthority must be <= 40 characters")
   val issuingAuthority: String? = null,
-
-  @Schema(description = "User who updated the entry", example = "admin")
-  @field:Size(max = 100, message = "updatedBy must be <= 100 characters")
-  val updatedBy: String,
 )

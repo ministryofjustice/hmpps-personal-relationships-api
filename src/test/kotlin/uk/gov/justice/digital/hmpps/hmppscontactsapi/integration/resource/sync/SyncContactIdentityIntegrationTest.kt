@@ -68,10 +68,11 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `Sync endpoints should return forbidden without an authorised role on the token`(role: String) {
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER.copy(roles = listOf(role)))
     webTestClient.get()
       .uri("/sync/contact-identity/1")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -81,7 +82,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(createContactIdentityRequest(savedContactId))
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -91,7 +92,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(updateContactIdentityRequest(savedContactId))
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -99,7 +100,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.delete()
       .uri("/sync/contact-identity/1")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -112,7 +113,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
     val contactIdentity = webTestClient.get()
       .uri("/sync/contact-identity/{contactIdentityId}", contactIdentityId)
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -131,7 +132,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
       .uri("/sync/contact-identity")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(createContactIdentityRequest(savedContactId))
       .exchange()
       .expectStatus()
@@ -151,7 +152,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_CREATED,
-      additionalInfo = ContactIdentityInfo(contactIdentity.contactIdentityId, Source.NOMIS),
+      additionalInfo = ContactIdentityInfo(contactIdentity.contactIdentityId, Source.NOMIS, "SYS"),
       personReference = PersonReference(dpsContactId = contactIdentity.contactId),
     )
   }
@@ -171,7 +172,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
       .uri("/sync/contact-identity")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(createContactIdentityRequest(savedContactId))
       .exchange()
       .expectStatus()
@@ -190,7 +191,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
       .uri("/sync/contact-identity/{contactIdentityId}", contactIdentity.contactIdentityId)
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(updateContactIdentityRequest(savedContactId, actualGivenIssuingAuthority))
       .exchange()
       .expectStatus()
@@ -212,7 +213,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_UPDATED,
-      additionalInfo = ContactIdentityInfo(updatedIdentity.contactIdentityId, Source.NOMIS),
+      additionalInfo = ContactIdentityInfo(updatedIdentity.contactIdentityId, Source.NOMIS, "SYS"),
       personReference = PersonReference(dpsContactId = updatedIdentity.contactId),
     )
   }
@@ -224,7 +225,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.delete()
       .uri("/sync/contact-identity/{contactIdentityId}", contactIdentityId)
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -232,13 +233,13 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.get()
       .uri("/sync/contact-identity/{contactIdentityId}", contactIdentityId)
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_DELETED,
-      additionalInfo = ContactIdentityInfo(3, Source.NOMIS),
+      additionalInfo = ContactIdentityInfo(3, Source.NOMIS, "SYS"),
       personReference = PersonReference(dpsContactId = 3),
     )
   }

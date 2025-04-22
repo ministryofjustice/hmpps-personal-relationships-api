@@ -172,10 +172,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact identity created event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_IDENTITY_CREATED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_IDENTITY_CREATED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_IDENTITY_CREATED, 1L, 1L, user = aUser("id_user"))
     verify(
       expectedEventType = "contacts-api.contact-identity.created",
-      expectedAdditionalInformation = ContactIdentityInfo(contactIdentityId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = ContactIdentityInfo(contactIdentityId = 1L, source = Source.DPS, username = "id_user"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact proof of identity has been created",
     )
@@ -184,10 +184,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact identity updated event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_IDENTITY_UPDATED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_IDENTITY_UPDATED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_IDENTITY_UPDATED, 1L, 1L, user = aUser("id_user"))
     verify(
       expectedEventType = "contacts-api.contact-identity.updated",
-      expectedAdditionalInformation = ContactIdentityInfo(contactIdentityId = 1, source = Source.DPS),
+      expectedAdditionalInformation = ContactIdentityInfo(contactIdentityId = 1, source = Source.DPS, username = "id_user"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact proof of identity has been updated",
     )
@@ -196,10 +196,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact identity deleted event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_IDENTITY_DELETED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_IDENTITY_DELETED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_IDENTITY_DELETED, 1L, 1L, user = aUser("id_user"))
     verify(
       expectedEventType = "contacts-api.contact-identity.deleted",
-      expectedAdditionalInformation = ContactIdentityInfo(contactIdentityId = 1, source = Source.DPS),
+      expectedAdditionalInformation = ContactIdentityInfo(contactIdentityId = 1, source = Source.DPS, username = "id_user"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact proof of identity has been deleted",
     )

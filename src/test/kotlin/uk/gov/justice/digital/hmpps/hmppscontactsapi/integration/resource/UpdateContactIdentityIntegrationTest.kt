@@ -43,7 +43,6 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
         identityType = "DL",
         identityValue = "DL123456789",
         issuingAuthority = "DVLA",
-        createdBy = "created",
       ),
 
     ).contactIdentityId
@@ -59,12 +58,10 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "identityType must not be null;{\"identityType\": null, \"identityValue\": \"0123456789\", \"updatedBy\": \"created\"}",
-      "identityType must not be null;{\"identityValue\": \"0123456789\", \"updatedBy\": \"created\"}",
-      "identityValue must not be null;{\"identityType\": \"DL\", \"identityValue\": null, \"updatedBy\": \"created\"}",
-      "identityValue must not be null;{\"identityType\": \"DL\", \"updatedBy\": \"created\"}",
-      "updatedBy must not be null;{\"identityType\": \"DL\", \"identityValue\": \"0123456789\", \"updatedBy\": null}",
-      "updatedBy must not be null;{\"identityType\": \"DL\", \"identityValue\": \"0123456789\"}",
+      "identityType must not be null;{\"identityType\": null, \"identityValue\": \"0123456789\"}",
+      "identityType must not be null;{\"identityValue\": \"0123456789\"}",
+      "identityValue must not be null;{\"identityType\": \"DL\", \"identityValue\": null}",
+      "identityValue must not be null;{\"identityType\": \"DL\"}",
     ],
     delimiter = ';',
   )
@@ -73,7 +70,7 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/identity/$savedContactIdentityId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -83,7 +80,7 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Validation failure: $expectedMessage")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_IDENTITY_UPDATED, ContactIdentityInfo(savedContactIdentityId))
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_IDENTITY_UPDATED)
   }
 
   @ParameterizedTest
@@ -93,7 +90,7 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/identity/$savedContactIdentityId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -103,7 +100,7 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Validation failure(s): $expectedMessage")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_IDENTITY_UPDATED, ContactIdentityInfo(savedContactIdentityId))
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_IDENTITY_UPDATED)
   }
 
   @Test
@@ -114,7 +111,7 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/identity/$savedContactIdentityId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -131,14 +128,13 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
     val request = UpdateIdentityRequest(
       identityType = "MACRO",
       identityValue = "DL123456789",
-      updatedBy = "updated",
     )
 
     val errors = webTestClient.put()
       .uri("/contact/$savedContactId/identity/$savedContactIdentityId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -148,7 +144,7 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported identity type (MACRO)")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_IDENTITY_UPDATED, ContactIdentityInfo(savedContactIdentityId))
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_IDENTITY_UPDATED)
   }
 
   @Test
@@ -159,7 +155,7 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/-321/identity/$savedContactIdentityId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -169,7 +165,7 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Entity not found : Contact (-321) not found")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_IDENTITY_UPDATED, ContactIdentityInfo(savedContactIdentityId))
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_IDENTITY_UPDATED)
   }
 
   @Test
@@ -180,7 +176,7 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/identity/-99")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -190,7 +186,7 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Entity not found : Contact identity (-99) not found")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_IDENTITY_UPDATED, ContactIdentityInfo(-99))
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_IDENTITY_UPDATED)
   }
 
   @Test
@@ -199,7 +195,6 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       identityType = "PASS",
       identityValue = "P978654312",
       issuingAuthority = null,
-      updatedBy = "updated",
     )
     val updated = testAPIClient.updateAContactIdentity(
       savedContactId,
@@ -219,7 +214,7 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_UPDATED,
-      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS),
+      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "updated"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }
@@ -231,7 +226,6 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       identityType = "PASS",
       identityValue = "P978654312",
       issuingAuthority = "Passport office",
-      updatedBy = "updated",
     )
 
     val updated = testAPIClient.updateAContactIdentity(
@@ -253,7 +247,7 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_UPDATED,
-      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS),
+      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "updated"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }
@@ -267,16 +261,11 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
         "issuingAuthority must be <= 40 characters",
         aMinimalRequest().copy(issuingAuthority = "".padStart(41, 'X')),
       ),
-      Arguments.of(
-        "updatedBy must be <= 100 characters",
-        aMinimalRequest().copy(updatedBy = "".padStart(101, 'X')),
-      ),
     )
 
     private fun aMinimalRequest() = UpdateIdentityRequest(
       identityType = "DL",
       identityValue = "DL123456789",
-      updatedBy = "updated",
     )
   }
 }

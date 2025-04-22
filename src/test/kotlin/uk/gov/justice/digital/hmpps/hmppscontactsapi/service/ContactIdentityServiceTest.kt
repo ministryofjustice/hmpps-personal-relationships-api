@@ -13,6 +13,7 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactIdentityDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactIdentityEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateIdentityRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateMultipleIdentitiesRequest
@@ -48,13 +49,14 @@ class ContactIdentityServiceTest {
     createdTime = now(),
   )
 
+  private val user = aUser("identity_user")
+
   @Nested
   inner class CreateIdentity {
     private val request = CreateIdentityRequest(
       identityType = "DL",
       identityValue = "DL123456789",
       issuingAuthority = "DVLA",
-      createdBy = "created",
     )
 
     @Test
@@ -62,7 +64,7 @@ class ContactIdentityServiceTest {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
 
       val exception = assertThrows<EntityNotFoundException> {
-        service.create(contactId, request)
+        service.create(contactId, request, user)
       }
       assertThat(exception.message).isEqualTo("Contact (99) not found")
     }
@@ -76,7 +78,7 @@ class ContactIdentityServiceTest {
       )
 
       val exception = assertThrows<ValidationException> {
-        service.create(contactId, request.copy(identityType = "FOO"))
+        service.create(contactId, request.copy(identityType = "FOO"), user)
       }
       assertThat(exception).isEqualTo(expectedException)
       verify(referenceCodeService).validateReferenceCode(ReferenceCodeGroup.ID_TYPE, "FOO", allowInactive = false)
@@ -97,7 +99,7 @@ class ContactIdentityServiceTest {
       )
 
       val exception = assertThrows<ValidationException> {
-        service.create(contactId, request.copy(identityValue = "1923/1Z34567A", identityType = "PNC"))
+        service.create(contactId, request.copy(identityValue = "1923/1Z34567A", identityType = "PNC"), user)
       }
       assertThat(exception.message).isEqualTo("Identity value (1923/1Z34567A) is not a valid PNC Number")
     }
@@ -121,7 +123,7 @@ class ContactIdentityServiceTest {
         )
       }
 
-      val created = service.create(contactId, request)
+      val created = service.create(contactId, request, user)
       assertThat(created.createdTime).isNotNull()
       assertThat(created).isEqualTo(
         ContactIdentityDetails(
@@ -132,7 +134,7 @@ class ContactIdentityServiceTest {
           identityTypeIsActive = true,
           identityValue = "DL123456789",
           issuingAuthority = "DVLA",
-          createdBy = "created",
+          createdBy = "identity_user",
           createdTime = created.createdTime,
           updatedBy = null,
           updatedTime = null,
@@ -156,7 +158,6 @@ class ContactIdentityServiceTest {
           issuingAuthority = null,
         ),
       ),
-      createdBy = "created",
     )
 
     @Test
@@ -164,7 +165,7 @@ class ContactIdentityServiceTest {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
 
       val exception = assertThrows<EntityNotFoundException> {
-        service.createMultiple(contactId, request)
+        service.createMultiple(contactId, request, user)
       }
       assertThat(exception.message).isEqualTo("Contact (99) not found")
     }
@@ -178,7 +179,7 @@ class ContactIdentityServiceTest {
       )
 
       val exception = assertThrows<ValidationException> {
-        service.createMultiple(contactId, request.copy(identities = listOf(IdentityDocument(identityType = "FOO", identityValue = "111111"))))
+        service.createMultiple(contactId, request.copy(identities = listOf(IdentityDocument(identityType = "FOO", identityValue = "111111"))), user)
       }
       assertThat(exception).isEqualTo(expectedException)
       verify(referenceCodeService).validateReferenceCode(ReferenceCodeGroup.ID_TYPE, "FOO", allowInactive = false)
@@ -199,7 +200,7 @@ class ContactIdentityServiceTest {
       )
 
       val exception = assertThrows<ValidationException> {
-        service.createMultiple(contactId, request.copy(identities = listOf(IdentityDocument(identityValue = "1923/1Z34567A", identityType = "PNC"))))
+        service.createMultiple(contactId, request.copy(identities = listOf(IdentityDocument(identityValue = "1923/1Z34567A", identityType = "PNC"))), user)
       }
       assertThat(exception.message).isEqualTo("Identity value (1923/1Z34567A) is not a valid PNC Number")
     }
@@ -237,7 +238,7 @@ class ContactIdentityServiceTest {
         )
       }
 
-      val allCreated = service.createMultiple(contactId, request)
+      val allCreated = service.createMultiple(contactId, request, user)
 
       val drivingLicence = allCreated[0]
       assertThat(drivingLicence.createdTime).isNotNull()
@@ -250,7 +251,7 @@ class ContactIdentityServiceTest {
           identityTypeIsActive = true,
           identityValue = "DL123456789",
           issuingAuthority = "DVLA",
-          createdBy = "created",
+          createdBy = "identity_user",
           createdTime = drivingLicence.createdTime,
           updatedBy = null,
           updatedTime = null,
@@ -268,7 +269,7 @@ class ContactIdentityServiceTest {
           identityTypeIsActive = true,
           identityValue = "P897654312",
           issuingAuthority = null,
-          createdBy = "created",
+          createdBy = "identity_user",
           createdTime = passport.createdTime,
           updatedBy = null,
           updatedTime = null,
@@ -283,7 +284,6 @@ class ContactIdentityServiceTest {
       "PASS",
       "P987654321",
       "Passport office",
-      "updated",
     )
     private val contactIdentityId = 1234L
     private val existingIdentity = ContactIdentityEntity(
@@ -303,7 +303,7 @@ class ContactIdentityServiceTest {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
 
       val exception = assertThrows<EntityNotFoundException> {
-        service.update(contactId, contactIdentityId, request)
+        service.update(contactId, contactIdentityId, request, user)
       }
       assertThat(exception.message).isEqualTo("Contact (99) not found")
     }
@@ -314,7 +314,7 @@ class ContactIdentityServiceTest {
       whenever(contactIdentityRepository.findById(contactIdentityId)).thenReturn(Optional.empty())
 
       val exception = assertThrows<EntityNotFoundException> {
-        service.update(contactId, contactIdentityId, request)
+        service.update(contactId, contactIdentityId, request, user)
       }
       assertThat(exception.message).isEqualTo("Contact identity (1234) not found")
     }
@@ -327,7 +327,7 @@ class ContactIdentityServiceTest {
       whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.ID_TYPE, "FOO", allowInactive = true)).thenThrow(expectedException)
 
       val exception = assertThrows<ValidationException> {
-        service.update(contactId, contactIdentityId, request.copy(identityType = "FOO"))
+        service.update(contactId, contactIdentityId, request.copy(identityType = "FOO"), user)
       }
       assertThat(exception).isEqualTo(expectedException)
       verify(referenceCodeService).validateReferenceCode(ReferenceCodeGroup.ID_TYPE, "FOO", allowInactive = true)
@@ -349,7 +349,7 @@ class ContactIdentityServiceTest {
       )
 
       val exception = assertThrows<ValidationException> {
-        service.update(contactId, contactIdentityId, request.copy(identityValue = "1923/1Z34567A", identityType = "PNC"))
+        service.update(contactId, contactIdentityId, request.copy(identityValue = "1923/1Z34567A", identityType = "PNC"), user)
       }
       assertThat(exception.message).isEqualTo("Identity value (1923/1Z34567A) is not a valid PNC Number")
     }
@@ -374,7 +374,7 @@ class ContactIdentityServiceTest {
         )
       }
 
-      val updated = service.update(contactId, contactIdentityId, request)
+      val updated = service.update(contactId, contactIdentityId, request, user)
       assertThat(updated.updatedTime).isNotNull()
       assertThat(updated).isEqualTo(
         ContactIdentityDetails(
@@ -387,7 +387,7 @@ class ContactIdentityServiceTest {
           issuingAuthority = "Passport office",
           createdBy = "USER99",
           createdTime = existingIdentity.createdTime,
-          updatedBy = "updated",
+          updatedBy = "identity_user",
           updatedTime = updated.updatedTime,
         ),
       )

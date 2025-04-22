@@ -238,7 +238,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
     contactReturnedOnCreate.identities.forEach { identity ->
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_IDENTITY_CREATED,
-        additionalInfo = ContactIdentityInfo(identity.contactIdentityId, Source.DPS),
+        additionalInfo = ContactIdentityInfo(identity.contactIdentityId, Source.DPS, "created"),
         personReference = PersonReference(dpsContactId = contactReturnedOnCreate.id),
       )
     }

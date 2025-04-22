@@ -7,7 +7,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
-import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
@@ -28,7 +27,7 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
-    setCurrentUser(StubUser.READ_WRITE_USER)
+    setCurrentUser(StubUser.CREATING_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "identity",
@@ -46,12 +45,10 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "identityType must not be null;{\"identityType\": null, \"identityValue\": \"0123456789\", \"createdBy\": \"created\"}",
-      "identityType must not be null;{\"identityValue\": \"0123456789\", \"createdBy\": \"created\"}",
-      "identityValue must not be null;{\"identityType\": \"DL\", \"identityValue\": null, \"createdBy\": \"created\"}",
-      "identityValue must not be null;{\"identityType\": \"DL\", \"createdBy\": \"created\"}",
-      "createdBy must not be null;{\"identityType\": \"DL\", \"identityValue\": \"0123456789\", \"createdBy\": null}",
-      "createdBy must not be null;{\"identityType\": \"DL\", \"identityValue\": \"0123456789\"}",
+      "identityType must not be null;{\"identityType\": null, \"identityValue\": \"0123456789\"}",
+      "identityType must not be null;{\"identityValue\": \"0123456789\"}",
+      "identityValue must not be null;{\"identityType\": \"DL\", \"identityValue\": null}",
+      "identityValue must not be null;{\"identityType\": \"DL\"}",
     ],
     delimiter = ';',
   )
@@ -60,7 +57,7 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/identity")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -82,7 +79,7 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/identity")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -105,7 +102,7 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/identity")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -125,14 +122,13 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
     val request = CreateIdentityRequest(
       identityType = "MACRO CARD",
       identityValue = "DL123456789",
-      createdBy = "created",
     )
 
     val errors = webTestClient.post()
       .uri("/contact/$savedContactId/identity")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -152,14 +148,13 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
     val request = CreateIdentityRequest(
       identityType = "NHS",
       identityValue = "Is active is false",
-      createdBy = "created",
     )
 
     val errors = webTestClient.post()
       .uri("/contact/$savedContactId/identity")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -182,7 +177,7 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/-321/identity")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -207,28 +202,26 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_CREATED,
-      additionalInfo = ContactIdentityInfo(created.contactIdentityId, Source.DPS),
+      additionalInfo = ContactIdentityInfo(created.contactIdentityId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
-  fun `should create the identity with all fields`(role: String) {
+  @Test
+  fun `should create the identity with all fields`() {
     val request = CreateIdentityRequest(
       identityType = "DL",
       identityValue = "DL123456789",
       issuingAuthority = "DVLA",
-      createdBy = "created",
     )
 
-    val created = testAPIClient.createAContactIdentity(savedContactId, request, role)
+    val created = testAPIClient.createAContactIdentity(savedContactId, request)
 
     assertEqualsExcludingTimestamps(created, request)
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_CREATED,
-      additionalInfo = ContactIdentityInfo(created.contactIdentityId, Source.DPS),
+      additionalInfo = ContactIdentityInfo(created.contactIdentityId, Source.DPS, "created"),
       personReference = PersonReference(created.contactId),
     )
   }
@@ -238,7 +231,7 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(identityType).isEqualTo(request.identityType)
       assertThat(identityValue).isEqualTo(request.identityValue)
       assertThat(issuingAuthority).isEqualTo(request.issuingAuthority)
-      assertThat(createdBy).isEqualTo(request.createdBy)
+      assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
     }
   }
@@ -252,16 +245,11 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
         "issuingAuthority must be <= 40 characters",
         aMinimalRequest().copy(issuingAuthority = "".padStart(41, 'X')),
       ),
-      Arguments.of(
-        "createdBy must be <= 100 characters",
-        aMinimalRequest().copy(createdBy = "".padStart(101, 'X')),
-      ),
     )
 
     private fun aMinimalRequest() = CreateIdentityRequest(
       identityType = "DL",
       identityValue = "DL123456789",
-      createdBy = "created",
     )
   }
 }

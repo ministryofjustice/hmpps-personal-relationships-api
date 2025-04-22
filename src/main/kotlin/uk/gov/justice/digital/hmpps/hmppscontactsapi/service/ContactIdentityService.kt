@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactIdentityEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
@@ -27,19 +28,19 @@ class ContactIdentityService(
 ) {
 
   @Transactional
-  fun create(contactId: Long, request: CreateIdentityRequest): ContactIdentityDetails {
+  fun create(contactId: Long, request: CreateIdentityRequest, user: User): ContactIdentityDetails {
     validateContactExists(contactId)
     return createAContactIdentity(
       contactId,
       request.identityType,
       request.identityValue,
       request.issuingAuthority,
-      request.createdBy,
+      user.username,
     )
   }
 
   @Transactional
-  fun createMultiple(contactId: Long, request: CreateMultipleIdentitiesRequest): List<ContactIdentityDetails> {
+  fun createMultiple(contactId: Long, request: CreateMultipleIdentitiesRequest, user: User): List<ContactIdentityDetails> {
     validateContactExists(contactId)
     return request.identities.map {
       createAContactIdentity(
@@ -47,7 +48,7 @@ class ContactIdentityService(
         it.identityType,
         it.identityValue,
         it.issuingAuthority,
-        request.createdBy,
+        user.username,
       )
     }
   }
@@ -80,7 +81,7 @@ class ContactIdentityService(
   }
 
   @Transactional
-  fun update(contactId: Long, contactIdentityId: Long, request: UpdateIdentityRequest): ContactIdentityDetails {
+  fun update(contactId: Long, contactIdentityId: Long, request: UpdateIdentityRequest, user: User): ContactIdentityDetails {
     validateContactExists(contactId)
     val existing = validateExistingIdentity(contactIdentityId)
     val type = referenceCodeService.validateReferenceCode(ReferenceCodeGroup.ID_TYPE, request.identityType, allowInactive = true)
@@ -90,7 +91,7 @@ class ContactIdentityService(
       identityType = request.identityType,
       identityValue = request.identityValue,
       issuingAuthority = request.issuingAuthority,
-      updatedBy = request.updatedBy,
+      updatedBy = user.username,
       updatedTime = LocalDateTime.now(),
     )
 

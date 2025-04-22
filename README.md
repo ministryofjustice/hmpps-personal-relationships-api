@@ -50,6 +50,8 @@ DB_NAME=personal-relationships-db
 DB_USER=personal-relationships
 DB_PASS=contacts
 DB_SSL_MODE=prefer
+DPR_USER=dpr_user
+DPR_PASSWORD=dpr_password
 ```
 
 Start up the docker dependencies using the docker-compose file in the `hmpps-personal-relationships-api` service.
