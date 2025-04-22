@@ -14,7 +14,7 @@ data class PatchRelationshipRequest(
   @Schema(description = "The relationship reference code between the prisoner and the contact", example = "FRI", nullable = false, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   val relationshipToPrisonerCode: JsonNullable<String> = JsonNullable.undefined(),
 
-  @Schema(description = "Whether they are the emergency contact for the prisoner", example = "boolean", nullable = false, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @Schema(description = "Whether they are the emergency contact for the prisoner", example = "true", nullable = false, type = "boolean", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty(required = true)
   val isEmergencyContact: JsonNullable<Boolean> = JsonNullable.undefined(),
 
