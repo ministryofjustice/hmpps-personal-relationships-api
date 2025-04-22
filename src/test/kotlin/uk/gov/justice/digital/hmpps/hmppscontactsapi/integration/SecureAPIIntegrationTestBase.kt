@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 
 abstract class SecureAPIIntegrationTestBase : PostgresIntegrationTestBase() {
 
@@ -17,6 +18,7 @@ abstract class SecureAPIIntegrationTestBase : PostgresIntegrationTestBase() {
 
   @Test
   fun `should return unauthorized if no token`() {
+    setCurrentUser(null)
     baseRequestBuilder()
       .exchange()
       .expectStatus()
@@ -25,8 +27,9 @@ abstract class SecureAPIIntegrationTestBase : PostgresIntegrationTestBase() {
 
   @Test
   fun `should return forbidden if no role`() {
+    setCurrentUser(StubUser.USER_WITH_NO_ROLES)
     baseRequestBuilder()
-      .headers(setAuthorisation())
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -37,8 +40,9 @@ abstract class SecureAPIIntegrationTestBase : PostgresIntegrationTestBase() {
     val forbiddenRoles = allPossibleRoles - allowedRoles
     return forbiddenRoles.map { forbiddenRole ->
       DynamicTest.dynamicTest("Requests with role ($forbiddenRole) should be forbidden") {
+        setCurrentUser(StubUser("SECURE_TEST", "Secure test", listOf(forbiddenRole)))
         baseRequestBuilder()
-          .headers(setAuthorisation(roles = listOf(forbiddenRole)))
+          .headers(setAuthorisationUsingCurrentUser())
           .exchange()
           .expectStatus()
           .isForbidden

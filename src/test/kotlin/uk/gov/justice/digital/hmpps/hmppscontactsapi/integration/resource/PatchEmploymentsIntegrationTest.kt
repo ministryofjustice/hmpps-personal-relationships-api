@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.EmploymentIn
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 
@@ -36,6 +37,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun setUp() {
+    setCurrentUser(StubUser.CREATING_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "employments",
@@ -83,6 +85,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
         updatedTime = null,
       ),
     )
+    setCurrentUser(StubUser.UPDATING_USER)
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.patch()

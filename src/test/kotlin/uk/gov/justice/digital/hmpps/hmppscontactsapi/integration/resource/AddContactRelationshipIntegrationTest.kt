@@ -8,7 +8,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
-import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
@@ -20,6 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEven
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerContactInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
@@ -30,6 +30,7 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun setUp() {
+    setCurrentUser(StubUser.READ_WRITE_USER)
     contact = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = RandomStringUtils.secure().nextAlphabetic(10),
@@ -118,9 +119,8 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(errors.userMessage).isEqualTo("Entity not found : Contact (123456789) could not be found")
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
-  fun `should create the contact relationship with minimal fields`(role: String) {
+  @Test
+  fun `should create the contact relationship with minimal fields`() {
     stubPrisonSearchWithResponse("A1234BC")
 
     val request = AddContactRelationshipRequest(
@@ -135,7 +135,7 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       ),
     )
 
-    val createdRelationship = testAPIClient.addAContactRelationship(request, role)
+    val createdRelationship = testAPIClient.addAContactRelationship(request)
 
     assertThat(createdRelationship.relationshipToPrisonerCode).isEqualTo("MOT")
     assertThat(createdRelationship.relationshipToPrisonerDescription).isEqualTo("Mother")
@@ -145,7 +145,7 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_CREATED,
-      additionalInfo = PrisonerContactInfo(createdRelationship.prisonerContactId, source = Source.DPS, "AUTH_ADM"),
+      additionalInfo = PrisonerContactInfo(createdRelationship.prisonerContactId, source = Source.DPS, "read_write_user"),
       personReference = PersonReference(dpsContactId = contact.id, nomsNumber = request.relationship.prisonerNumber),
     )
   }
@@ -199,7 +199,7 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_CREATED,
-      additionalInfo = PrisonerContactInfo(createdRelationship.prisonerContactId, source = Source.DPS, "AUTH_ADM"),
+      additionalInfo = PrisonerContactInfo(createdRelationship.prisonerContactId, source = Source.DPS, "read_write_user"),
       personReference = PersonReference(dpsContactId = contact.id, nomsNumber = request.relationship.prisonerNumber),
     )
   }

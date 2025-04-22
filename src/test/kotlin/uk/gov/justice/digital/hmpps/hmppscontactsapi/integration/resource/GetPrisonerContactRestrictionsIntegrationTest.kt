@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -9,10 +10,16 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDet
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 class GetPrisonerContactRestrictionsIntegrationTest : SecureAPIIntegrationTestBase() {
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.READ_ONLY_USER)
+  }
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
@@ -101,22 +108,23 @@ class GetPrisonerContactRestrictionsIntegrationTest : SecureAPIIntegrationTestBa
   fun `should return empty list if no restrictions for a contact`() {
     val prisonerNumber = "G4793VF"
     stubPrisonSearchWithResponse(prisonerNumber)
-    val created = testAPIClient.createAContactWithARelationship(
-      CreateContactRequest(
-        lastName = "Last",
-        firstName = "First",
-        relationship = ContactRelationship(
-          prisonerNumber = prisonerNumber,
-          relationshipTypeCode = "S",
-          relationshipToPrisonerCode = "FRI",
-          isNextOfKin = false,
-          isEmergencyContact = false,
-          isApprovedVisitor = false,
-          comments = null,
+    val created = doWithTemporaryWritePermission {
+      testAPIClient.createAContactWithARelationship(
+        CreateContactRequest(
+          lastName = "Last",
+          firstName = "First",
+          relationship = ContactRelationship(
+            prisonerNumber = prisonerNumber,
+            relationshipTypeCode = "S",
+            relationshipToPrisonerCode = "FRI",
+            isNextOfKin = false,
+            isEmergencyContact = false,
+            isApprovedVisitor = false,
+            comments = null,
+          ),
         ),
-      ),
-
-    )
+      )
+    }
     val restrictions = testAPIClient.getPrisonerContactRestrictions(
       created.createdRelationship!!.prisonerContactId,
 

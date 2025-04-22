@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 
 import org.apache.commons.lang3.RandomStringUtils
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -20,12 +21,18 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEven
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerContactInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase() {
 
   @Autowired
   protected lateinit var contactRepository: ContactRepository
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.CREATING_USER)
+  }
 
   @ParameterizedTest
   @CsvSource(
@@ -40,7 +47,7 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
   )
   fun `should return bad request if required fields are null`(expectedMessage: String, relationShipJson: String) {
     val json =
-      "{\"firstName\": \"first\", \"lastName\": \"last\", \"createdBy\": \"created\", \"relationship\": $relationShipJson}"
+      "{\"firstName\": \"first\", \"lastName\": \"last\", \"relationship\": $relationShipJson}"
     val errors = webTestClient.post()
       .uri("/contact")
       .accept(MediaType.APPLICATION_JSON)
@@ -184,13 +191,13 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(created.createdContact.id, Source.DPS, "AUTH_ADM"),
+      additionalInfo = ContactInfo(created.createdContact.id, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.createdContact.id),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_CREATED,
-      additionalInfo = PrisonerContactInfo(created.createdRelationship!!.prisonerContactId, Source.DPS, "AUTH_ADM"),
+      additionalInfo = PrisonerContactInfo(created.createdRelationship!!.prisonerContactId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.createdContact.id, nomsNumber = request.relationship!!.prisonerNumber),
     )
   }
@@ -222,13 +229,13 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(created.createdContact.id, Source.DPS, "AUTH_ADM"),
+      additionalInfo = ContactInfo(created.createdContact.id, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.createdContact.id),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_CREATED,
-      additionalInfo = PrisonerContactInfo(created.createdRelationship!!.prisonerContactId, Source.DPS, "AUTH_ADM"),
+      additionalInfo = PrisonerContactInfo(created.createdRelationship!!.prisonerContactId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.createdContact.id, nomsNumber = request.relationship!!.prisonerNumber),
     )
   }

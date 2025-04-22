@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource.migra
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.groups.Tuple
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -22,6 +21,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.Migra
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.ElementType
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -35,175 +35,158 @@ class MigrateContactIntegrationTest : PostgresIntegrationTestBase() {
   private val aUsername = "XXX"
   private val aDateTime = LocalDateTime.of(2024, 1, 1, 13, 0)
 
-  @Nested
-  inner class MigrateContactTests {
+  @BeforeEach
+  fun initialiseData() {
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
+  }
 
-    @BeforeEach
-    fun initialiseData() {
-    }
+  @Test
+  fun `should return unauthorized if no token provided`() {
+    webTestClient.post()
+      .uri("/migrate/contact")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(basicMigrationRequest(personId = 500))
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
 
-    @Test
-    fun `should return unauthorized if no token provided`() {
-      webTestClient.post()
-        .uri("/migrate/contact")
-        .accept(MediaType.APPLICATION_JSON)
-        .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(basicMigrationRequest(personId = 500))
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
+  @ParameterizedTest
+  @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
+  fun `should return forbidden without an authorised role on the token`(authRole: String) {
+    setCurrentUser(StubUser(authRole, authRole, listOf(authRole), caseload = null, isSystemUser = true))
+    webTestClient.post()
+      .uri("/migrate/contact")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(basicMigrationRequest(personId = 500L))
+      .headers(setAuthorisationUsingCurrentUser())
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
-    fun `should return forbidden without an authorised role on the token`(authRole: String) {
-      webTestClient.post()
-        .uri("/migrate/contact")
-        .accept(MediaType.APPLICATION_JSON)
-        .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(basicMigrationRequest(personId = 500L))
-        .headers(setAuthorisation(roles = listOf(authRole)))
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
+  @Test
+  fun `should migrate a basic contact`() {
+    val request = basicMigrationRequest(personId = 500L)
+    val countContactsBefore = contactRepository.count()
 
-    @Test
-    fun `should migrate a basic contact`() {
-      val request = basicMigrationRequest(personId = 500L)
-      val countContactsBefore = contactRepository.count()
+    val result = testAPIClient.migrateAContact(request)
 
-      val result = testAPIClient.migrateAContact(request)
-
-      with(result) {
-        with(contact) {
-          assertThat(elementType).isEqualTo(ElementType.CONTACT)
-          assertThat(nomisId).isEqualTo(request.personId)
-          // NOTE: The dpsId and personId should both be the same
-          assertThat(dpsId).isEqualTo(request.personId)
-        }
-        assertThat(lastName).isEqualTo(request.lastName)
-        assertThat(dateOfBirth).isEqualTo(request.dateOfBirth)
+    with(result) {
+      with(contact) {
+        assertThat(elementType).isEqualTo(ElementType.CONTACT)
+        assertThat(nomisId).isEqualTo(request.personId)
+        // NOTE: The dpsId and personId should both be the same
+        assertThat(dpsId).isEqualTo(request.personId)
       }
-
-      assertThat(contactRepository.count()).isEqualTo(countContactsBefore + 1)
+      assertThat(lastName).isEqualTo(request.lastName)
+      assertThat(dateOfBirth).isEqualTo(request.dateOfBirth)
     }
 
-    @Test
-    fun `should allow duplicate requests for the same personId and recreate the contact`() {
-      val request = basicMigrationRequest(personId = 501L)
-      val countContactsBefore = contactRepository.count()
+    assertThat(contactRepository.count()).isEqualTo(countContactsBefore + 1)
+  }
 
-      // Initial request - success
-      val result1 = testAPIClient.migrateAContact(request)
-      with(result1) {
-        assertThat(this.contact.nomisId).isEqualTo(request.personId)
-        assertThat(this.contact.dpsId).isEqualTo(request.personId)
-      }
+  @Test
+  fun `should allow duplicate requests for the same personId and recreate the contact`() {
+    val request = basicMigrationRequest(personId = 501L)
+    val countContactsBefore = contactRepository.count()
 
-      assertThat(contactRepository.count()).isEqualTo(countContactsBefore + 1)
-
-      // Duplicate request - should delete the original and replace it
-      val result2 = testAPIClient.migrateAContact(request)
-      with(result2) {
-        assertThat(this.contact.nomisId).isEqualTo(request.personId)
-        assertThat(this.contact.dpsId).isEqualTo(request.personId)
-      }
-
-      // Same count - the duplicate contact replaces the original
-      assertThat(contactRepository.count()).isEqualTo(countContactsBefore + 1)
+    // Initial request - success
+    val result1 = testAPIClient.migrateAContact(request)
+    with(result1) {
+      assertThat(this.contact.nomisId).isEqualTo(request.personId)
+      assertThat(this.contact.dpsId).isEqualTo(request.personId)
     }
 
-    @Test
-    fun `should migrate a contact with addresses, phones, emails, restrictions, identifiers and employments`() {
-      val request = basicMigrationRequest(502).copy(
-        addresses = addresses(),
-        phoneNumbers = phoneNumbers(),
-        emailAddresses = emails(),
-        identifiers = identifiers(),
-        restrictions = restrictions(),
-        employments = employments(),
-      )
+    assertThat(contactRepository.count()).isEqualTo(countContactsBefore + 1)
 
-      val result = testAPIClient.migrateAContact(request)
-
-      with(result) {
-        assertThat(contact.elementType).isEqualTo(ElementType.CONTACT)
-        assertThat(contact.nomisId).isEqualTo(request.personId)
-        assertThat(contact.dpsId).isEqualTo(request.personId)
-
-        assertThat(phoneNumbers).hasSize(2)
-        assertThat(phoneNumbers).extracting("elementType", "nomisId")
-          .containsAll(
-            listOf(
-              Tuple(ElementType.PHONE, 101L),
-              Tuple(ElementType.PHONE, 102L),
-            ),
-          )
-
-        assertThat(addresses).hasSize(2)
-        assertThat(addresses[0].address).extracting("elementType", "nomisId").contains(ElementType.ADDRESS, 201L)
-        assertThat(addresses[1].address).extracting("elementType", "nomisId").contains(ElementType.ADDRESS, 202L)
-
-        assertThat(emailAddresses).hasSize(2)
-        assertThat(emailAddresses).extracting("elementType", "nomisId")
-          .containsAll(listOf(Tuple(ElementType.EMAIL, 301L), Tuple(ElementType.EMAIL, 302L)))
-
-        assertThat(restrictions).hasSize(2)
-        assertThat(restrictions).extracting("elementType", "nomisId")
-          .containsAll(listOf(Tuple(ElementType.RESTRICTION, 401L), Tuple(ElementType.RESTRICTION, 402L)))
-
-        assertThat(identities).hasSize(2)
-        assertThat(identities).extracting("elementType", "nomisId")
-          .containsAll(listOf(Tuple(ElementType.IDENTITY, 601L), Tuple(ElementType.IDENTITY, 602L)))
-
-        assertThat(employments).hasSize(2)
-        assertThat(employments).extracting("elementType", "nomisId")
-          .containsAll(listOf(Tuple(ElementType.EMPLOYMENT, 501L), Tuple(ElementType.EMPLOYMENT, 502L)))
-      }
+    // Duplicate request - should delete the original and replace it
+    val result2 = testAPIClient.migrateAContact(request)
+    with(result2) {
+      assertThat(this.contact.nomisId).isEqualTo(request.personId)
+      assertThat(this.contact.dpsId).isEqualTo(request.personId)
     }
 
-    @Test
-    fun `should migrate a contact with addresses with linked phone numbers`() {
-      val phoneCount = contactPhoneRepository.count()
+    // Same count - the duplicate contact replaces the original
+    assertThat(contactRepository.count()).isEqualTo(countContactsBefore + 1)
+  }
 
-      val request = basicMigrationRequest(personId = 503).copy(
-        addresses = addressesWithPhones(),
-      )
+  @Test
+  fun `should migrate a contact with addresses, phones, emails, restrictions, identifiers and employments`() {
+    val request = basicMigrationRequest(502).copy(
+      addresses = addresses(),
+      phoneNumbers = phoneNumbers(),
+      emailAddresses = emails(),
+      identifiers = identifiers(),
+      restrictions = restrictions(),
+      employments = employments(),
+    )
 
-      val result = testAPIClient.migrateAContact(request)
+    val result = testAPIClient.migrateAContact(request)
 
-      with(result) {
-        assertThat(phoneNumbers).hasSize(0)
-        assertThat(addresses).hasSize(1)
-        assertThat(addresses[0].address).extracting("elementType", "nomisId").contains(ElementType.ADDRESS, 201L)
-        assertThat(addresses[0].phones).hasSize(2)
-        assertThat(addresses[0].phones).extracting("elementType", "nomisId")
-          .containsAll(
-            listOf(
-              Tuple(ElementType.ADDRESS_PHONE, 101L),
-              Tuple(ElementType.ADDRESS_PHONE, 102L),
-            ),
-          )
-      }
+    with(result) {
+      assertThat(contact.elementType).isEqualTo(ElementType.CONTACT)
+      assertThat(contact.nomisId).isEqualTo(request.personId)
+      assertThat(contact.dpsId).isEqualTo(request.personId)
 
-      assertThat(contactPhoneRepository.count()).isEqualTo(phoneCount + 2)
+      assertThat(phoneNumbers).hasSize(2)
+      assertThat(phoneNumbers).extracting("elementType", "nomisId")
+        .containsAll(
+          listOf(
+            Tuple(ElementType.PHONE, 101L),
+            Tuple(ElementType.PHONE, 102L),
+          ),
+        )
+
+      assertThat(addresses).hasSize(2)
+      assertThat(addresses[0].address).extracting("elementType", "nomisId").contains(ElementType.ADDRESS, 201L)
+      assertThat(addresses[1].address).extracting("elementType", "nomisId").contains(ElementType.ADDRESS, 202L)
+
+      assertThat(emailAddresses).hasSize(2)
+      assertThat(emailAddresses).extracting("elementType", "nomisId")
+        .containsAll(listOf(Tuple(ElementType.EMAIL, 301L), Tuple(ElementType.EMAIL, 302L)))
+
+      assertThat(restrictions).hasSize(2)
+      assertThat(restrictions).extracting("elementType", "nomisId")
+        .containsAll(listOf(Tuple(ElementType.RESTRICTION, 401L), Tuple(ElementType.RESTRICTION, 402L)))
+
+      assertThat(identities).hasSize(2)
+      assertThat(identities).extracting("elementType", "nomisId")
+        .containsAll(listOf(Tuple(ElementType.IDENTITY, 601L), Tuple(ElementType.IDENTITY, 602L)))
+
+      assertThat(employments).hasSize(2)
+      assertThat(employments).extracting("elementType", "nomisId")
+        .containsAll(listOf(Tuple(ElementType.EMPLOYMENT, 501L), Tuple(ElementType.EMPLOYMENT, 502L)))
+    }
+  }
+
+  @Test
+  fun `should migrate a contact with addresses with linked phone numbers`() {
+    val phoneCount = contactPhoneRepository.count()
+
+    val request = basicMigrationRequest(personId = 503).copy(
+      addresses = addressesWithPhones(),
+    )
+
+    val result = testAPIClient.migrateAContact(request)
+
+    with(result) {
+      assertThat(phoneNumbers).hasSize(0)
+      assertThat(addresses).hasSize(1)
+      assertThat(addresses[0].address).extracting("elementType", "nomisId").contains(ElementType.ADDRESS, 201L)
+      assertThat(addresses[0].phones).hasSize(2)
+      assertThat(addresses[0].phones).extracting("elementType", "nomisId")
+        .containsAll(
+          listOf(
+            Tuple(ElementType.ADDRESS_PHONE, 101L),
+            Tuple(ElementType.ADDRESS_PHONE, 102L),
+          ),
+        )
     }
 
-    @Test
-    fun `should migrate a contact with relationships and prisoner restrictions`() {
-      // TODO: next PR
-    }
-
-    @Test
-    fun `should fail due to missing reference data`() {
-      // TODO: next PR
-    }
-
-    @Test
-    fun `should fail with request validation errors`() {
-      // TODO: next PR
-    }
+    assertThat(contactPhoneRepository.count()).isEqualTo(phoneCount + 2)
   }
 
   private fun basicMigrationRequest(

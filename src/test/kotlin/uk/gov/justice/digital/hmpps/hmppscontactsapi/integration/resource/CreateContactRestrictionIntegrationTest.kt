@@ -10,7 +10,6 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRestrictionRequest
@@ -18,6 +17,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactRestr
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 
@@ -28,13 +28,14 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
+    setCurrentUser(StubUser.READ_WRITE_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "last",
         firstName = "first",
       ),
     ).id
-    stubGetUserByUsername(UserDetails("created", "Created User"))
+    setCurrentUser(StubUser.CREATING_USER)
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.post()
@@ -157,7 +158,7 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(expiryDate).isNull()
       assertThat(comments).isNull()
       assertThat(enteredByUsername).isEqualTo("created")
-      assertThat(enteredByDisplayName).isEqualTo("Created User")
+      assertThat(enteredByDisplayName).isEqualTo("Created")
       assertThat(createdBy).isEqualTo(request.createdBy)
       assertThat(createdTime).isNotNull()
     }
@@ -190,7 +191,7 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(expiryDate).isEqualTo(request.expiryDate)
       assertThat(comments).isEqualTo(request.comments)
       assertThat(enteredByUsername).isEqualTo("created")
-      assertThat(enteredByDisplayName).isEqualTo("Created User")
+      assertThat(enteredByDisplayName).isEqualTo("Created")
       assertThat(createdBy).isEqualTo(request.createdBy)
       assertThat(createdTime).isNotNull()
     }

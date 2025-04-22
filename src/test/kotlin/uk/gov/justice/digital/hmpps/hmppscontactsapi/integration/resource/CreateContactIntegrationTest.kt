@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -27,11 +28,17 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.EmploymentIn
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
 class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.CREATING_USER)
+  }
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
@@ -192,7 +199,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactReturnedOnCreate.id, Source.DPS, "AUTH_ADM"),
+      additionalInfo = ContactInfo(contactReturnedOnCreate.id, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactReturnedOnCreate.id),
     )
   }
@@ -224,7 +231,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactReturnedOnCreate.id, Source.DPS, "AUTH_ADM"),
+      additionalInfo = ContactInfo(contactReturnedOnCreate.id, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactReturnedOnCreate.id),
     )
 
@@ -340,7 +347,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactId, Source.DPS, "AUTH_ADM"),
+      additionalInfo = ContactInfo(contactId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
@@ -438,7 +445,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactId, Source.DPS, "AUTH_ADM"),
+      additionalInfo = ContactInfo(contactId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
@@ -494,7 +501,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactId, Source.DPS, "AUTH_ADM"),
+      additionalInfo = ContactInfo(contactId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
@@ -554,7 +561,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactId, Source.DPS, "AUTH_ADM"),
+      additionalInfo = ContactInfo(contactId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
@@ -618,7 +625,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contact.id, Source.DPS, "AUTH_ADM"),
+      additionalInfo = ContactInfo(contact.id, Source.DPS, "created"),
       personReference = PersonReference(contact.id),
     )
   }
@@ -630,7 +637,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(firstName).isEqualTo(request.firstName)
       assertThat(middleNames).isEqualTo(request.middleNames)
       assertThat(dateOfBirth).isEqualTo(request.dateOfBirth)
-      assertThat(createdBy).isEqualTo("AUTH_ADM")
+      assertThat(createdBy).isEqualTo("created")
       assertThat(isStaff).isEqualTo(request.isStaff)
       assertThat(languageCode).isEqualTo(request.languageCode)
       assertThat(interpreterRequired).isEqualTo(request.interpreterRequired)

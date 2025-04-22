@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEven
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerContactRestrictionInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 
@@ -31,6 +32,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
 
   @BeforeEach
   fun initialiseData() {
+    setCurrentUser(StubUser.READ_WRITE_USER)
     stubPrisonSearchWithResponse(prisonerNumberCreatedAgainst)
     val created = testAPIClient.createAContactWithARelationship(
       CreateContactRequest(

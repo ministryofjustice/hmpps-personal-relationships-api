@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.EmploymentIn
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 class DeleteEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
@@ -24,14 +25,16 @@ class DeleteEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
+    stubOrganisationSummary(999)
+    stubOrganisationSummary(666)
+
+    setCurrentUser(StubUser.READ_WRITE_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "employment",
         firstName = "has",
       ),
     ).id
-    stubOrganisationSummary(999)
-    stubOrganisationSummary(666)
     savedEmploymentId = testAPIClient.createAnEmployment(
       savedContactId,
       CreateEmploymentRequest(

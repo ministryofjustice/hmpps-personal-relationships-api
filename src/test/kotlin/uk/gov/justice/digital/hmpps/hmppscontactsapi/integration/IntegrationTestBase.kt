@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.wiremock.Organi
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.wiremock.OrganisationsApiExtension.Companion.organisationsApiMockServer
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.wiremock.PrisonerSearchApiExtension
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.wiremock.PrisonerSearchApiExtension.Companion.prisonerSearchApiServer
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
 @ExtendWith(HmppsAuthApiExtension::class, PrisonerSearchApiExtension::class, ManageUsersApiExtension::class, OrganisationsApiExtension::class)
@@ -43,7 +44,7 @@ abstract class IntegrationTestBase {
 
   @BeforeEach
   fun setupTestApiClient() {
-    testAPIClient = TestAPIClient(webTestClient, jwtAuthHelper)
+    testAPIClient = TestAPIClient(webTestClient, jwtAuthHelper, null)
     stubEvents.reset()
   }
 
@@ -52,6 +53,8 @@ abstract class IntegrationTestBase {
     roles: List<String> = listOf(),
     scopes: List<String> = listOf("read"),
   ): (HttpHeaders) -> Unit = testAPIClient.setAuthorisation(username = username, scopes = scopes, roles = roles)
+
+  internal fun setAuthorisationUsingCurrentUser(): (HttpHeaders) -> Unit = testAPIClient.setAuthorisationUsingCurrentUser()
 
   protected fun stubPingWithResponse(status: Int) {
     hmppsAuth.stubHealthPing(status)
@@ -86,5 +89,20 @@ abstract class IntegrationTestBase {
 
   fun stubOrganisationSummaryNotFound(id: Long) {
     organisationsApiMockServer.stubOrganisationSummaryNotFound(id)
+  }
+
+  fun setCurrentUser(user: StubUser?) {
+    testAPIClient.currentUser = user
+    if (user != null && !user.isSystemUser) {
+      manageUsersApiMockServer.stubGetUser(UserDetails(username = user.username, name = user.displayName))
+    }
+  }
+
+  fun <T> doWithTemporaryWritePermission(action: () -> T): T {
+    val previousUser = testAPIClient.currentUser
+    setCurrentUser(StubUser.READ_WRITE_USER)
+    val result = action()
+    setCurrentUser(previousUser)
+    return result
   }
 }

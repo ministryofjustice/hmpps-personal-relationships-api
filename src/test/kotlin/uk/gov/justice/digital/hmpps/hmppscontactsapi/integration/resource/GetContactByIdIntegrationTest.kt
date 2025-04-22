@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 
 import org.apache.commons.lang3.RandomUtils
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.EmploymentEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.EmploymentRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -23,6 +25,11 @@ class GetContactByIdIntegrationTest : SecureAPIIntegrationTestBase() {
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.READ_ONLY_USER)
+  }
+
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()
     .uri("/contact/123456")
     .accept(MediaType.APPLICATION_JSON)
@@ -32,7 +39,7 @@ class GetContactByIdIntegrationTest : SecureAPIIntegrationTestBase() {
     webTestClient.get()
       .uri("/contact/123456")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -241,8 +248,7 @@ class GetContactByIdIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @Test
   fun `should get the contact with employments`() {
-    val newContact =
-      testAPIClient.createAContact(CreateContactRequest(lastName = "Bob", firstName = "First"))
+    val newContact = doWithTemporaryWritePermission { testAPIClient.createAContact(CreateContactRequest(lastName = "Bob", firstName = "First")) }
     val org1 = createOrg()
     val org2 = createOrg()
 

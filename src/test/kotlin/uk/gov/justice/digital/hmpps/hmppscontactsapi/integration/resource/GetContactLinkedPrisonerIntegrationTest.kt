@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelati
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.LinkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 
 class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
   private var savedContactId = 0L
@@ -38,12 +39,15 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
-    savedContactId = testAPIClient.createAContact(
-      CreateContactRequest(
-        lastName = "Contact",
-        firstName = "Linked",
-      ),
-    ).id
+    setCurrentUser(StubUser.READ_ONLY_USER)
+    doWithTemporaryWritePermission {
+      savedContactId = testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "Contact",
+          firstName = "Linked",
+        ),
+      ).id
+    }
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()
@@ -54,9 +58,9 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
     stubPrisonerSearch(prisoner1)
     stubPrisonerSearch(prisoner2)
 
-    val prisoner1FriendRelationship = addRelationship(prisoner1, "FRI")
-    val prisoner1OtherRelationship = addRelationship(prisoner1, "OTHER")
-    val prisoner2FatherRelationship = addRelationship(prisoner2, "FA")
+    val prisoner1FriendRelationship = doWithTemporaryWritePermission { addRelationship(prisoner1, "FRI") }
+    val prisoner1OtherRelationship = doWithTemporaryWritePermission { addRelationship(prisoner1, "OTHER") }
+    val prisoner2FatherRelationship = doWithTemporaryWritePermission { addRelationship(prisoner2, "FA") }
 
     stubSearchPrisonersByPrisonerNumbers(
       setOf(prisoner1.prisonerNumber, prisoner2.prisonerNumber),
@@ -120,8 +124,8 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
     stubPrisonerSearch(prisoner1)
     stubPrisonerSearch(prisoner2)
 
-    val prisoner1Relationship = addRelationship(prisoner1, "OTHER")
-    val prisoner2Relationship = addRelationship(prisoner2, "FA")
+    val prisoner1Relationship = doWithTemporaryWritePermission { addRelationship(prisoner1, "OTHER") }
+    val prisoner2Relationship = doWithTemporaryWritePermission { addRelationship(prisoner2, "FA") }
 
     stubSearchPrisonersByPrisonerNumbers(setOf(prisoner1.prisonerNumber, prisoner2.prisonerNumber), listOf(prisoner1))
 
