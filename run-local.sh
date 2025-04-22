@@ -14,6 +14,8 @@ export DB_NAME=personal-relationships-db
 export DB_USER=personal-relationships
 export DB_PASS=contacts
 export DB_SSL_MODE=prefer
+export DPR_USER=dpr_user
+export DPR_PASSWORD=dpr_password
 
 export API_BASE_URL_HMPPS_AUTH=https://sign-in-dev.hmpps.service.justice.gov.uk/auth
 
