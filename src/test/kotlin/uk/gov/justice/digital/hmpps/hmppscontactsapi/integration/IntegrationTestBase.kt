@@ -48,14 +48,6 @@ abstract class IntegrationTestBase {
     stubEvents.reset()
   }
 
-  internal fun setAuthorisation(
-    username: String? = "AUTH_ADM",
-    roles: List<String> = listOf(),
-    scopes: List<String> = listOf("read"),
-  ): (HttpHeaders) -> Unit = testAPIClient.setAuthorisation(username = username, scopes = scopes, roles = roles)
-
-  internal fun setAuthorisationUsingCurrentUser(): (HttpHeaders) -> Unit = testAPIClient.setAuthorisationUsingCurrentUser()
-
   protected fun stubPingWithResponse(status: Int) {
     hmppsAuth.stubHealthPing(status)
     prisonerSearchApiServer.stubHealthPing(status)
@@ -91,6 +83,25 @@ abstract class IntegrationTestBase {
     organisationsApiMockServer.stubOrganisationSummaryNotFound(id)
   }
 
+  @Deprecated(
+    "Use setCurrentUser and setAuthorisationUsingCurrentUser instead",
+    ReplaceWith("testAPIClient.setAuthorisationUsingCurrentUser"),
+  )
+  internal fun setAuthorisation(
+    username: String? = "AUTH_ADM",
+    roles: List<String> = listOf(),
+    scopes: List<String> = listOf("read"),
+  ): (HttpHeaders) -> Unit = testAPIClient.setAuthorisation(username = username, scopes = scopes, roles = roles)
+
+  /**
+   * Use #setCurrentUser with a `StubUser` to set the current user. Default for all tests is no user.
+   */
+  internal fun setAuthorisationUsingCurrentUser(): (HttpHeaders) -> Unit = testAPIClient.setAuthorisationUsingCurrentUser()
+
+  /**
+   * Setting to null will mean there is no user and authentication will fail.
+   * To simulate a non-user system token use a StubUser with isSystemUser set to trye.
+   */
   fun setCurrentUser(user: StubUser?) {
     testAPIClient.currentUser = user
     if (user != null && !user.isSystemUser) {
@@ -98,6 +109,9 @@ abstract class IntegrationTestBase {
     }
   }
 
+  /**
+   * Perform the specified action as StubUser.READ_WRITE_USER before switching back to the previous user.
+   */
   fun <T> doWithTemporaryWritePermission(action: () -> T): T {
     val previousUser = testAPIClient.currentUser
     setCurrentUser(StubUser.READ_WRITE_USER)

@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestAttribute
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactIdentityFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateIdentityRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateMultipleIdentitiesRequest
@@ -72,8 +74,9 @@ class ContactIdentityController(private val contactIdentityFacade: ContactIdenti
       example = "123456",
     ) contactId: Long,
     @Valid @RequestBody request: CreateIdentityRequest,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    val created = contactIdentityFacade.create(contactId, request)
+    val created = contactIdentityFacade.create(contactId, request, user)
     return ResponseEntity
       .status(HttpStatus.CREATED)
       .body(created)
@@ -116,8 +119,9 @@ class ContactIdentityController(private val contactIdentityFacade: ContactIdenti
       example = "123456",
     ) contactId: Long,
     @Valid @RequestBody request: CreateMultipleIdentitiesRequest,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    val created = contactIdentityFacade.createMultiple(contactId, request)
+    val created = contactIdentityFacade.createMultiple(contactId, request, user)
     return ResponseEntity
       .status(HttpStatus.CREATED)
       .body(created)
@@ -165,7 +169,8 @@ class ContactIdentityController(private val contactIdentityFacade: ContactIdenti
       example = "987654",
     ) contactIdentityId: Long,
     @Valid @RequestBody request: UpdateIdentityRequest,
-  ): ResponseEntity<Any> = ResponseEntity.ok(contactIdentityFacade.update(contactId, contactIdentityId, request))
+    @RequestAttribute user: User,
+  ): ResponseEntity<Any> = ResponseEntity.ok(contactIdentityFacade.update(contactId, contactIdentityId, request, user))
 
   @GetMapping("/identity/{contactIdentityId}")
   @Operation(
@@ -241,8 +246,9 @@ class ContactIdentityController(private val contactIdentityFacade: ContactIdenti
       description = "The id of the contact identity",
       example = "987654",
     ) contactIdentityId: Long,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    contactIdentityFacade.delete(contactId, contactIdentityId)
+    contactIdentityFacade.delete(contactId, contactIdentityId, user)
     return ResponseEntity.noContent().build()
   }
 }

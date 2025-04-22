@@ -9,6 +9,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactIdentityDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateIdentityRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateMultipleIdentitiesRequest
@@ -29,45 +30,46 @@ class ContactIdentityFacadeTest {
   private val contactIdentityId = 99L
   private val contactIdentityDetails = createContactIdentityDetails(id = contactIdentityId, contactId = contactId)
 
+  private val user = aUser()
+
   @Test
   fun `should send event if create success`() {
-    whenever(identityService.create(any(), any())).thenReturn(contactIdentityDetails)
+    whenever(identityService.create(any(), any(), any())).thenReturn(contactIdentityDetails)
     whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
     val request = CreateIdentityRequest(
       identityType = "DL",
       identityValue = "DL123456789",
-      createdBy = "created",
     )
 
-    val result = facade.create(contactId, request)
+    val result = facade.create(contactId, request, user)
 
     assertThat(result).isEqualTo(contactIdentityDetails)
-    verify(identityService).create(contactId, request)
+    verify(identityService).create(contactId, request, user)
     verify(eventsService).send(
       outboundEvent = OutboundEvent.CONTACT_IDENTITY_CREATED,
       identifier = contactIdentityId,
       contactId = contactId,
       source = Source.DPS,
+      user = user,
     )
   }
 
   @Test
   fun `should not send event if create throws exception and propagate the exception`() {
     val expectedException = RuntimeException("Bang!")
-    whenever(identityService.create(any(), any())).thenThrow(expectedException)
+    whenever(identityService.create(any(), any(), any())).thenThrow(expectedException)
     whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
     val request = CreateIdentityRequest(
       identityType = "DL",
       identityValue = "DL123456789",
-      createdBy = "created",
     )
 
     val exception = assertThrows<RuntimeException> {
-      facade.create(contactId, request)
+      facade.create(contactId, request, user)
     }
 
     assertThat(exception).isEqualTo(exception)
-    verify(identityService).create(contactId, request)
+    verify(identityService).create(contactId, request, user)
     verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
@@ -76,7 +78,7 @@ class ContactIdentityFacadeTest {
     val first = createContactIdentityDetails(id = 9999, contactId = contactId)
     val second = createContactIdentityDetails(id = 8888, contactId = contactId)
 
-    whenever(identityService.createMultiple(any(), any())).thenReturn(listOf(first, second))
+    whenever(identityService.createMultiple(any(), any(), any())).thenReturn(listOf(first, second))
     whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
     val request = CreateMultipleIdentitiesRequest(
       identities = listOf(
@@ -91,66 +93,66 @@ class ContactIdentityFacadeTest {
           issuingAuthority = null,
         ),
       ),
-      createdBy = "created",
     )
 
-    val result = facade.createMultiple(contactId, request)
+    val result = facade.createMultiple(contactId, request, user)
 
     assertThat(result).isEqualTo(listOf(first, second))
-    verify(identityService).createMultiple(contactId, request)
+    verify(identityService).createMultiple(contactId, request, user)
     verify(eventsService).send(
       outboundEvent = OutboundEvent.CONTACT_IDENTITY_CREATED,
       identifier = 9999,
       contactId = contactId,
       source = Source.DPS,
+      user = user,
     )
     verify(eventsService).send(
       outboundEvent = OutboundEvent.CONTACT_IDENTITY_CREATED,
       identifier = 8888,
       contactId = contactId,
       source = Source.DPS,
+      user = user,
     )
   }
 
   @Test
   fun `should send event if update success`() {
-    whenever(identityService.update(any(), any(), any())).thenReturn(contactIdentityDetails)
+    whenever(identityService.update(any(), any(), any(), any())).thenReturn(contactIdentityDetails)
     whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
     val request = UpdateIdentityRequest(
       identityType = "PASS",
       identityValue = "P978654312",
-      updatedBy = "updated",
     )
 
-    val result = facade.update(contactId, contactIdentityId, request)
+    val result = facade.update(contactId, contactIdentityId, request, user)
 
     assertThat(result).isEqualTo(contactIdentityDetails)
-    verify(identityService).update(contactId, contactIdentityId, request)
+    verify(identityService).update(contactId, contactIdentityId, request, user)
     verify(eventsService).send(
       outboundEvent = OutboundEvent.CONTACT_IDENTITY_UPDATED,
       identifier = contactIdentityId,
       contactId = contactId,
       source = Source.DPS,
+      user = user,
     )
   }
 
   @Test
   fun `should not send event if update throws exception and propagate the exception`() {
     val expectedException = RuntimeException("Bang!")
-    whenever(identityService.update(any(), any(), any())).thenThrow(expectedException)
+    whenever(identityService.update(any(), any(), any(), any())).thenThrow(expectedException)
     whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
     val request = UpdateIdentityRequest(
       identityType = "PASS",
       identityValue = "P978654312",
-      updatedBy = "updated",
     )
 
     val exception = assertThrows<RuntimeException> {
-      facade.update(contactId, contactIdentityId, request)
+      facade.update(contactId, contactIdentityId, request, user)
     }
 
     assertThat(exception).isEqualTo(exception)
-    verify(identityService).update(contactId, contactIdentityId, request)
+    verify(identityService).update(contactId, contactIdentityId, request, user)
     verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
@@ -183,7 +185,7 @@ class ContactIdentityFacadeTest {
     whenever(identityService.delete(any(), any())).then {}
     whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
-    facade.delete(contactId, contactIdentityId)
+    facade.delete(contactId, contactIdentityId, user)
 
     verify(identityService).delete(contactId, contactIdentityId)
     verify(eventsService).send(
@@ -191,6 +193,7 @@ class ContactIdentityFacadeTest {
       identifier = contactIdentityId,
       contactId = contactId,
       source = Source.DPS,
+      user = user,
     )
   }
 
@@ -201,7 +204,7 @@ class ContactIdentityFacadeTest {
     whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val exception = assertThrows<RuntimeException> {
-      facade.delete(contactId, contactIdentityId)
+      facade.delete(contactId, contactIdentityId, user)
     }
 
     assertThat(exception).isEqualTo(exception)

@@ -10,8 +10,4 @@ data class CreateMultipleIdentitiesRequest(
   @field:Valid
   @field:Size(min = 1, message = "identities must have at least 1 item")
   val identities: List<IdentityDocument>,
-
-  @Schema(description = "User who created the entry", example = "admin")
-  @field:Size(max = 100, message = "createdBy must be <= 100 characters")
-  val createdBy: String,
 )

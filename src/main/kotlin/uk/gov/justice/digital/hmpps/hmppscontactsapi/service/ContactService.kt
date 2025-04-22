@@ -78,7 +78,7 @@ class ContactService(
     val newRelationship = request.relationship?.toEntity(createdContact.id(), user.username)
       ?.let { prisonerContactRepository.saveAndFlush(it) }
 
-    createIdentityInformation(createdContact, request)
+    createIdentityInformation(createdContact, request, user)
     createAddresses(createdContact.id(), user.username, request.addresses)
     createPhoneNumbers(request, createdContact, user)
     createEmailAddresses(request, createdContact, user)
@@ -445,14 +445,13 @@ class ContactService(
   fun createIdentityInformation(
     createdContact: ContactEntity,
     request: CreateContactRequest,
+    user: User,
   ) {
     if (request.identities.isNotEmpty()) {
       contactIdentityService.createMultiple(
         createdContact.id(),
-        CreateMultipleIdentitiesRequest(
-          identities = request.identities,
-          createdBy = createdContact.createdBy,
-        ),
+        CreateMultipleIdentitiesRequest(identities = request.identities),
+        user,
       )
     }
   }

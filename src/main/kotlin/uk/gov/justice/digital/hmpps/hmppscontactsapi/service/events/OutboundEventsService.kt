@@ -89,7 +89,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactIdentityInfo(identifier, source),
+            ContactIdentityInfo(identifier, source, user.username),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }

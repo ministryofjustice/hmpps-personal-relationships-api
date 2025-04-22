@@ -17,7 +17,4 @@ data class CreateIdentityRequest(
   @field:Size(max = 40, message = "issuingAuthority must be <= 40 characters")
   val issuingAuthority: String? = null,
 
-  @Schema(description = "User who created the entry", example = "admin")
-  @field:Size(max = 100, message = "createdBy must be <= 100 characters")
-  val createdBy: String,
 )

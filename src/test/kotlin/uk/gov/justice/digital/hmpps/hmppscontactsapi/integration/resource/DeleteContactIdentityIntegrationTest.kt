@@ -3,8 +3,6 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
@@ -25,7 +23,7 @@ class DeleteContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
-    setCurrentUser(StubUser.READ_WRITE_USER)
+    setCurrentUser(StubUser.CREATING_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "identity",
@@ -38,10 +36,10 @@ class DeleteContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       CreateIdentityRequest(
         identityType = "DL",
         identityValue = "DL123456789",
-        createdBy = "created",
       ),
 
     ).contactIdentityId
+    setCurrentUser(StubUser.DELETING_USER)
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.delete()
@@ -53,7 +51,7 @@ class DeleteContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
     val errors = webTestClient.delete()
       .uri("/contact/-321/identity/$savedContactIdentityId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -65,7 +63,7 @@ class DeleteContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_IDENTITY_DELETED,
-      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS),
+      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "deleted"),
     )
   }
 
@@ -74,7 +72,7 @@ class DeleteContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
     val errors = webTestClient.delete()
       .uri("/contact/$savedContactId/identity/-99")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -86,17 +84,16 @@ class DeleteContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_IDENTITY_DELETED,
-      additionalInfo = ContactIdentityInfo(-99, Source.DPS),
+      additionalInfo = ContactIdentityInfo(-99, Source.DPS, "deleted"),
     )
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
-  fun `should delete the contacts identity number`(role: String) {
+  @Test
+  fun `should delete the contacts identity number`() {
     webTestClient.delete()
       .uri("/contact/$savedContactId/identity/$savedContactIdentityId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNoContent
@@ -104,14 +101,14 @@ class DeleteContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
     webTestClient.get()
       .uri("/contact/$savedContactId/identity/$savedContactIdentityId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_DELETED,
-      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS),
+      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "deleted"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }
