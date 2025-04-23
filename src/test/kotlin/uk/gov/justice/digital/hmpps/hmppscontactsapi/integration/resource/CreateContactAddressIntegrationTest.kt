@@ -48,12 +48,14 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "createdBy must not be null;{\"createdBy\": null}",
-      "createdBy must not be null;{}",
-      "Unsupported phone type (UNKNOWN);{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\", \"phoneType\": \"UNKNOWN\" } ], \"createdBy\": \"JD000001\"}",
-      "phoneNumbers[0].phoneNumber must not be null;{ \"phoneNumbers\": [ { \"phoneType\": \"MOB\" } ], \"createdBy\": \"JD000001\"}",
-      "phoneNumbers[0].phoneType must not be null;{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\" } ], \"createdBy\": \"JD000001\"}",
-      "phoneNumbers must not be null;{ \"phoneNumbers\": null, \"createdBy\": \"JD000001\"}",
+      "createdBy must not be null;{\"createdBy\": null, \"countryCode\": \"ENG\"}",
+      "createdBy must not be null;{\"countryCode\": \"ENG\"}",
+      "countryCode must not be null;{\"createdBy\": \"JD000001\", \"countryCode\": null}",
+      "countryCode must not be null;{\"createdBy\": \"JD000001\"}",
+      "Unsupported phone type (UNKNOWN);{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\", \"phoneType\": \"UNKNOWN\" } ], \"countryCode\": \"ENG\", \"createdBy\": \"JD000001\"}",
+      "phoneNumbers[0].phoneNumber must not be null;{ \"phoneNumbers\": [ { \"phoneType\": \"MOB\" } ], \"countryCode\": \"ENG\", \"createdBy\": \"JD000001\"}",
+      "phoneNumbers[0].phoneType must not be null;{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\" } ], \"countryCode\": \"ENG\", \"createdBy\": \"JD000001\"}",
+      "phoneNumbers must not be null;{ \"phoneNumbers\": null, \"countryCode\": \"ENG\", \"createdBy\": \"JD000001\"}",
     ],
     delimiter = ';',
   )
@@ -62,7 +64,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/address")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -81,7 +83,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/address")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -105,7 +107,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/address")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -130,7 +132,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/-321/address")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -165,6 +167,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       primaryAddress = true,
       property = "27",
       street = "Hello Road",
+      countryCode = "ENG",
       createdBy = "created",
       phoneNumbers = listOf(
         PhoneNumber(phoneType = "MOB", phoneNumber = "07777123456", extNumber = null),
@@ -203,7 +206,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/address")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -446,6 +449,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       primaryAddress = true,
       property = "27",
       street = "Hello Road",
+      countryCode = "ENG",
       createdBy = "created",
     )
   }

@@ -103,4 +103,4 @@ data class ContactAddressDetails(
 
   @Schema(description = "The timestamp of when the contact address was last updated", example = "2024-01-01T00:00:00Z", nullable = true)
   val updatedTime: LocalDateTime?,
-) : AddressLines
+) : AddressLines<String?>

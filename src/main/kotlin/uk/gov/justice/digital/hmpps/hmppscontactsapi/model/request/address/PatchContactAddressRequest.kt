@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address
 import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
 import org.openapitools.jackson.nullable.JsonNullable
 import java.time.LocalDate
@@ -52,9 +53,10 @@ data class PatchContactAddressRequest(
   @field:Size(max = 12, message = "postcode must be <= 12 characters")
   val postcode: JsonNullable<String?> = JsonNullable.undefined(),
 
-  @Schema(description = "Country code - from NOMIS reference data", example = "UK", nullable = true, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @Schema(description = "Country code - from NOMIS reference data", example = "UK", type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @field:Size(max = 12, message = "countryCode must be <= 12 characters")
-  val countryCode: JsonNullable<String?> = JsonNullable.undefined(),
+  @field:NotNull
+  val countryCode: JsonNullable<String> = JsonNullable.undefined(),
 
   @Schema(description = "Whether the address has been verified by postcode lookup", example = "false", nullable = false, type = "boolean", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   val verified: JsonNullable<Boolean> = JsonNullable.undefined(),

@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.model
 
-interface AddressLines {
+interface AddressLines<COUNTRY> {
   val flat: String?
   val property: String?
   val street: String?
@@ -8,5 +8,5 @@ interface AddressLines {
   val cityCode: String?
   val countyCode: String?
   val postcode: String?
-  val countryCode: String?
+  val countryCode: COUNTRY
 }

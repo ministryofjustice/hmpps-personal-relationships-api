@@ -142,4 +142,4 @@ data class PrisonerContactSummary(
   val comments: String?,
 
   val restrictionSummary: RestrictionsSummary,
-) : AddressLines
+) : AddressLines<String?>

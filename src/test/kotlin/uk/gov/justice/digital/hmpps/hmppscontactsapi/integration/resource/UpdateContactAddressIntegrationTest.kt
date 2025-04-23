@@ -49,6 +49,7 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
         street = "Acacia Avenue",
         area = "Hoggs Bottom",
         postcode = "HB10 2NB",
+        countryCode = "ENG",
         createdBy = "created",
       ),
 
@@ -65,9 +66,11 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "updatedBy must not be null;{\"updatedBy\": null, \"primaryAddress\": true}",
-      "updatedBy must not be null;{\"primaryAddress\": true}",
-      "primaryAddress must not be null;{\"updatedBy\": \"foo\"}",
+      "updatedBy must not be null;{\"updatedBy\": null, \"primaryAddress\": true, \"countryCode\": \"ENG\"}",
+      "updatedBy must not be null;{\"primaryAddress\": true, \"countryCode\": \"ENG\"}",
+      "countryCode must not be null;{\"updatedBy\": \"foo\", \"primaryAddress\": true, \"countryCode\": null}",
+      "countryCode must not be null;{\"updatedBy\": \"foo\", \"primaryAddress\": true}",
+      "primaryAddress must not be null;{\"updatedBy\": \"foo\", \"countryCode\": \"ENG\"}",
     ],
     delimiter = ';',
   )
@@ -76,7 +79,7 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/address/$savedContactAddressId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -100,7 +103,7 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/address/$savedContactAddressId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -124,7 +127,7 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/address/$savedContactAddressId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -149,7 +152,7 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/-321/address/$savedContactAddressId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -174,7 +177,7 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/address/-99")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -201,6 +204,7 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       street = "Acacia Avenue",
       area = "Hoggs Bottom",
       postcode = "HB10 1DJ",
+      countryCode = "ENG",
       updatedBy = "updated",
     )
 
@@ -234,6 +238,7 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     val request = UpdateContactAddressRequest(
       addressType = null,
       primaryAddress = false,
+      countryCode = "ENG",
       updatedBy = "updated",
     )
 
@@ -493,6 +498,7 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       mailFlag = false,
       property = "27",
       street = "Hello Road",
+      countryCode = "ENG",
       updatedBy = "updated",
     )
 
@@ -502,6 +508,7 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       mailFlag = false,
       property = "27",
       street = "Hello Road",
+      countryCode = "ENG",
       createdBy = "created",
     )
   }

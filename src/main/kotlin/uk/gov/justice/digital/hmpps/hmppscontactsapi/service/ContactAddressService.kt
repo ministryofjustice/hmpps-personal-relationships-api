@@ -202,8 +202,8 @@ class ContactAddressService(
     .findById(contactId)
     .orElseThrow { EntityNotFoundException("Contact ($contactId) not found") }
 
-  private fun validateCountryCode(countryCode: String?) {
-    countryCode?.let { validateReferenceDataExists(it, ReferenceCodeGroup.COUNTRY) }
+  private fun validateCountryCode(countryCode: String) {
+    validateReferenceDataExists(countryCode, ReferenceCodeGroup.COUNTRY)
   }
 
   private fun validateCountyCode(countyCode: String?) {

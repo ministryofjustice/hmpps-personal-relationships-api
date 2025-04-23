@@ -43,6 +43,7 @@ class DeleteContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
         street = "Acacia Avenue",
         area = "Hoggs Bottom",
         postcode = "HB10 2NB",
+        countryCode = "ENG",
         createdBy = "created",
       ),
     ).contactAddressId
@@ -57,7 +58,7 @@ class DeleteContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     val errors = webTestClient.delete()
       .uri("/contact/-321/address/$savedContactAddressId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -78,7 +79,7 @@ class DeleteContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     val errors = webTestClient.delete()
       .uri("/contact/$savedContactId/address/-99")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -97,10 +98,11 @@ class DeleteContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should delete the contact address`(role: String) {
+    setCurrentUser(StubUser.DELETING_USER.copy(roles = listOf(role)))
     webTestClient.delete()
       .uri("/contact/$savedContactId/address/$savedContactAddressId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNoContent
@@ -108,7 +110,7 @@ class DeleteContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     webTestClient.get()
       .uri("/contact/$savedContactId/address/$savedContactAddressId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
