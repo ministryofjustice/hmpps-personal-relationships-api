@@ -15,6 +15,7 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerNumberOfChildren
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.isEqualTo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.prisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateOrUpdatePrisonerNumberOfChildrenRequest
@@ -34,6 +35,7 @@ class PrisonerNumberOfChildrenServiceTest {
   private lateinit var prisonerNumberOfChildrenService: PrisonerNumberOfChildrenService
 
   private val prisonerNumber = "A1234BC"
+  private val user = aUser("test-user")
 
   @Nested
   inner class GetNumberOfChildrenByPrisonerNumber {
@@ -85,7 +87,6 @@ class PrisonerNumberOfChildrenServiceTest {
       // Given
       val request = CreateOrUpdatePrisonerNumberOfChildrenRequest(
         numberOfChildren = 1,
-        requestedBy = "USER1",
       )
 
       whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
@@ -107,6 +108,7 @@ class PrisonerNumberOfChildrenServiceTest {
       val result = prisonerNumberOfChildrenService.createOrUpdateNumberOfChildren(
         prisonerNumber,
         request,
+        user,
       )
 
       // Then
@@ -123,7 +125,6 @@ class PrisonerNumberOfChildrenServiceTest {
       // Given
       val request = CreateOrUpdatePrisonerNumberOfChildrenRequest(
         numberOfChildren = null,
-        requestedBy = "USER1",
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
       whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
@@ -145,6 +146,7 @@ class PrisonerNumberOfChildrenServiceTest {
       val result = prisonerNumberOfChildrenService.createOrUpdateNumberOfChildren(
         prisonerNumber,
         request,
+        user,
       )
 
       // Then
@@ -170,7 +172,6 @@ class PrisonerNumberOfChildrenServiceTest {
 
       val request = CreateOrUpdatePrisonerNumberOfChildrenRequest(
         numberOfChildren = 1,
-        requestedBy = "USER1",
       )
       whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
         .thenReturn(existingNumberOfChildrenCount)
@@ -184,6 +185,7 @@ class PrisonerNumberOfChildrenServiceTest {
       val result = prisonerNumberOfChildrenService.createOrUpdateNumberOfChildren(
         prisonerNumber,
         request,
+        user,
       )
 
       verify(prisonerNumberOfChildrenRepository, times(1)).save(
@@ -212,7 +214,6 @@ class PrisonerNumberOfChildrenServiceTest {
       // Given
       val request = CreateOrUpdatePrisonerNumberOfChildrenRequest(
         numberOfChildren = 1,
-        requestedBy = "test-user",
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(null)
 
@@ -221,6 +222,7 @@ class PrisonerNumberOfChildrenServiceTest {
         prisonerNumberOfChildrenService.createOrUpdateNumberOfChildren(
           prisonerNumber,
           request,
+          user,
         )
       }.message isEqualTo "Prisoner number $prisonerNumber - not found"
     }

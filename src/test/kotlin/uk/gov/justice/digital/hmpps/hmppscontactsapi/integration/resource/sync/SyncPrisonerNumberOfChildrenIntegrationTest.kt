@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEven
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerNumberOfChildren
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 
@@ -29,6 +30,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
   @BeforeEach
   fun setUp() {
     numberOfChildrenRepository.deleteAll()
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
   }
 
   @Test
@@ -69,10 +71,11 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `Sync endpoints should return forbidden without authorized role`(role: String) {
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER.copy(roles = listOf(role)))
     webTestClient.get()
       .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -82,7 +85,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(aMinimalRequest())
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -99,7 +102,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     // When
     webTestClient.put()
       .uri("/sync/$prisonerNumber/number-of-children")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(numberOfChildrenToSync)
       .exchange()
@@ -111,7 +114,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     val numberOfChildrenResponse = webTestClient.get()
       .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -140,14 +143,14 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     // When
     val response = webTestClient.put()
       .uri("/sync/$prisonerNumber/number-of-children")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(numberOfChildrenToSync)
       .exchange()
       .expectStatus().isOk
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
       .expectBody(SyncPrisonerNumberOfChildrenResponse::class.java)
-      .returnResult().responseBody
+      .returnResult().responseBody!!
 
     assertThat(response).isNotNull
     assertThat(response).usingRecursiveComparison()
@@ -166,6 +169,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
       additionalInfo = PrisonerNumberOfChildren(
         response.id,
         Source.NOMIS,
+        "SYS",
       ),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
@@ -174,7 +178,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     val savedNumberOfChildren = webTestClient.get()
       .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -199,7 +203,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     )
     val existingResponse = webTestClient.put()
       .uri("/sync/$prisonerNumber/number-of-children")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(existingNumberOfChildren)
       .exchange()
@@ -219,7 +223,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     // When
     val response = webTestClient.put()
       .uri("/sync/$prisonerNumber/number-of-children")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(updatedNumberOfChildren)
       .exchange()
@@ -244,7 +248,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     val numberOfChildren = webTestClient.get()
       .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -263,13 +267,13 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     assertThat(historicalRecord[0].createdBy).isEqualTo("user")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_UPDATED,
-      additionalInfo = PrisonerNumberOfChildren(historicalRecord[0].prisonerNumberOfChildrenId, Source.NOMIS),
+      additionalInfo = PrisonerNumberOfChildren(historicalRecord[0].prisonerNumberOfChildrenId, Source.NOMIS, "SYS"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-      additionalInfo = PrisonerNumberOfChildren(numberOfChildren.id, Source.NOMIS),
+      additionalInfo = PrisonerNumberOfChildren(numberOfChildren.id, Source.NOMIS, "SYS"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -284,7 +288,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     )
     val existingResponse = webTestClient.put()
       .uri("/sync/$prisonerNumber/number-of-children")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(existingNumberOfChildren)
       .exchange()
@@ -305,7 +309,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     // When
     val response = webTestClient.put()
       .uri("/sync/$prisonerNumber/number-of-children")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(updatedNumberOfChildren)
       .exchange()
@@ -330,7 +334,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     val numberOfChildren = webTestClient.get()
       .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -368,7 +372,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     // When
     val response = webTestClient.put()
       .uri("/sync/$prisonerNumber/number-of-children")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(numberOfChildrenToSync)
       .exchange()
@@ -391,7 +395,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     // When
     val response = webTestClient.put()
       .uri("/sync/$prisonerNumber/number-of-children")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(numberOfChildrenToSync)
       .exchange()
@@ -417,7 +421,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     val numberOfChildrenResponse = webTestClient.get()
       .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk

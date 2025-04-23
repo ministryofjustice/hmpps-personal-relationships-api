@@ -1,9 +1,8 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.prisoner
@@ -14,8 +13,14 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEven
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerNumberOfChildren
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 
 class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrationTestBase() {
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.READ_WRITE_USER)
+  }
 
   private val prisonerNumber = "A1234BC"
   private val prisoner1 = prisoner(
@@ -33,15 +38,14 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
     .contentType(MediaType.APPLICATION_JSON)
     .bodyValue(createRequest())
 
-  @ParameterizedTest
-  @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
-  fun `should create new number of children`(role: String) {
+  @Test
+  fun `should create new number of children`() {
     stubPrisonerSearch(prisoner1)
     val request = createRequest()
 
     val response = webTestClient.put()
       .uri("/prisoner/$prisonerNumber/number-of-children")
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(request)
       .exchange()
@@ -58,12 +62,12 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
           id = 2L,
           numberOfChildren = "1",
           active = true,
-          createdBy = "test-user",
+          createdBy = "read_write_user",
         ),
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-      additionalInfo = PrisonerNumberOfChildren(response!!.id, Source.DPS),
+      additionalInfo = PrisonerNumberOfChildren(response!!.id, Source.DPS, "read_write_user"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -73,12 +77,11 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
     stubPrisonerSearch(prisoner1)
     val request = CreateOrUpdatePrisonerNumberOfChildrenRequest(
       numberOfChildren = null,
-      requestedBy = "test-user",
     )
 
     val response = webTestClient.put()
       .uri("/prisoner/$prisonerNumber/number-of-children")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(request)
       .exchange()
@@ -95,12 +98,12 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
           id = 2L,
           numberOfChildren = null,
           active = true,
-          createdBy = "test-user",
+          createdBy = "read_write_user",
         ),
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-      additionalInfo = PrisonerNumberOfChildren(response!!.id, Source.DPS),
+      additionalInfo = PrisonerNumberOfChildren(response!!.id, Source.DPS, "read_write_user"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -111,7 +114,7 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
     val request = createRequest()
     val response = webTestClient.put()
       .uri("/prisoner/$prisonerNumber/number-of-children")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(request)
       .exchange()
@@ -124,7 +127,7 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
 
     val updateResponse = webTestClient.put()
       .uri("/prisoner/$prisonerNumber/number-of-children")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(request)
       .exchange()
@@ -142,12 +145,12 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
           id = 1L,
           numberOfChildren = "1",
           active = true,
-          createdBy = "test-user",
+          createdBy = "read_write_user",
         ),
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-      additionalInfo = PrisonerNumberOfChildren(response.id, Source.DPS),
+      additionalInfo = PrisonerNumberOfChildren(response.id, Source.DPS, "read_write_user"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -156,12 +159,11 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
   fun `should return 400 when number of children is more than 99`() {
     webTestClient.put()
       .uri("/prisoner/$prisonerNumber/number-of-children")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(
         CreateOrUpdatePrisonerNumberOfChildrenRequest(
           numberOfChildren = 100,
-          requestedBy = "test-user",
         ),
       )
       .exchange()
@@ -179,12 +181,11 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
     stubPrisonerSearch(prisoner1)
     webTestClient.put()
       .uri("/prisoner/$prisonerNumber/number-of-children")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(
         CreateOrUpdatePrisonerNumberOfChildrenRequest(
           numberOfChildren = -1,
-          requestedBy = "test-user",
         ),
       )
       .exchange()
@@ -199,6 +200,5 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
 
   private fun createRequest() = CreateOrUpdatePrisonerNumberOfChildrenRequest(
     numberOfChildren = 1,
-    requestedBy = "test-user",
   )
 }

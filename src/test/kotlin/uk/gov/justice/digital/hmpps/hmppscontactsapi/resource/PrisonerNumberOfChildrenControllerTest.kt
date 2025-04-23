@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.PrisonerNumberOfChildrenFacade
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateOrUpdatePrisonerNumberOfChildrenRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerNumberOfChildrenResponse
 @ExtendWith(MockitoExtension::class)
@@ -61,13 +62,14 @@ class PrisonerNumberOfChildrenControllerTest {
   @Nested
   inner class CreateOrUpdateNumberOfChildren {
 
+    private val user = aUser("test-user")
+
     @Test
     fun `should create or update number of children successfully`() {
       // Given
       val prisonerNumber = "A1234BC"
       val request = CreateOrUpdatePrisonerNumberOfChildrenRequest(
         numberOfChildren = 1,
-        requestedBy = "test-user",
       )
       val expectedResponse = PrisonerNumberOfChildrenResponse(
         id = 1L,
@@ -75,15 +77,15 @@ class PrisonerNumberOfChildrenControllerTest {
         active = true,
       )
       whenever(
-        prisonerNumberOfChildrenFacade.createOrUpdateNumberOfChildren(prisonerNumber, request),
+        prisonerNumberOfChildrenFacade.createOrUpdateNumberOfChildren(prisonerNumber, request, user),
       ).thenReturn(expectedResponse)
 
       // When
-      val result = controller.createOrUpdateNumberOfChildren(prisonerNumber, request)
+      val result = controller.createOrUpdateNumberOfChildren(prisonerNumber, request, user)
 
       // Then
       assertThat(result).isEqualTo(expectedResponse)
-      verify(prisonerNumberOfChildrenFacade).createOrUpdateNumberOfChildren(prisonerNumber, request)
+      verify(prisonerNumberOfChildrenFacade).createOrUpdateNumberOfChildren(prisonerNumber, request, user)
     }
 
     @Test
@@ -92,17 +94,16 @@ class PrisonerNumberOfChildrenControllerTest {
       val prisonerNumber = "A1234BC"
       val request = CreateOrUpdatePrisonerNumberOfChildrenRequest(
         numberOfChildren = 1,
-        requestedBy = "test-user",
       )
       whenever(
-        prisonerNumberOfChildrenFacade.createOrUpdateNumberOfChildren(prisonerNumber, request),
+        prisonerNumberOfChildrenFacade.createOrUpdateNumberOfChildren(prisonerNumber, request, user),
       ).thenThrow(EntityNotFoundException("Prisoner not found"))
 
       // When/Then
       assertThrows<EntityNotFoundException> {
-        controller.createOrUpdateNumberOfChildren(prisonerNumber, request)
+        controller.createOrUpdateNumberOfChildren(prisonerNumber, request, user)
       }
-      verify(prisonerNumberOfChildrenFacade).createOrUpdateNumberOfChildren(prisonerNumber, request)
+      verify(prisonerNumberOfChildrenFacade).createOrUpdateNumberOfChildren(prisonerNumber, request, user)
     }
   }
 }

@@ -13,7 +13,7 @@ import org.mockito.Mockito.verify
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerNumberOfChildren
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.isEqualTo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateOrUpdatePrisonerNumberOfChildrenRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerNumberOfChildrenResponse
@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.PrisonerNumberOfChi
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
-import java.time.LocalDateTime
 
 @ExtendWith(MockitoExtension::class)
 class PrisonerNumberOfChildrenFacadeTest {
@@ -71,13 +70,13 @@ class PrisonerNumberOfChildrenFacadeTest {
 
   @Nested
   inner class CreateOrUpdateNumberOfChildren {
+    private val user = aUser("test-user")
 
     @Test
     fun `should create new record and send created event when no existing record`() {
       val prisonerNumber = "A1234BC"
       val request = CreateOrUpdatePrisonerNumberOfChildrenRequest(
         numberOfChildren = 1,
-        requestedBy = "test-user",
       )
       val updatedResponse = PrisonerNumberOfChildrenResponse(
         id = 2L,
@@ -85,10 +84,10 @@ class PrisonerNumberOfChildrenFacadeTest {
         active = true,
       )
 
-      whenever(prisonerNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, request)).thenReturn(
+      whenever(prisonerNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, request, user)).thenReturn(
         updatedResponse,
       )
-      val result = prisonerNumberOfChildrenFacade.createOrUpdateNumberOfChildren(prisonerNumber, request)
+      val result = prisonerNumberOfChildrenFacade.createOrUpdateNumberOfChildren(prisonerNumber, request, user)
 
       assertThat(result)
         .isNotNull
@@ -99,34 +98,24 @@ class PrisonerNumberOfChildrenFacadeTest {
         identifier = updatedResponse.id,
         noms = prisonerNumber,
         source = Source.DPS,
+        user = user,
       )
     }
 
     @Test
     fun `should update existing record and send created events`() {
       val prisonerNumber = "A1234BC"
-      val createdTime = LocalDateTime.now()
       val request = CreateOrUpdatePrisonerNumberOfChildrenRequest(
         numberOfChildren = 2,
-        requestedBy = "test-user",
       )
       val updatedResponse = PrisonerNumberOfChildrenResponse(
         id = 2L,
         numberOfChildren = "2",
         active = true,
       )
-      val existingRecord = PrisonerNumberOfChildren(
-        prisonerNumberOfChildrenId = 2L,
-        prisonerNumber = prisonerNumber,
-        numberOfChildren = "1",
-        createdBy = "USER1",
-        createdTime = createdTime,
-        active = true,
-      )
-      whenever(prisonerNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, request)).thenReturn(
-        updatedResponse,
-      )
-      val result = prisonerNumberOfChildrenFacade.createOrUpdateNumberOfChildren(prisonerNumber, request)
+      whenever(prisonerNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, request, user))
+        .thenReturn(updatedResponse)
+      val result = prisonerNumberOfChildrenFacade.createOrUpdateNumberOfChildren(prisonerNumber, request, user)
 
       assertThat(result)
         .isNotNull
@@ -137,6 +126,7 @@ class PrisonerNumberOfChildrenFacadeTest {
         identifier = updatedResponse.id,
         noms = prisonerNumber,
         source = Source.DPS,
+        user = user,
       )
     }
 
@@ -146,17 +136,16 @@ class PrisonerNumberOfChildrenFacadeTest {
       val request = CreateOrUpdatePrisonerNumberOfChildrenRequest(
 
         numberOfChildren = 1,
-        requestedBy = "test-user",
       )
 
-      whenever(prisonerNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, request))
+      whenever(prisonerNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, request, user))
         .thenThrow(RuntimeException("Prisoner's number of children could not updated!"))
 
       assertThrows<RuntimeException> {
-        prisonerNumberOfChildrenFacade.createOrUpdateNumberOfChildren(prisonerNumber, request)
+        prisonerNumberOfChildrenFacade.createOrUpdateNumberOfChildren(prisonerNumber, request, user)
       }.message isEqualTo "Prisoner's number of children could not updated!"
 
-      verify(prisonerNumberOfChildrenService).createOrUpdateNumberOfChildren(prisonerNumber, request)
+      verify(prisonerNumberOfChildrenService).createOrUpdateNumberOfChildren(prisonerNumber, request, user)
       verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
     }
   }

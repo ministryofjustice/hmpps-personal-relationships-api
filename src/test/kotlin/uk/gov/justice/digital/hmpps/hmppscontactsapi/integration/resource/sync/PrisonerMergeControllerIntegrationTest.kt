@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonRefere
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerDomesticStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerNumberOfChildren
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDateTime
 
 class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
@@ -39,6 +40,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
     stubEvents.reset()
     numberOfChildrenRepository.deleteAll()
     domesticStatusRepository.deleteAll()
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
   }
 
   @Test
@@ -52,9 +54,10 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
 
   @Test
   fun `should return forbidden for merge without an authorised role on the token`() {
+    setCurrentUser(StubUser.USER_WITH_NO_ROLES)
     webTestClient.put()
       .uri(MERGE_URI)
-      .headers(setAuthorisation())
+      .headers(setAuthorisationUsingCurrentUser())
       .accept(MediaType.APPLICATION_JSON)
       .exchange()
       .expectStatus().isForbidden
@@ -69,7 +72,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
 
     webTestClient.put()
       .uri("/merge/keep/${KEEP_PRISONER}/remove/$REMOVE_PRISONER")
-      .headers(setAuthorisation(roles = listOf("ROLE_PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .accept(MediaType.APPLICATION_JSON)
       .exchange()
       .expectStatus().isOk
@@ -89,7 +92,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
 
     webTestClient.put()
       .uri(MERGE_URI)
-      .headers(setAuthorisation(roles = listOf("ROLE_PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .accept(MediaType.APPLICATION_JSON)
       .exchange()
       .expectStatus().isOk
@@ -152,7 +155,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
 
     webTestClient.put()
       .uri(MERGE_URI)
-      .headers(setAuthorisation(roles = listOf("ROLE_PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .accept(MediaType.APPLICATION_JSON)
       .exchange()
       .expectStatus().isOk
@@ -165,7 +168,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-      additionalInfo = PrisonerNumberOfChildren(retainedNumberOfChildren.id, Source.DPS),
+      additionalInfo = PrisonerNumberOfChildren(retainedNumberOfChildren.id, Source.DPS, "SYS"),
       personReference = PersonReference(nomsNumber = KEEP_PRISONER),
     )
 
@@ -227,7 +230,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
 
     webTestClient.put()
       .uri(MERGE_URI)
-      .headers(setAuthorisation(roles = listOf("ROLE_PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .accept(MediaType.APPLICATION_JSON)
       .exchange()
       .expectStatus().isOk
@@ -251,7 +254,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
 
     webTestClient.put()
       .uri(MERGE_URI)
-      .headers(setAuthorisation(roles = listOf("ROLE_PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .accept(MediaType.APPLICATION_JSON)
       .exchange()
       .expectStatus().isOk
@@ -281,7 +284,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.get()
       .uri("/sync/$removingPrisonerNumber/domestic-status")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -291,7 +294,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
     val retainedDomesticStatus = webTestClient.get()
       .uri("/sync/$keepingPrisonerNumber/domestic-status")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -311,7 +314,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.get()
       .uri("/sync/$removingPrisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -321,7 +324,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
     val retainedNumberOfChildren = webTestClient.get()
       .uri("/sync/$keepingPrisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -340,7 +343,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
   private fun createDomesticStatusRecords(domesticStatusToMigrate: MigratePrisonerDomesticStatusRequest) {
     webTestClient.post()
       .uri("/migrate/domestic-status")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(domesticStatusToMigrate)
       .exchange()
@@ -353,7 +356,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
   ) {
     webTestClient.post()
       .uri("/migrate/number-of-children")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(numberOfChildrenToMigrate)
       .exchange()

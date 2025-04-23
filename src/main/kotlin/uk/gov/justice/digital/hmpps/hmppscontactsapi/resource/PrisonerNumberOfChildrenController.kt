@@ -12,9 +12,11 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestAttribute
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.PrisonerNumberOfChildrenFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateOrUpdatePrisonerNumberOfChildrenRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerNumberOfChildrenResponse
@@ -95,5 +97,6 @@ class PrisonerNumberOfChildrenController(
   fun createOrUpdateNumberOfChildren(
     @PathVariable prisonerNumber: String,
     @Valid @RequestBody request: CreateOrUpdatePrisonerNumberOfChildrenRequest,
-  ): PrisonerNumberOfChildrenResponse = prisonerNumberOfChildrenFacade.createOrUpdateNumberOfChildren(prisonerNumber, request)
+    @RequestAttribute user: User,
+  ): PrisonerNumberOfChildrenResponse = prisonerNumberOfChildrenFacade.createOrUpdateNumberOfChildren(prisonerNumber, request, user)
 }
