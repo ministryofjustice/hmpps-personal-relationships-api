@@ -42,6 +42,7 @@ class DeleteContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
         primaryAddress = true,
         property = "27",
         street = "Hello Road",
+        countryCode = "ENG",
         createdBy = "created",
       ),
     ).contactAddressId
@@ -68,7 +69,7 @@ class DeleteContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
     val errors = webTestClient.delete()
       .uri("/contact/-321/address/$savedAddressId/phone/$savedAddressPhoneId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -85,7 +86,7 @@ class DeleteContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
     val errors = webTestClient.delete()
       .uri("/contact/$savedContactId/address/$savedAddressId/phone/-400")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -100,10 +101,11 @@ class DeleteContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should delete the address-specific phone number`(role: String) {
+    setCurrentUser(StubUser.DELETING_USER.copy(roles = listOf(role)))
     webTestClient.delete()
       .uri("/contact/$savedContactId/address/$savedAddressId/phone/$savedAddressPhoneId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNoContent
@@ -111,7 +113,7 @@ class DeleteContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
     webTestClient.get()
       .uri("/contact/$savedContactId/address/$savedAddressId/phone/$savedAddressPhoneId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound

@@ -221,7 +221,7 @@ fun createAddress(
   cityCode: String? = "CIT",
   countyCode: String? = "COUNT",
   postcode: String? = "POST CODE",
-  countryCode: String? = "ENG",
+  countryCode: String = "ENG",
   verified: Boolean = true,
   mailFlag: Boolean = true,
   startDate: LocalDate? = LocalDate.of(2020, 2, 3),
@@ -488,6 +488,7 @@ fun createContactAddressRequest(
   street: String = "Acacia Avenue",
   area: String = "Bulls Nose",
   postcode: String = "EC1 2NJ",
+  countryCode: String = "ENG",
   createdBy: String = "CREATE_USER",
 ) = CreateContactAddressRequest(
   addressType = addressType,
@@ -496,6 +497,7 @@ fun createContactAddressRequest(
   street = street,
   area = area,
   postcode = postcode,
+  countryCode = countryCode,
   createdBy = createdBy,
 )
 
@@ -507,6 +509,7 @@ fun updateContactAddressRequest(
   street: String = "Acacia Avenue",
   area: String = "Bulls Nose",
   postcode: String = "EC1 2NJ",
+  countryCode: String = "ENG",
   updatedBy: String = "AMEND_USER",
 ) = UpdateContactAddressRequest(
   primaryAddress = primaryAddress,
@@ -516,6 +519,7 @@ fun updateContactAddressRequest(
   street = street,
   area = area,
   postcode = postcode,
+  countryCode = countryCode,
   updatedBy = updatedBy,
 )
 

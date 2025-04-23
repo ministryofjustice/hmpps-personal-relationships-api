@@ -51,6 +51,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
         street = "Acacia Avenue",
         area = "Hoggs Bottom",
         postcode = "HB10 2NB",
+        countryCode = "ENG",
         createdBy = "created",
       ),
 
@@ -67,8 +68,9 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "updatedBy must not be null;{\"updatedBy\": null}",
-      "updatedBy must not be null;{}",
+      "Validation failure: updatedBy must not be null;{\"updatedBy\": null}",
+      "Validation failure: updatedBy must not be null;{}",
+      "Validation failure(s): countryCode must not be null;{\"countryCode\": null, \"updatedBy\": \"user\"}",
     ],
     delimiter = ';',
   )
@@ -77,7 +79,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/address/$savedContactAddressId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -86,7 +88,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .expectBody(ErrorResponse::class.java)
       .returnResult().responseBody!!
 
-    assertThat(errors.userMessage).isEqualTo("Validation failure: $expectedMessage")
+    assertThat(errors.userMessage).isEqualTo(expectedMessage)
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
@@ -101,7 +103,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/address/$savedContactAddressId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -125,7 +127,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/address/$savedContactAddressId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -150,7 +152,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/-321/address/$savedContactAddressId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -175,7 +177,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/address/-99")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -544,10 +546,6 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
         aMinimalPatchAddressRequest().copy(countyCode = JsonNullable.of(null)),
       ),
       Arguments.of(
-        "countryCode",
-        aMinimalPatchAddressRequest().copy(countryCode = JsonNullable.of(null)),
-      ),
-      Arguments.of(
         "postcode",
         aMinimalPatchAddressRequest().copy(postcode = JsonNullable.of(null)),
       ),
@@ -576,6 +574,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       mailFlag = false,
       property = "27",
       street = "Hello Road",
+      countryCode = "ENG",
       createdBy = "created",
     )
   }

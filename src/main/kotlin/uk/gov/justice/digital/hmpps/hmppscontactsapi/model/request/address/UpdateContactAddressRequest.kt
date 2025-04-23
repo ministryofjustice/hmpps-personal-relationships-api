@@ -50,9 +50,9 @@ data class UpdateContactAddressRequest(
   @field:Size(max = 12, message = "postcode must be <= 12 characters")
   override val postcode: String? = null,
 
-  @Schema(description = "Country code - from NOMIS reference data", example = "UK", nullable = true)
+  @Schema(description = "Country code - from NOMIS reference data", example = "UK")
   @field:Size(max = 12, message = "countryCode must be <= 12 characters")
-  override val countryCode: String? = null,
+  override val countryCode: String,
 
   @Schema(description = "Whether the address has been verified by postcode lookup", example = "false")
   val verified: Boolean = false,
@@ -76,4 +76,4 @@ data class UpdateContactAddressRequest(
   @Schema(description = "The id of the user who updated the address", example = "JD000001")
   @field:Size(max = 100, message = "updatedBy must be <= 100 characters")
   val updatedBy: String,
-) : AddressLines
+) : AddressLines<String>

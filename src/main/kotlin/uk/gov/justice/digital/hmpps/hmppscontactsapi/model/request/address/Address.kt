@@ -52,9 +52,9 @@ data class Address(
   @field:Size(max = 12, message = "postcode must be <= 12 characters")
   override val postcode: String? = null,
 
-  @Schema(description = "Country code - from NOMIS", example = "UK", nullable = true)
+  @Schema(description = "Country code - from NOMIS", example = "UK")
   @field:Size(max = 12, message = "countryCode must be <= 12 characters")
-  override val countryCode: String? = null,
+  override val countryCode: String,
 
   @Schema(description = "Whether the address has been verified by postcode lookup", example = "false")
   val verified: Boolean? = false,
@@ -78,4 +78,4 @@ data class Address(
   @Schema(description = "Any additional information or comments about the address", example = "Some additional information", nullable = true)
   @field:Size(max = 240, message = "comments must be <= 240 characters")
   val comments: String? = null,
-) : AddressLines
+) : AddressLines<String>

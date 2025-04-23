@@ -53,9 +53,9 @@ data class CreateContactAddressRequest(
   @field:Size(max = 12, message = "postcode must be <= 12 characters")
   override val postcode: String? = null,
 
-  @Schema(description = "Country code - from NOMIS", example = "UK", nullable = true)
+  @Schema(description = "Country code - from NOMIS", example = "UK")
   @field:Size(max = 12, message = "countryCode must be <= 12 characters")
-  override val countryCode: String? = null,
+  override val countryCode: String,
 
   @Schema(description = "Whether the address has been verified by postcode lookup", example = "false")
   val verified: Boolean? = false,
@@ -83,4 +83,4 @@ data class CreateContactAddressRequest(
   @Schema(description = "The id of the user who created the contact", example = "JD000001")
   @field:Size(max = 100, message = "createdBy must be <= 100 characters")
   val createdBy: String,
-) : AddressLines
+) : AddressLines<String>

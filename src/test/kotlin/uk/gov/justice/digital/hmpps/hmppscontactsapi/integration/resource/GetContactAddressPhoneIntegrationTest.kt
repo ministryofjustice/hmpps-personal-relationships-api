@@ -41,6 +41,7 @@ class GetContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
           primaryAddress = true,
           property = "27",
           street = "Hello Road",
+          countryCode = "ENG",
           createdBy = "created",
         ),
 
@@ -71,7 +72,7 @@ class GetContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
     val errors = webTestClient.get()
       .uri("/contact/$savedContactId/address/$savedAddressId/phone/-100")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -85,10 +86,11 @@ class GetContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should return the details of the address-specific phone number`(role: String) {
+    setCurrentUser(StubUser.CREATING_USER.copy(roles = listOf(role)))
     val result = webTestClient.get()
       .uri("/contact/$savedContactId/address/$savedAddressId/phone/$savedAddressPhoneId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk()

@@ -80,4 +80,4 @@ data class ContactSearchResultItem(
   @Schema(description = "Any additional information or comments about the address", example = "Some additional information", nullable = true)
   val comments: String?,
 
-) : AddressLines
+) : AddressLines<String?>
