@@ -45,15 +45,15 @@ data class PatchContactAddressRequest(
   @field:Size(max = 12, message = "cityCode must be <= 12 characters")
   val cityCode: JsonNullable<String?> = JsonNullable.undefined(),
 
-  @Schema(description = "County code - from NOMIS reference data", example = "WMIDS", type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @Schema(description = "County code - from NOMIS reference data", example = "WMIDS", nullable = true, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @field:Size(max = 12, message = "countyCode must be <= 12 characters")
-  val countyCode: JsonNullable<String> = JsonNullable.undefined(),
+  val countyCode: JsonNullable<String?> = JsonNullable.undefined(),
 
   @Schema(description = "Postcode", example = "S13 4FH", nullable = true, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @field:Size(max = 12, message = "postcode must be <= 12 characters")
   val postcode: JsonNullable<String?> = JsonNullable.undefined(),
 
-  @Schema(description = "Country code - from NOMIS reference data", example = "UK", nullable = true, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @Schema(description = "Country code - from NOMIS reference data", example = "UK", type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @field:Size(max = 12, message = "countryCode must be <= 12 characters")
   @field:NotNull
   val countryCode: JsonNullable<String> = JsonNullable.undefined(),
