@@ -72,8 +72,4 @@ data class UpdateContactAddressRequest(
   @Schema(description = "Any additional information or comments about the address", example = "Some additional information", nullable = true)
   @field:Size(max = 240, message = "comments must be <= 240 characters")
   val comments: String? = null,
-
-  @Schema(description = "The id of the user who updated the address", example = "JD000001")
-  @field:Size(max = 100, message = "updatedBy must be <= 100 characters")
-  val updatedBy: String,
 ) : AddressLines<String>

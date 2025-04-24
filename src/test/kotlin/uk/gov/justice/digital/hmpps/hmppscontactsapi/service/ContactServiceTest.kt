@@ -17,6 +17,7 @@ import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.never
+import org.mockito.kotlin.same
 import org.mockito.kotlin.whenever
 import org.openapitools.jackson.nullable.JsonNullable
 import org.springframework.data.domain.Page
@@ -136,7 +137,7 @@ class ContactServiceTest {
       val identityEntity1 =
         createContactIdentityDetailsEntity(id = 1, identityType = "PNC", identityValue = "1923/1Z34567A")
       whenever(contactIdentityDetailsRepository.findByContactId(123L)).thenReturn(listOf(identityEntity1))
-      whenever(contactAddressService.create(any(), any())).thenReturn(
+      whenever(contactAddressService.create(any(), any(), any())).thenReturn(
         CreateAddressResponse(
           contactAddressResponse(
             999,
@@ -190,7 +191,7 @@ class ContactServiceTest {
       assertThat(result.createdContact.identities[0].identityValue).isEqualTo("1923/1Z34567A")
 
       val contactAddressCaptor = argumentCaptor<CreateContactAddressRequest>()
-      verify(contactAddressService).create(eq(123L), contactAddressCaptor.capture())
+      verify(contactAddressService).create(eq(123L), contactAddressCaptor.capture(), same(user))
       val createAddressRequest = contactAddressCaptor.firstValue
       with(createAddressRequest) {
         assertThat(addressType).isEqualTo(addressWithPhoneNumber.addressType)
@@ -210,7 +211,6 @@ class ContactServiceTest {
         assertThat(noFixedAddress).isEqualTo(addressWithPhoneNumber.noFixedAddress)
         assertThat(phoneNumbers).isEqualTo(addressWithPhoneNumber.phoneNumbers)
         assertThat(comments).isEqualTo(addressWithPhoneNumber.comments)
-        assertThat(createdBy).isEqualTo(user.username)
       }
 
       verify(contactPhoneService).createMultiple(123L, user.username, listOf(phoneNumber))
@@ -488,7 +488,7 @@ class ContactServiceTest {
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(contactAddressDetailsRepository.findByContactId(any())).thenReturn(listOf(aContactAddressDetailsEntity))
-      whenever(contactAddressService.create(any(), any())).thenThrow(RuntimeException("Bang!"))
+      whenever(contactAddressService.create(any(), any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
         service.createContact(request, user)

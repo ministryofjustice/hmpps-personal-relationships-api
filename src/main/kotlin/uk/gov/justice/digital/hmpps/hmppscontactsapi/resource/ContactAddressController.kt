@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestAttribute
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactAddressFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.PatchContactAddressRequest
@@ -68,8 +70,9 @@ class ContactAddressController(private val contactAddressFacade: ContactAddressF
     contactId: Long,
     @Valid @RequestBody
     request: CreateContactAddressRequest,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    val created = contactAddressFacade.create(contactId, request)
+    val created = contactAddressFacade.create(contactId, request, user)
     return ResponseEntity
       .status(HttpStatus.CREATED)
       .body(created)
@@ -111,7 +114,8 @@ class ContactAddressController(private val contactAddressFacade: ContactAddressF
     contactAddressId: Long,
     @Valid @RequestBody
     request: UpdateContactAddressRequest,
-  ) = contactAddressFacade.update(contactId, contactAddressId, request)
+    @RequestAttribute user: User,
+  ) = contactAddressFacade.update(contactId, contactAddressId, request, user)
 
   @PatchMapping("/{contactAddressId}", consumes = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(summary = "Patch a contact address individual fields as a patch", description = "Patches an existing contact address by its ID")
@@ -149,7 +153,8 @@ class ContactAddressController(private val contactAddressFacade: ContactAddressF
     contactAddressId: Long,
     @Valid @RequestBody
     request: PatchContactAddressRequest,
-  ) = contactAddressFacade.patch(contactId, contactAddressId, request)
+    @RequestAttribute user: User,
+  ) = contactAddressFacade.patch(contactId, contactAddressId, request, user)
 
   @GetMapping("/{contactAddressId}")
   @Operation(summary = "Get a contact address", description = "Get a contact address by its ID")
@@ -211,8 +216,9 @@ class ContactAddressController(private val contactAddressFacade: ContactAddressF
     @PathVariable("contactAddressId")
     @Parameter(name = "contactAddressId", description = "The contact address ID", example = "456")
     contactAddressId: Long,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    contactAddressFacade.delete(contactId, contactAddressId)
+    contactAddressFacade.delete(contactId, contactAddressId, user)
     return ResponseEntity.noContent().build()
   }
 }

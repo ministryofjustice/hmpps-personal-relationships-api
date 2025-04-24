@@ -45,7 +45,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactAddressInfo(identifier, source),
+            ContactAddressInfo(identifier, source, user.username),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }

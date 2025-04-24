@@ -5,6 +5,7 @@ import jakarta.validation.ValidationException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
@@ -46,7 +47,7 @@ class ContactAddressService(
     return existing.toModel()
   }
 
-  fun create(contactId: Long, request: CreateContactAddressRequest): CreateAddressResponse {
+  fun create(contactId: Long, request: CreateContactAddressRequest, user: User): CreateAddressResponse {
     validateContactExists(contactId)
     validateAddressType(request.addressType)
     validateCityCode(request.cityCode)
@@ -60,19 +61,19 @@ class ContactAddressService(
     if (request.mailFlag != null && request.mailFlag) {
       updatedAddressIds += contactAddressRepository.resetMailAddressFlagForContact(contactId)
     }
-    val savedContactAddress = contactAddressRepository.saveAndFlush(request.toEntity(contactId))
+    val savedContactAddress = contactAddressRepository.saveAndFlush(request.toEntity(contactId, user))
 
     val contactAddressPhoneId = contactAddressPhoneService.createMultipleAddressSpecificPhones(
       contactId,
       savedContactAddress.contactAddressId,
-      request.createdBy,
+      user.username,
       request.phoneNumbers,
     )
     val savedContactAddressModel = savedContactAddress.toModel(contactAddressPhoneId)
     return CreateAddressResponse(savedContactAddressModel, updatedAddressIds)
   }
 
-  fun update(contactId: Long, contactAddressId: Long, request: UpdateContactAddressRequest): UpdateAddressResponse {
+  fun update(contactId: Long, contactAddressId: Long, request: UpdateContactAddressRequest, user: User): UpdateAddressResponse {
     val contact = validateContactExists(contactId)
     val existing = validateExistingAddress(contactAddressId)
     validateAddressType(request.addressType)
@@ -109,10 +110,10 @@ class ContactAddressService(
       noFixedAddress = request.noFixedAddress ?: false,
       comments = request.comments,
     ).also {
-      it.updatedBy = request.updatedBy
+      it.updatedBy = user.username
       it.updatedTime = LocalDateTime.now()
       if (!existing.verified && request.verified) {
-        it.verifiedBy = request.updatedBy
+        it.verifiedBy = user.username
         it.verifiedTime = LocalDateTime.now()
       }
     }
@@ -120,7 +121,7 @@ class ContactAddressService(
     return UpdateAddressResponse(contactAddressRepository.saveAndFlush(changedContactAddress).toModel(), updatedAddressIds)
   }
 
-  fun patch(contactId: Long, contactAddressId: Long, request: PatchContactAddressRequest): UpdateAddressResponse {
+  fun patch(contactId: Long, contactAddressId: Long, request: PatchContactAddressRequest, user: User): UpdateAddressResponse {
     val contact = validateContactExists(contactId)
     val existing = validateExistingAddress(contactAddressId)
     if (contact.contactId != existing.contactId) {
@@ -145,13 +146,14 @@ class ContactAddressService(
       }
     }
 
-    val changedContactAddress = existing.patchRequest(request)
+    val changedContactAddress = existing.patchRequest(request, user)
 
     return UpdateAddressResponse(contactAddressRepository.saveAndFlush(changedContactAddress).toModel(), updatedAddressIds)
   }
 
   private fun ContactAddressEntity.patchRequest(
     request: PatchContactAddressRequest,
+    user: User,
   ): ContactAddressEntity {
     val changedContactAddress = this.copy(
       primaryAddress = request.primaryAddress.orElse(this.primaryAddress),
@@ -171,11 +173,11 @@ class ContactAddressService(
       noFixedAddress = request.noFixedAddress.orElse(this.noFixedAddress),
       comments = request.comments.orElse(this.comments),
     ).also { entity ->
-      entity.updatedBy = request.updatedBy
+      entity.updatedBy = user.username
       entity.updatedTime = LocalDateTime.now()
       request.verified.ifPresent {
         if (it && !this.verified) {
-          entity.verifiedBy = request.updatedBy
+          entity.verifiedBy = user.username
           entity.verifiedTime = LocalDateTime.now()
         }
       }

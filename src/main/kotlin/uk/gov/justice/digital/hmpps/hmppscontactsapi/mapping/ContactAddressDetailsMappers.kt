@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping
 
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.CreateContactAddressRequest
@@ -40,7 +41,7 @@ fun ContactAddressDetailsEntity.toModel(phoneNumbers: List<ContactAddressPhoneDe
   updatedTime = this.updatedTime,
 )
 
-fun CreateContactAddressRequest.toEntity(contactId: Long): ContactAddressEntity = ContactAddressEntity(
+fun CreateContactAddressRequest.toEntity(contactId: Long, user: User): ContactAddressEntity = ContactAddressEntity(
   contactAddressId = 0L,
   contactId = contactId,
   addressType = this.addressType,
@@ -59,7 +60,7 @@ fun CreateContactAddressRequest.toEntity(contactId: Long): ContactAddressEntity 
   endDate = this.endDate,
   noFixedAddress = this.noFixedAddress ?: false,
   comments = this.comments,
-  createdBy = this.createdBy,
+  createdBy = user.username,
   createdTime = LocalDateTime.now(),
 )
 

@@ -79,7 +79,7 @@ class ContactService(
       ?.let { prisonerContactRepository.saveAndFlush(it) }
 
     createIdentityInformation(createdContact, request, user)
-    createAddresses(createdContact.id(), user.username, request.addresses)
+    createAddresses(createdContact.id(), user.username, request.addresses, user)
     createPhoneNumbers(request, createdContact, user)
     createEmailAddresses(request, createdContact, user)
     createEmployments(request, createdContact, user)
@@ -130,7 +130,7 @@ class ContactService(
   fun getContact(id: Long): ContactDetails? = contactRepository.findById(id).getOrNull()
     ?.let { enrichContact(it) }
 
-  private fun createAddresses(contactId: Long, createdBy: String, addresses: List<Address>) {
+  private fun createAddresses(contactId: Long, createdBy: String, addresses: List<Address>, user: User) {
     addresses.forEach { address ->
       contactAddressService.create(
         contactId,
@@ -152,8 +152,8 @@ class ContactService(
           noFixedAddress = address.noFixedAddress,
           phoneNumbers = address.phoneNumbers,
           comments = address.comments,
-          createdBy = createdBy,
         ),
+        user,
       )
     }
   }

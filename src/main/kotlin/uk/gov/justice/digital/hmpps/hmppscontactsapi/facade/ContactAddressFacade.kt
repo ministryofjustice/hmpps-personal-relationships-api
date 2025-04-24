@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.PatchContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.UpdateContactAddressRequest
@@ -15,11 +16,12 @@ class ContactAddressFacade(
   private val outboundEventsService: OutboundEventsService,
 ) {
 
-  fun create(contactId: Long, request: CreateContactAddressRequest): ContactAddressResponse = contactAddressService.create(contactId, request).also { (created, otherUpdatedAddressIds) ->
+  fun create(contactId: Long, request: CreateContactAddressRequest, user: User): ContactAddressResponse = contactAddressService.create(contactId, request, user).also { (created, otherUpdatedAddressIds) ->
     outboundEventsService.send(
       outboundEvent = OutboundEvent.CONTACT_ADDRESS_CREATED,
       identifier = created.contactAddressId,
       contactId = contactId,
+      user = user,
     )
     created.phoneNumberIds.map {
       outboundEventsService.send(
@@ -27,48 +29,54 @@ class ContactAddressFacade(
         identifier = it,
         secondIdentifier = created.contactAddressId,
         contactId = contactId,
+        user = user,
       )
     }
-    sendOtherUpdatedAddressEvents(otherUpdatedAddressIds, contactId)
+    sendOtherUpdatedAddressEvents(otherUpdatedAddressIds, contactId, user)
   }.created
 
-  fun update(contactId: Long, contactAddressId: Long, request: UpdateContactAddressRequest): ContactAddressResponse = contactAddressService.update(contactId, contactAddressId, request).also { (updated, otherUpdatedAddressIds) ->
+  fun update(contactId: Long, contactAddressId: Long, request: UpdateContactAddressRequest, user: User): ContactAddressResponse = contactAddressService.update(contactId, contactAddressId, request, user).also { (updated, otherUpdatedAddressIds) ->
     outboundEventsService.send(
       outboundEvent = OutboundEvent.CONTACT_ADDRESS_UPDATED,
       identifier = updated.contactAddressId,
       contactId = contactId,
+      user = user,
     )
-    sendOtherUpdatedAddressEvents(otherUpdatedAddressIds, contactId)
+    sendOtherUpdatedAddressEvents(otherUpdatedAddressIds, contactId, user)
   }.updated
 
-  fun patch(contactId: Long, contactAddressId: Long, request: PatchContactAddressRequest): ContactAddressResponse = contactAddressService.patch(contactId, contactAddressId, request).also { (updated, otherUpdatedAddressIds) ->
+  fun patch(contactId: Long, contactAddressId: Long, request: PatchContactAddressRequest, user: User): ContactAddressResponse = contactAddressService.patch(contactId, contactAddressId, request, user).also { (updated, otherUpdatedAddressIds) ->
     outboundEventsService.send(
       outboundEvent = OutboundEvent.CONTACT_ADDRESS_UPDATED,
       identifier = updated.contactAddressId,
       contactId = contactId,
+      user = user,
     )
-    sendOtherUpdatedAddressEvents(otherUpdatedAddressIds, contactId)
+    sendOtherUpdatedAddressEvents(otherUpdatedAddressIds, contactId, user)
   }.updated
 
   private fun sendOtherUpdatedAddressEvents(
     otherUpdatedAddressIds: Set<Long>,
     contactId: Long,
+    user: User,
   ) {
     otherUpdatedAddressIds.forEach {
       outboundEventsService.send(
         outboundEvent = OutboundEvent.CONTACT_ADDRESS_UPDATED,
         identifier = it,
         contactId = contactId,
+        user = user,
       )
     }
   }
 
-  fun delete(contactId: Long, contactAddressId: Long) {
+  fun delete(contactId: Long, contactAddressId: Long, user: User) {
     contactAddressService.delete(contactId, contactAddressId).also {
       outboundEventsService.send(
         outboundEvent = OutboundEvent.CONTACT_ADDRESS_DELETED,
         identifier = it.contactAddressId,
         contactId = contactId,
+        user = user,
       )
     }
   }

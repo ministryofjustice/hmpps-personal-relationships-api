@@ -489,7 +489,6 @@ fun createContactAddressRequest(
   area: String = "Bulls Nose",
   postcode: String = "EC1 2NJ",
   countryCode: String = "ENG",
-  createdBy: String = "CREATE_USER",
 ) = CreateContactAddressRequest(
   addressType = addressType,
   flat = flat,
@@ -498,7 +497,6 @@ fun createContactAddressRequest(
   area = area,
   postcode = postcode,
   countryCode = countryCode,
-  createdBy = createdBy,
 )
 
 fun updateContactAddressRequest(
@@ -510,7 +508,6 @@ fun updateContactAddressRequest(
   area: String = "Bulls Nose",
   postcode: String = "EC1 2NJ",
   countryCode: String = "ENG",
-  updatedBy: String = "AMEND_USER",
 ) = UpdateContactAddressRequest(
   primaryAddress = primaryAddress,
   addressType = addressType,
@@ -520,7 +517,6 @@ fun updateContactAddressRequest(
   area = area,
   postcode = postcode,
   countryCode = countryCode,
-  updatedBy = updatedBy,
 )
 
 fun patchContactAddressRequest() = PatchContactAddressRequest(
@@ -531,7 +527,6 @@ fun patchContactAddressRequest() = PatchContactAddressRequest(
   street = JsonNullable.of("Acacia Avenue"),
   area = JsonNullable.of("Bulls Nose"),
   postcode = JsonNullable.of("EC1 2NJ"),
-  updatedBy = "AMEND_USER",
 )
 
 fun contactAddressResponse(
