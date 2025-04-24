@@ -32,7 +32,7 @@ dependencies {
   implementation("org.openapitools:jackson-databind-nullable:0.2.6")
 
   // CSV dependencies
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.18.2")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.18.3")
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
