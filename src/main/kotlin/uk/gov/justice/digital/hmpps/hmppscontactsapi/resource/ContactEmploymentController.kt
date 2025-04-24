@@ -19,10 +19,12 @@ import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestAttribute
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.EmploymentFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.CreateEmploymentRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.PatchEmploymentsRequest
@@ -80,7 +82,8 @@ class ContactEmploymentController(
       example = "123456",
     ) contactId: Long,
     @Valid @RequestBody request: PatchEmploymentsRequest,
-  ): List<EmploymentDetails> = employmentFacade.patchEmployments(contactId, request)
+    @RequestAttribute user: User,
+  ): List<EmploymentDetails> = employmentFacade.patchEmployments(contactId, request, user)
 
   @PostMapping
   @Operation(
@@ -121,8 +124,9 @@ class ContactEmploymentController(
       example = "123456",
     ) contactId: Long,
     @Valid @RequestBody request: CreateEmploymentRequest,
+    @RequestAttribute user: User,
   ): ResponseEntity<EmploymentDetails> {
-    val createdEmployment = employmentFacade.createEmployment(contactId, request)
+    val createdEmployment = employmentFacade.createEmployment(contactId, request, user)
     return ResponseEntity
       .created(URI.create("/contact/$contactId/employment/${createdEmployment.employmentId}"))
       .body(createdEmployment)
@@ -172,7 +176,8 @@ class ContactEmploymentController(
       example = "123456",
     ) employmentId: Long,
     @Valid @RequestBody request: UpdateEmploymentRequest,
-  ) = employmentFacade.updateEmployment(contactId, employmentId, request)
+    @RequestAttribute user: User,
+  ) = employmentFacade.updateEmployment(contactId, employmentId, request, user)
 
   @DeleteMapping("/{employmentId}")
   @Operation(
@@ -205,8 +210,9 @@ class ContactEmploymentController(
       description = "The id of the employment",
       example = "123456",
     ) employmentId: Long,
+    @RequestAttribute user: User,
   ) {
-    employmentFacade.deleteEmployment(contactId, employmentId)
+    employmentFacade.deleteEmployment(contactId, employmentId, user)
   }
 
   @GetMapping("/{employmentId}")

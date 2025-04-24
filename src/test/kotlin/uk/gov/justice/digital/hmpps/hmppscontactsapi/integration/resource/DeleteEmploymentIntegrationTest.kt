@@ -28,7 +28,7 @@ class DeleteEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
     stubOrganisationSummary(999)
     stubOrganisationSummary(666)
 
-    setCurrentUser(StubUser.READ_WRITE_USER)
+    setCurrentUser(StubUser.CREATING_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "employment",
@@ -40,9 +40,9 @@ class DeleteEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
       CreateEmploymentRequest(
         organisationId = 999,
         isActive = true,
-        createdBy = "created",
       ),
     ).employmentId
+    setCurrentUser(StubUser.DELETING_USER)
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.delete()
@@ -54,7 +54,7 @@ class DeleteEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
     val errors = webTestClient.delete()
       .uri("/contact/-321/employment/$savedEmploymentId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -71,7 +71,7 @@ class DeleteEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
     val errors = webTestClient.delete()
       .uri("/contact/$savedContactId/employment/-321")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -91,7 +91,7 @@ class DeleteEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_DELETED,
-      additionalInfo = EmploymentInfo(savedEmploymentId, Source.DPS),
+      additionalInfo = EmploymentInfo(savedEmploymentId, Source.DPS, "deleted"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }

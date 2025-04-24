@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.organisationsapi.model.OrganisationSummary
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.EmploymentEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.PatchEmploymentResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.PatchEmploymentsRequest
@@ -21,7 +22,7 @@ class EmploymentService(
   private val organisationService: OrganisationService,
 ) {
 
-  fun patchEmployments(contactId: Long, request: PatchEmploymentsRequest): PatchEmploymentResult {
+  fun patchEmployments(contactId: Long, request: PatchEmploymentsRequest, user: User): PatchEmploymentResult {
     validateContactExists(contactId)
     val createdIds = mutableListOf<Long>()
     val updatedIds = mutableListOf<Long>()
@@ -34,7 +35,7 @@ class EmploymentService(
           organisationId = newEmployment.organisationId,
           contactId = contactId,
           active = newEmployment.isActive,
-          createdBy = request.requestedBy,
+          createdBy = user.username,
           createdTime = LocalDateTime.now(),
           updatedBy = null,
           updatedTime = null,
@@ -49,7 +50,7 @@ class EmploymentService(
         existingEmployment.copy(
           organisationId = updatedEmployment.organisationId,
           active = updatedEmployment.isActive,
-          updatedBy = request.requestedBy,
+          updatedBy = user.username,
           updatedTime = LocalDateTime.now(),
         ),
       )
@@ -99,7 +100,7 @@ class EmploymentService(
     return createEmploymentDetails(created, organisation)
   }
 
-  fun updateEmployment(contactId: Long, employmentId: Long, request: UpdateEmploymentRequest): EmploymentDetails {
+  fun updateEmployment(contactId: Long, employmentId: Long, request: UpdateEmploymentRequest, user: User): EmploymentDetails {
     validateContactExists(contactId)
     val organisation = validateOrganisationExists(request.organisationId)
     val originalEntity = validateEmploymentExists(employmentId)
@@ -107,7 +108,7 @@ class EmploymentService(
       originalEntity.copy(
         organisationId = request.organisationId,
         active = request.isActive,
-        updatedBy = request.updatedBy,
+        updatedBy = user.username,
         updatedTime = LocalDateTime.now(),
       ),
     )

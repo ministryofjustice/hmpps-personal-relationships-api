@@ -100,7 +100,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/employment")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(
         """{
                   }""",
@@ -119,7 +119,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/-999/employment")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(aMinimalRequest())
       .exchange()
       .expectStatus()
@@ -144,15 +144,14 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "requestedBy must not be null;{\"createEmployments\":[], \"updateEmployments\":[], \"deleteEmployments\":[], \"requestedBy\": null}",
-      "createEmployments must not be null;{\"createEmployments\":null, \"updateEmployments\":[], \"deleteEmployments\":[], \"requestedBy\": \"USER\"}",
-      "updateEmployments must not be null;{\"createEmployments\":[], \"updateEmployments\":null, \"deleteEmployments\":[], \"requestedBy\": \"USER\"}",
-      "deleteEmployments must not be null;{\"createEmployments\":[], \"updateEmployments\":[], \"deleteEmployments\":null, \"requestedBy\": \"USER\"}",
-      "createEmployments[0].organisationId must not be null;{\"createEmployments\":[{\"organisationId\": null, \"isActive\": true}], \"updateEmployments\":[], \"deleteEmployments\":[], \"requestedBy\": \"USER\"}",
-      "createEmployments[0].isActive must not be null;{\"createEmployments\":[{\"organisationId\": 99, \"isActive\": null}], \"updateEmployments\":[], \"deleteEmployments\":[], \"requestedBy\": \"USER\"}",
-      "updateEmployments[0].employmentId must not be null;{\"updateEmployments\":[{\"employmentId\": null, \"organisationId\": 99, \"isActive\": true}], \"createEmployments\":[], \"deleteEmployments\":[], \"requestedBy\": \"USER\"}",
-      "updateEmployments[0].organisationId must not be null;{\"updateEmployments\":[{\"employmentId\": 123, \"organisationId\": null, \"isActive\": true}], \"createEmployments\":[], \"deleteEmployments\":[], \"requestedBy\": \"USER\"}",
-      "updateEmployments[0].isActive must not be null;{\"updateEmployments\":[{\"employmentId\": 123, \"organisationId\": 99, \"isActive\": null}], \"createEmployments\":[], \"deleteEmployments\":[], \"requestedBy\": \"USER\"}",
+      "createEmployments must not be null;{\"createEmployments\":null, \"updateEmployments\":[], \"deleteEmployments\":[]}",
+      "updateEmployments must not be null;{\"createEmployments\":[], \"updateEmployments\":null, \"deleteEmployments\":[]}",
+      "deleteEmployments must not be null;{\"createEmployments\":[], \"updateEmployments\":[], \"deleteEmployments\":null}",
+      "createEmployments[0].organisationId must not be null;{\"createEmployments\":[{\"organisationId\": null, \"isActive\": true}], \"updateEmployments\":[], \"deleteEmployments\":[]}",
+      "createEmployments[0].isActive must not be null;{\"createEmployments\":[{\"organisationId\": 99, \"isActive\": null}], \"updateEmployments\":[], \"deleteEmployments\":[]}",
+      "updateEmployments[0].employmentId must not be null;{\"updateEmployments\":[{\"employmentId\": null, \"organisationId\": 99, \"isActive\": true}], \"createEmployments\":[], \"deleteEmployments\":[]}",
+      "updateEmployments[0].organisationId must not be null;{\"updateEmployments\":[{\"employmentId\": 123, \"organisationId\": null, \"isActive\": true}], \"createEmployments\":[], \"deleteEmployments\":[]}",
+      "updateEmployments[0].isActive must not be null;{\"updateEmployments\":[{\"employmentId\": 123, \"organisationId\": 99, \"isActive\": null}], \"createEmployments\":[], \"deleteEmployments\":[]}",
     ],
     delimiter = ';',
   )
@@ -161,7 +160,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/employment")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(bodyValue)
       .exchange()
       .expectStatus()
@@ -198,36 +197,36 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(employer.organisationId).isEqualTo(555)
       assertThat(createdBy).isEqualTo("TO_BE_UPDATED")
       assertThat(isActive).isFalse()
-      assertThat(updatedBy).isEqualTo("REQUESTED")
+      assertThat(updatedBy).isEqualTo("updated")
       assertThat(updatedTime).isNotNull()
     }
     val newEmployment = employmentsAfterUpdate.find { it.employer.organisationId == 999L }!!
     with(newEmployment) {
       assertThat(employer.organisationId).isEqualTo(999)
       assertThat(isActive).isTrue()
-      assertThat(createdBy).isEqualTo("REQUESTED")
+      assertThat(createdBy).isEqualTo("updated")
       assertThat(createdTime).isNotNull()
       assertThat(updatedBy).isNull()
       assertThat(updatedTime).isNull()
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_CREATED,
-      additionalInfo = EmploymentInfo(newEmployment.employmentId, source = Source.DPS),
+      additionalInfo = EmploymentInfo(newEmployment.employmentId, source = Source.DPS, "updated"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_UPDATED,
-      additionalInfo = EmploymentInfo(employmentToBeUpdated.employmentId, source = Source.DPS),
+      additionalInfo = EmploymentInfo(employmentToBeUpdated.employmentId, source = Source.DPS, "updated"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_DELETED,
-      additionalInfo = EmploymentInfo(employmentToBeDeleted.employmentId, source = Source.DPS),
+      additionalInfo = EmploymentInfo(employmentToBeDeleted.employmentId, source = Source.DPS, "updated"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.EMPLOYMENT_UPDATED,
-      additionalInfo = EmploymentInfo(employmentToRemainUntouched.employmentId, source = Source.DPS),
+      additionalInfo = EmploymentInfo(employmentToRemainUntouched.employmentId, source = Source.DPS, "updated"),
     )
   }
 
@@ -240,7 +239,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
     with(employmentsAfterUpdate.find { it.employer.organisationId == 999L }!!) {
       assertThat(employer.organisationId).isEqualTo(999)
       assertThat(isActive).isFalse()
-      assertThat(createdBy).isEqualTo("REQUESTED")
+      assertThat(createdBy).isEqualTo("updated")
       assertThat(createdTime).isNotNull()
       assertThat(updatedBy).isNull()
       assertThat(updatedTime).isNull()
@@ -257,7 +256,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/employment")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -277,7 +276,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/employment")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -306,7 +305,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/employment")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -339,6 +338,5 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
     createEmployments = emptyList(),
     updateEmployments = emptyList(),
     deleteEmployments = emptyList(),
-    requestedBy = "REQUESTED",
   )
 }

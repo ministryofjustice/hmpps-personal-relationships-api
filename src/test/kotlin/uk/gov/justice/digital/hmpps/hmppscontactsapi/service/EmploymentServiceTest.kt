@@ -13,6 +13,7 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.EmploymentEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createEmploymentEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createOrganisationSummary
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.Employment
@@ -42,6 +43,7 @@ class EmploymentServiceTest {
   private val employmentRepository: EmploymentRepository = mock()
   private val organisationService: OrganisationService = mock()
   private val service = EmploymentService(contactRepository, employmentRepository, organisationService)
+  private val user = aUser()
 
   @Test
   fun `Patch employments should create a new employment`() {
@@ -64,8 +66,8 @@ class EmploymentServiceTest {
         createEmployments = listOf(Employment(2, true)),
         updateEmployments = emptyList(),
         deleteEmployments = emptyList(),
-        requestedBy = "USER1",
       ),
+      user,
     )
 
     assertThat(employments.employmentsAfterUpdate).hasSize(2)
@@ -130,8 +132,8 @@ class EmploymentServiceTest {
         createEmployments = emptyList(),
         updateEmployments = listOf(PatchEmploymentsUpdateEmployment(1, 2, false)),
         deleteEmployments = emptyList(),
-        requestedBy = "USER1",
       ),
+      user,
     )
 
     assertThat(employments.employmentsAfterUpdate).hasSize(1)
@@ -171,8 +173,8 @@ class EmploymentServiceTest {
           createEmployments = emptyList(),
           updateEmployments = listOf(PatchEmploymentsUpdateEmployment(1, 2, false)),
           deleteEmployments = emptyList(),
-          requestedBy = "USER1",
         ),
+        user,
       )
     }
     assertThat(exception.message).isEqualTo("Employment with id 1 not found")
@@ -190,8 +192,8 @@ class EmploymentServiceTest {
           createEmployments = emptyList(),
           updateEmployments = listOf(PatchEmploymentsUpdateEmployment(1, 2, false)),
           deleteEmployments = emptyList(),
-          requestedBy = "USER1",
         ),
+        user,
       )
     }
     assertThat(exception.message).isEqualTo("Contact (99) not found")
@@ -223,8 +225,8 @@ class EmploymentServiceTest {
         createEmployments = emptyList(),
         updateEmployments = emptyList(),
         deleteEmployments = listOf(1),
-        requestedBy = "USER1",
       ),
+      user,
     )
 
     assertThat(employments.employmentsAfterUpdate).isEmpty()
@@ -249,8 +251,8 @@ class EmploymentServiceTest {
           createEmployments = emptyList(),
           updateEmployments = emptyList(),
           deleteEmployments = listOf(99),
-          requestedBy = "USER1",
         ),
+        user,
       )
     }
     assertThat(exception.message).isEqualTo("Employment with id 99 not found")
@@ -385,8 +387,8 @@ class EmploymentServiceTest {
       UpdateEmploymentRequest(
         organisationId = 2,
         isActive = false,
-        updatedBy = "UPDATED",
       ),
+      user,
     )
 
     assertThat(updated.employmentId).isEqualTo(999)
@@ -403,7 +405,7 @@ class EmploymentServiceTest {
           active = false,
           createdBy = "USER",
           createdTime = now(),
-          updatedBy = "UPDATED",
+          updatedBy = "USER1",
           updatedTime = now(),
         ),
       )
@@ -426,8 +428,8 @@ class EmploymentServiceTest {
         UpdateEmploymentRequest(
           organisationId = 1,
           isActive = true,
-          updatedBy = "USER1",
         ),
+        user,
       )
     }
     assertThat(exception).isEqualTo(expectedException)
@@ -449,8 +451,8 @@ class EmploymentServiceTest {
         UpdateEmploymentRequest(
           organisationId = 1,
           isActive = true,
-          updatedBy = "USER1",
         ),
+        user,
       )
     }
     assertThat(exception.message).isEqualTo("Employment (1) not found")
@@ -472,8 +474,8 @@ class EmploymentServiceTest {
         UpdateEmploymentRequest(
           organisationId = 1,
           isActive = true,
-          updatedBy = "USER1",
         ),
+        user,
       )
     }
     assertThat(exception.message).isEqualTo("Contact (99) not found")

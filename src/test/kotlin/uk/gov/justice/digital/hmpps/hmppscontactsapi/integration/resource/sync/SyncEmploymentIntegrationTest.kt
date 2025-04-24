@@ -63,10 +63,11 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
 
   @Test
   fun `Sync endpoints should return forbidden without an authorised role on the token`() {
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER.copy(roles = listOf("ROLE_WRONG")))
     webTestClient.get()
       .uri("/sync/employment/1")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -76,7 +77,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(createSyncEmploymentRequest())
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -86,7 +87,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(updateEmploymentRequest(employmentSyncResponse()))
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -94,7 +95,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.delete()
       .uri("/sync/employment/1")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -106,7 +107,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
     val employment = webTestClient.get()
       .uri("/sync/employment/{employmentId}", savedEmployment.employmentId)
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -133,7 +134,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
       .uri("/sync/employment")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(createSyncEmploymentRequest(organisationId = organisationId, contactId = contactId))
       .exchange()
       .expectStatus()
@@ -155,7 +156,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_CREATED,
-      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS),
+      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, "SYS"),
       personReference = PersonReference(dpsContactId = employment.contactId),
     )
   }
@@ -169,7 +170,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
       .uri("/sync/employment/{employmentId}", employment.employmentId)
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(updateEmploymentRequest)
       .exchange()
       .expectStatus()
@@ -190,7 +191,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_UPDATED,
-      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS),
+      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, "SYS"),
       personReference = PersonReference(dpsContactId = updatedEmployment.contactId),
     )
   }
@@ -202,7 +203,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.delete()
       .uri("/sync/employment/{employmentId}", employment.employmentId)
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -210,14 +211,14 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.get()
       .uri("/sync/employment/{employmentId}", employment.employmentId)
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_DELETED,
-      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS),
+      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, "SYS"),
       personReference = PersonReference(dpsContactId = employment.contactId),
     )
   }
@@ -246,7 +247,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
       .uri("/sync/employment")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(createSyncEmploymentRequest(organisationId = organisationId, contactId = contactId))
       .exchange()
       .expectStatus()
