@@ -234,7 +234,7 @@ class CreateMultipleIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     with(drivingLicence) {
       assertThat(identityType).isEqualTo("DL")
-      assertThat(identityTypeDescription).isEqualTo("Driving Licence")
+      assertThat(identityTypeDescription).isEqualTo("Driving licence")
       assertThat(identityValue).isEqualTo("DL123456789")
       assertThat(issuingAuthority).isEqualTo("DVLA")
       assertThat(createdBy).isEqualTo("created")
@@ -249,7 +249,7 @@ class CreateMultipleIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
     val passport = created.find { it.identityType == "PASS" }!!
     with(passport) {
       assertThat(identityType).isEqualTo("PASS")
-      assertThat(identityTypeDescription).isEqualTo("Passport Number")
+      assertThat(identityTypeDescription).isEqualTo("Passport number")
       assertThat(identityValue).isEqualTo("P897654312")
       assertThat(issuingAuthority).isNull()
       assertThat(createdBy).isEqualTo("created")

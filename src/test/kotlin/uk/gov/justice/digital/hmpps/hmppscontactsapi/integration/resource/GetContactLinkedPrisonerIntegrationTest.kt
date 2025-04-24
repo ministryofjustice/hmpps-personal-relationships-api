@@ -84,7 +84,7 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
           relationshipTypeCode = "S",
           relationshipTypeDescription = "Social",
           relationshipToPrisonerCode = "OTHER",
-          relationshipToPrisonerDescription = "Other - Social",
+          relationshipToPrisonerDescription = "Other social relationship",
           isRelationshipActive = true,
         ),
         LinkedPrisonerDetails(
@@ -158,7 +158,7 @@ class GetContactLinkedPrisonerIntegrationTest : SecureAPIIntegrationTestBase() {
           relationshipTypeCode = "S",
           relationshipTypeDescription = "Social",
           relationshipToPrisonerCode = "OTHER",
-          relationshipToPrisonerDescription = "Other - Social",
+          relationshipToPrisonerDescription = "Other social relationship",
           isRelationshipActive = true,
         ),
       ),
