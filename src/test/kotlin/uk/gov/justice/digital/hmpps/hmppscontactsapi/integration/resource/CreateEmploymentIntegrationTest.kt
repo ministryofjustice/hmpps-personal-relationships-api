@@ -25,7 +25,7 @@ class CreateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
-    setCurrentUser(StubUser.READ_WRITE_USER)
+    setCurrentUser(StubUser.CREATING_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "employment",
@@ -44,12 +44,10 @@ class CreateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "createdBy must not be null;{\"organisationId\": 99, \"isActive\": true, \"createdBy\": null}",
-      "createdBy must not be null;{\"organisationId\": 99, \"isActive\": true}",
-      "organisationId must not be null;{\"organisationId\": null, \"isActive\": true, \"createdBy\": \"USER\"}",
-      "organisationId must not be null;{\"isActive\": true, \"createdBy\": \"USER\"}",
-      "isActive must not be null;{\"organisationId\": 99, \"isActive\": null, \"createdBy\": \"USER\"}",
-      "isActive must not be null;{\"organisationId\": 99, \"createdBy\": \"USER\"}",
+      "organisationId must not be null;{\"organisationId\": null, \"isActive\": true}",
+      "organisationId must not be null;{\"isActive\": true}",
+      "isActive must not be null;{\"organisationId\": 99, \"isActive\": null}",
+      "isActive must not be null;{\"organisationId\": 99}",
     ],
     delimiter = ';',
   )
@@ -58,7 +56,7 @@ class CreateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/employment")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -78,7 +76,7 @@ class CreateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/-321/employment")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -100,7 +98,7 @@ class CreateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_CREATED,
-      additionalInfo = EmploymentInfo(created.employmentId, Source.DPS),
+      additionalInfo = EmploymentInfo(created.employmentId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }
@@ -109,7 +107,6 @@ class CreateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
     private fun aMinimalRequest() = CreateEmploymentRequest(
       organisationId = 999,
       isActive = true,
-      createdBy = "created",
     )
   }
 }

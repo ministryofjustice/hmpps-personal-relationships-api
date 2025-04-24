@@ -133,7 +133,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            EmploymentInfo(identifier, source),
+            EmploymentInfo(identifier, source, user.username),
             contactId?.let { PersonReference(it) },
           )
         }

@@ -35,7 +35,6 @@ class GetEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
         CreateEmploymentRequest(
           organisationId = 999,
           isActive = true,
-          createdBy = "created",
         ),
       ).employmentId
     }
@@ -50,7 +49,7 @@ class GetEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
     val errors = webTestClient.get()
       .uri("/contact/-321/employment/$savedEmploymentId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -66,7 +65,7 @@ class GetEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
     val errors = webTestClient.get()
       .uri("/contact/$savedContactId/employment/-321")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound

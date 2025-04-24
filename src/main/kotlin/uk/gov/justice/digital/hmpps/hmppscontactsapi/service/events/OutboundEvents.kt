@@ -322,7 +322,7 @@ data class ContactIdentityInfo(val contactIdentityId: Long, override val source:
 data class ContactRestrictionInfo(val contactRestrictionId: Long, override val source: Source = Source.DPS, val username: String) : AdditionalInformation(source)
 data class PrisonerContactInfo(val prisonerContactId: Long, override val source: Source = Source.DPS, val username: String) : AdditionalInformation(source)
 data class PrisonerContactRestrictionInfo(val prisonerContactRestrictionId: Long, override val source: Source = Source.DPS, val username: String) : AdditionalInformation(source)
-data class EmploymentInfo(val employmentId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)
+data class EmploymentInfo(val employmentId: Long, override val source: Source = Source.DPS, val username: String) : AdditionalInformation(source)
 data class PrisonerDomesticStatus(val domesticStatusId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)
 data class PrisonerNumberOfChildren(val prisonerNumberOfChildrenId: Long, override val source: Source = Source.DPS, val username: String) : AdditionalInformation(source)
 

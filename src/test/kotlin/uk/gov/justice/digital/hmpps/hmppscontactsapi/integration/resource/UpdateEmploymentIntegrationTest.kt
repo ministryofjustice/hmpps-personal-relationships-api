@@ -41,7 +41,6 @@ class UpdateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
       CreateEmploymentRequest(
         organisationId = 999,
         isActive = true,
-        createdBy = "created",
       ),
     ).employmentId
     setCurrentUser(StubUser.UPDATING_USER)
@@ -56,12 +55,10 @@ class UpdateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "updatedBy must not be null;{\"organisationId\": 99, \"isActive\": true, \"updatedBy\": null}",
-      "updatedBy must not be null;{\"organisationId\": 99, \"isActive\": true}",
-      "organisationId must not be null;{\"organisationId\": null, \"isActive\": true, \"updatedBy\": \"USER\"}",
-      "organisationId must not be null;{\"isActive\": true, \"updatedBy\": \"USER\"}",
-      "isActive must not be null;{\"organisationId\": 99, \"isActive\": null, \"updatedBy\": \"USER\"}",
-      "isActive must not be null;{\"organisationId\": 99, \"updatedBy\": \"USER\"}",
+      "organisationId must not be null;{\"organisationId\": null, \"isActive\": true}",
+      "organisationId must not be null;{\"isActive\": true}",
+      "isActive must not be null;{\"organisationId\": 99, \"isActive\": null}",
+      "isActive must not be null;{\"organisationId\": 99}",
     ],
     delimiter = ';',
   )
@@ -70,7 +67,7 @@ class UpdateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/employment/$savedEmploymentId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -90,7 +87,7 @@ class UpdateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/-321/employment/$savedEmploymentId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -111,7 +108,7 @@ class UpdateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/employment/-321")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -134,7 +131,7 @@ class UpdateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_UPDATED,
-      additionalInfo = EmploymentInfo(updated.employmentId, Source.DPS),
+      additionalInfo = EmploymentInfo(updated.employmentId, Source.DPS, "updated"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
   }
@@ -143,7 +140,6 @@ class UpdateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
     private fun aMinimalRequest() = UpdateEmploymentRequest(
       organisationId = 666,
       isActive = false,
-      updatedBy = "updated",
     )
   }
 }

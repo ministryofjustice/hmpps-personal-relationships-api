@@ -567,13 +567,13 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_CREATED,
-      additionalInfo = EmploymentInfo(firstCreated.employmentId, Source.DPS),
+      additionalInfo = EmploymentInfo(firstCreated.employmentId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_CREATED,
-      additionalInfo = EmploymentInfo(secondCreated.employmentId, Source.DPS),
+      additionalInfo = EmploymentInfo(secondCreated.employmentId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactId),
     )
   }
