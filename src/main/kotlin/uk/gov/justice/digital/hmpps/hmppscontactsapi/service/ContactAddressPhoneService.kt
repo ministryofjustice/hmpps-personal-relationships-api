@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressPhoneEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
@@ -35,21 +36,23 @@ class ContactAddressPhoneService(
     contactId: Long,
     contactAddressId: Long,
     request: CreateContactAddressPhoneRequest,
+    user: User,
   ): ContactAddressPhoneDetails {
     validateContactExists(contactId)
     validateContactAddressExists(contactAddressId)
-    return createAnAddressSpecificPhoneNumber(contactId, contactAddressId, request.phoneType, request.phoneNumber, request.extNumber, request.createdBy)
+    return createAnAddressSpecificPhoneNumber(contactId, contactAddressId, request.phoneType, request.phoneNumber, request.extNumber, user.username)
   }
 
   fun createMultiple(
     contactId: Long,
     contactAddressId: Long,
     request: CreateMultiplePhoneNumbersRequest,
+    user: User,
   ): List<ContactAddressPhoneDetails> {
     validateContactExists(contactId)
     validateContactAddressExists(contactAddressId)
     return request.phoneNumbers.map {
-      createAnAddressSpecificPhoneNumber(contactId, contactAddressId, it.phoneType, it.phoneNumber, it.extNumber, request.createdBy)
+      createAnAddressSpecificPhoneNumber(contactId, contactAddressId, it.phoneType, it.phoneNumber, it.extNumber, user.username)
     }
   }
 
@@ -130,6 +133,7 @@ class ContactAddressPhoneService(
     contactId: Long,
     contactAddressPhoneId: Long,
     request: UpdateContactAddressPhoneRequest,
+    user: User,
   ): ContactAddressPhoneDetails {
     validateContactExists(contactId)
     val existing = validateContactAddressPhoneExists(contactAddressPhoneId)
@@ -142,14 +146,14 @@ class ContactAddressPhoneService(
       phoneType = request.phoneType,
       phoneNumber = request.phoneNumber,
       extNumber = request.extNumber,
-      updatedBy = request.updatedBy,
+      updatedBy = user.username,
       updatedTime = LocalDateTime.now(),
     )
 
     val updatedPhone = contactPhoneRepository.saveAndFlush(updatingPhone)
 
     val updatingContactAddressPhone = existing.copy(
-      updatedBy = request.updatedBy,
+      updatedBy = user.username,
       updatedTime = LocalDateTime.now(),
     )
 

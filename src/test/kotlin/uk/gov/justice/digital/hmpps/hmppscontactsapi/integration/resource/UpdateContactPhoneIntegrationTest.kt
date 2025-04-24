@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdateP
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactPhoneInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
@@ -42,7 +43,6 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
         phoneType = "MOB",
         phoneNumber = "07777777777",
         extNumber = "123456",
-        createdBy = "USER1",
       ),
 
     ).contactPhoneId
@@ -58,12 +58,10 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "phoneType must not be null;{\"phoneType\": null, \"phoneNumber\": \"0123456789\", \"updatedBy\": \"updated\"}",
-      "phoneType must not be null;{\"phoneNumber\": \"0123456789\", \"updatedBy\": \"updated\"}",
-      "phoneNumber must not be null;{\"phoneType\": \"MOB\", \"phoneNumber\": null, \"updatedBy\": \"updated\"}",
-      "phoneNumber must not be null;{\"phoneType\": \"MOB\", \"updatedBy\": \"updated\"}",
-      "updatedBy must not be null;{\"phoneType\": \"MOB\", \"phoneNumber\": \"0123456789\", \"updatedBy\": null}",
-      "updatedBy must not be null;{\"phoneType\": \"MOB\", \"phoneNumber\": \"0123456789\"}",
+      "phoneType must not be null;{\"phoneType\": null, \"phoneNumber\": \"0123456789\"}",
+      "phoneType must not be null;{\"phoneNumber\": \"0123456789\"}",
+      "phoneNumber must not be null;{\"phoneType\": \"MOB\", \"phoneNumber\": null}",
+      "phoneNumber must not be null;{\"phoneType\": \"MOB\"}",
     ],
     delimiter = ';',
   )
@@ -72,7 +70,7 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/phone/$savedContactPhoneId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -82,7 +80,7 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Validation failure: $expectedMessage")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_PHONE_UPDATED, ContactPhoneInfo(savedContactPhoneId))
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_PHONE_UPDATED)
   }
 
   @ParameterizedTest
@@ -92,7 +90,7 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/phone/$savedContactPhoneId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -102,7 +100,7 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Validation failure(s): $expectedMessage")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_PHONE_UPDATED, ContactPhoneInfo(savedContactPhoneId))
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_PHONE_UPDATED)
   }
 
   @ParameterizedTest
@@ -114,14 +112,13 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
     val request = UpdatePhoneRequest(
       phoneType = "MOB",
       phoneNumber = phoneNumber,
-      updatedBy = "updated",
     )
 
     val errors = webTestClient.put()
       .uri("/contact/$savedContactId/phone/$savedContactPhoneId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -131,7 +128,7 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Validation failure: Phone number invalid, it can only contain numbers, () and whitespace with an optional + at the start")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_PHONE_UPDATED, ContactPhoneInfo(savedContactPhoneId))
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_PHONE_UPDATED)
   }
 
   @Test
@@ -139,14 +136,13 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
     val request = UpdatePhoneRequest(
       phoneType = "SATELLITE",
       phoneNumber = "+44777777777 (0123)",
-      updatedBy = "updated",
     )
 
     val errors = webTestClient.put()
       .uri("/contact/$savedContactId/phone/$savedContactPhoneId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -156,7 +152,7 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported phone type (SATELLITE)")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_PHONE_UPDATED, ContactPhoneInfo(savedContactPhoneId))
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_PHONE_UPDATED)
   }
 
   @Test
@@ -167,7 +163,7 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/-321/phone/$savedContactPhoneId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -177,7 +173,7 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Entity not found : Contact (-321) not found")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_PHONE_UPDATED, ContactPhoneInfo(savedContactPhoneId))
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_PHONE_UPDATED)
   }
 
   @Test
@@ -188,7 +184,7 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/phone/-99")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -198,7 +194,7 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Entity not found : Contact phone (-99) not found")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_PHONE_UPDATED, ContactPhoneInfo(-99))
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_PHONE_UPDATED)
   }
 
   @Test
@@ -207,7 +203,6 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       phoneType = "MOB",
       phoneNumber = "+44777777777 (0123)",
       extNumber = null,
-      updatedBy = "updated",
     )
 
     val updated = testAPIClient.updateAContactPhone(savedContactId, savedContactPhoneId, request)
@@ -216,7 +211,7 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(phoneType).isEqualTo(request.phoneType)
       assertThat(phoneNumber).isEqualTo(request.phoneNumber)
       assertThat(extNumber).isNull()
-      assertThat(createdBy).isEqualTo("USER1")
+      assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
       assertThat(updatedBy).isEqualTo("updated")
       assertThat(updatedTime).isNotNull()
@@ -224,7 +219,7 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_UPDATED,
-      additionalInfo = ContactPhoneInfo(savedContactPhoneId),
+      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "updated"),
       personReference = PersonReference(savedContactId),
     )
   }
@@ -236,7 +231,6 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       phoneType = "MOB",
       phoneNumber = "+44777777777 (0123)",
       extNumber = "9999",
-      updatedBy = "updated",
     )
 
     val updated = testAPIClient.updateAContactPhone(savedContactId, savedContactPhoneId, request, role)
@@ -245,7 +239,7 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(phoneType).isEqualTo(request.phoneType)
       assertThat(phoneNumber).isEqualTo(request.phoneNumber)
       assertThat(extNumber).isEqualTo(request.extNumber)
-      assertThat(createdBy).isEqualTo("USER1")
+      assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
       assertThat(updatedBy).isEqualTo("updated")
       assertThat(updatedTime).isNotNull()
@@ -253,7 +247,7 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_UPDATED,
-      additionalInfo = ContactPhoneInfo(savedContactPhoneId),
+      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "updated"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }
@@ -267,16 +261,11 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
         "extNumber must be <= 7 characters",
         aMinimalRequest().copy(extNumber = "".padStart(8, 'X')),
       ),
-      Arguments.of(
-        "updatedBy must be <= 100 characters",
-        aMinimalRequest().copy(updatedBy = "".padStart(101, 'X')),
-      ),
     )
 
     private fun aMinimalRequest() = UpdatePhoneRequest(
       phoneType = "MOB",
       phoneNumber = "+44777777777 (0123)",
-      updatedBy = "updated",
     )
   }
 }

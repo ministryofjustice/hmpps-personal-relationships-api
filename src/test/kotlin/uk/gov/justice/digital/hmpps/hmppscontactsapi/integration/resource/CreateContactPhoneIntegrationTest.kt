@@ -28,7 +28,7 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
-    setCurrentUser(StubUser.READ_WRITE_USER)
+    setCurrentUser(StubUser.CREATING_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "phone",
@@ -46,12 +46,10 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "phoneType must not be null;{\"phoneType\": null, \"phoneNumber\": \"0123456789\", \"createdBy\": \"created\"}",
-      "phoneType must not be null;{\"phoneNumber\": \"0123456789\", \"createdBy\": \"created\"}",
-      "phoneNumber must not be null;{\"phoneType\": \"MOB\", \"phoneNumber\": null, \"createdBy\": \"created\"}",
-      "phoneNumber must not be null;{\"phoneType\": \"MOB\", \"createdBy\": \"created\"}",
-      "createdBy must not be null;{\"phoneType\": \"MOB\", \"phoneNumber\": \"0123456789\", \"createdBy\": null}",
-      "createdBy must not be null;{\"phoneType\": \"MOB\", \"phoneNumber\": \"0123456789\"}",
+      "phoneType must not be null;{\"phoneType\": null, \"phoneNumber\": \"0123456789\"}",
+      "phoneType must not be null;{\"phoneNumber\": \"0123456789\"}",
+      "phoneNumber must not be null;{\"phoneType\": \"MOB\", \"phoneNumber\": null}",
+      "phoneNumber must not be null;{\"phoneType\": \"MOB\"}",
     ],
     delimiter = ';',
   )
@@ -60,7 +58,7 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/phone")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -82,7 +80,7 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/phone")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -106,14 +104,13 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
     val request = CreatePhoneRequest(
       phoneType = "MOB",
       phoneNumber = phoneNumber,
-      createdBy = "created",
     )
 
     val errors = webTestClient.post()
       .uri("/contact/$savedContactId/phone")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -133,14 +130,13 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
     val request = CreatePhoneRequest(
       phoneType = "SATELLITE",
       phoneNumber = "+44777777777 (0123)",
-      createdBy = "created",
     )
 
     val errors = webTestClient.post()
       .uri("/contact/$savedContactId/phone")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -163,7 +159,7 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/-321/phone")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -188,7 +184,7 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(created.contactPhoneId, Source.DPS),
+      additionalInfo = ContactPhoneInfo(created.contactPhoneId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }
@@ -200,7 +196,6 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       phoneType = "MOB",
       phoneNumber = "+44777777777 (0123)",
       extNumber = "9999",
-      createdBy = "created",
     )
 
     val created = testAPIClient.createAContactPhone(savedContactId, request, role)
@@ -209,7 +204,7 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(created.contactPhoneId, Source.DPS),
+      additionalInfo = ContactPhoneInfo(created.contactPhoneId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }
@@ -219,7 +214,7 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(phoneType).isEqualTo(request.phoneType)
       assertThat(phoneNumber).isEqualTo(request.phoneNumber)
       assertThat(extNumber).isEqualTo(request.extNumber)
-      assertThat(createdBy).isEqualTo(request.createdBy)
+      assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
     }
   }
@@ -233,16 +228,11 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
         "extNumber must be <= 7 characters",
         aMinimalRequest().copy(extNumber = "".padStart(8, 'X')),
       ),
-      Arguments.of(
-        "createdBy must be <= 100 characters",
-        aMinimalRequest().copy(createdBy = "".padStart(101, 'X')),
-      ),
     )
 
     private fun aMinimalRequest() = CreatePhoneRequest(
       phoneType = "MOB",
       phoneNumber = "+44777777777 (0123)",
-      createdBy = "created",
     )
   }
 }

@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestAttribute
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactAddressPhoneFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
@@ -76,8 +78,9 @@ class ContactAddressPhoneController(
     contactAddressId: Long,
     @Valid @RequestBody
     request: CreateContactAddressPhoneRequest,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    val created = contactAddressPhoneFacade.create(contactId, contactAddressId, request)
+    val created = contactAddressPhoneFacade.create(contactId, contactAddressId, request, user)
     return ResponseEntity
       .status(HttpStatus.CREATED)
       .body(created)
@@ -119,8 +122,9 @@ class ContactAddressPhoneController(
     contactAddressId: Long,
     @Valid @RequestBody
     request: CreateMultiplePhoneNumbersRequest,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    val created = contactAddressPhoneFacade.createMultiple(contactId, contactAddressId, request)
+    val created = contactAddressPhoneFacade.createMultiple(contactId, contactAddressId, request, user)
     return ResponseEntity
       .status(HttpStatus.CREATED)
       .body(created)
@@ -165,7 +169,8 @@ class ContactAddressPhoneController(
     contactAddressPhoneId: Long,
     @Valid @RequestBody
     request: UpdateContactAddressPhoneRequest,
-  ) = contactAddressPhoneFacade.update(contactId, contactAddressPhoneId, request)
+    @RequestAttribute user: User,
+  ) = contactAddressPhoneFacade.update(contactId, contactAddressPhoneId, request, user)
 
   @GetMapping("/phone/{contactAddressPhoneId}")
   @Operation(summary = "Get an address-specific phone number", description = "Get an address-specific phone number by its ID")
@@ -233,8 +238,9 @@ class ContactAddressPhoneController(
     @PathVariable("contactAddressPhoneId")
     @Parameter(name = "contactAddressPhoneId", description = "The address-specific phone ID", example = "979")
     contactAddressPhoneId: Long,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    contactAddressPhoneFacade.delete(contactId, contactAddressPhoneId)
+    contactAddressPhoneFacade.delete(contactId, contactAddressPhoneId, user)
     return ResponseEntity.noContent().build()
   }
 }

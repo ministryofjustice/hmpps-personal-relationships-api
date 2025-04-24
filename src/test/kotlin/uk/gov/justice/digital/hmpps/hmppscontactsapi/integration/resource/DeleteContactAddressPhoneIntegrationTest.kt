@@ -27,7 +27,7 @@ class DeleteContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
 
   @BeforeEach
   fun initialiseData() {
-    setCurrentUser(StubUser.READ_WRITE_USER)
+    setCurrentUser(StubUser.CREATING_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "address-phone",
@@ -54,9 +54,9 @@ class DeleteContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
         phoneType = "HOME",
         phoneNumber = "123456",
         extNumber = "2",
-        createdBy = "CREATED",
       ),
     ).contactAddressPhoneId
+    setCurrentUser(StubUser.DELETING_USER)
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.delete()
@@ -119,7 +119,7 @@ class DeleteContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_PHONE_DELETED,
-      additionalInfo = ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId, Source.DPS),
+      additionalInfo = ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId, Source.DPS, "deleted"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }

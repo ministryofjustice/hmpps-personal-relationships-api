@@ -16,8 +16,4 @@ data class CreatePhoneRequest(
   @Schema(description = "Extension number", example = "123", nullable = true)
   @field:Size(max = 7, message = "extNumber must be <= 7 characters")
   val extNumber: String? = null,
-
-  @Schema(description = "User who created the entry", example = "admin")
-  @field:Size(max = 100, message = "createdBy must be <= 100 characters")
-  val createdBy: String,
 )

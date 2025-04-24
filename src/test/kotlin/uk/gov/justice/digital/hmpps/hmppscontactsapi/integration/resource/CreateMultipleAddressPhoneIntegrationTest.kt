@@ -30,7 +30,7 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
 
   @BeforeEach
   fun initialiseData() {
-    setCurrentUser(StubUser.READ_WRITE_USER)
+    setCurrentUser(StubUser.CREATING_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "phone",
@@ -60,12 +60,10 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
   @ParameterizedTest
   @CsvSource(
     value = [
-      "phoneNumbers[0].phoneType must not be null;{\"phoneNumbers\": [{ \"phoneType\": null, \"phoneNumber\": \"0123456789\"}], \"createdBy\": \"created\"}",
-      "phoneNumbers[0].phoneType must not be null;{\"phoneNumbers\": [{\"phoneNumber\": \"0123456789\"}], \"createdBy\": \"created\"}",
-      "phoneNumbers[0].phoneNumber must not be null;{\"phoneNumbers\": [{\"phoneType\": \"MOB\", \"phoneNumber\": null}], \"createdBy\": \"created\"}",
-      "phoneNumbers[0].phoneNumber must not be null;{\"phoneNumbers\": [{\"phoneType\": \"MOB\"}], \"createdBy\": \"created\"}",
-      "createdBy must not be null;{\"phoneNumbers\": [{\"phoneType\": \"MOB\", \"phoneNumber\": \"0123456789\"}], \"createdBy\": null}",
-      "createdBy must not be null;{\"phoneNumbers\": [{\"phoneType\": \"MOB\", \"phoneNumber\": \"0123456789\"}]}",
+      "phoneNumbers[0].phoneType must not be null;{\"phoneNumbers\": [{ \"phoneType\": null, \"phoneNumber\": \"0123456789\"}]}",
+      "phoneNumbers[0].phoneType must not be null;{\"phoneNumbers\": [{\"phoneNumber\": \"0123456789\"}]}",
+      "phoneNumbers[0].phoneNumber must not be null;{\"phoneNumbers\": [{\"phoneType\": \"MOB\", \"phoneNumber\": null}]}",
+      "phoneNumbers[0].phoneNumber must not be null;{\"phoneNumbers\": [{\"phoneType\": \"MOB\"}]}",
     ],
     delimiter = ';',
   )
@@ -124,7 +122,6 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
           phoneNumber = phoneNumber,
         ),
       ),
-      createdBy = "created",
     )
 
     val errors = webTestClient.post()
@@ -155,7 +152,6 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
           phoneNumber = "+44777777777 (0123)",
         ),
       ),
-      createdBy = "created",
     )
 
     val errors = webTestClient.post()
@@ -238,7 +234,6 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
           extNumber = null,
         ),
       ),
-      createdBy = "created",
     )
 
     val created = testAPIClient.createMultipleContactAddressPhones(savedContactId, savedAddressId, request, role)
@@ -247,7 +242,7 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
     assertThat(mobile).isNotNull()
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
-      additionalInfo = ContactAddressPhoneInfo(mobile!!.contactAddressPhoneId, savedAddressId, Source.DPS),
+      additionalInfo = ContactAddressPhoneInfo(mobile!!.contactAddressPhoneId, savedAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
@@ -255,7 +250,7 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
     assertThat(home).isNotNull()
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
-      additionalInfo = ContactAddressPhoneInfo(home!!.contactAddressPhoneId, savedAddressId, Source.DPS),
+      additionalInfo = ContactAddressPhoneInfo(home!!.contactAddressPhoneId, savedAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }
@@ -298,7 +293,6 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
         ),
       ),
       Arguments.of("phoneNumbers must have at least 1 item", aMinimalRequest().copy(phoneNumbers = emptyList())),
-      Arguments.of("createdBy must be <= 100 characters", aMinimalRequest().copy(createdBy = "".padStart(101, 'X'))),
     )
 
     private fun aMinimalRequest() = CreateMultiplePhoneNumbersRequest(
@@ -308,7 +302,6 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
           phoneNumber = "+44777777777 (0123)",
         ),
       ),
-      createdBy = "created",
     )
   }
 }
