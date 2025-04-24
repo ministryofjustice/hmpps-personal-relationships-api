@@ -3,14 +3,15 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactRestrictionEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactRestrictionEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePrisonerContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreateContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdateContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionsResponse
@@ -98,6 +99,7 @@ class RestrictionsService(
   fun createContactGlobalRestriction(
     contactId: Long,
     request: CreateContactRestrictionRequest,
+    user: User,
   ): ContactRestrictionDetails {
     validateContactExists(contactId)
     validateExpiryDateBeforeStartDate(request.startDate, request.expiryDate)
@@ -111,7 +113,7 @@ class RestrictionsService(
         startDate = request.startDate,
         expiryDate = request.expiryDate,
         comments = request.comments,
-        createdBy = request.createdBy,
+        createdBy = user.username,
         createdTime = LocalDateTime.now(),
       ),
     )
@@ -128,6 +130,7 @@ class RestrictionsService(
     contactId: Long,
     contactRestrictionId: Long,
     request: UpdateContactRestrictionRequest,
+    user: User,
   ): ContactRestrictionDetails {
     validateContactExists(contactId)
     validateExpiryDateBeforeStartDate(request.startDate, request.expiryDate)
@@ -140,7 +143,7 @@ class RestrictionsService(
         startDate = request.startDate,
         expiryDate = request.expiryDate,
         comments = request.comments,
-        updatedBy = request.updatedBy,
+        updatedBy = user.username,
         updatedTime = LocalDateTime.now(),
       ),
     )
@@ -173,6 +176,7 @@ class RestrictionsService(
   fun createPrisonerContactRestriction(
     prisonerContactId: Long,
     request: CreatePrisonerContactRestrictionRequest,
+    user: User,
   ): PrisonerContactRestrictionDetails {
     val relationship = prisonerContactRepository.findById(prisonerContactId)
       .orElseThrow { EntityNotFoundException("Prisoner contact ($prisonerContactId) could not be found") }
@@ -185,7 +189,7 @@ class RestrictionsService(
         startDate = request.startDate,
         expiryDate = request.expiryDate,
         comments = request.comments,
-        createdBy = request.createdBy,
+        createdBy = user.username,
         createdTime = LocalDateTime.now(),
       ),
     )
@@ -196,6 +200,7 @@ class RestrictionsService(
     prisonerContactId: Long,
     prisonerContactRestrictionId: Long,
     request: UpdatePrisonerContactRestrictionRequest,
+    user: User,
   ): PrisonerContactRestrictionDetails {
     val relationship = prisonerContactRepository.findById(prisonerContactId)
       .orElseThrow { EntityNotFoundException("Prisoner contact ($prisonerContactId) could not be found") }
@@ -208,7 +213,7 @@ class RestrictionsService(
         startDate = request.startDate,
         expiryDate = request.expiryDate,
         comments = request.comments,
-        updatedBy = request.updatedBy,
+        updatedBy = user.username,
         updatedTime = LocalDateTime.now(),
       ),
     )

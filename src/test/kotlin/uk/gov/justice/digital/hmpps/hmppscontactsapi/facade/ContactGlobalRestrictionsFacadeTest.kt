@@ -8,8 +8,9 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreateContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdateContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.RestrictionsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
@@ -26,6 +27,7 @@ class ContactGlobalRestrictionsFacadeTest {
 
   private val contactId: Long = 99
   private val contactRestrictionId: Long = 66
+  private val user = aUser("restrictions")
 
   @Test
   fun `should send created global restriction event on success`() {
@@ -34,7 +36,6 @@ class ContactGlobalRestrictionsFacadeTest {
       startDate = LocalDate.of(2020, 1, 1),
       expiryDate = LocalDate.of(2022, 2, 2),
       comments = "Some comments",
-      createdBy = "created",
     )
 
     val expected = ContactRestrictionDetails(
@@ -52,18 +53,19 @@ class ContactGlobalRestrictionsFacadeTest {
       updatedBy = null,
       updatedTime = null,
     )
-    whenever(restrictionService.createContactGlobalRestriction(contactId, request)).thenReturn(expected)
+    whenever(restrictionService.createContactGlobalRestriction(contactId, request, user)).thenReturn(expected)
 
-    val result = facade.createContactGlobalRestriction(contactId, request)
+    val result = facade.createContactGlobalRestriction(contactId, request, user)
 
     assertThat(result).isEqualTo(expected)
-    verify(restrictionService).createContactGlobalRestriction(contactId, request)
+    verify(restrictionService).createContactGlobalRestriction(contactId, request, user)
     verify(outboundEventsService).send(
       outboundEvent = OutboundEvent.CONTACT_RESTRICTION_CREATED,
       identifier = contactRestrictionId,
       contactId = contactId,
       noms = "",
       source = Source.DPS,
+      user = user,
     )
   }
 
@@ -74,18 +76,17 @@ class ContactGlobalRestrictionsFacadeTest {
       startDate = LocalDate.of(2020, 1, 1),
       expiryDate = LocalDate.of(2022, 2, 2),
       comments = "Some comments",
-      createdBy = "created",
     )
 
     val expected = RuntimeException("Bang!")
-    whenever(restrictionService.createContactGlobalRestriction(contactId, request)).thenThrow(expected)
+    whenever(restrictionService.createContactGlobalRestriction(contactId, request, user)).thenThrow(expected)
 
     val result = assertThrows<RuntimeException> {
-      facade.createContactGlobalRestriction(contactId, request)
+      facade.createContactGlobalRestriction(contactId, request, user)
     }
 
     assertThat(result).isEqualTo(expected)
-    verify(restrictionService).createContactGlobalRestriction(contactId, request)
+    verify(restrictionService).createContactGlobalRestriction(contactId, request, user)
     verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
@@ -96,7 +97,6 @@ class ContactGlobalRestrictionsFacadeTest {
       startDate = LocalDate.of(2020, 1, 1),
       expiryDate = LocalDate.of(2022, 2, 2),
       comments = "Some comments",
-      updatedBy = "updated",
     )
 
     val expected = ContactRestrictionDetails(
@@ -114,18 +114,19 @@ class ContactGlobalRestrictionsFacadeTest {
       updatedBy = "updated",
       updatedTime = LocalDateTime.now(),
     )
-    whenever(restrictionService.updateContactGlobalRestriction(contactId, contactRestrictionId, request)).thenReturn(expected)
+    whenever(restrictionService.updateContactGlobalRestriction(contactId, contactRestrictionId, request, user)).thenReturn(expected)
 
-    val result = facade.updateContactGlobalRestriction(contactId, contactRestrictionId, request)
+    val result = facade.updateContactGlobalRestriction(contactId, contactRestrictionId, request, user)
 
     assertThat(result).isEqualTo(expected)
-    verify(restrictionService).updateContactGlobalRestriction(contactId, contactRestrictionId, request)
+    verify(restrictionService).updateContactGlobalRestriction(contactId, contactRestrictionId, request, user)
     verify(outboundEventsService).send(
       outboundEvent = OutboundEvent.CONTACT_RESTRICTION_UPDATED,
       identifier = contactRestrictionId,
       contactId = contactId,
       noms = "",
       source = Source.DPS,
+      user = user,
     )
   }
 
@@ -136,18 +137,17 @@ class ContactGlobalRestrictionsFacadeTest {
       startDate = LocalDate.of(2020, 1, 1),
       expiryDate = LocalDate.of(2022, 2, 2),
       comments = "Some comments",
-      updatedBy = "updated",
     )
 
     val expected = RuntimeException("Bang!")
-    whenever(restrictionService.updateContactGlobalRestriction(contactId, contactRestrictionId, request)).thenThrow(expected)
+    whenever(restrictionService.updateContactGlobalRestriction(contactId, contactRestrictionId, request, user)).thenThrow(expected)
 
     val result = assertThrows<RuntimeException> {
-      facade.updateContactGlobalRestriction(contactId, contactRestrictionId, request)
+      facade.updateContactGlobalRestriction(contactId, contactRestrictionId, request, user)
     }
 
     assertThat(result).isEqualTo(expected)
-    verify(restrictionService).updateContactGlobalRestriction(contactId, contactRestrictionId, request)
+    verify(restrictionService).updateContactGlobalRestriction(contactId, contactRestrictionId, request, user)
     verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 }

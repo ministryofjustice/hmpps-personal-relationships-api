@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request
+package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions
 
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.Size
@@ -26,8 +26,4 @@ data class CreatePrisonerContactRestrictionRequest(
   @Schema(description = "Comments for the restriction", example = "N/A", nullable = true)
   @field:Size(max = 240, message = "comments must be <= 240 characters")
   val comments: String?,
-
-  @Schema(description = "User who created the entry", example = "admin")
-  @field:Size(max = 100, message = "createdBy must be <= 100 characters")
-  val createdBy: String,
 )

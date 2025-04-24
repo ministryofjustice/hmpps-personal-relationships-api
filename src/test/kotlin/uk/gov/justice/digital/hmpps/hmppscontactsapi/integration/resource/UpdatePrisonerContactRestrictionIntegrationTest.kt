@@ -14,8 +14,8 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDet
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePrisonerContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerContactRestrictionInfo
@@ -61,7 +61,6 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
         startDate = LocalDate.of(2020, 1, 1),
         expiryDate = LocalDate.of(2022, 2, 2),
         comments = "Some comments",
-        createdBy = "created",
       ),
 
     ).prisonerContactRestrictionId
@@ -77,12 +76,10 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
   @ParameterizedTest
   @CsvSource(
     value = [
-      "restrictionType must not be null;{\"restrictionType\": null, \"startDate\": \"2020-01-01\", \"updatedBy\": \"updated\"}",
-      "restrictionType must not be null;{\"startDate\": \"2020-01-01\", \"updatedBy\": \"updated\"}",
-      "startDate must not be null;{\"restrictionType\": \"BAN\", \"startDate\": null, \"updatedBy\": \"updated\"}",
-      "startDate must not be null;{\"restrictionType\": \"BAN\", \"updatedBy\": \"updated\"}",
-      "updatedBy must not be null;{\"restrictionType\": \"BAN\", \"startDate\": \"2020-01-01\", \"updatedBy\": null}",
-      "updatedBy must not be null;{\"restrictionType\": \"BAN\", \"startDate\": \"2020-01-01\"}",
+      "restrictionType must not be null;{\"restrictionType\": null, \"startDate\": \"2020-01-01\"}",
+      "restrictionType must not be null;{\"startDate\": \"2020-01-01\"}",
+      "startDate must not be null;{\"restrictionType\": \"BAN\", \"startDate\": null}",
+      "startDate must not be null;{\"restrictionType\": \"BAN\"}",
     ],
     delimiter = ';',
   )
@@ -91,7 +88,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       .uri("/prisoner-contact/$savedPrisonerContactId/restriction/$savedPrisonerContactRestrictionId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -113,7 +110,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       .uri("/prisoner-contact/$savedPrisonerContactId/restriction/$savedPrisonerContactRestrictionId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -136,7 +133,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       .uri("/prisoner-contact/-321/restriction/$savedPrisonerContactRestrictionId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -159,7 +156,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       .uri("/prisoner-contact/$savedPrisonerContactId/restriction/-321")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -182,7 +179,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       .uri("/prisoner-contact/$savedPrisonerContactId/restriction/$savedPrisonerContactRestrictionId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -205,7 +202,6 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       startDate = LocalDate.of(1990, 1, 1),
       expiryDate = null,
       comments = null,
-      updatedBy = "updated",
     )
 
     val updated = testAPIClient.updatePrisonerContactRestriction(
@@ -234,7 +230,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
-      additionalInfo = PrisonerContactRestrictionInfo(updated.prisonerContactRestrictionId, Source.DPS),
+      additionalInfo = PrisonerContactRestrictionInfo(updated.prisonerContactRestrictionId, Source.DPS, "updated"),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
     )
   }
@@ -248,7 +244,6 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       startDate = LocalDate.of(1990, 1, 1),
       expiryDate = LocalDate.of(1992, 2, 2),
       comments = "Updated comments",
-      updatedBy = "updated",
     )
 
     val updated = testAPIClient.updatePrisonerContactRestriction(
@@ -277,7 +272,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
-      additionalInfo = PrisonerContactRestrictionInfo(updated.prisonerContactRestrictionId, Source.DPS),
+      additionalInfo = PrisonerContactRestrictionInfo(updated.prisonerContactRestrictionId, Source.DPS, "updated"),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
     )
   }
@@ -286,10 +281,6 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
       Arguments.of("comments must be <= 240 characters", aMinimalRequest().copy(comments = "".padStart(241, 'X'))),
-      Arguments.of(
-        "updatedBy must be <= 100 characters",
-        aMinimalRequest().copy(updatedBy = "".padStart(101, 'X')),
-      ),
     )
 
     private fun aMinimalRequest() = UpdatePrisonerContactRestrictionRequest(
@@ -297,7 +288,6 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       startDate = LocalDate.of(1990, 1, 1),
       expiryDate = null,
       comments = null,
-      updatedBy = "updated",
     )
   }
 }

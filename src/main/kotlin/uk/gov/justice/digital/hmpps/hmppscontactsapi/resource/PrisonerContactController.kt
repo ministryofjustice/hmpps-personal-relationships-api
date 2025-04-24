@@ -26,9 +26,9 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.PrisonerContactRestrictionsFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionsResponse
@@ -240,8 +240,9 @@ class PrisonerContactController(
       example = "123456",
     ) prisonerContactId: Long,
     @Valid @RequestBody request: CreatePrisonerContactRestrictionRequest,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    val created = prisonerContactRestrictionsFacade.createPrisonerContactRestriction(prisonerContactId, request)
+    val created = prisonerContactRestrictionsFacade.createPrisonerContactRestriction(prisonerContactId, request, user)
     return ResponseEntity
       .status(HttpStatus.CREATED)
       .body(created)
@@ -290,5 +291,6 @@ class PrisonerContactController(
       example = "123456",
     ) prisonerContactRestrictionId: Long,
     @Valid @RequestBody request: UpdatePrisonerContactRestrictionRequest,
-  ): PrisonerContactRestrictionDetails = prisonerContactRestrictionsFacade.updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request)
+    @RequestAttribute user: User,
+  ): PrisonerContactRestrictionDetails = prisonerContactRestrictionsFacade.updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request, user)
 }

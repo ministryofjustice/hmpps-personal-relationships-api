@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource.sync
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
@@ -12,10 +13,16 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEven
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerContactRestrictionInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
+  }
 
   @Nested
   inner class PrisonerContactRestrictionEntitySyncTests {
@@ -57,10 +64,11 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
 
     @Test
     fun `Sync endpoints should return forbidden without an authorised role on the token`() {
+      setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER.copy(roles = listOf("ROLE_WRONG")))
       webTestClient.get()
         .uri("/sync/prisoner-contact-restriction/1")
         .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -70,7 +78,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(createPrisonerContactRestrictionRequest())
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -80,7 +88,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(updatePrisonerContactRestrictionRequest())
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -88,7 +96,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       webTestClient.delete()
         .uri("/sync/prisoner-contact-restriction/1")
         .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -101,7 +109,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       val prisonerContactRestriction = webTestClient.get()
         .uri("/sync/prisoner-contact-restriction/{id}", contactId)
         .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isOk
@@ -129,7 +137,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .uri("/sync/prisoner-contact-restriction")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .bodyValue(createPrisonerContactRestrictionRequest())
         .exchange()
         .expectStatus()
@@ -153,7 +161,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
-        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS),
+        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS, "SYS"),
         personReference = PersonReference(dpsContactId = prisonerContactRestriction.contactId, nomsNumber = prisonerContactRestriction.prisonerNumber),
       )
     }
@@ -164,7 +172,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .uri("/sync/prisoner-contact-restriction")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .bodyValue(createPrisonerContactRestrictionRequest())
         .exchange()
         .expectStatus()
@@ -190,7 +198,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .uri("/sync/prisoner-contact-restriction/{id}", prisonerContactRestriction.prisonerContactRestrictionId)
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .bodyValue(updatePrisonerContactRestrictionRequest())
         .exchange()
         .expectStatus()
@@ -214,7 +222,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
-        additionalInfo = PrisonerContactRestrictionInfo(updatedPrisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS),
+        additionalInfo = PrisonerContactRestrictionInfo(updatedPrisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS, "SYS"),
         personReference = PersonReference(dpsContactId = updatedPrisonerContactRestriction.contactId, nomsNumber = updatedPrisonerContactRestriction.prisonerNumber),
       )
     }
@@ -225,7 +233,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .uri("/sync/prisoner-contact-restriction")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .bodyValue(createPrisonerContactRestrictionRequest())
         .exchange()
         .expectStatus()
@@ -237,7 +245,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       webTestClient.delete()
         .uri("/sync/prisoner-contact-restriction/{id}", prisonerContactRestriction.prisonerContactRestrictionId)
         .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isOk
@@ -245,13 +253,13 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       webTestClient.get()
         .uri("/sync/prisoner-contact-restriction/{id}", prisonerContactRestriction.prisonerContactRestrictionId)
         .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isNotFound
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED,
-        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS),
+        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS, "SYS"),
         personReference = PersonReference(dpsContactId = prisonerContactRestriction.contactId, nomsNumber = prisonerContactRestriction.prisonerNumber),
       )
     }

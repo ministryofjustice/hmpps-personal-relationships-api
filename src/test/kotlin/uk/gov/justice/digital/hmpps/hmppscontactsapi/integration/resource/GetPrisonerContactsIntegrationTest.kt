@@ -16,9 +16,9 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.helper.TestAPIC
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreateContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RestrictionTypeDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RestrictionsSummary
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
@@ -608,7 +608,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           LocalDate.now().minusDays(1),
           null,
           "global",
-          "USER1",
         ),
       )
 
@@ -619,7 +618,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           LocalDate.now().minusDays(1),
           null,
           "rel1",
-          "USER1",
         ),
       )
 
@@ -630,7 +628,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           LocalDate.now().minusDays(1),
           null,
           "rel2",
-          "USER1",
         ),
       )
     }
@@ -690,7 +687,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           LocalDate.now().minusDays(2),
           LocalDate.now().minusDays(1),
           "expired",
-          "USER1",
         ),
       )
       testAPIClient.createContactGlobalRestriction(
@@ -700,7 +696,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           LocalDate.now().minusDays(2),
           LocalDate.now().plusDays(1),
           "active",
-          "USER1",
         ),
       )
 
@@ -711,7 +706,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           LocalDate.now().minusDays(2),
           LocalDate.now().minusDays(1),
           "expired cctb",
-          "USER1",
         ),
       )
 
@@ -722,7 +716,6 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           LocalDate.now().minusDays(2),
           LocalDate.now().minusDays(1),
           "expired ban",
-          "USER1",
         ),
       )
     }
@@ -748,7 +741,7 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   private fun getForUrl(url: String): PrisonerContactSummaryResponse {
     val withActiveOnly = webTestClient.get()
       .uri(url)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk

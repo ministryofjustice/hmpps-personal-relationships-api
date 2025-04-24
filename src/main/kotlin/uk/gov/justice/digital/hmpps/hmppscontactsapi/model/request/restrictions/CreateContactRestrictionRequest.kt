@@ -1,15 +1,15 @@
-package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request
+package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions
 
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.Size
 import java.time.LocalDate
 
-@Schema(description = "Request to update an existing new restriction between a prisoner and a contact")
-data class UpdatePrisonerContactRestrictionRequest(
+@Schema(description = "Request to create a new global restriction on a contact, a.k.a an estate-wide restriction")
+data class CreateContactRestrictionRequest(
   @Schema(
     description =
     """
-    The coded type of restriction that applies to this relationship.
+    The coded type of restriction that applies to this contact.
     This is a coded value from the group RESTRICTION in reference codes.
     Example values include ACC, BAN, CHILD, CLOSED, RESTRICTED, DIHCON, NONCON.
     """,
@@ -26,8 +26,4 @@ data class UpdatePrisonerContactRestrictionRequest(
   @Schema(description = "Comments for the restriction", example = "N/A", nullable = true)
   @field:Size(max = 240, message = "comments must be <= 240 characters")
   val comments: String?,
-
-  @Schema(description = "User who updated the entry", example = "admin")
-  @field:Size(max = 100, message = "updatedBy must be <= 100 characters")
-  val updatedBy: String,
 )

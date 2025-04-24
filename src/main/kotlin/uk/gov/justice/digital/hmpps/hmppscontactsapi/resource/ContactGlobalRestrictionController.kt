@@ -17,12 +17,14 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestAttribute
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactGlobalRestrictionsFacade
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreateContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdateContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
@@ -109,8 +111,9 @@ class ContactGlobalRestrictionController(
       example = "123456",
     ) contactId: Long,
     @Valid @RequestBody request: CreateContactRestrictionRequest,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    val created = restrictionsFacade.createContactGlobalRestriction(contactId, request)
+    val created = restrictionsFacade.createContactGlobalRestriction(contactId, request, user)
     return ResponseEntity
       .status(HttpStatus.CREATED)
       .body(created)
@@ -158,5 +161,6 @@ class ContactGlobalRestrictionController(
       example = "123456",
     ) contactRestrictionId: Long,
     @Valid @RequestBody request: UpdateContactRestrictionRequest,
-  ): ContactRestrictionDetails = restrictionsFacade.updateContactGlobalRestriction(contactId, contactRestrictionId, request)
+    @RequestAttribute user: User,
+  ): ContactRestrictionDetails = restrictionsFacade.updateContactGlobalRestriction(contactId, contactRestrictionId, request, user)
 }

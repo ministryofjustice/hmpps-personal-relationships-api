@@ -1,8 +1,9 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePrisonerContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.RestrictionsService
@@ -20,12 +21,14 @@ class PrisonerContactRestrictionsFacade(
   fun createPrisonerContactRestriction(
     prisonerContactId: Long,
     request: CreatePrisonerContactRestrictionRequest,
-  ): PrisonerContactRestrictionDetails = restrictionsService.createPrisonerContactRestriction(prisonerContactId, request).also {
+    user: User,
+  ): PrisonerContactRestrictionDetails = restrictionsService.createPrisonerContactRestriction(prisonerContactId, request, user).also {
     outboundEventsService.send(
       outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
       identifier = it.prisonerContactRestrictionId,
       contactId = it.contactId,
       noms = it.prisonerNumber,
+      user = user,
     )
   }
 
@@ -33,12 +36,14 @@ class PrisonerContactRestrictionsFacade(
     prisonerContactId: Long,
     prisonerContactRestrictionId: Long,
     request: UpdatePrisonerContactRestrictionRequest,
-  ): PrisonerContactRestrictionDetails = restrictionsService.updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request).also {
+    user: User,
+  ): PrisonerContactRestrictionDetails = restrictionsService.updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request, user).also {
     outboundEventsService.send(
       outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
       identifier = prisonerContactRestrictionId,
       contactId = it.contactId,
       noms = it.prisonerNumber,
+      user = user,
     )
   }
 }
