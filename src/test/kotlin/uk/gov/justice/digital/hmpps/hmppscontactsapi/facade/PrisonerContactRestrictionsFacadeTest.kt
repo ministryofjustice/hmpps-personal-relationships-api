@@ -8,8 +8,9 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePrisonerContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.RestrictionsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
@@ -28,6 +29,7 @@ class PrisonerContactRestrictionsFacadeTest {
   private val contactId: Long = 77
   private val prisonerContactId: Long = 99
   private val prisonerContactRestrictionId: Long = 66
+  private val user = aUser("restrictions")
 
   @Test
   fun `should send created prisoner contact restriction event on success`() {
@@ -36,7 +38,6 @@ class PrisonerContactRestrictionsFacadeTest {
       startDate = LocalDate.of(2020, 1, 1),
       expiryDate = LocalDate.of(2022, 2, 2),
       comments = "Some comments",
-      createdBy = "created",
     )
 
     val expected = PrisonerContactRestrictionDetails(
@@ -56,18 +57,19 @@ class PrisonerContactRestrictionsFacadeTest {
       updatedBy = null,
       updatedTime = null,
     )
-    whenever(restrictionService.createPrisonerContactRestriction(prisonerContactId, request)).thenReturn(expected)
+    whenever(restrictionService.createPrisonerContactRestriction(prisonerContactId, request, user)).thenReturn(expected)
 
-    val result = facade.createPrisonerContactRestriction(prisonerContactId, request)
+    val result = facade.createPrisonerContactRestriction(prisonerContactId, request, user)
 
     assertThat(result).isEqualTo(expected)
-    verify(restrictionService).createPrisonerContactRestriction(prisonerContactId, request)
+    verify(restrictionService).createPrisonerContactRestriction(prisonerContactId, request, user)
     verify(outboundEventsService).send(
       outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
       identifier = prisonerContactRestrictionId,
       contactId = contactId,
       noms = prisonerNumber,
       source = Source.DPS,
+      user = user,
     )
   }
 
@@ -78,18 +80,17 @@ class PrisonerContactRestrictionsFacadeTest {
       startDate = LocalDate.of(2020, 1, 1),
       expiryDate = LocalDate.of(2022, 2, 2),
       comments = "Some comments",
-      createdBy = "created",
     )
 
     val expected = RuntimeException("Bang!")
-    whenever(restrictionService.createPrisonerContactRestriction(prisonerContactId, request)).thenThrow(expected)
+    whenever(restrictionService.createPrisonerContactRestriction(prisonerContactId, request, user)).thenThrow(expected)
 
     val result = assertThrows<RuntimeException> {
-      facade.createPrisonerContactRestriction(prisonerContactId, request)
+      facade.createPrisonerContactRestriction(prisonerContactId, request, user)
     }
 
     assertThat(result).isEqualTo(expected)
-    verify(restrictionService).createPrisonerContactRestriction(prisonerContactId, request)
+    verify(restrictionService).createPrisonerContactRestriction(prisonerContactId, request, user)
     verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
@@ -100,7 +101,6 @@ class PrisonerContactRestrictionsFacadeTest {
       startDate = LocalDate.of(2020, 1, 1),
       expiryDate = LocalDate.of(2022, 2, 2),
       comments = "Some comments",
-      updatedBy = "updated",
     )
 
     val expected = PrisonerContactRestrictionDetails(
@@ -120,18 +120,19 @@ class PrisonerContactRestrictionsFacadeTest {
       updatedBy = "updated",
       updatedTime = LocalDateTime.now(),
     )
-    whenever(restrictionService.updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request)).thenReturn(expected)
+    whenever(restrictionService.updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request, user)).thenReturn(expected)
 
-    val result = facade.updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request)
+    val result = facade.updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request, user)
 
     assertThat(result).isEqualTo(expected)
-    verify(restrictionService).updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request)
+    verify(restrictionService).updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request, user)
     verify(outboundEventsService).send(
       outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
       identifier = prisonerContactRestrictionId,
       contactId = contactId,
       noms = prisonerNumber,
       source = Source.DPS,
+      user = user,
     )
   }
 
@@ -142,18 +143,17 @@ class PrisonerContactRestrictionsFacadeTest {
       startDate = LocalDate.of(2020, 1, 1),
       expiryDate = LocalDate.of(2022, 2, 2),
       comments = "Some comments",
-      updatedBy = "updated",
     )
 
     val expected = RuntimeException("Bang!")
-    whenever(restrictionService.updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request)).thenThrow(expected)
+    whenever(restrictionService.updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request, user)).thenThrow(expected)
 
     val result = assertThrows<RuntimeException> {
-      facade.updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request)
+      facade.updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request, user)
     }
 
     assertThat(result).isEqualTo(expected)
-    verify(restrictionService).updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request)
+    verify(restrictionService).updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request, user)
     verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 }

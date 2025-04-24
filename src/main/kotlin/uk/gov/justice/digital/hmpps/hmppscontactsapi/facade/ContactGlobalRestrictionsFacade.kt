@@ -1,8 +1,9 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreateContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdateContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.RestrictionsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
@@ -19,11 +20,13 @@ class ContactGlobalRestrictionsFacade(
   fun createContactGlobalRestriction(
     contactId: Long,
     request: CreateContactRestrictionRequest,
-  ): ContactRestrictionDetails = restrictionsService.createContactGlobalRestriction(contactId, request).also {
+    user: User,
+  ): ContactRestrictionDetails = restrictionsService.createContactGlobalRestriction(contactId, request, user).also {
     outboundEventsService.send(
       outboundEvent = OutboundEvent.CONTACT_RESTRICTION_CREATED,
       identifier = it.contactRestrictionId,
       contactId = contactId,
+      user = user,
     )
   }
 
@@ -31,11 +34,13 @@ class ContactGlobalRestrictionsFacade(
     contactId: Long,
     contactRestrictionId: Long,
     request: UpdateContactRestrictionRequest,
-  ): ContactRestrictionDetails = restrictionsService.updateContactGlobalRestriction(contactId, contactRestrictionId, request).also {
+    user: User,
+  ): ContactRestrictionDetails = restrictionsService.updateContactGlobalRestriction(contactId, contactRestrictionId, request, user).also {
     outboundEventsService.send(
       outboundEvent = OutboundEvent.CONTACT_RESTRICTION_UPDATED,
       identifier = contactRestrictionId,
       contactId = contactId,
+      user = user,
     )
   }
 }

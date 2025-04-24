@@ -21,11 +21,17 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonRefere
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerContactInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerContactRestrictionInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDate
 
 @Sql("classpath:merge.tests/data-for-merge-test.sql")
 @Sql(scripts = ["classpath:merge.tests/cleanup-merge-test.sql"], executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
+  }
 
   @Nested
   inner class MergeTests {
@@ -49,12 +55,13 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden for merge without an authorised role on the token`() {
+      setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER.copy(roles = listOf("ROLE_WRONG")))
       webTestClient.post()
         .uri("/sync/admin/merge")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(createMergeRequest(retained = "A3333AA", removed = "A4444AA"))
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -66,7 +73,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         .uri("/sync/admin/merge")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .bodyValue(createMergeRequest(retained = "A3333AA", removed = "A4444AA"))
         .exchange()
         .expectStatus()
@@ -90,7 +97,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         .uri("/sync/admin/merge")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .bodyValue(
           createMergeRequest(
             retained = "A3333AA",
@@ -172,12 +179,13 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden for a reset without an authorised role on the token`() {
+      setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER.copy(roles = listOf("ROLE_WRONG")))
       webTestClient.post()
         .uri("/sync/admin/reset")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(createResetRequest(prisonerNumber = "A3333AA"))
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -189,7 +197,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         .uri("/sync/admin/reset")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .bodyValue(createResetRequest(prisonerNumber = "A3333AA"))
         .exchange()
         .expectStatus()
@@ -217,7 +225,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         .uri("/sync/admin/reset")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .bodyValue(
           createResetRequest(
             prisonerNumber = "A4444AA",
@@ -327,7 +335,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
       relationship.prisonerContactRestrictionIds.map { restrictionId ->
         stubEvents.assertHasEvent(
           event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED,
-          additionalInfo = PrisonerContactRestrictionInfo(restrictionId, Source.NOMIS),
+          additionalInfo = PrisonerContactRestrictionInfo(restrictionId, Source.NOMIS, "SYS"),
           personReference = PersonReference(
             dpsContactId = relationship.contactId,
             nomsNumber = relationship.prisonerNumber,
@@ -348,7 +356,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
       created.restrictions.map { restriction ->
         stubEvents.assertHasEvent(
           event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
-          additionalInfo = PrisonerContactRestrictionInfo(restriction.dpsId, Source.NOMIS),
+          additionalInfo = PrisonerContactRestrictionInfo(restriction.dpsId, Source.NOMIS, "SYS"),
           personReference = PersonReference(
             dpsContactId = created.contactId,
             nomsNumber = createdPrisonerNumber,

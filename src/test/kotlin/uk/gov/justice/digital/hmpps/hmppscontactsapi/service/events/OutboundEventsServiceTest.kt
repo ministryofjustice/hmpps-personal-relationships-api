@@ -208,10 +208,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact restriction created event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_RESTRICTION_CREATED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_RESTRICTION_CREATED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_RESTRICTION_CREATED, 1L, 1L, user = aUser("restriction_user"))
     verify(
       expectedEventType = "contacts-api.contact-restriction.created",
-      expectedAdditionalInformation = ContactRestrictionInfo(contactRestrictionId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = ContactRestrictionInfo(contactRestrictionId = 1L, source = Source.DPS, username = "restriction_user"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact restriction has been created",
     )
@@ -220,10 +220,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact restriction updated event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_RESTRICTION_UPDATED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_RESTRICTION_UPDATED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_RESTRICTION_UPDATED, 1L, 1L, user = aUser("restriction_user"))
     verify(
       expectedEventType = "contacts-api.contact-restriction.updated",
-      expectedAdditionalInformation = ContactRestrictionInfo(contactRestrictionId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = ContactRestrictionInfo(contactRestrictionId = 1L, source = Source.DPS, username = "restriction_user"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact restriction has been updated",
     )
@@ -232,10 +232,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact restriction deleted event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_RESTRICTION_DELETED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_RESTRICTION_DELETED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_RESTRICTION_DELETED, 1L, 1L, user = aUser("restriction_user"))
     verify(
       expectedEventType = "contacts-api.contact-restriction.deleted",
-      expectedAdditionalInformation = ContactRestrictionInfo(contactRestrictionId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = ContactRestrictionInfo(contactRestrictionId = 1L, source = Source.DPS, username = "restriction_user"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact restriction has been deleted",
     )
@@ -280,10 +280,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `prisoner contact restriction created event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED, 1L, 1L, "A1234AA")
+    outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED, 1L, 1L, "A1234AA", user = aUser("restriction_user"))
     verify(
       expectedEventType = "contacts-api.prisoner-contact-restriction.created",
-      expectedAdditionalInformation = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = 1L, source = Source.DPS, username = "restriction_user"),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact restriction has been created",
     )
@@ -292,10 +292,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `prisoner contact restriction updated event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED, 1L, 1L, "A1234AA")
+    outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED, 1L, 1L, "A1234AA", user = aUser("restriction_user"))
     verify(
       expectedEventType = "contacts-api.prisoner-contact-restriction.updated",
-      expectedAdditionalInformation = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = 1L, source = Source.DPS, username = "restriction_user"),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact restriction has been updated",
     )
@@ -304,10 +304,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `prisoner contact resrtiction deleted event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED, 1L, 1L, "A1234AA")
+    outboundEventsService.send(OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED, 1L, 1L, "A1234AA", user = aUser("restriction_user"))
     verify(
       expectedEventType = "contacts-api.prisoner-contact-restriction.deleted",
-      expectedAdditionalInformation = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = 1L, source = Source.DPS, username = "restriction_user"),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact restriction has been deleted",
     )

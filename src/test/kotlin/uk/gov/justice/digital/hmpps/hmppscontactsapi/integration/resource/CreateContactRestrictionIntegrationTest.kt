@@ -12,7 +12,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreateContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactRestrictionInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
@@ -47,12 +47,10 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "restrictionType must not be null;{\"restrictionType\": null, \"startDate\": \"2020-01-01\", \"createdBy\": \"created\"}",
-      "restrictionType must not be null;{\"startDate\": \"2020-01-01\", \"createdBy\": \"created\"}",
-      "startDate must not be null;{\"restrictionType\": \"BAN\", \"startDate\": null, \"createdBy\": \"created\"}",
-      "startDate must not be null;{\"restrictionType\": \"BAN\", \"createdBy\": \"created\"}",
-      "createdBy must not be null;{\"restrictionType\": \"BAN\", \"startDate\": \"2020-01-01\", \"createdBy\": null}",
-      "createdBy must not be null;{\"restrictionType\": \"BAN\", \"startDate\": \"2020-01-01\"}",
+      "restrictionType must not be null;{\"restrictionType\": null, \"startDate\": \"2020-01-01\"}",
+      "restrictionType must not be null;{\"startDate\": \"2020-01-01\"}",
+      "startDate must not be null;{\"restrictionType\": \"BAN\", \"startDate\": null}",
+      "startDate must not be null;{\"restrictionType\": \"BAN\"}",
     ],
     delimiter = ';',
   )
@@ -61,7 +59,7 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/restriction")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -83,7 +81,7 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/restriction")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -106,7 +104,7 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/-321/restriction")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -129,7 +127,7 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/restriction")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -159,13 +157,13 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(comments).isNull()
       assertThat(enteredByUsername).isEqualTo("created")
       assertThat(enteredByDisplayName).isEqualTo("Created")
-      assertThat(createdBy).isEqualTo(request.createdBy)
+      assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
     }
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_CREATED,
-      additionalInfo = ContactRestrictionInfo(created.contactRestrictionId, Source.DPS),
+      additionalInfo = ContactRestrictionInfo(created.contactRestrictionId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }
@@ -178,7 +176,6 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       startDate = LocalDate.of(2020, 1, 1),
       expiryDate = LocalDate.of(2021, 2, 2),
       comments = "Some comments",
-      createdBy = "created",
     )
 
     val created = testAPIClient.createContactGlobalRestriction(savedContactId, request, role)
@@ -192,13 +189,13 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(comments).isEqualTo(request.comments)
       assertThat(enteredByUsername).isEqualTo("created")
       assertThat(enteredByDisplayName).isEqualTo("Created")
-      assertThat(createdBy).isEqualTo(request.createdBy)
+      assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
     }
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_CREATED,
-      additionalInfo = ContactRestrictionInfo(created.contactRestrictionId, Source.DPS),
+      additionalInfo = ContactRestrictionInfo(created.contactRestrictionId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }
@@ -207,10 +204,6 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
       Arguments.of("comments must be <= 240 characters", aMinimalRequest().copy(comments = "".padStart(241, 'X'))),
-      Arguments.of(
-        "createdBy must be <= 100 characters",
-        aMinimalRequest().copy(createdBy = "".padStart(101, 'X')),
-      ),
     )
 
     private fun aMinimalRequest() = CreateContactRestrictionRequest(
@@ -218,7 +211,6 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       startDate = LocalDate.of(2020, 1, 1),
       expiryDate = null,
       comments = null,
-      createdBy = "created",
     )
   }
 }

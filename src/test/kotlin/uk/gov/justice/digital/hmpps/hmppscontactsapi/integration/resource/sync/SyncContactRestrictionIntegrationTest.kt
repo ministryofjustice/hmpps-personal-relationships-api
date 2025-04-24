@@ -68,10 +68,11 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `Sync endpoints should return forbidden without an authorised role on the token`(role: String) {
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER.copy(roles = listOf(role)))
     webTestClient.get()
       .uri("/sync/contact-restriction/1")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -81,7 +82,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(createContactRestrictionRequest(savedContactId))
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -91,7 +92,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(updateContactRestrictionRequest(savedContactId))
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -99,7 +100,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.delete()
       .uri("/sync/contact-restriction/1")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -112,7 +113,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     val contactRestriction = webTestClient.get()
       .uri("/sync/contact-restriction/{contactRestrictionId}", contactRestrictionId)
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -134,7 +135,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
       .uri("/sync/contact-restriction")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(createContactRestrictionRequest(savedContactId))
       .exchange()
       .expectStatus()
@@ -155,7 +156,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_CREATED,
-      additionalInfo = ContactRestrictionInfo(contactRestriction.contactRestrictionId, Source.NOMIS),
+      additionalInfo = ContactRestrictionInfo(contactRestriction.contactRestrictionId, Source.NOMIS, "SYS"),
       personReference = PersonReference(dpsContactId = contactRestriction.contactId),
     )
   }
@@ -166,7 +167,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
       .uri("/sync/contact-restriction")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(createContactRestrictionRequest(savedContactId))
       .exchange()
       .expectStatus()
@@ -187,7 +188,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
       .uri("/sync/contact-restriction/{contactRestrictionId}", contactRestriction.contactRestrictionId)
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(updateContactRestrictionRequest(savedContactId))
       .exchange()
       .expectStatus()
@@ -211,7 +212,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_UPDATED,
-      additionalInfo = ContactRestrictionInfo(updatedRestriction.contactRestrictionId, Source.NOMIS),
+      additionalInfo = ContactRestrictionInfo(updatedRestriction.contactRestrictionId, Source.NOMIS, "SYS"),
       personReference = PersonReference(dpsContactId = updatedRestriction.contactId),
     )
   }
@@ -223,7 +224,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.delete()
       .uri("/sync/contact-restriction/{contactRestrictionId}", contactRestrictionId)
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -231,13 +232,13 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.get()
       .uri("/sync/contact-restriction/{contactRestrictionId}", contactRestrictionId)
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_DELETED,
-      additionalInfo = ContactRestrictionInfo(contactRestrictionId, Source.NOMIS),
+      additionalInfo = ContactRestrictionInfo(contactRestrictionId, Source.NOMIS, "SYS"),
       personReference = PersonReference(dpsContactId = 3),
     )
   }

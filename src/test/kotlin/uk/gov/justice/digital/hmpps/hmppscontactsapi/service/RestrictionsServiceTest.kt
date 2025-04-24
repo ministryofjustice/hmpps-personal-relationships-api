@@ -16,16 +16,17 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactRestrictionEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactRestrictionEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactRestrictionDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createPrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createPrisonerContactRestrictionDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.isEqualTo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePrisonerContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdateContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreateContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdateContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionsResponse
@@ -426,12 +427,15 @@ class RestrictionsServiceTest {
 
   @Nested
   inner class CreateGlobal {
+
+    private val user = aUser("created")
+
     @Test
     fun `blow up creating global restriction if contact is missing`() {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
 
       val exception = assertThrows<EntityNotFoundException> {
-        service.createContactGlobalRestriction(contactId, aCreateGlobalRestrictionRequest())
+        service.createContactGlobalRestriction(contactId, aCreateGlobalRestrictionRequest(), user)
       }
       assertThat(exception.message).isEqualTo("Contact (99) could not be found")
     }
@@ -447,6 +451,7 @@ class RestrictionsServiceTest {
             startDate = LocalDate.of(2022, 2, 2),
             expiryDate = LocalDate.of(2020, 1, 1),
           ),
+          user,
         )
       }
       error.message isEqualTo "Restriction start date should be before the restriction end date"
@@ -465,7 +470,7 @@ class RestrictionsServiceTest {
       ).thenThrow(expectedException)
 
       val exception = assertThrows<ValidationException> {
-        service.createContactGlobalRestriction(contactId, aCreateGlobalRestrictionRequest())
+        service.createContactGlobalRestriction(contactId, aCreateGlobalRestrictionRequest(), user)
       }
       assertThat(exception).isEqualTo(expectedException)
       verify(referenceCodeService).validateReferenceCode(ReferenceCodeGroup.RESTRICTION, "BAN", allowInactive = false)
@@ -497,7 +502,7 @@ class RestrictionsServiceTest {
         )
       }
 
-      val created = service.createContactGlobalRestriction(contactId, aCreateGlobalRestrictionRequest())
+      val created = service.createContactGlobalRestriction(contactId, aCreateGlobalRestrictionRequest(), user)
       assertThat(created).isEqualTo(
         ContactRestrictionDetails(
           contactRestrictionId = 9999,
@@ -527,7 +532,6 @@ class RestrictionsServiceTest {
       startDate = startDate,
       expiryDate = expiryDate,
       comments = "Some comments",
-      createdBy = "created",
     )
   }
 
@@ -546,6 +550,7 @@ class RestrictionsServiceTest {
       updatedBy = null,
       updatedTime = null,
     )
+    private val user = aUser("updated")
 
     @Test
     fun `blow up updating global restriction if contact is missing`() {
@@ -556,6 +561,7 @@ class RestrictionsServiceTest {
           contactId,
           contactRestrictionId,
           anUpdateGlobalRestrictionRequest(),
+          user,
         )
       }
       assertThat(exception.message).isEqualTo("Contact (99) could not be found")
@@ -573,6 +579,7 @@ class RestrictionsServiceTest {
             startDate = LocalDate.of(1992, 2, 2),
             expiryDate = LocalDate.of(1990, 1, 1),
           ),
+          user,
         )
       }
       error.message isEqualTo "Restriction start date should be before the restriction end date"
@@ -588,6 +595,7 @@ class RestrictionsServiceTest {
           contactId,
           contactRestrictionId,
           anUpdateGlobalRestrictionRequest(),
+          user,
         )
       }
       assertThat(exception.message).isEqualTo("Contact restriction (654) could not be found")
@@ -605,6 +613,7 @@ class RestrictionsServiceTest {
           contactId,
           contactRestrictionId,
           anUpdateGlobalRestrictionRequest(),
+          user,
         )
       }
       assertThat(exception).isEqualTo(expectedException)
@@ -636,6 +645,7 @@ class RestrictionsServiceTest {
         contactId,
         contactRestrictionId,
         anUpdateGlobalRestrictionRequest(),
+        user,
       )
       assertThat(updated).isEqualTo(
         ContactRestrictionDetails(
@@ -666,18 +676,19 @@ class RestrictionsServiceTest {
       startDate = startDate,
       expiryDate = expiryDate,
       comments = "Updated comments",
-      updatedBy = "updated",
     )
   }
 
   @Nested
   inner class CreatePrisonerContactRestriction {
+    private val user = aUser("created")
+
     @Test
     fun `blow up creating prisoner contact restriction if prisoner contact is missing`() {
       whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.empty())
 
       val exception = assertThrows<EntityNotFoundException> {
-        service.createPrisonerContactRestriction(prisonerContactId, aCreatePrisonerContactRestrictionRequest())
+        service.createPrisonerContactRestriction(prisonerContactId, aCreatePrisonerContactRestrictionRequest(), user)
       }
       assertThat(exception.message).isEqualTo("Prisoner contact (66) could not be found")
     }
@@ -695,7 +706,7 @@ class RestrictionsServiceTest {
       ).thenThrow(expectedException)
 
       val exception = assertThrows<ValidationException> {
-        service.createPrisonerContactRestriction(prisonerContactId, aCreatePrisonerContactRestrictionRequest())
+        service.createPrisonerContactRestriction(prisonerContactId, aCreatePrisonerContactRestrictionRequest(), user)
       }
       assertThat(exception).isEqualTo(expectedException)
       verify(referenceCodeService).validateReferenceCode(ReferenceCodeGroup.RESTRICTION, "BAN", allowInactive = false)
@@ -728,7 +739,7 @@ class RestrictionsServiceTest {
       }
 
       val created =
-        service.createPrisonerContactRestriction(prisonerContactId, aCreatePrisonerContactRestrictionRequest())
+        service.createPrisonerContactRestriction(prisonerContactId, aCreatePrisonerContactRestrictionRequest(), user)
       assertThat(created).isEqualTo(
         PrisonerContactRestrictionDetails(
           prisonerContactRestrictionId = 9999,
@@ -757,7 +768,6 @@ class RestrictionsServiceTest {
       startDate = LocalDate.of(2020, 1, 1),
       expiryDate = LocalDate.of(2022, 2, 2),
       comments = "Some comments",
-      createdBy = "created",
     )
   }
 
@@ -776,6 +786,7 @@ class RestrictionsServiceTest {
       updatedBy = null,
       updatedTime = null,
     )
+    private val user = aUser("updated")
 
     @Test
     fun `blow up updating prisoner contact restriction if prisoner contact is missing`() {
@@ -786,6 +797,7 @@ class RestrictionsServiceTest {
           prisonerContactId,
           prisonerContactRestrictionId,
           anUpdatePrisonerContactRestrictionRequest(),
+          user,
         )
       }
       assertThat(exception.message).isEqualTo("Prisoner contact (66) could not be found")
@@ -801,6 +813,7 @@ class RestrictionsServiceTest {
           prisonerContactId,
           prisonerContactRestrictionId,
           anUpdatePrisonerContactRestrictionRequest(),
+          user,
         )
       }
       assertThat(exception.message).isEqualTo("Prisoner contact restriction (654) could not be found")
@@ -822,6 +835,7 @@ class RestrictionsServiceTest {
           prisonerContactId,
           prisonerContactRestrictionId,
           anUpdatePrisonerContactRestrictionRequest(),
+          user,
         )
       }
       assertThat(exception).isEqualTo(expectedException)
@@ -857,6 +871,7 @@ class RestrictionsServiceTest {
         prisonerContactId,
         prisonerContactRestrictionId,
         anUpdatePrisonerContactRestrictionRequest(),
+        user,
       )
       assertThat(updated).isEqualTo(
         PrisonerContactRestrictionDetails(
@@ -886,7 +901,6 @@ class RestrictionsServiceTest {
       startDate = LocalDate.of(1990, 1, 1),
       expiryDate = LocalDate.of(1992, 2, 2),
       comments = "Updated comments",
-      updatedBy = "updated",
     )
   }
 }

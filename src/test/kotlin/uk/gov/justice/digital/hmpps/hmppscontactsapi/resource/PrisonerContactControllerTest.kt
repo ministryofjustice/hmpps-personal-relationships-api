@@ -19,9 +19,9 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createPrisonerConta
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createPrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UpdatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.PrisonerContactRelationshipService
@@ -168,32 +168,32 @@ class PrisonerContactControllerTest {
 
   @Nested
   inner class CreatePrisonerContactRestrictions {
+    private val user = aUser("restrictions")
     private val request = CreatePrisonerContactRestrictionRequest(
       restrictionType = "BAN",
       startDate = LocalDate.of(2020, 1, 1),
       expiryDate = LocalDate.of(2022, 2, 2),
       comments = "Some comments",
-      createdBy = "created",
     )
 
     @Test
     fun `should create restrictions`() {
       val expected = createPrisonerContactRestrictionDetails()
-      whenever(prisonerContactRestrictionsFacade.createPrisonerContactRestriction(9, request)).thenReturn(expected)
+      whenever(prisonerContactRestrictionsFacade.createPrisonerContactRestriction(9, request, user)).thenReturn(expected)
 
-      val response = controller.createPrisonerContactRestriction(9, request)
+      val response = controller.createPrisonerContactRestriction(9, request, user)
 
       assertThat(response.body).isEqualTo(expected)
-      verify(prisonerContactRestrictionsFacade).createPrisonerContactRestriction(9, request)
+      verify(prisonerContactRestrictionsFacade).createPrisonerContactRestriction(9, request, user)
     }
 
     @Test
     fun `should propagate exceptions creating a restriction`() {
       val expected = RuntimeException("Bang!")
-      whenever(prisonerContactRestrictionsFacade.createPrisonerContactRestriction(9, request)).thenThrow(expected)
+      whenever(prisonerContactRestrictionsFacade.createPrisonerContactRestriction(9, request, user)).thenThrow(expected)
 
       val result = assertThrows<RuntimeException> {
-        controller.createPrisonerContactRestriction(9, request)
+        controller.createPrisonerContactRestriction(9, request, user)
       }
       assertThat(result).isEqualTo(expected)
     }
@@ -202,32 +202,32 @@ class PrisonerContactControllerTest {
   @Nested
   inner class UpdatePrisonerContactRestrictions {
     private val prisonerContactRestrictionId = 564L
+    private val user = aUser("restrictions")
     private val request = UpdatePrisonerContactRestrictionRequest(
       restrictionType = "BAN",
       startDate = LocalDate.of(2020, 1, 1),
       expiryDate = LocalDate.of(2022, 2, 2),
       comments = "Some comments",
-      updatedBy = "updated",
     )
 
     @Test
     fun `should update restrictions`() {
       val expected = createPrisonerContactRestrictionDetails()
-      whenever(prisonerContactRestrictionsFacade.updatePrisonerContactRestriction(9, prisonerContactRestrictionId, request)).thenReturn(expected)
+      whenever(prisonerContactRestrictionsFacade.updatePrisonerContactRestriction(9, prisonerContactRestrictionId, request, user)).thenReturn(expected)
 
-      val response = controller.updatePrisonerContactRestriction(9, prisonerContactRestrictionId, request)
+      val response = controller.updatePrisonerContactRestriction(9, prisonerContactRestrictionId, request, user)
 
       assertThat(response).isEqualTo(expected)
-      verify(prisonerContactRestrictionsFacade).updatePrisonerContactRestriction(9, prisonerContactRestrictionId, request)
+      verify(prisonerContactRestrictionsFacade).updatePrisonerContactRestriction(9, prisonerContactRestrictionId, request, user)
     }
 
     @Test
     fun `should propagate exceptions updating a restriction`() {
       val expected = RuntimeException("Bang!")
-      whenever(prisonerContactRestrictionsFacade.updatePrisonerContactRestriction(9, prisonerContactRestrictionId, request)).thenThrow(expected)
+      whenever(prisonerContactRestrictionsFacade.updatePrisonerContactRestriction(9, prisonerContactRestrictionId, request, user)).thenThrow(expected)
 
       val result = assertThrows<RuntimeException> {
-        controller.updatePrisonerContactRestriction(9, prisonerContactRestrictionId, request)
+        controller.updatePrisonerContactRestriction(9, prisonerContactRestrictionId, request, user)
       }
       assertThat(result).isEqualTo(expected)
     }
