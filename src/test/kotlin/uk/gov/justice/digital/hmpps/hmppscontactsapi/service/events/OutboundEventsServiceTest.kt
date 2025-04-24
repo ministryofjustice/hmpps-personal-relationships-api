@@ -100,10 +100,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact email created event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_EMAIL_CREATED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_EMAIL_CREATED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_EMAIL_CREATED, 1L, 1L, user = aUser("email"))
     verify(
       expectedEventType = "contacts-api.contact-email.created",
-      expectedAdditionalInformation = ContactEmailInfo(contactEmailId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = ContactEmailInfo(contactEmailId = 1L, source = Source.DPS, username = "email"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact email address has been created",
     )
@@ -112,10 +112,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact email updated event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_EMAIL_UPDATED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_EMAIL_UPDATED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_EMAIL_UPDATED, 1L, 1L, user = aUser("email"))
     verify(
       expectedEventType = "contacts-api.contact-email.updated",
-      expectedAdditionalInformation = ContactEmailInfo(contactEmailId = 1, source = Source.DPS),
+      expectedAdditionalInformation = ContactEmailInfo(contactEmailId = 1, source = Source.DPS, username = "email"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact email address has been updated",
     )
@@ -124,10 +124,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact email deleted event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_EMAIL_DELETED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_EMAIL_DELETED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_EMAIL_DELETED, 1L, 1L, user = aUser("email"))
     verify(
       expectedEventType = "contacts-api.contact-email.deleted",
-      expectedAdditionalInformation = ContactEmailInfo(contactEmailId = 1, source = Source.DPS),
+      expectedAdditionalInformation = ContactEmailInfo(contactEmailId = 1, source = Source.DPS, username = "email"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact email address has been deleted",
     )

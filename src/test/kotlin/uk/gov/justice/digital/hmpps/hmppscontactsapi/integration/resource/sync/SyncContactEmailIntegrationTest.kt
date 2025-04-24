@@ -67,10 +67,11 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `Sync endpoints should return forbidden without an authorised role on the token`(role: String) {
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER.copy(roles = listOf(role)))
     webTestClient.get()
       .uri("/sync/contact-email/1")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -80,7 +81,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(createContactEmailRequest(savedContactId))
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -90,7 +91,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(updateContactEmailRequest(savedContactId))
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -98,7 +99,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.delete()
       .uri("/sync/contact-email/1")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -111,7 +112,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
     val contactEmail = webTestClient.get()
       .uri("/sync/contact-email/{contactEmailId}", contactEmailId)
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -128,7 +129,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
       .uri("/sync/contact-email")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(createContactEmailRequest(savedContactId))
       .exchange()
       .expectStatus()
@@ -147,7 +148,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_CREATED,
-      additionalInfo = ContactEmailInfo(contactEmail.contactEmailId, Source.NOMIS),
+      additionalInfo = ContactEmailInfo(contactEmail.contactEmailId, Source.NOMIS, "SYS"),
       personReference = PersonReference(dpsContactId = contactEmail.contactId),
     )
   }
@@ -158,7 +159,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
       .uri("/sync/contact-email")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(createContactEmailRequest(savedContactId))
       .exchange()
       .expectStatus()
@@ -177,7 +178,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
       .uri("/sync/contact-email/{contactEmailId}", contactEmail.contactEmailId)
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(updateContactEmailRequest(savedContactId))
       .exchange()
       .expectStatus()
@@ -198,7 +199,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(contactEmail.contactEmailId, Source.NOMIS),
+      additionalInfo = ContactEmailInfo(contactEmail.contactEmailId, Source.NOMIS, "SYS"),
       personReference = PersonReference(dpsContactId = contactEmail.contactId),
     )
   }
@@ -210,7 +211,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.delete()
       .uri("/sync/contact-email/{contactEmailId}", contactEmailId)
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -218,13 +219,13 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.get()
       .uri("/sync/contact-email/{contactEmailId}", contactEmailId)
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_DELETED,
-      additionalInfo = ContactEmailInfo(contactEmailId, Source.NOMIS),
+      additionalInfo = ContactEmailInfo(contactEmailId, Source.NOMIS, "SYS"),
       personReference = PersonReference(dpsContactId = 3),
     )
   }

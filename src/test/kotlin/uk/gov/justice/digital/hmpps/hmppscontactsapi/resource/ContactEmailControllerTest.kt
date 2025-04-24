@@ -10,6 +10,7 @@ import org.mockito.Mockito.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactEmailFacade
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactEmailDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateEmailRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.UpdateEmailRequest
@@ -20,6 +21,7 @@ class ContactEmailControllerTest {
 
   private val facade: ContactEmailFacade = mock()
   private val controller = ContactEmailController(facade)
+  private val user = aUser()
 
   @Nested
   inner class CreateContactEmail {
@@ -28,32 +30,30 @@ class ContactEmailControllerTest {
       val createdEmail = createContactEmailDetails(id = 99, contactId = 1)
       val request = CreateEmailRequest(
         emailAddress = "test@example.com",
-        createdBy = "created",
       )
-      whenever(facade.create(1, request)).thenReturn(createdEmail)
+      whenever(facade.create(1, request, user)).thenReturn(createdEmail)
 
-      val response = controller.createEmailAddress(1, request)
+      val response = controller.createEmailAddress(1, request, user)
 
       assertThat(response.statusCode).isEqualTo(HttpStatus.CREATED)
       assertThat(response.body).isEqualTo(createdEmail)
-      verify(facade).create(1, request)
+      verify(facade).create(1, request, user)
     }
 
     @Test
     fun `should propagate exceptions if create fails`() {
       val request = CreateEmailRequest(
         emailAddress = "test@example.com",
-        createdBy = "created",
       )
       val expected = EntityNotFoundException("Couldn't find contact")
-      whenever(facade.create(1, request)).thenThrow(expected)
+      whenever(facade.create(1, request, user)).thenThrow(expected)
 
       val exception = assertThrows<EntityNotFoundException> {
-        controller.createEmailAddress(1, request)
+        controller.createEmailAddress(1, request, user)
       }
 
       assertThat(exception).isEqualTo(expected)
-      verify(facade).create(1, request)
+      verify(facade).create(1, request, user)
     }
   }
 
@@ -64,32 +64,30 @@ class ContactEmailControllerTest {
       val updatedEmail = createContactEmailDetails(id = 2, contactId = 1)
       val request = UpdateEmailRequest(
         emailAddress = "test@example.com",
-        updatedBy = "JAMES",
       )
-      whenever(facade.update(1, 2, request)).thenReturn(updatedEmail)
+      whenever(facade.update(1, 2, request, user)).thenReturn(updatedEmail)
 
-      val response = controller.updateEmailAddress(1, 2, request)
+      val response = controller.updateEmailAddress(1, 2, request, user)
 
       assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
       assertThat(response.body).isEqualTo(updatedEmail)
-      verify(facade).update(1, 2, request)
+      verify(facade).update(1, 2, request, user)
     }
 
     @Test
     fun `should propagate exceptions if update fails`() {
       val request = UpdateEmailRequest(
         emailAddress = "test@example.com",
-        updatedBy = "JAMES",
       )
       val expected = EntityNotFoundException("Couldn't find contact")
-      whenever(facade.update(1, 2, request)).thenThrow(expected)
+      whenever(facade.update(1, 2, request, user)).thenThrow(expected)
 
       val exception = assertThrows<EntityNotFoundException> {
-        controller.updateEmailAddress(1, 2, request)
+        controller.updateEmailAddress(1, 2, request, user)
       }
 
       assertThat(exception).isEqualTo(expected)
-      verify(facade).update(1, 2, request)
+      verify(facade).update(1, 2, request, user)
     }
   }
 
@@ -129,25 +127,25 @@ class ContactEmailControllerTest {
   inner class DeleteContactEmail {
     @Test
     fun `should return 204 if deleted successfully`() {
-      whenever(facade.delete(1, 2)).then { }
+      whenever(facade.delete(1, 2, user)).then { }
 
-      val response = controller.deleteEmailAddress(1, 2)
+      val response = controller.deleteEmailAddress(1, 2, user)
 
       assertThat(response.statusCode).isEqualTo(HttpStatus.NO_CONTENT)
-      verify(facade).delete(1, 2)
+      verify(facade).delete(1, 2, user)
     }
 
     @Test
     fun `should propagate exceptions if delete fails`() {
       val expected = EntityNotFoundException("Couldn't find contact")
-      whenever(facade.delete(1, 2)).thenThrow(expected)
+      whenever(facade.delete(1, 2, user)).thenThrow(expected)
 
       val exception = assertThrows<EntityNotFoundException> {
-        controller.deleteEmailAddress(1, 2)
+        controller.deleteEmailAddress(1, 2, user)
       }
 
       assertThat(exception).isEqualTo(expected)
-      verify(facade).delete(1, 2)
+      verify(facade).delete(1, 2, user)
     }
   }
 }

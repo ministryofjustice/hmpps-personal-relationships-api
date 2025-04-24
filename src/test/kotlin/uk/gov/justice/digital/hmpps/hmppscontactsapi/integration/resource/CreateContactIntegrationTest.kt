@@ -507,13 +507,13 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_CREATED,
-      additionalInfo = ContactEmailInfo(firstCreated!!.contactEmailId, Source.DPS),
+      additionalInfo = ContactEmailInfo(firstCreated!!.contactEmailId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_CREATED,
-      additionalInfo = ContactEmailInfo(secondCreated!!.contactEmailId, Source.DPS),
+      additionalInfo = ContactEmailInfo(secondCreated!!.contactEmailId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactId),
     )
   }

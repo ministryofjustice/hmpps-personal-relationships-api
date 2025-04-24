@@ -17,6 +17,7 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEmailEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateEmailException
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactEmailEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateEmailRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.UpdateEmailRequest
@@ -49,15 +50,15 @@ class ContactEmailServiceTest {
   inner class CreateEmail {
     private val request = CreateEmailRequest(
       emailAddress = "test@example.com",
-      createdBy = "created",
     )
+    private val user = aUser("created")
 
     @Test
     fun `should throw EntityNotFoundException creating email if contact doesn't exist`() {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
 
       val exception = assertThrows<EntityNotFoundException> {
-        service.create(contactId, request)
+        service.create(contactId, request, user)
       }
       assertThat(exception.message).isEqualTo("Contact (99) not found")
     }
@@ -67,7 +68,7 @@ class ContactEmailServiceTest {
     fun `should not create email address if it's invalid`(case: String, invalidEmail: String) {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
       val exception = assertThrows<ValidationException> {
-        service.create(contactId, request.copy(emailAddress = invalidEmail))
+        service.create(contactId, request.copy(emailAddress = invalidEmail), user)
       }
       assertThat(exception.message).isEqualTo("Email address is invalid")
       verify(contactEmailRepository, never()).saveAndFlush(any())
@@ -84,7 +85,7 @@ class ContactEmailServiceTest {
         ),
       )
       val exception = assertThrows<DuplicateEmailException> {
-        service.create(contactId, request.copy(emailAddress = "test@example.com"))
+        service.create(contactId, request.copy(emailAddress = "test@example.com"), user)
       }
       assertThat(exception.message).isEqualTo("Contact already has an email address matching \"test@example.com\"")
       verify(contactEmailRepository, never()).saveAndFlush(any())
@@ -99,7 +100,7 @@ class ContactEmailServiceTest {
         )
       }
 
-      val created = service.create(contactId, request)
+      val created = service.create(contactId, request, user)
       assertThat(created.createdTime).isNotNull()
       assertThat(created).isEqualTo(
         ContactEmailDetails(
@@ -119,8 +120,8 @@ class ContactEmailServiceTest {
   inner class UpdateEmail {
     private val request = UpdateEmailRequest(
       emailAddress = "updated@example.com",
-      updatedBy = "updated",
     )
+    private val user = aUser("updated")
     private val contactEmailId = 1234L
     private val existingEmail = ContactEmailEntity(
       contactEmailId = contactEmailId,
@@ -137,7 +138,7 @@ class ContactEmailServiceTest {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
 
       val exception = assertThrows<EntityNotFoundException> {
-        service.update(contactId, contactEmailId, request)
+        service.update(contactId, contactEmailId, request, user)
       }
       assertThat(exception.message).isEqualTo("Contact (99) not found")
     }
@@ -148,7 +149,7 @@ class ContactEmailServiceTest {
       whenever(contactEmailRepository.findById(contactEmailId)).thenReturn(Optional.empty())
 
       val exception = assertThrows<EntityNotFoundException> {
-        service.update(contactId, contactEmailId, request)
+        service.update(contactId, contactEmailId, request, user)
       }
       assertThat(exception.message).isEqualTo("Contact email (1234) not found")
     }
@@ -160,7 +161,7 @@ class ContactEmailServiceTest {
       whenever(contactEmailRepository.findById(contactEmailId)).thenReturn(Optional.of(existingEmail))
 
       val exception = assertThrows<ValidationException> {
-        service.update(contactId, contactEmailId, request.copy(emailAddress = invalidEmail))
+        service.update(contactId, contactEmailId, request.copy(emailAddress = invalidEmail), user)
       }
       assertThat(exception.message).isEqualTo("Email address is invalid")
       verify(contactEmailRepository, never()).saveAndFlush(any())
@@ -173,7 +174,7 @@ class ContactEmailServiceTest {
       whenever(contactEmailRepository.findByContactId(contactId)).thenReturn(listOf(existingEmail, createContactEmailEntity(id = 9999999, emailAddress = "other@example.com")))
 
       val exception = assertThrows<DuplicateEmailException> {
-        service.update(contactId, contactEmailId, request.copy(emailAddress = "OTHER@EXAMPLE.COM"))
+        service.update(contactId, contactEmailId, request.copy(emailAddress = "OTHER@EXAMPLE.COM"), user)
       }
       assertThat(exception.message).isEqualTo("Contact already has an email address matching \"OTHER@EXAMPLE.COM\"")
       verify(contactEmailRepository, never()).saveAndFlush(any())
@@ -189,7 +190,7 @@ class ContactEmailServiceTest {
         )
       }
 
-      val updated = service.update(contactId, contactEmailId, request)
+      val updated = service.update(contactId, contactEmailId, request, user)
       assertThat(updated.updatedTime).isNotNull()
       assertThat(updated).isEqualTo(
         ContactEmailDetails(

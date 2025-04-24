@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEmailEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateEmailException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
@@ -27,10 +28,10 @@ class ContactEmailService(
   }
 
   @Transactional
-  fun create(contactId: Long, request: CreateEmailRequest): ContactEmailDetails {
+  fun create(contactId: Long, request: CreateEmailRequest, user: User): ContactEmailDetails {
     validateContactExists(contactId)
     val existingLowercaseEmails = contactEmailRepository.findByContactId(contactId).map { it.emailAddress.lowercase() }
-    return createAnEmail(request.emailAddress, request.createdBy, contactId, existingLowercaseEmails)
+    return createAnEmail(request.emailAddress, user.username, contactId, existingLowercaseEmails)
   }
 
   @Transactional
@@ -63,7 +64,7 @@ class ContactEmailService(
   }
 
   @Transactional
-  fun update(contactId: Long, contactEmailId: Long, request: UpdateEmailRequest): ContactEmailDetails {
+  fun update(contactId: Long, contactEmailId: Long, request: UpdateEmailRequest, user: User): ContactEmailDetails {
     validateContactExists(contactId)
     val existing = validateExistingEmail(contactEmailId)
     val existingLowercaseEmailsExcludingTheOneBeingUpdated = contactEmailRepository.findByContactId(contactId)
@@ -73,7 +74,7 @@ class ContactEmailService(
 
     val updating = existing.copy(
       emailAddress = request.emailAddress,
-      updatedBy = request.updatedBy,
+      updatedBy = user.username,
       updatedTime = LocalDateTime.now(),
     )
 
