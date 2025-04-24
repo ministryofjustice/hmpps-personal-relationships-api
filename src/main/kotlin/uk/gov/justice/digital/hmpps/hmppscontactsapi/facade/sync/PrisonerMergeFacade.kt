@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -24,6 +25,7 @@ class PrisonerMergeFacade(
             identifier = it.id,
             noms = keepingPrisonerNumber,
             source = Source.DPS,
+            user = User.SYS_USER,
           )
         }
       }
@@ -36,6 +38,7 @@ class PrisonerMergeFacade(
             identifier = it.id,
             noms = keepingPrisonerNumber,
             source = Source.DPS,
+            user = User.SYS_USER,
           )
         }
       }

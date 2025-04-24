@@ -22,7 +22,7 @@ class OutboundEventsService(
     noms: String = "",
     source: Source = Source.DPS,
     secondIdentifier: Long? = 0,
-    user: User = User.SYS_USER,
+    user: User,
   ) {
     if (featureSwitches.isEnabled(outboundEvent)) {
       log.info("Sending outbound event $outboundEvent with source $source for identifier $identifier (contactId $contactId, noms $noms, secondIdentifier ${secondIdentifier ?: "N/A"})")
