@@ -12,9 +12,11 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestAttribute
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.PrisonerDomesticStatusFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateOrUpdatePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerDomesticStatusResponse
@@ -95,5 +97,6 @@ class PrisonerDomesticStatusController(
   fun createOrUpdateDomesticStatus(
     @PathVariable prisonerNumber: String,
     @Valid @RequestBody request: CreateOrUpdatePrisonerDomesticStatusRequest,
-  ): PrisonerDomesticStatusResponse = prisonerDomesticStatusFacade.createOrUpdateDomesticStatus(prisonerNumber, request)
+    @RequestAttribute user: User,
+  ): PrisonerDomesticStatusResponse = prisonerDomesticStatusFacade.createOrUpdateDomesticStatus(prisonerNumber, request, user)
 }

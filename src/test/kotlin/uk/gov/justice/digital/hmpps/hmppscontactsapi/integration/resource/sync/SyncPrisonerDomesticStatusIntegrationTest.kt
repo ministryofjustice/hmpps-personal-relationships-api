@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEven
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerDomesticStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 
@@ -29,6 +30,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
   @BeforeEach
   fun setUp() {
     domesticStatusRepository.deleteAll()
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
   }
 
   @Test
@@ -69,10 +71,11 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `Sync endpoints should return forbidden without an authorised role on the token`(role: String) {
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER.copy(roles = listOf(role)))
     webTestClient.get()
       .uri("/sync/$prisonerNumber/domestic-status")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -82,7 +85,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(aMinimalRequest())
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -99,7 +102,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     // When
     webTestClient.put()
       .uri("/sync/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(domesticStatusToSync)
       .exchange()
@@ -111,7 +114,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     val domesticStatus = webTestClient.get()
       .uri("/sync/$prisonerNumber/domestic-status")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -140,7 +143,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     // When
     val response = webTestClient.put()
       .uri("/sync/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(domesticStatusToSync)
       .exchange()
@@ -166,7 +169,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     val savedDomesticStatus = webTestClient.get()
       .uri("/sync/$prisonerNumber/domestic-status")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -182,7 +185,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(savedDomesticStatus.id, Source.NOMIS),
+      additionalInfo = PrisonerDomesticStatus(savedDomesticStatus.id, Source.NOMIS, "SYS"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -197,7 +200,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     )
     val existingResponse = webTestClient.put()
       .uri("/sync/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(existingDomesticStatus)
       .exchange()
@@ -217,7 +220,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     // When
     val response = webTestClient.put()
       .uri("/sync/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(updatedDomesticStatus)
       .exchange()
@@ -242,7 +245,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     val savedDomesticStatus = webTestClient.get()
       .uri("/sync/$prisonerNumber/domestic-status")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -261,13 +264,13 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     assertThat(historicalRecord[0].createdBy).isEqualTo("user")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
-      additionalInfo = PrisonerDomesticStatus(historicalRecord[0].prisonerDomesticStatusId, Source.NOMIS),
+      additionalInfo = PrisonerDomesticStatus(historicalRecord[0].prisonerDomesticStatusId, Source.NOMIS, "SYS"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(savedDomesticStatus.id, Source.NOMIS),
+      additionalInfo = PrisonerDomesticStatus(savedDomesticStatus.id, Source.NOMIS, "SYS"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -282,7 +285,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     )
     val existingResponse = webTestClient.put()
       .uri("/sync/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(existingDomesticStatus)
       .exchange()
@@ -303,7 +306,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     // When
     val response = webTestClient.put()
       .uri("/sync/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(updatedDomesticStatus)
       .exchange()
@@ -328,7 +331,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     val savedDomesticStatus = webTestClient.get()
       .uri("/sync/$prisonerNumber/domestic-status")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -366,7 +369,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     // When
     val response = webTestClient.put()
       .uri("/sync/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(invalidDomesticStatus)
       .exchange()
@@ -390,7 +393,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     // When
     val response = webTestClient.put()
       .uri("/sync/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(domesticStatusesToSync)
       .exchange()
@@ -416,7 +419,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     val savedDomesticStatus = webTestClient.get()
       .uri("/sync/$prisonerNumber/domestic-status")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk

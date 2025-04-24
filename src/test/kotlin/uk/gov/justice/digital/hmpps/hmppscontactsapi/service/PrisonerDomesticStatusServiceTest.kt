@@ -16,6 +16,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerDomesticStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ReferenceCodeEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.isEqualTo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.prisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
@@ -40,6 +41,8 @@ class PrisonerDomesticStatusServiceTest {
   private lateinit var prisonerDomesticStatusService: PrisonerDomesticStatusService
 
   private val prisonerNumber = "A1234BC"
+
+  private val user = aUser("test-user")
 
   @Nested
   inner class GetDomesticStatusByPrisonerNumber {
@@ -101,7 +104,6 @@ class PrisonerDomesticStatusServiceTest {
       // Given
       val request = CreateOrUpdatePrisonerDomesticStatusRequest(
         domesticStatusCode = "S",
-        requestedBy = "USER1",
       )
 
       whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
@@ -130,6 +132,7 @@ class PrisonerDomesticStatusServiceTest {
       val result = prisonerDomesticStatusService.createOrUpdateDomesticStatus(
         prisonerNumber,
         request,
+        user,
       )
 
       // Then
@@ -147,7 +150,6 @@ class PrisonerDomesticStatusServiceTest {
       // Given
       val request = CreateOrUpdatePrisonerDomesticStatusRequest(
         domesticStatusCode = null,
-        requestedBy = "USER1",
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
       whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
@@ -169,6 +171,7 @@ class PrisonerDomesticStatusServiceTest {
       val result = prisonerDomesticStatusService.createOrUpdateDomesticStatus(
         prisonerNumber,
         request,
+        user,
       )
 
       // Then
@@ -196,7 +199,6 @@ class PrisonerDomesticStatusServiceTest {
 
       val request = CreateOrUpdatePrisonerDomesticStatusRequest(
         domesticStatusCode = "D",
-        requestedBy = "USER1",
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
       whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
@@ -217,6 +219,7 @@ class PrisonerDomesticStatusServiceTest {
       val result = prisonerDomesticStatusService.createOrUpdateDomesticStatus(
         prisonerNumber,
         request,
+        user,
       )
 
       val statusCaptor = argumentCaptor<PrisonerDomesticStatus>()
@@ -242,7 +245,6 @@ class PrisonerDomesticStatusServiceTest {
       // Given
       val request = CreateOrUpdatePrisonerDomesticStatusRequest(
         domesticStatusCode = "M",
-        requestedBy = "test-user",
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
       whenever(
@@ -257,6 +259,7 @@ class PrisonerDomesticStatusServiceTest {
         prisonerDomesticStatusService.createOrUpdateDomesticStatus(
           prisonerNumber,
           request,
+          user,
         )
       }.message isEqualTo "No reference data found for groupCode: DOMESTIC_STS and code: M"
     }
@@ -266,7 +269,6 @@ class PrisonerDomesticStatusServiceTest {
       // Given
       val request = CreateOrUpdatePrisonerDomesticStatusRequest(
         domesticStatusCode = "M",
-        requestedBy = "test-user",
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(null)
 
@@ -275,6 +277,7 @@ class PrisonerDomesticStatusServiceTest {
         prisonerDomesticStatusService.createOrUpdateDomesticStatus(
           prisonerNumber,
           request,
+          user,
         )
       }.message isEqualTo "Prisoner number $prisonerNumber - not found"
     }

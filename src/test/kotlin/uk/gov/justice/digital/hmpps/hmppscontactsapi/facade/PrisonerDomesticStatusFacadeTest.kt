@@ -12,7 +12,7 @@ import org.mockito.Mockito.verify
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerDomesticStatus
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.isEqualTo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateOrUpdatePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerDomesticStatusResponse
@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.PrisonerDomesticSta
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
-import java.time.LocalDateTime
 
 @ExtendWith(MockitoExtension::class)
 class PrisonerDomesticStatusFacadeTest {
@@ -71,22 +70,23 @@ class PrisonerDomesticStatusFacadeTest {
   @Nested
   inner class CreateOrUpdateDomesticStatus {
 
+    private val user = aUser("test-user")
+
     @Test
     fun `should create new record and send created event when no existing record`() {
       val prisonerNumber = "A1234BC"
       val request = CreateOrUpdatePrisonerDomesticStatusRequest(
         domesticStatusCode = "MARRIED",
-        requestedBy = "test-user",
       )
       val updatedResponse = PrisonerDomesticStatusResponse(
         id = 2L,
         domesticStatusCode = "MARRIED",
         active = true,
       )
-      whenever(prisonerDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request)).thenReturn(
+      whenever(prisonerDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request, user)).thenReturn(
         updatedResponse,
       )
-      val result = prisonerDomesticStatusFacade.createOrUpdateDomesticStatus(prisonerNumber, request)
+      val result = prisonerDomesticStatusFacade.createOrUpdateDomesticStatus(prisonerNumber, request, user)
 
       assertThat(result)
         .isNotNull
@@ -97,34 +97,25 @@ class PrisonerDomesticStatusFacadeTest {
         identifier = updatedResponse.id,
         noms = prisonerNumber,
         source = Source.DPS,
+        user = user,
       )
     }
 
     @Test
     fun `should update existing record and send created events`() {
       val prisonerNumber = "A1234BC"
-      val createdTime = LocalDateTime.now()
       val request = CreateOrUpdatePrisonerDomesticStatusRequest(
         domesticStatusCode = "MARRIED",
-        requestedBy = "test-user",
       )
       val updatedResponse = PrisonerDomesticStatusResponse(
         id = 2L,
         domesticStatusCode = "MARRIED",
         active = true,
       )
-      val existingRecord = PrisonerDomesticStatus(
-        prisonerDomesticStatusId = 2L,
-        prisonerNumber = prisonerNumber,
-        domesticStatusCode = "D",
-        createdBy = "USER1",
-        createdTime = createdTime,
-        active = true,
-      )
-      whenever(prisonerDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request)).thenReturn(
+      whenever(prisonerDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request, user)).thenReturn(
         updatedResponse,
       )
-      val result = prisonerDomesticStatusFacade.createOrUpdateDomesticStatus(prisonerNumber, request)
+      val result = prisonerDomesticStatusFacade.createOrUpdateDomesticStatus(prisonerNumber, request, user)
 
       assertThat(result)
         .isNotNull
@@ -135,6 +126,7 @@ class PrisonerDomesticStatusFacadeTest {
         identifier = updatedResponse.id,
         noms = prisonerNumber,
         source = Source.DPS,
+        user = user,
       )
     }
 
@@ -144,17 +136,16 @@ class PrisonerDomesticStatusFacadeTest {
       val request = CreateOrUpdatePrisonerDomesticStatusRequest(
 
         domesticStatusCode = "MARRIED",
-        requestedBy = "test-user",
       )
-      whenever(prisonerDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request)).thenThrow(
+      whenever(prisonerDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request, user)).thenThrow(
         RuntimeException("Prisoner's domestic status could not updated!"),
       )
 
       assertThrows<RuntimeException> {
-        prisonerDomesticStatusFacade.createOrUpdateDomesticStatus(prisonerNumber, request)
+        prisonerDomesticStatusFacade.createOrUpdateDomesticStatus(prisonerNumber, request, user)
       }.message isEqualTo "Prisoner's domestic status could not updated!"
 
-      verify(prisonerDomesticStatusService).createOrUpdateDomesticStatus(prisonerNumber, request)
+      verify(prisonerDomesticStatusService).createOrUpdateDomesticStatus(prisonerNumber, request, user)
       verify(outboundEventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
     }
   }
