@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactPhoneEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
@@ -28,14 +29,14 @@ class ContactPhoneService(
 ) {
 
   @Transactional
-  fun create(contactId: Long, request: CreatePhoneRequest): ContactPhoneDetails {
+  fun create(contactId: Long, request: CreatePhoneRequest, user: User): ContactPhoneDetails {
     validateContactExists(contactId)
     return createANewPhoneNumber(
       contactId,
       request.phoneType,
       request.phoneNumber,
       request.extNumber,
-      request.createdBy,
+      user.username,
     )
   }
 
@@ -83,7 +84,7 @@ class ContactPhoneService(
   fun get(contactId: Long, contactPhoneId: Long): ContactPhoneDetails? = contactPhoneDetailsRepository.findByContactIdAndContactPhoneId(contactId, contactPhoneId)?.toModel()
 
   @Transactional
-  fun update(contactId: Long, contactPhoneId: Long, request: UpdatePhoneRequest): ContactPhoneDetails {
+  fun update(contactId: Long, contactPhoneId: Long, request: UpdatePhoneRequest, user: User): ContactPhoneDetails {
     validateContactExists(contactId)
     val existing = validateExistingPhone(contactPhoneId)
     val type =
@@ -94,7 +95,7 @@ class ContactPhoneService(
       phoneType = request.phoneType,
       phoneNumber = request.phoneNumber,
       extNumber = request.extNumber,
-      updatedBy = request.updatedBy,
+      updatedBy = user.username,
       updatedTime = LocalDateTime.now(),
     )
 

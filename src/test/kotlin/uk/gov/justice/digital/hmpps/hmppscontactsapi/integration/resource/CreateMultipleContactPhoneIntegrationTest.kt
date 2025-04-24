@@ -28,7 +28,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
 
   @BeforeEach
   fun initialiseData() {
-    setCurrentUser(StubUser.READ_WRITE_USER)
+    setCurrentUser(StubUser.CREATING_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "phone",
@@ -46,12 +46,10 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
   @ParameterizedTest
   @CsvSource(
     value = [
-      "phoneNumbers[0].phoneType must not be null;{\"phoneNumbers\": [{ \"phoneType\": null, \"phoneNumber\": \"0123456789\"}], \"createdBy\": \"created\"}",
-      "phoneNumbers[0].phoneType must not be null;{\"phoneNumbers\": [{\"phoneNumber\": \"0123456789\"}], \"createdBy\": \"created\"}",
-      "phoneNumbers[0].phoneNumber must not be null;{\"phoneNumbers\": [{\"phoneType\": \"MOB\", \"phoneNumber\": null}], \"createdBy\": \"created\"}",
-      "phoneNumbers[0].phoneNumber must not be null;{\"phoneNumbers\": [{\"phoneType\": \"MOB\"}], \"createdBy\": \"created\"}",
-      "createdBy must not be null;{\"phoneNumbers\": [{\"phoneType\": \"MOB\", \"phoneNumber\": \"0123456789\"}], \"createdBy\": null}",
-      "createdBy must not be null;{\"phoneNumbers\": [{\"phoneType\": \"MOB\", \"phoneNumber\": \"0123456789\"}]}",
+      "phoneNumbers[0].phoneType must not be null;{\"phoneNumbers\": [{ \"phoneType\": null, \"phoneNumber\": \"0123456789\"}]}",
+      "phoneNumbers[0].phoneType must not be null;{\"phoneNumbers\": [{\"phoneNumber\": \"0123456789\"}]}",
+      "phoneNumbers[0].phoneNumber must not be null;{\"phoneNumbers\": [{\"phoneType\": \"MOB\", \"phoneNumber\": null}]}",
+      "phoneNumbers[0].phoneNumber must not be null;{\"phoneNumbers\": [{\"phoneType\": \"MOB\"}]}",
     ],
     delimiter = ';',
   )
@@ -60,7 +58,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
       .uri("/contact/$savedContactId/phones")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -82,7 +80,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
       .uri("/contact/$savedContactId/phones")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -110,14 +108,13 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
           phoneNumber = phoneNumber,
         ),
       ),
-      createdBy = "created",
     )
 
     val errors = webTestClient.post()
       .uri("/contact/$savedContactId/phones")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -141,14 +138,13 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
           phoneNumber = "+44777777777 (0123)",
         ),
       ),
-      createdBy = "created",
     )
 
     val errors = webTestClient.post()
       .uri("/contact/$savedContactId/phones")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -171,7 +167,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
       .uri("/contact/-321/phones")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -201,7 +197,6 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
           extNumber = null,
         ),
       ),
-      createdBy = "created",
     )
 
     val created = testAPIClient.createMultipleContactPhones(savedContactId, request, role)
@@ -210,7 +205,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
     assertThat(mobile).isNotNull()
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(mobile!!.contactPhoneId, Source.DPS),
+      additionalInfo = ContactPhoneInfo(mobile!!.contactPhoneId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
@@ -218,7 +213,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
     assertThat(home).isNotNull()
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(home!!.contactPhoneId, Source.DPS),
+      additionalInfo = ContactPhoneInfo(home!!.contactPhoneId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }
@@ -261,7 +256,6 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
         ),
       ),
       Arguments.of("phoneNumbers must have at least 1 item", aMinimalRequest().copy(phoneNumbers = emptyList())),
-      Arguments.of("createdBy must be <= 100 characters", aMinimalRequest().copy(createdBy = "".padStart(101, 'X'))),
     )
 
     private fun aMinimalRequest() = CreateMultiplePhoneNumbersRequest(
@@ -271,7 +265,6 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
           phoneNumber = "+44777777777 (0123)",
         ),
       ),
-      createdBy = "created",
     )
   }
 }

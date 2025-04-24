@@ -30,7 +30,7 @@ class CreateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
 
   @BeforeEach
   fun initialiseData() {
-    setCurrentUser(StubUser.READ_WRITE_USER)
+    setCurrentUser(StubUser.CREATING_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "address-phone",
@@ -171,7 +171,7 @@ class CreateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
-      additionalInfo = ContactAddressPhoneInfo(created.contactAddressPhoneId, created.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressPhoneInfo(created.contactAddressPhoneId, created.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }
@@ -188,7 +188,7 @@ class CreateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
       assertThat(phoneType).isEqualTo(request.phoneType)
       assertThat(phoneNumber).isEqualTo(request.phoneNumber)
       assertThat(extNumber).isEqualTo(request.extNumber)
-      assertThat(createdBy).isEqualTo(request.createdBy)
+      assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
     }
   }
@@ -202,10 +202,6 @@ class CreateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
         "extNumber must be <= 7 characters",
         aMinimalRequest().copy(extNumber = "".padStart(8, 'X')),
       ),
-      Arguments.of(
-        "createdBy must be <= 100 characters",
-        aMinimalRequest().copy(createdBy = "".padStart(101, 'X')),
-      ),
     )
 
     private fun aMinimalRequest() = CreateContactAddressPhoneRequest(
@@ -213,7 +209,6 @@ class CreateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
       phoneType = "HOME",
       phoneNumber = "123456789",
       extNumber = "111",
-      createdBy = "CREATED",
     )
   }
 }

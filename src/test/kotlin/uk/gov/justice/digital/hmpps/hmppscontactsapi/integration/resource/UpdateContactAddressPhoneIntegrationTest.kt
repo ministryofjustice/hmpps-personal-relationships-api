@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdateC
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactAddressPhoneInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
@@ -59,7 +60,6 @@ class UpdateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
         phoneType = "HOME",
         phoneNumber = "123456",
         extNumber = "2",
-        createdBy = "CREATED",
       ),
 
     ).contactAddressPhoneId
@@ -115,12 +115,10 @@ class UpdateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
   @ParameterizedTest
   @CsvSource(
     value = [
-      "phoneType must not be null;{\"phoneType\": null, \"phoneNumber\": \"0123456789\", \"updatedBy\": \"updated\"}",
-      "phoneType must not be null;{\"phoneNumber\": \"0123456789\", \"updatedBy\": \"updated\"}",
-      "phoneNumber must not be null;{\"phoneType\": \"MOB\", \"phoneNumber\": null, \"updatedBy\": \"updated\"}",
-      "phoneNumber must not be null;{\"phoneType\": \"MOB\", \"updatedBy\": \"updated\"}",
-      "updatedBy must not be null;{\"phoneType\": \"MOB\", \"phoneNumber\": \"0123456789\", \"updatedBy\": null}",
-      "updatedBy must not be null;{\"phoneType\": \"MOB\", \"phoneNumber\": \"0123456789\"}",
+      "phoneType must not be null;{\"phoneType\": null, \"phoneNumber\": \"0123456789\"}",
+      "phoneType must not be null;{\"phoneNumber\": \"0123456789\"}",
+      "phoneNumber must not be null;{\"phoneType\": \"MOB\", \"phoneNumber\": null}",
+      "phoneNumber must not be null;{\"phoneType\": \"MOB\"}",
     ],
     delimiter = ';',
   )
@@ -141,7 +139,6 @@ class UpdateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
     assertThat(errors.userMessage).isEqualTo("Validation failure: $expectedMessage")
     stubEvents.assertHasNoEvents(
       OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED,
-      ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId),
     )
   }
 
@@ -164,7 +161,6 @@ class UpdateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
     assertThat(errors.userMessage).isEqualTo("Validation failure(s): $expectedMessage")
     stubEvents.assertHasNoEvents(
       OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED,
-      ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId),
     )
   }
 
@@ -177,7 +173,6 @@ class UpdateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
     val request = UpdateContactAddressPhoneRequest(
       phoneType = "MOB",
       phoneNumber = phoneNumber,
-      updatedBy = "updated",
     )
 
     val errors = webTestClient.put()
@@ -196,7 +191,6 @@ class UpdateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
     assertThat(errors.userMessage).isEqualTo("Validation failure: Phone number invalid, it can only contain numbers, () and whitespace with an optional + at the start")
     stubEvents.assertHasNoEvents(
       OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED,
-      ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId),
     )
   }
 
@@ -205,7 +199,6 @@ class UpdateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
     val request = UpdateContactAddressPhoneRequest(
       phoneType = "SATELLITE",
       phoneNumber = "+44777777777 (0123)",
-      updatedBy = "updated",
     )
 
     val errors = webTestClient.put()
@@ -224,7 +217,6 @@ class UpdateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
     assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported phone type (SATELLITE)")
     stubEvents.assertHasNoEvents(
       OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED,
-      ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId),
     )
   }
 
@@ -245,15 +237,15 @@ class UpdateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
       assertThat(phoneType).isEqualTo(request.phoneType)
       assertThat(phoneNumber).isEqualTo(request.phoneNumber)
       assertThat(extNumber).isEqualTo(request.extNumber)
-      assertThat(createdBy).isEqualTo("CREATED")
+      assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
-      assertThat(updatedBy).isEqualTo(request.updatedBy)
+      assertThat(updatedBy).isEqualTo("updated")
       assertThat(updatedTime).isNotNull()
     }
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED,
-      additionalInfo = ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId),
+      additionalInfo = ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId, Source.DPS, "updated"),
       personReference = PersonReference(savedContactId),
     )
   }
@@ -267,17 +259,12 @@ class UpdateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
         "extNumber must be <= 7 characters",
         aMinimalRequest().copy(extNumber = "".padStart(8, 'X')),
       ),
-      Arguments.of(
-        "updatedBy must be <= 100 characters",
-        aMinimalRequest().copy(updatedBy = "".padStart(101, 'X')),
-      ),
     )
 
     private fun aMinimalRequest() = UpdateContactAddressPhoneRequest(
       phoneType = "MOB",
       phoneNumber = "+44777777777 (0123)",
       extNumber = "2",
-      updatedBy = "updated",
     )
   }
 }

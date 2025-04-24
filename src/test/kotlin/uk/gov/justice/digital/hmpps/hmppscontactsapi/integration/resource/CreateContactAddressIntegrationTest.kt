@@ -185,7 +185,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     created.phoneNumberIds.map {
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
-        additionalInfo = ContactAddressPhoneInfo(it, created.contactAddressId, Source.DPS),
+        additionalInfo = ContactAddressPhoneInfo(it, created.contactAddressId, Source.DPS, "created"),
         personReference = PersonReference(dpsContactId = created.contactId),
       )
     }

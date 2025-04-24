@@ -54,7 +54,6 @@ class GetContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
           phoneType = "HOME",
           phoneNumber = "123456",
           extNumber = "2",
-          createdBy = "CREATED",
         ),
 
       ).contactAddressPhoneId
@@ -102,7 +101,7 @@ class GetContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(contactId).isEqualTo(savedContactId)
       assertThat(phoneNumber).isEqualTo("123456")
       assertThat(extNumber).isEqualTo("2")
-      assertThat(createdBy).isEqualTo("CREATED")
+      assertThat(createdBy).isEqualTo("read_write_user")
       assertThat(createdTime).isBefore(LocalDateTime.now())
     }
   }

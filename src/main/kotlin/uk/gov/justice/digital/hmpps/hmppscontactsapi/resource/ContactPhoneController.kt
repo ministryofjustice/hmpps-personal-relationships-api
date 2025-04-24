@@ -19,9 +19,11 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestAttribute
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactPhoneFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
@@ -73,8 +75,9 @@ class ContactPhoneController(private val contactPhoneFacade: ContactPhoneFacade)
       example = "123456",
     ) contactId: Long,
     @Valid @RequestBody request: CreatePhoneRequest,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    val createdPhone = contactPhoneFacade.create(contactId, request)
+    val createdPhone = contactPhoneFacade.create(contactId, request, user)
     return ResponseEntity
       .status(HttpStatus.CREATED)
       .body(createdPhone)
@@ -117,8 +120,9 @@ class ContactPhoneController(private val contactPhoneFacade: ContactPhoneFacade)
       example = "123456",
     ) contactId: Long,
     @Valid @RequestBody request: CreateMultiplePhoneNumbersRequest,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    val createdPhone = contactPhoneFacade.createMultiple(contactId, request)
+    val createdPhone = contactPhoneFacade.createMultiple(contactId, request, user)
     return ResponseEntity
       .status(HttpStatus.CREATED)
       .body(createdPhone)
@@ -206,8 +210,9 @@ class ContactPhoneController(private val contactPhoneFacade: ContactPhoneFacade)
       example = "987654",
     ) contactPhoneId: Long,
     @Valid @RequestBody request: UpdatePhoneRequest,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    val updatedPhone = contactPhoneFacade.update(contactId, contactPhoneId, request)
+    val updatedPhone = contactPhoneFacade.update(contactId, contactPhoneId, request, user)
     return ResponseEntity.ok(updatedPhone)
   }
 
@@ -247,8 +252,9 @@ class ContactPhoneController(private val contactPhoneFacade: ContactPhoneFacade)
       description = "The id of the contact phone",
       example = "987654",
     ) contactPhoneId: Long,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    contactPhoneFacade.delete(contactId, contactPhoneId)
+    contactPhoneFacade.delete(contactId, contactPhoneId, user)
     return ResponseEntity.noContent().build()
   }
 }

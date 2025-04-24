@@ -575,25 +575,21 @@ fun createContactAddressPhoneRequest(
   phoneType: String = "HOME",
   phoneNumber: String = "0876 878787",
   extNumber: String? = null,
-  createdBy: String = "CREATE_USER",
 ) = CreateContactAddressPhoneRequest(
   contactAddressId = contactAddressId,
   phoneType = phoneType,
   phoneNumber = phoneNumber,
   extNumber = extNumber,
-  createdBy = createdBy,
 )
 
 fun updateContactAddressPhoneRequest(
   phoneType: String = "HOME",
   phoneNumber: String = "0878 7666565",
   extNumber: String? = null,
-  updatedBy: String = "AMEND_USER",
 ) = UpdateContactAddressPhoneRequest(
   phoneType = phoneType,
   phoneNumber = phoneNumber,
   extNumber = extNumber,
-  updatedBy = updatedBy,
 )
 
 fun createContactAddressPhoneDetails(

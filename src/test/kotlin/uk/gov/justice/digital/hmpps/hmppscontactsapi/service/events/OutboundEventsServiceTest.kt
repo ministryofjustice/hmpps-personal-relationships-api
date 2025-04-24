@@ -136,10 +136,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact phone created event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_PHONE_CREATED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_PHONE_CREATED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_PHONE_CREATED, 1L, 1L, user = aUser("phone"))
     verify(
       expectedEventType = "contacts-api.contact-phone.created",
-      expectedAdditionalInformation = ContactPhoneInfo(contactPhoneId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = ContactPhoneInfo(contactPhoneId = 1L, source = Source.DPS, username = "phone"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact phone number has been created",
     )
@@ -148,10 +148,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact phone updated event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_PHONE_UPDATED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_PHONE_UPDATED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_PHONE_UPDATED, 1L, 1L, user = aUser("phone"))
     verify(
       expectedEventType = "contacts-api.contact-phone.updated",
-      expectedAdditionalInformation = ContactPhoneInfo(contactPhoneId = 1, source = Source.DPS),
+      expectedAdditionalInformation = ContactPhoneInfo(contactPhoneId = 1, source = Source.DPS, username = "phone"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact phone number has been updated",
     )
@@ -160,12 +160,48 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact phone deleted event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_PHONE_DELETED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_PHONE_DELETED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_PHONE_DELETED, 1L, 1L, user = aUser("phone"))
     verify(
       expectedEventType = "contacts-api.contact-phone.deleted",
-      expectedAdditionalInformation = ContactPhoneInfo(contactPhoneId = 1, source = Source.DPS),
+      expectedAdditionalInformation = ContactPhoneInfo(contactPhoneId = 1, source = Source.DPS, username = "phone"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact phone number has been deleted",
+    )
+  }
+
+  @Test
+  fun `contact address phone created event with id 1 is sent to the events publisher`() {
+    featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED) } doReturn true }
+    outboundEventsService.send(OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED, 1L, 1L, secondIdentifier = 99L, user = aUser("phone"))
+    verify(
+      expectedEventType = "contacts-api.contact-address-phone.created",
+      expectedAdditionalInformation = ContactAddressPhoneInfo(contactAddressPhoneId = 1L, contactAddressId = 99L, source = Source.DPS, username = "phone"),
+      expectedPersonReference = PersonReference(dpsContactId = 1L),
+      expectedDescription = "A contact address phone number has been created",
+    )
+  }
+
+  @Test
+  fun `contact address phone updated event with id 1 is sent to the events publisher`() {
+    featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED) } doReturn true }
+    outboundEventsService.send(OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED, 1L, 1L, secondIdentifier = 99L, user = aUser("phone"))
+    verify(
+      expectedEventType = "contacts-api.contact-address-phone.updated",
+      expectedAdditionalInformation = ContactAddressPhoneInfo(contactAddressPhoneId = 1, contactAddressId = 99L, source = Source.DPS, username = "phone"),
+      expectedPersonReference = PersonReference(dpsContactId = 1L),
+      expectedDescription = "A contact address phone number has been updated",
+    )
+  }
+
+  @Test
+  fun `contact address phone deleted event with id 1 is sent to the events publisher`() {
+    featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_ADDRESS_PHONE_DELETED) } doReturn true }
+    outboundEventsService.send(OutboundEvent.CONTACT_ADDRESS_PHONE_DELETED, 1L, 1L, secondIdentifier = 99L, user = aUser("phone"))
+    verify(
+      expectedEventType = "contacts-api.contact-address-phone.deleted",
+      expectedAdditionalInformation = ContactAddressPhoneInfo(contactAddressPhoneId = 1, contactAddressId = 99L, source = Source.DPS, username = "phone"),
+      expectedPersonReference = PersonReference(dpsContactId = 1L),
+      expectedDescription = "A contact address phone number has been deleted",
     )
   }
 

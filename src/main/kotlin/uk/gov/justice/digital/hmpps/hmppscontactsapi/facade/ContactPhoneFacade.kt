@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.UpdatePhoneRequest
@@ -15,44 +16,46 @@ class ContactPhoneFacade(
   private val outboundEventsService: OutboundEventsService,
 ) {
 
-  fun create(contactId: Long, request: CreatePhoneRequest): ContactPhoneDetails = contactPhoneService.create(contactId, request).also {
+  fun create(contactId: Long, request: CreatePhoneRequest, user: User): ContactPhoneDetails = contactPhoneService.create(contactId, request, user).also {
     outboundEventsService.send(
       outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
       identifier = it.contactPhoneId,
       contactId = contactId,
+      user = user,
     )
   }
 
-  fun createMultiple(contactId: Long, request: CreateMultiplePhoneNumbersRequest): List<ContactPhoneDetails> = contactPhoneService.createMultiple(
+  fun createMultiple(contactId: Long, request: CreateMultiplePhoneNumbersRequest, user: User): List<ContactPhoneDetails> = contactPhoneService.createMultiple(
     contactId,
-    request.createdBy,
+    user.username,
     request.phoneNumbers,
-  ).also { created ->
-    created.forEach {
-      outboundEventsService.send(
-        outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
-        identifier = it.contactPhoneId,
-        contactId = contactId,
-      )
-    }
+  ).onEach {
+    outboundEventsService.send(
+      outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
+      identifier = it.contactPhoneId,
+      contactId = contactId,
+      user = user,
+    )
   }
 
   fun get(contactId: Long, contactPhoneId: Long): ContactPhoneDetails? = contactPhoneService.get(contactId, contactPhoneId)
 
-  fun update(contactId: Long, contactPhoneId: Long, request: UpdatePhoneRequest): ContactPhoneDetails = contactPhoneService.update(contactId, contactPhoneId, request).also {
+  fun update(contactId: Long, contactPhoneId: Long, request: UpdatePhoneRequest, user: User): ContactPhoneDetails = contactPhoneService.update(contactId, contactPhoneId, request, user).also {
     outboundEventsService.send(
       outboundEvent = OutboundEvent.CONTACT_PHONE_UPDATED,
       identifier = contactPhoneId,
       contactId = contactId,
+      user = user,
     )
   }
 
-  fun delete(contactId: Long, contactPhoneId: Long) {
+  fun delete(contactId: Long, contactPhoneId: Long, user: User) {
     contactPhoneService.delete(contactId, contactPhoneId).also {
       outboundEventsService.send(
         outboundEvent = OutboundEvent.CONTACT_PHONE_DELETED,
         identifier = contactPhoneId,
         contactId = contactId,
+        user = user,
       )
     }
   }

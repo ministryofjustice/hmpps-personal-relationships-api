@@ -15,6 +15,7 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactPhoneDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactPhoneEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreateMultiplePhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.phone.CreatePhoneRequest
@@ -73,7 +74,6 @@ class ContactPhoneServiceTest {
           extNumber = null,
         ),
       ),
-      "USER1",
     )
 
     @Test
@@ -81,7 +81,7 @@ class ContactPhoneServiceTest {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
 
       val exception = assertThrows<EntityNotFoundException> {
-        service.createMultiple(contactId, request.createdBy, request.phoneNumbers)
+        service.createMultiple(contactId, "created", request.phoneNumbers)
       }
       assertThat(exception.message).isEqualTo("Contact (99) not found")
     }
@@ -101,7 +101,7 @@ class ContactPhoneServiceTest {
       val exception = assertThrows<ValidationException> {
         service.createMultiple(
           contactId,
-          request.createdBy,
+          "crated",
           listOf(PhoneNumber(phoneType = "FOO", phoneNumber = "123")),
         )
       }
@@ -126,7 +126,7 @@ class ContactPhoneServiceTest {
       val exception = assertThrows<ValidationException> {
         service.createMultiple(
           contactId,
-          request.createdBy,
+          "created",
           listOf(PhoneNumber(phoneType = "MOB", phoneNumber = phoneNumber)),
         )
       }
@@ -179,7 +179,7 @@ class ContactPhoneServiceTest {
         )
       }
 
-      val allCreated = service.createMultiple(contactId, request.createdBy, request.phoneNumbers)
+      val allCreated = service.createMultiple(contactId, "created", request.phoneNumbers)
       assertThat(allCreated).hasSize(2)
       val mobile = allCreated[0]
       assertThat(mobile.createdTime).isNotNull()
@@ -191,7 +191,7 @@ class ContactPhoneServiceTest {
           phoneTypeDescription = "Mobile",
           phoneNumber = "+447777777777",
           extNumber = "0123",
-          createdBy = "USER1",
+          createdBy = "created",
           createdTime = mobile.createdTime,
           updatedBy = null,
           updatedTime = null,
@@ -207,7 +207,7 @@ class ContactPhoneServiceTest {
           phoneTypeDescription = "Home",
           phoneNumber = "01234 567890",
           extNumber = null,
-          createdBy = "USER1",
+          createdBy = "created",
           createdTime = home.createdTime,
           updatedBy = null,
           updatedTime = null,
@@ -224,15 +224,15 @@ class ContactPhoneServiceTest {
       "MOB",
       "+447777777777",
       "0123",
-      "USER1",
     )
+    private val user = aUser()
 
     @Test
     fun `should throw EntityNotFoundException creating phone if contact doesn't exist`() {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
 
       val exception = assertThrows<EntityNotFoundException> {
-        service.create(contactId, request)
+        service.create(contactId, request, user)
       }
       assertThat(exception.message).isEqualTo("Contact (99) not found")
     }
@@ -250,7 +250,7 @@ class ContactPhoneServiceTest {
       ).thenThrow(expectedException)
 
       val exception = assertThrows<ValidationException> {
-        service.create(contactId, request.copy(phoneType = "FOO"))
+        service.create(contactId, request.copy(phoneType = "FOO"), user)
       }
       assertThat(exception).isEqualTo(expectedException)
     }
@@ -271,7 +271,7 @@ class ContactPhoneServiceTest {
       )
 
       val exception = assertThrows<ValidationException> {
-        service.create(contactId, request.copy(phoneNumber = phoneNumber))
+        service.create(contactId, request.copy(phoneNumber = phoneNumber), user)
       }
       assertThat(exception.message).isEqualTo("Phone number invalid, it can only contain numbers, () and whitespace with an optional + at the start")
     }
@@ -301,7 +301,7 @@ class ContactPhoneServiceTest {
         )
       }
 
-      val created = service.create(contactId, request)
+      val created = service.create(contactId, request, user)
       assertThat(created.createdTime).isNotNull()
       assertThat(created).isEqualTo(
         ContactPhoneDetails(
@@ -373,8 +373,8 @@ class ContactPhoneServiceTest {
       "MOB",
       "+447777777777",
       "0123",
-      "updated",
     )
+    private val user = aUser("updated")
     private val contactPhoneId = 1234L
     private val existingPhone = ContactPhoneEntity(
       contactPhoneId = contactPhoneId,
@@ -393,7 +393,7 @@ class ContactPhoneServiceTest {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
 
       val exception = assertThrows<EntityNotFoundException> {
-        service.update(contactId, contactPhoneId, request)
+        service.update(contactId, contactPhoneId, request, user)
       }
       assertThat(exception.message).isEqualTo("Contact (99) not found")
     }
@@ -404,7 +404,7 @@ class ContactPhoneServiceTest {
       whenever(contactPhoneRepository.findById(contactPhoneId)).thenReturn(Optional.empty())
 
       val exception = assertThrows<EntityNotFoundException> {
-        service.update(contactId, contactPhoneId, request)
+        service.update(contactId, contactPhoneId, request, user)
       }
       assertThat(exception.message).isEqualTo("Contact phone (1234) not found")
     }
@@ -423,7 +423,7 @@ class ContactPhoneServiceTest {
       ).thenThrow(expectedException)
 
       val exception = assertThrows<ValidationException> {
-        service.update(contactId, contactPhoneId, request.copy(phoneType = "FOO"))
+        service.update(contactId, contactPhoneId, request.copy(phoneType = "FOO"), user)
       }
       assertThat(exception).isEqualTo(expectedException)
     }
@@ -445,7 +445,7 @@ class ContactPhoneServiceTest {
       )
 
       val exception = assertThrows<ValidationException> {
-        service.update(contactId, contactPhoneId, request.copy(phoneNumber = phoneNumber))
+        service.update(contactId, contactPhoneId, request.copy(phoneNumber = phoneNumber), user)
       }
       assertThat(exception.message).isEqualTo("Phone number invalid, it can only contain numbers, () and whitespace with an optional + at the start")
     }
@@ -476,7 +476,7 @@ class ContactPhoneServiceTest {
         )
       }
 
-      val updated = service.update(contactId, contactPhoneId, request)
+      val updated = service.update(contactId, contactPhoneId, request, user)
       assertThat(updated.updatedTime).isNotNull()
       assertThat(updated).isEqualTo(
         ContactPhoneDetails(

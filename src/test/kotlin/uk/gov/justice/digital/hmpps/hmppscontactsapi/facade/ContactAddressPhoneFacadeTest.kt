@@ -9,6 +9,7 @@ import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.updateContactAddressPhoneRequest
@@ -29,25 +30,27 @@ class ContactAddressPhoneFacadeTest {
   private val contactAddressId = 2L
   private val contactPhoneId = 3L
   private val contactAddressPhoneId = 4L
+  private val user = aUser()
 
   @Test
   fun `should send event if create success`() {
     val request = createContactAddressPhoneRequest(contactAddressId)
     val response = createContactAddressPhoneDetails(contactAddressPhoneId, contactAddressId, contactPhoneId, contactId)
 
-    whenever(addressPhoneService.create(any(), any(), any())).thenReturn(response)
+    whenever(addressPhoneService.create(any(), any(), any(), any())).thenReturn(response)
     whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
-    val result = facade.create(contactId, contactAddressId, request)
+    val result = facade.create(contactId, contactAddressId, request, user)
 
     assertThat(result).isEqualTo(response)
-    verify(addressPhoneService).create(contactId, contactAddressId, request)
+    verify(addressPhoneService).create(contactId, contactAddressId, request, user)
     verify(eventsService).send(
       outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
       identifier = contactAddressPhoneId,
       secondIdentifier = contactAddressId,
       contactId = contactId,
       source = Source.DPS,
+      user = user,
     )
   }
 
@@ -56,16 +59,16 @@ class ContactAddressPhoneFacadeTest {
     val expectedException = RuntimeException("Bang!")
     val request = createContactAddressPhoneRequest(contactAddressId)
 
-    whenever(addressPhoneService.create(any(), any(), any())).thenThrow(expectedException)
+    whenever(addressPhoneService.create(any(), any(), any(), any())).thenThrow(expectedException)
     whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val exception = assertThrows<RuntimeException> {
-      facade.create(contactId, contactAddressId, request)
+      facade.create(contactId, contactAddressId, request, user)
     }
 
     assertThat(exception.message).isEqualTo(expectedException.message)
 
-    verify(addressPhoneService).create(contactId, contactAddressId, request)
+    verify(addressPhoneService).create(contactId, contactAddressId, request, user)
     verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
@@ -84,7 +87,6 @@ class ContactAddressPhoneFacadeTest {
           extNumber = null,
         ),
       ),
-      "USER1",
     )
 
     val response = listOf(
@@ -92,19 +94,20 @@ class ContactAddressPhoneFacadeTest {
       createContactAddressPhoneDetails(8888, contactAddressId, 5555, contactId),
     )
 
-    whenever(addressPhoneService.createMultiple(any(), any(), any())).thenReturn(response)
+    whenever(addressPhoneService.createMultiple(any(), any(), any(), any())).thenReturn(response)
     whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
-    val result = facade.createMultiple(contactId, contactAddressId, request)
+    val result = facade.createMultiple(contactId, contactAddressId, request, user)
 
     assertThat(result).isEqualTo(response)
-    verify(addressPhoneService).createMultiple(contactId, contactAddressId, request)
+    verify(addressPhoneService).createMultiple(contactId, contactAddressId, request, user)
     verify(eventsService).send(
       outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
       identifier = 9999,
       secondIdentifier = contactAddressId,
       contactId = contactId,
       source = Source.DPS,
+      user = user,
     )
     verify(eventsService).send(
       outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
@@ -112,6 +115,7 @@ class ContactAddressPhoneFacadeTest {
       secondIdentifier = contactAddressId,
       contactId = contactId,
       source = Source.DPS,
+      user = user,
     )
   }
 
@@ -120,23 +124,25 @@ class ContactAddressPhoneFacadeTest {
     val response = createContactAddressPhoneDetails(contactAddressPhoneId, contactAddressId, contactPhoneId, contactId)
     val request = updateContactAddressPhoneRequest()
 
-    whenever(addressPhoneService.update(any(), any(), any())).thenReturn(response)
+    whenever(addressPhoneService.update(any(), any(), any(), any())).thenReturn(response)
     whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val result = facade.update(
       contactId = contactId,
       contactAddressPhoneId = contactAddressPhoneId,
       request = request,
+      user = user,
     )
 
     assertThat(result).isEqualTo(response)
-    verify(addressPhoneService).update(contactId, contactAddressPhoneId, request)
+    verify(addressPhoneService).update(contactId, contactAddressPhoneId, request, user)
     verify(eventsService).send(
       outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED,
       identifier = contactAddressPhoneId,
       secondIdentifier = contactAddressId,
       contactId = contactId,
       source = Source.DPS,
+      user = user,
     )
   }
 
@@ -145,15 +151,15 @@ class ContactAddressPhoneFacadeTest {
     val expectedException = RuntimeException("Bang!")
     val request = updateContactAddressPhoneRequest()
 
-    whenever(addressPhoneService.update(any(), any(), any())).thenThrow(expectedException)
+    whenever(addressPhoneService.update(any(), any(), any(), any())).thenThrow(expectedException)
     whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val exception = assertThrows<RuntimeException> {
-      facade.update(contactId, contactAddressPhoneId, request)
+      facade.update(contactId, contactAddressPhoneId, request, user)
     }
 
     assertThat(exception).isEqualTo(exception)
-    verify(addressPhoneService).update(contactId, contactAddressPhoneId, request)
+    verify(addressPhoneService).update(contactId, contactAddressPhoneId, request, user)
     verify(eventsService, never()).send(any(), any(), any(), any(), any(), any(), any())
   }
 
@@ -189,7 +195,7 @@ class ContactAddressPhoneFacadeTest {
     whenever(addressPhoneService.delete(any(), any())).thenReturn(response)
     whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
-    facade.delete(contactId, contactAddressPhoneId)
+    facade.delete(contactId, contactAddressPhoneId, user)
 
     verify(addressPhoneService).delete(contactId, contactAddressPhoneId)
     verify(eventsService).send(
@@ -198,6 +204,7 @@ class ContactAddressPhoneFacadeTest {
       secondIdentifier = contactAddressId,
       contactId = contactId,
       source = Source.DPS,
+      user = user,
     )
   }
 
@@ -208,7 +215,7 @@ class ContactAddressPhoneFacadeTest {
     whenever(eventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
 
     val exception = assertThrows<RuntimeException> {
-      facade.delete(contactId, contactAddressPhoneId)
+      facade.delete(contactId, contactAddressPhoneId, user)
     }
 
     assertThat(exception.message).isEqualTo(expectedException.message)

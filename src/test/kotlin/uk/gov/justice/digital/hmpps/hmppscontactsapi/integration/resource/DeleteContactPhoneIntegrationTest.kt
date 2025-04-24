@@ -37,7 +37,7 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
-    setCurrentUser(StubUser.READ_WRITE_USER)
+    setCurrentUser(StubUser.CREATING_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "phone",
@@ -51,10 +51,10 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
         phoneType = "MOB",
         phoneNumber = "07777777777",
         extNumber = "123456",
-        createdBy = "USER1",
       ),
 
     ).contactPhoneId
+    setCurrentUser(StubUser.DELETING_USER)
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.delete()
@@ -66,7 +66,7 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
     val errors = webTestClient.delete()
       .uri("/contact/-321/phone/$savedContactPhoneId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -75,7 +75,7 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Entity not found : Contact (-321) not found")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_PHONE_DELETED, ContactPhoneInfo(savedContactPhoneId))
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_PHONE_DELETED)
   }
 
   @Test
@@ -83,7 +83,7 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
     val errors = webTestClient.delete()
       .uri("/contact/$savedContactId/phone/-99")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -92,7 +92,7 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Entity not found : Contact phone (-99) not found")
-    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_PHONE_DELETED, ContactPhoneInfo(-99))
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_PHONE_DELETED)
   }
 
   @Test
@@ -100,7 +100,7 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
     webTestClient.delete()
       .uri("/contact/$savedContactId/phone/$savedContactPhoneId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNoContent
@@ -108,14 +108,14 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
     webTestClient.get()
       .uri("/contact/$savedContactId/phone/$savedContactPhoneId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_DELETED,
-      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS),
+      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "deleted"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }
@@ -123,6 +123,7 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should delete the contacts phone number even if associated with an address`(role: String) {
+    setCurrentUser(StubUser.DELETING_USER.copy(roles = listOf(role)))
     val address = addressRepository.saveAndFlush(
       ContactAddressEntity(
         contactAddressId = 0L,
@@ -155,7 +156,7 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
     webTestClient.delete()
       .uri("/contact/$savedContactId/phone/$savedContactPhoneId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNoContent
@@ -163,14 +164,14 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
     webTestClient.get()
       .uri("/contact/$savedContactId/phone/$savedContactPhoneId")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_DELETED,
-      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS),
+      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "deleted"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
