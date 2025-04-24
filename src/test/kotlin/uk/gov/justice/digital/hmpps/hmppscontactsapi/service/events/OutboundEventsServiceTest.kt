@@ -64,10 +64,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact address created event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_ADDRESS_CREATED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_ADDRESS_CREATED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_ADDRESS_CREATED, 1L, 1L, user = aUser("address"))
     verify(
       expectedEventType = "contacts-api.contact-address.created",
-      expectedAdditionalInformation = ContactAddressInfo(contactAddressId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = ContactAddressInfo(contactAddressId = 1L, source = Source.DPS, username = "address"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact address has been created",
     )
@@ -76,10 +76,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact address updated event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_ADDRESS_UPDATED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_ADDRESS_UPDATED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_ADDRESS_UPDATED, 1L, 1L, user = aUser("address"))
     verify(
       expectedEventType = "contacts-api.contact-address.updated",
-      expectedAdditionalInformation = ContactAddressInfo(contactAddressId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = ContactAddressInfo(contactAddressId = 1L, source = Source.DPS, username = "address"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact address has been updated",
     )
@@ -88,10 +88,10 @@ class OutboundEventsServiceTest {
   @Test
   fun `contact address deleted event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.CONTACT_ADDRESS_DELETED) } doReturn true }
-    outboundEventsService.send(OutboundEvent.CONTACT_ADDRESS_DELETED, 1L, 1L)
+    outboundEventsService.send(OutboundEvent.CONTACT_ADDRESS_DELETED, 1L, 1L, user = aUser("address"))
     verify(
       expectedEventType = "contacts-api.contact-address.deleted",
-      expectedAdditionalInformation = ContactAddressInfo(contactAddressId = 1L, source = Source.DPS),
+      expectedAdditionalInformation = ContactAddressInfo(contactAddressId = 1L, source = Source.DPS, username = "address"),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact address has been deleted",
     )

@@ -63,7 +63,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -85,7 +85,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -107,7 +107,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -135,7 +135,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -165,7 +165,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -353,13 +353,13 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(minimalCreated.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(minimalCreated.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(everythingCreated.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(everythingCreated.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
@@ -401,7 +401,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(aMinimalCreateContactRequest().copy(addresses = listOf(addressWithInvalidPhone)))
       .exchange()
       .expectStatus()
@@ -472,7 +472,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(aMinimalCreateContactRequest().copy(phoneNumbers = listOf(invalidPhone)))
       .exchange()
       .expectStatus()
@@ -527,7 +527,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(aMinimalCreateContactRequest().copy(emailAddresses = listOf(invalid)))
       .exchange()
       .expectStatus()
@@ -589,7 +589,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(aMinimalCreateContactRequest().copy(employments = listOf(invalid)))
       .exchange()
       .expectStatus()

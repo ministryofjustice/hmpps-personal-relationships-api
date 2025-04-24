@@ -44,9 +44,9 @@ class DeleteContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
         area = "Hoggs Bottom",
         postcode = "HB10 2NB",
         countryCode = "ENG",
-        createdBy = "created",
       ),
     ).contactAddressId
+    setCurrentUser(StubUser.DELETING_USER)
   }
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.delete()
@@ -70,7 +70,7 @@ class DeleteContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_ADDRESS_DELETED,
-      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "deleted"),
     )
   }
 
@@ -89,10 +89,7 @@ class DeleteContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     assertThat(errors.userMessage).isEqualTo("Entity not found : Contact address (-99) not found")
 
-    stubEvents.assertHasNoEvents(
-      event = OutboundEvent.CONTACT_ADDRESS_DELETED,
-      additionalInfo = ContactAddressInfo(-99, Source.DPS),
-    )
+    stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_ADDRESS_DELETED)
   }
 
   @ParameterizedTest
@@ -117,7 +114,7 @@ class DeleteContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_DELETED,
-      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "deleted"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }

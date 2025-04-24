@@ -314,7 +314,7 @@ data class OutboundHMPPSDomainEvent(
  */
 
 data class ContactInfo(val contactId: Long, override val source: Source = Source.DPS, val username: String) : AdditionalInformation(source)
-data class ContactAddressInfo(val contactAddressId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)
+data class ContactAddressInfo(val contactAddressId: Long, override val source: Source = Source.DPS, val username: String) : AdditionalInformation(source)
 data class ContactPhoneInfo(val contactPhoneId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)
 data class ContactAddressPhoneInfo(val contactAddressPhoneId: Long, val contactAddressId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)
 data class ContactEmailInfo(val contactEmailId: Long, override val source: Source = Source.DPS) : AdditionalInformation(source)

@@ -30,7 +30,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
-    setCurrentUser(StubUser.READ_WRITE_USER)
+    setCurrentUser(StubUser.CREATING_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "address",
@@ -48,14 +48,12 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "createdBy must not be null;{\"createdBy\": null, \"countryCode\": \"ENG\"}",
-      "createdBy must not be null;{\"countryCode\": \"ENG\"}",
-      "countryCode must not be null;{\"createdBy\": \"JD000001\", \"countryCode\": null}",
-      "countryCode must not be null;{\"createdBy\": \"JD000001\"}",
-      "Unsupported phone type (UNKNOWN);{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\", \"phoneType\": \"UNKNOWN\" } ], \"countryCode\": \"ENG\", \"createdBy\": \"JD000001\"}",
-      "phoneNumbers[0].phoneNumber must not be null;{ \"phoneNumbers\": [ { \"phoneType\": \"MOB\" } ], \"countryCode\": \"ENG\", \"createdBy\": \"JD000001\"}",
-      "phoneNumbers[0].phoneType must not be null;{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\" } ], \"countryCode\": \"ENG\", \"createdBy\": \"JD000001\"}",
-      "phoneNumbers must not be null;{ \"phoneNumbers\": null, \"countryCode\": \"ENG\", \"createdBy\": \"JD000001\"}",
+      "countryCode must not be null;{\"countryCode\": null}",
+      "countryCode must not be null;{}",
+      "Unsupported phone type (UNKNOWN);{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\", \"phoneType\": \"UNKNOWN\" } ], \"countryCode\": \"ENG\"}",
+      "phoneNumbers[0].phoneNumber must not be null;{ \"phoneNumbers\": [ { \"phoneType\": \"MOB\" } ], \"countryCode\": \"ENG\"}",
+      "phoneNumbers[0].phoneType must not be null;{ \"phoneNumbers\": [ { \"phoneNumber\": \"01234567890\" } ], \"countryCode\": \"ENG\"}",
+      "phoneNumbers must not be null;{ \"phoneNumbers\": null, \"countryCode\": \"ENG\"}",
     ],
     delimiter = ';',
   )
@@ -96,7 +94,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(savedContactId, Source.DPS),
+      additionalInfo = ContactAddressInfo(savedContactId, Source.DPS, "created"),
     )
   }
 
@@ -120,7 +118,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(savedContactId, Source.DPS),
+      additionalInfo = ContactAddressInfo(savedContactId, Source.DPS, "created"),
     )
   }
 
@@ -155,7 +153,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }
@@ -168,7 +166,6 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       property = "27",
       street = "Hello Road",
       countryCode = "ENG",
-      createdBy = "created",
       phoneNumbers = listOf(
         PhoneNumber(phoneType = "MOB", phoneNumber = "07777123456", extNumber = null),
         PhoneNumber(phoneType = "BUS", phoneNumber = "07777123455", extNumber = null),
@@ -181,7 +178,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
 
@@ -217,10 +214,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(contact.addresses).isEmpty()
 
     // Verify no events were published
-    stubEvents.assertHasNoEvents(
-      event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(savedContactId, Source.DPS),
-    )
+    stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_ADDRESS_CREATED)
   }
 
   @Test
@@ -234,7 +228,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }
@@ -253,12 +247,12 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(primary.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(primary.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }
@@ -277,7 +271,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
     stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_ADDRESS_UPDATED)
@@ -297,12 +291,12 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(mail.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(mail.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }
@@ -321,7 +315,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
     stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_ADDRESS_UPDATED)
@@ -349,22 +343,22 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(primary.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(primary.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(mail.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(mail.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(other.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(other.contactAddressId, Source.DPS, "created"),
     )
   }
 
@@ -387,12 +381,12 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(primaryAndMail.contactAddressId, Source.DPS),
+      additionalInfo = ContactAddressInfo(primaryAndMail.contactAddressId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }
@@ -426,7 +420,6 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       Arguments.of("area must be <= 70 characters", aMinimalAddressRequest().copy(area = "".padStart(71, 'X'))),
       Arguments.of("postcode must be <= 12 characters", aMinimalAddressRequest().copy(postcode = "".padStart(13, 'X'))),
       Arguments.of("comments must be <= 240 characters", aMinimalAddressRequest().copy(comments = "".padStart(241, 'X'))),
-      Arguments.of("createdBy must be <= 100 characters", aMinimalAddressRequest().copy(createdBy = "".padStart(101, 'X'))),
       Arguments.of("phoneNumbers[0].phoneNumber must be <= 40 characters", aMinimalAddressRequest().copy(phoneNumbers = listOf(PhoneNumber(phoneType = "MOB", phoneNumber = "".padStart(41, 'X'), extNumber = null)))),
       Arguments.of("phoneNumbers[0].phoneType must be <= 12 characters", aMinimalAddressRequest().copy(phoneNumbers = listOf(PhoneNumber(phoneType = "".padStart(13, 'X'), phoneNumber = "07403322232", extNumber = null)))),
       Arguments.of("phoneNumbers[0].extNumber must be <= 7 characters", aMinimalAddressRequest().copy(phoneNumbers = listOf(PhoneNumber(phoneType = "MOB", phoneNumber = "07403322232", extNumber = "".padStart(8, 'X'))))),
@@ -439,7 +432,6 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
         assertThat(property).isEqualTo(request.property)
         assertThat(street).isEqualTo(request.street)
         assertThat(postcode).isEqualTo(request.postcode)
-        assertThat(createdBy).isEqualTo(request.createdBy)
         assertThat(createdTime).isNotNull()
       }
     }
@@ -450,7 +442,6 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       property = "27",
       street = "Hello Road",
       countryCode = "ENG",
-      createdBy = "created",
     )
   }
 }

@@ -43,7 +43,6 @@ class DeleteContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
         property = "27",
         street = "Hello Road",
         countryCode = "ENG",
-        createdBy = "created",
       ),
     ).contactAddressId
 
