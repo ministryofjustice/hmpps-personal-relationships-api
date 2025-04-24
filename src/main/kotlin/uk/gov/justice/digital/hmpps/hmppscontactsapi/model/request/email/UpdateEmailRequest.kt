@@ -8,8 +8,4 @@ data class UpdateEmailRequest(
   @Schema(description = "Email address", example = "test@example.com")
   @field:Size(max = 240, message = "emailAddress must be <= 240 characters")
   val emailAddress: String,
-
-  @Schema(description = "User who updated the entry", example = "admin")
-  @field:Size(max = 100, message = "updatedBy must be <= 100 characters")
-  val updatedBy: String,
 )

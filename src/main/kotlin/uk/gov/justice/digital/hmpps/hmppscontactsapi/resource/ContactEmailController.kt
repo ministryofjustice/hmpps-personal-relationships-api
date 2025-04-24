@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestAttribute
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactEmailFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateEmailRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.email.CreateMultipleEmailsRequest
@@ -72,8 +74,9 @@ class ContactEmailController(private val contactEmailFacade: ContactEmailFacade)
       example = "123456",
     ) contactId: Long,
     @Valid @RequestBody request: CreateEmailRequest,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    val created = contactEmailFacade.create(contactId, request)
+    val created = contactEmailFacade.create(contactId, request, user)
     return ResponseEntity
       .status(HttpStatus.CREATED)
       .body(created)
@@ -116,8 +119,9 @@ class ContactEmailController(private val contactEmailFacade: ContactEmailFacade)
       example = "123456",
     ) contactId: Long,
     @Valid @RequestBody request: CreateMultipleEmailsRequest,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    val created = contactEmailFacade.createMultiple(contactId, request)
+    val created = contactEmailFacade.createMultiple(contactId, request, user)
     return ResponseEntity
       .status(HttpStatus.CREATED)
       .body(created)
@@ -165,7 +169,8 @@ class ContactEmailController(private val contactEmailFacade: ContactEmailFacade)
       example = "987654",
     ) contactEmailId: Long,
     @Valid @RequestBody request: UpdateEmailRequest,
-  ): ResponseEntity<Any> = ResponseEntity.ok(contactEmailFacade.update(contactId, contactEmailId, request))
+    @RequestAttribute user: User,
+  ): ResponseEntity<Any> = ResponseEntity.ok(contactEmailFacade.update(contactId, contactEmailId, request, user))
 
   @GetMapping("/email/{contactEmailId}")
   @Operation(
@@ -241,8 +246,9 @@ class ContactEmailController(private val contactEmailFacade: ContactEmailFacade)
       description = "The id of the contact email",
       example = "987654",
     ) contactEmailId: Long,
+    @RequestAttribute user: User,
   ): ResponseEntity<Any> {
-    contactEmailFacade.delete(contactId, contactEmailId)
+    contactEmailFacade.delete(contactId, contactEmailId, user)
     return ResponseEntity.noContent().build()
   }
 }

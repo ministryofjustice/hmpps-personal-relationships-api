@@ -29,7 +29,7 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
-    setCurrentUser(StubUser.READ_WRITE_USER)
+    setCurrentUser(StubUser.CREATING_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "email",
@@ -47,10 +47,8 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "emailAddresses must not be null;{\"emailAddresses\": null, \"createdBy\": \"created\"}",
-      "emailAddresses must not be null;{\"createdBy\": \"created\"}",
-      "createdBy must not be null;{\"emailAddresses\": [{ \"emailAddress\": \"test@example.com\"}], \"createdBy\": null}",
-      "createdBy must not be null;{\"emailAddresses\": [{\"emailAddress\": \"test@example.com\"}]}",
+      "emailAddresses must not be null;{\"emailAddresses\": null}",
+      "emailAddresses must not be null;{}",
     ],
     delimiter = ';',
   )
@@ -59,7 +57,7 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/emails")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -81,7 +79,7 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/emails")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -104,7 +102,7 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/-321/emails")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -125,20 +123,18 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
       savedContactId,
       CreateMultipleEmailsRequest(
         emailAddresses = listOf(EmailAddress("test@example.com")),
-        createdBy = "created",
       ),
     )
 
     val request = CreateMultipleEmailsRequest(
       emailAddresses = listOf(EmailAddress("other@example.com"), EmailAddress("test@example.com")),
-      createdBy = "created",
     )
 
     val errors = webTestClient.post()
       .uri("/contact/$savedContactId/emails")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -154,14 +150,13 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
   fun `should not allow duplicate email addresses in the same request`() {
     val request = CreateMultipleEmailsRequest(
       emailAddresses = listOf(EmailAddress("foo@example.com"), EmailAddress("FOO@EXAMPLE.COM")),
-      createdBy = "created",
     )
 
     val errors = webTestClient.post()
       .uri("/contact/$savedContactId/emails")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -177,14 +172,13 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
   fun `should not create the emails if any email is not valid`() {
     val request = CreateMultipleEmailsRequest(
       emailAddresses = listOf(EmailAddress("@example.com"), EmailAddress("good@example.com")),
-      createdBy = "created",
     )
 
     val errors = webTestClient.post()
       .uri("/contact/$savedContactId/emails")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -203,7 +197,6 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
   fun `should create the emails`(role: String) {
     val request = CreateMultipleEmailsRequest(
       emailAddresses = listOf(EmailAddress("test@example.com"), EmailAddress("another@example.com")),
-      createdBy = "created",
     )
 
     val created = testAPIClient.createContactEmails(savedContactId, request, role)
@@ -214,7 +207,7 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_EMAIL_CREATED,
-        additionalInfo = ContactEmailInfo(createdEmailAddress!!.contactEmailId, Source.DPS),
+        additionalInfo = ContactEmailInfo(createdEmailAddress!!.contactEmailId, Source.DPS, "created"),
         personReference = PersonReference(dpsContactId = savedContactId),
       )
     }
@@ -228,15 +221,10 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
         aMinimalRequest().copy(emailAddresses = listOf(EmailAddress("".padStart(241, 'X')))),
       ),
       Arguments.of("emailAddresses must have at least 1 item", aMinimalRequest().copy(emailAddresses = emptyList())),
-      Arguments.of(
-        "createdBy must be <= 100 characters",
-        aMinimalRequest().copy(createdBy = "".padStart(101, 'X')),
-      ),
     )
 
     private fun aMinimalRequest() = CreateMultipleEmailsRequest(
       emailAddresses = listOf(EmailAddress("test@example.com")),
-      createdBy = "created",
     )
   }
 }

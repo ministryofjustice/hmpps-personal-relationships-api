@@ -11,8 +11,4 @@ data class CreateMultipleEmailsRequest(
   @field:Valid
   @field:Size(min = 1, message = "emailAddresses must have at least 1 item")
   val emailAddresses: List<EmailAddress>,
-
-  @Schema(description = "User who created the entry", example = "admin")
-  @field:Size(max = 100, message = "createdBy must be <= 100 characters")
-  val createdBy: String,
 )

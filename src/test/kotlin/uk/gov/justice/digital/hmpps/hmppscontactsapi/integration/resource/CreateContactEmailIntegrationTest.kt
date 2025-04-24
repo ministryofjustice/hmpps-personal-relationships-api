@@ -29,7 +29,7 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun initialiseData() {
-    setCurrentUser(StubUser.READ_WRITE_USER)
+    setCurrentUser(StubUser.CREATING_USER)
     savedContactId = testAPIClient.createAContact(
       CreateContactRequest(
         lastName = "email",
@@ -47,10 +47,8 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "emailAddress must not be null;{\"emailAddress\": null, \"createdBy\": \"created\"}",
-      "emailAddress must not be null;{\"createdBy\": \"created\"}",
-      "createdBy must not be null;{\"emailAddress\": \"test@example.com\", \"createdBy\": null}",
-      "createdBy must not be null;{\"emailAddress\": \"test@example.com\"}",
+      "emailAddress must not be null;{\"emailAddress\": null}",
+      "emailAddress must not be null;{}",
     ],
     delimiter = ';',
   )
@@ -59,7 +57,7 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/email")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -81,7 +79,7 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/email")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -104,7 +102,7 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/-321/email")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -129,7 +127,7 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/email")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -145,14 +143,13 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
   fun `should not create the email if the email is not valid`() {
     val request = CreateEmailRequest(
       emailAddress = "@example.com",
-      createdBy = "created",
     )
 
     val errors = webTestClient.post()
       .uri("/contact/$savedContactId/email")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -175,7 +172,7 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_CREATED,
-      additionalInfo = ContactEmailInfo(created.contactEmailId, Source.DPS),
+      additionalInfo = ContactEmailInfo(created.contactEmailId, Source.DPS, "created"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }
@@ -183,7 +180,7 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
   private fun assertEqualsExcludingTimestamps(email: ContactEmailDetails, request: CreateEmailRequest) {
     with(email) {
       assertThat(emailAddress).isEqualTo(request.emailAddress)
-      assertThat(createdBy).isEqualTo(request.createdBy)
+      assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
     }
   }
@@ -192,15 +189,10 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
       Arguments.of("emailAddress must be <= 240 characters", aMinimalRequest().copy(emailAddress = "".padStart(241, 'X'))),
-      Arguments.of(
-        "createdBy must be <= 100 characters",
-        aMinimalRequest().copy(createdBy = "".padStart(101, 'X')),
-      ),
     )
 
     private fun aMinimalRequest() = CreateEmailRequest(
       emailAddress = "test@example.com",
-      createdBy = "created",
     )
   }
 }

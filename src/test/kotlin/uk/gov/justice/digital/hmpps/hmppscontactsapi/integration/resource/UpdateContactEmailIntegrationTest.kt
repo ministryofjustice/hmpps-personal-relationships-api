@@ -43,7 +43,6 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
       savedContactId,
       CreateEmailRequest(
         emailAddress = initialEmailAddress,
-        createdBy = "created",
       ),
 
     ).contactEmailId
@@ -59,10 +58,8 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "emailAddress must not be null;{\"emailAddress\": null, \"emailValue\": \"0123456789\", \"updatedBy\": \"created\"}",
-      "emailAddress must not be null;{\"emailValue\": \"test@example.com\", \"updatedBy\": \"created\"}",
-      "updatedBy must not be null;{\"emailAddress\": \"DL\", \"emailValue\": \"test@example.com\", \"updatedBy\": null}",
-      "updatedBy must not be null;{\"emailAddress\": \"DL\", \"emailValue\": \"test@example.com\"}",
+      "emailAddress must not be null;{\"emailAddress\": null, \"emailValue\": \"0123456789\"}",
+      "emailAddress must not be null;{\"emailValue\": \"test@example.com\"}",
     ],
     delimiter = ';',
   )
@@ -71,7 +68,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/email/$savedContactEmailId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(json)
       .exchange()
       .expectStatus()
@@ -84,7 +81,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS),
+      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated"),
     )
   }
 
@@ -95,7 +92,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/email/$savedContactEmailId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -108,7 +105,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS),
+      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated"),
     )
   }
 
@@ -120,7 +117,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/-321/email/$savedContactEmailId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -133,7 +130,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS),
+      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated"),
     )
   }
 
@@ -145,7 +142,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/contact/$savedContactId/email/-99")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -158,7 +155,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(-99, Source.DPS),
+      additionalInfo = ContactEmailInfo(-99, Source.DPS, "updated"),
     )
   }
 
@@ -166,14 +163,13 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
   fun `should not update the email if the email address is invalid`() {
     val request = UpdateEmailRequest(
       emailAddress = "@example.com",
-      updatedBy = "updated",
     )
 
     val errors = webTestClient.put()
       .uri("/contact/$savedContactId/email/$savedContactEmailId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -186,7 +182,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(-99, Source.DPS),
+      additionalInfo = ContactEmailInfo(-99, Source.DPS, "updated"),
     )
   }
 
@@ -195,7 +191,6 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
   fun `should update the email`(role: String) {
     val request = UpdateEmailRequest(
       emailAddress = "updated@example.com",
-      updatedBy = "updated",
     )
     val updated = testAPIClient.updateAContactEmail(savedContactId, savedContactEmailId, request, role)
 
@@ -209,25 +204,24 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS),
+      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }
 
   @Test
   fun `should not be able to update the email to an existing email address leading to a duplicate`() {
-    testAPIClient.createAContactEmail(savedContactId, CreateEmailRequest("foo@example.com", "created"))
+    doWithTemporaryWritePermission { testAPIClient.createAContactEmail(savedContactId, CreateEmailRequest("foo@example.com")) }
 
     val request = UpdateEmailRequest(
       emailAddress = "FOO@EXAMPLE.COM",
-      updatedBy = "updated",
     )
 
     val errors = webTestClient.put()
       .uri("/contact/$savedContactId/email/$savedContactEmailId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -240,7 +234,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(-99, Source.DPS),
+      additionalInfo = ContactEmailInfo(-99, Source.DPS, "updated"),
     )
   }
 
@@ -248,7 +242,6 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
   fun `should be able to update the email to the same email address`() {
     val request = UpdateEmailRequest(
       emailAddress = initialEmailAddress,
-      updatedBy = "updated",
     )
     val updated = testAPIClient.updateAContactEmail(savedContactId, savedContactEmailId, request)
 
@@ -262,7 +255,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS),
+      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }
@@ -271,15 +264,10 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
       Arguments.of("emailAddress must be <= 240 characters", aMinimalRequest().copy(emailAddress = "".padStart(241, 'X'))),
-      Arguments.of(
-        "updatedBy must be <= 100 characters",
-        aMinimalRequest().copy(updatedBy = "".padStart(101, 'X')),
-      ),
     )
 
     private fun aMinimalRequest() = UpdateEmailRequest(
       emailAddress = "updated@example.com",
-      updatedBy = "updated",
     )
   }
 }
