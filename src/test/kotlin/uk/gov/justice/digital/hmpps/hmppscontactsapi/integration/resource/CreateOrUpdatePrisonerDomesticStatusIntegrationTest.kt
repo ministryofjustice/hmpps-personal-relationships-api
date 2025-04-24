@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -14,8 +15,14 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEven
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerDomesticStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 
 class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegrationTestBase() {
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.READ_WRITE_USER)
+  }
 
   private val prisonerNumber = "A1234BC"
   private val prisoner1 = prisoner(
@@ -36,12 +43,13 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create new domestic status`(role: String) {
+    setCurrentUser(StubUser.READ_WRITE_USER.copy(roles = listOf(role)))
     stubPrisonerSearch(prisoner1)
     val request = createRequest()
 
     val response = webTestClient.put()
       .uri("/prisoner/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(request)
       .exchange()
@@ -59,12 +67,12 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
           domesticStatusCode = "M",
           domesticStatusDescription = "Married or in a civil partnership",
           active = true,
-          createdBy = "test-user",
+          createdBy = "read_write_user",
         ),
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(response!!.id, Source.DPS),
+      additionalInfo = PrisonerDomesticStatus(response!!.id, Source.DPS, "read_write_user"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -74,12 +82,11 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
     stubPrisonerSearch(prisoner1)
     val request = CreateOrUpdatePrisonerDomesticStatusRequest(
       domesticStatusCode = null,
-      requestedBy = "test-user",
     )
 
     val response = webTestClient.put()
       .uri("/prisoner/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(request)
       .exchange()
@@ -97,12 +104,12 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
           domesticStatusCode = null,
           domesticStatusDescription = null,
           active = true,
-          createdBy = "test-user",
+          createdBy = "read_write_user",
         ),
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(response!!.id, Source.DPS),
+      additionalInfo = PrisonerDomesticStatus(response!!.id, Source.DPS, "read_write_user"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -113,7 +120,7 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
     val request = createRequest()
     val response = webTestClient.put()
       .uri("/prisoner/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(request)
       .exchange()
@@ -126,7 +133,7 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
 
     val updateResponse = webTestClient.put()
       .uri("/prisoner/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(request)
       .exchange()
@@ -145,12 +152,12 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
           domesticStatusCode = "M",
           domesticStatusDescription = "Married or in a civil partnership",
           active = true,
-          createdBy = "test-user",
+          createdBy = "read_write_user",
         ),
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(response.id, Source.DPS),
+      additionalInfo = PrisonerDomesticStatus(response.id, Source.DPS, "read_write_user"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -159,12 +166,11 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
   fun `should return 400 when domestic status code is more than 12 characters`() {
     webTestClient.put()
       .uri("/prisoner/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(
         CreateOrUpdatePrisonerDomesticStatusRequest(
           domesticStatusCode = "MORE THAN 12 CHARACTERS",
-          requestedBy = "test-user",
         ),
       )
       .exchange()
@@ -182,12 +188,11 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
     stubPrisonerSearch(prisoner1)
     webTestClient.put()
       .uri("/prisoner/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(
         CreateOrUpdatePrisonerDomesticStatusRequest(
           domesticStatusCode = "",
-          requestedBy = "test-user",
         ),
       )
       .exchange()
@@ -205,12 +210,11 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
     stubPrisonerSearch(prisoner1)
     webTestClient.put()
       .uri("/prisoner/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(
         CreateOrUpdatePrisonerDomesticStatusRequest(
           domesticStatusCode = "Q",
-          requestedBy = "test-user",
         ),
       )
       .exchange()
@@ -225,6 +229,5 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
 
   private fun createRequest() = CreateOrUpdatePrisonerDomesticStatusRequest(
     domesticStatusCode = "M",
-    requestedBy = "test-user",
   )
 }

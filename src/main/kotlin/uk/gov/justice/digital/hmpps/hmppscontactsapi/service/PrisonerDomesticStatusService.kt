@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerDomesticStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateOrUpdatePrisonerDomesticStatusRequest
@@ -32,6 +33,7 @@ class PrisonerDomesticStatusService(
   fun createOrUpdateDomesticStatus(
     prisonerNumber: String,
     request: CreateOrUpdatePrisonerDomesticStatusRequest,
+    user: User,
   ): PrisonerDomesticStatusResponse {
     prisonerService.getPrisoner(prisonerNumber)
       ?: throw EntityNotFoundException("Prisoner number $prisonerNumber - not found")
@@ -49,7 +51,7 @@ class PrisonerDomesticStatusService(
     val newDomesticStatus = PrisonerDomesticStatus(
       prisonerNumber = prisonerNumber,
       domesticStatusCode = request.domesticStatusCode,
-      createdBy = request.requestedBy,
+      createdBy = user.username,
       createdTime = LocalDateTime.now(),
       active = true,
     )

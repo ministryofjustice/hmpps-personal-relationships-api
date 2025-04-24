@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.PrisonerDomesticStatusFacade
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateOrUpdatePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerDomesticStatusResponse
 @ExtendWith(MockitoExtension::class)
@@ -22,6 +23,8 @@ class PrisonerDomesticStatusControllerTest {
 
   @InjectMocks
   private lateinit var controller: PrisonerDomesticStatusController
+
+  private val user = aUser("test-user")
 
   @Nested
   inner class GetDomesticStatus {
@@ -61,14 +64,12 @@ class PrisonerDomesticStatusControllerTest {
 
   @Nested
   inner class CreateOrUpdateDomesticStatus {
-
     @Test
     fun `should create or update domestic status successfully`() {
       // Given
       val prisonerNumber = "A1234BC"
       val request = CreateOrUpdatePrisonerDomesticStatusRequest(
         domesticStatusCode = "MARRIED",
-        requestedBy = "test-user",
       )
       val expectedResponse = PrisonerDomesticStatusResponse(
         id = 1L,
@@ -76,15 +77,15 @@ class PrisonerDomesticStatusControllerTest {
         active = true,
       )
       whenever(
-        prisonerDomesticStatusFacade.createOrUpdateDomesticStatus(prisonerNumber, request),
+        prisonerDomesticStatusFacade.createOrUpdateDomesticStatus(prisonerNumber, request, user),
       ).thenReturn(expectedResponse)
 
       // When
-      val result = controller.createOrUpdateDomesticStatus(prisonerNumber, request)
+      val result = controller.createOrUpdateDomesticStatus(prisonerNumber, request, user)
 
       // Then
       assertThat(result).isEqualTo(expectedResponse)
-      verify(prisonerDomesticStatusFacade).createOrUpdateDomesticStatus(prisonerNumber, request)
+      verify(prisonerDomesticStatusFacade).createOrUpdateDomesticStatus(prisonerNumber, request, user)
     }
 
     @Test
@@ -93,17 +94,16 @@ class PrisonerDomesticStatusControllerTest {
       val prisonerNumber = "A1234BC"
       val request = CreateOrUpdatePrisonerDomesticStatusRequest(
         domesticStatusCode = "MARRIED",
-        requestedBy = "test-user",
       )
       whenever(
-        prisonerDomesticStatusFacade.createOrUpdateDomesticStatus(prisonerNumber, request),
+        prisonerDomesticStatusFacade.createOrUpdateDomesticStatus(prisonerNumber, request, user),
       ).thenThrow(EntityNotFoundException("Prisoner not found"))
 
       // When/Then
       assertThrows<EntityNotFoundException> {
-        controller.createOrUpdateDomesticStatus(prisonerNumber, request)
+        controller.createOrUpdateDomesticStatus(prisonerNumber, request, user)
       }
-      verify(prisonerDomesticStatusFacade).createOrUpdateDomesticStatus(prisonerNumber, request)
+      verify(prisonerDomesticStatusFacade).createOrUpdateDomesticStatus(prisonerNumber, request, user)
     }
   }
 }

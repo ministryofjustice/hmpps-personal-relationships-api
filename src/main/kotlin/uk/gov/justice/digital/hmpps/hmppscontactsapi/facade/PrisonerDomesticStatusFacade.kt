@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateOrUpdatePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerDomesticStatusResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.PrisonerDomesticStatusService
@@ -18,13 +19,15 @@ class PrisonerDomesticStatusFacade(
   fun createOrUpdateDomesticStatus(
     prisonerNumber: String,
     request: CreateOrUpdatePrisonerDomesticStatusRequest,
-  ): PrisonerDomesticStatusResponse = prisonerDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request)
+    user: User,
+  ): PrisonerDomesticStatusResponse = prisonerDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, request, user)
     .also {
       outboundEventsService.send(
         outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
         identifier = it.id,
         noms = prisonerNumber,
         source = Source.DPS,
+        user = user,
       )
     }
 }

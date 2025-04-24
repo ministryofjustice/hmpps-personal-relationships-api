@@ -143,7 +143,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            PrisonerDomesticStatus(identifier, source),
+            PrisonerDomesticStatus(identifier, source, user.username),
             PersonReference(noms),
           )
         }

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -10,11 +11,17 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.prisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateOrUpdatePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerDomesticStatusResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 
 class GetPrisonerDomesticStatusIntegrationTest : SecureAPIIntegrationTestBase() {
 
   private val prisonerNumber = "A1234BC"
   private var domesticStatusId = 0L
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.READ_ONLY_USER)
+  }
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
@@ -25,7 +32,7 @@ class GetPrisonerDomesticStatusIntegrationTest : SecureAPIIntegrationTestBase() 
   fun `should return 404 when prisoner domestic status does not exist`() {
     webTestClient.get()
       .uri("/prisoner/A1234EE/domestic-status")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -34,18 +41,19 @@ class GetPrisonerDomesticStatusIntegrationTest : SecureAPIIntegrationTestBase() 
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should return domestic status when user has roles`(role: String) {
-    initialiseData()
+    setCurrentUser(StubUser.READ_WRITE_USER.copy(roles = listOf(role)))
+    doWithTemporaryWritePermission { initialiseData() }
     val expectedResponse = PrisonerDomesticStatusResponse(
       id = 1L,
       domesticStatusCode = "M",
       domesticStatusDescription = "Married or in a civil partnership",
       active = true,
-      createdBy = "test-user",
+      createdBy = "read_write_user",
     )
 
     val response = webTestClient.get()
       .uri("/prisoner/A1234BC/domestic-status")
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus().isOk
       .expectHeader().contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -70,12 +78,11 @@ class GetPrisonerDomesticStatusIntegrationTest : SecureAPIIntegrationTestBase() 
     )
     val request = CreateOrUpdatePrisonerDomesticStatusRequest(
       domesticStatusCode = "M",
-      requestedBy = "test-user",
     )
 
     val response = webTestClient.put()
       .uri("/prisoner/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS__RW")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(request)
       .exchange()
