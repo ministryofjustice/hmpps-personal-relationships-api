@@ -174,7 +174,7 @@ class GetContactByIdIntegrationTest : SecureAPIIntegrationTestBase() {
         assertThat(contactIdentityId).isEqualTo(1)
         assertThat(contactId).isEqualTo(1)
         assertThat(identityType).isEqualTo("DL")
-        assertThat(identityTypeDescription).isEqualTo("Driving Licence")
+        assertThat(identityTypeDescription).isEqualTo("Driving licence")
         assertThat(identityValue).isEqualTo("LAST-87736799M")
         assertThat(issuingAuthority).isEqualTo("DVLA")
         assertThat(createdBy).isEqualTo("TIM")
