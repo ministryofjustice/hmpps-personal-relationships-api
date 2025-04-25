@@ -6,6 +6,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -41,12 +42,14 @@ class PrisonerMergeFacadeTest {
         identifier = updatedResponse.id,
         noms = retainingPrisonerNumber,
         source = Source.DPS,
+        user = User.SYS_USER,
       )
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
         identifier = updatedResponse.id,
         noms = retainingPrisonerNumber,
         source = Source.DPS,
+        user = User.SYS_USER,
       )
     }
 
@@ -98,6 +101,7 @@ class PrisonerMergeFacadeTest {
         identifier = childrenResponse.id,
         noms = retainingPrisonerNumber,
         source = Source.DPS,
+        user = User.SYS_USER,
       )
     }
   }

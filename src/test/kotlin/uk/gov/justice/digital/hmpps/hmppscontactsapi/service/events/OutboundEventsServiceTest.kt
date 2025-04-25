@@ -15,6 +15,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.FeatureSwitches
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -352,7 +353,7 @@ class OutboundEventsServiceTest {
   @Test
   fun `events are not published for any outbound event when not enabled`() {
     featureSwitches.stub { on { isEnabled(any<OutboundEvent>(), any()) } doReturn false }
-    OutboundEvent.entries.forEach { outboundEventsService.send(it, 1L, 1L) }
+    OutboundEvent.entries.forEach { outboundEventsService.send(it, 1L, 1L, user = User.SYS_USER) }
     verifyNoInteractions(eventsPublisher)
   }
 
@@ -362,7 +363,7 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(event) } doReturn true }
     whenever(eventsPublisher.send(any())).thenThrow(RuntimeException("Boom!"))
 
-    outboundEventsService.send(event, 1L, 1L)
+    outboundEventsService.send(event, 1L, 1L, user = User.SYS_USER)
 
     verify(eventsPublisher).send(any())
   }

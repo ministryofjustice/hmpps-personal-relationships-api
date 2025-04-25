@@ -9,6 +9,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactEmailRequest
@@ -108,6 +109,7 @@ class SyncFacadeTest {
         identifier = result.id,
         contactId = result.id,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -148,6 +150,7 @@ class SyncFacadeTest {
         identifier = result.id,
         contactId = result.id,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -183,6 +186,7 @@ class SyncFacadeTest {
         identifier = 1L,
         contactId = 1L,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -246,6 +250,7 @@ class SyncFacadeTest {
         identifier = result.contactPhoneId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -265,6 +270,7 @@ class SyncFacadeTest {
         identifier = result.contactPhoneId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -284,6 +290,7 @@ class SyncFacadeTest {
         identifier = result.contactPhoneId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -333,6 +340,7 @@ class SyncFacadeTest {
         identifier = result.contactEmailId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -352,6 +360,7 @@ class SyncFacadeTest {
         identifier = result.contactEmailId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -371,6 +380,7 @@ class SyncFacadeTest {
         identifier = result.contactEmailId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -416,6 +426,7 @@ class SyncFacadeTest {
         identifier = result.contactIdentityId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -435,6 +446,7 @@ class SyncFacadeTest {
         identifier = result.contactIdentityId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -454,6 +466,7 @@ class SyncFacadeTest {
         identifier = result.contactIdentityId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -505,6 +518,7 @@ class SyncFacadeTest {
         identifier = result.contactRestrictionId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -524,6 +538,7 @@ class SyncFacadeTest {
         identifier = result.contactRestrictionId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -543,6 +558,7 @@ class SyncFacadeTest {
         identifier = result.contactRestrictionId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -597,6 +613,7 @@ class SyncFacadeTest {
         identifier = result.contactAddressId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -616,6 +633,7 @@ class SyncFacadeTest {
         identifier = result.contactAddressId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -635,6 +653,7 @@ class SyncFacadeTest {
         identifier = result.contactAddressId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -695,6 +714,7 @@ class SyncFacadeTest {
         contactId = result.contactId,
         source = Source.NOMIS,
         secondIdentifier = result.contactAddressId,
+        user = User.SYS_USER,
       )
     }
 
@@ -715,6 +735,7 @@ class SyncFacadeTest {
         contactId = result.contactId,
         source = Source.NOMIS,
         secondIdentifier = result.contactAddressId,
+        user = User.SYS_USER,
       )
     }
 
@@ -735,6 +756,7 @@ class SyncFacadeTest {
         contactId = result.contactId,
         source = Source.NOMIS,
         secondIdentifier = result.contactAddressId,
+        user = User.SYS_USER,
       )
     }
 
@@ -788,6 +810,7 @@ class SyncFacadeTest {
         contactId = result.contactId,
         noms = result.prisonerNumber,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -808,6 +831,7 @@ class SyncFacadeTest {
         contactId = result.contactId,
         noms = result.prisonerNumber,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -828,6 +852,7 @@ class SyncFacadeTest {
         contactId = result.contactId,
         noms = result.prisonerNumber,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -898,6 +923,7 @@ class SyncFacadeTest {
         contactId = result.contactId,
         noms = result.prisonerNumber,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -918,6 +944,7 @@ class SyncFacadeTest {
         contactId = result.contactId,
         noms = result.prisonerNumber,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -938,6 +965,7 @@ class SyncFacadeTest {
         contactId = result.contactId,
         noms = result.prisonerNumber,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -993,6 +1021,7 @@ class SyncFacadeTest {
         identifier = result.employmentId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -1012,6 +1041,7 @@ class SyncFacadeTest {
         identifier = result.employmentId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -1031,6 +1061,7 @@ class SyncFacadeTest {
         identifier = result.employmentId,
         contactId = result.contactId,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 

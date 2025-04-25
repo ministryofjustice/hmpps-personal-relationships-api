@@ -8,6 +8,7 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerNumberOfChildren
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerNumberOfChildrenRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.Status
@@ -82,12 +83,14 @@ class PrisonerNumberOfChildrenSyncFacadeTest {
         identifier = response.id,
         noms = prisonerNumber,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
       verify(outboundEventsService, times(1)).send(
         outboundEvent = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
         identifier = response.id,
         noms = prisonerNumber,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -122,12 +125,14 @@ class PrisonerNumberOfChildrenSyncFacadeTest {
         identifier = 0L,
         noms = prisonerNumber,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
         identifier = 1L,
         noms = prisonerNumber,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -172,12 +177,14 @@ class PrisonerNumberOfChildrenSyncFacadeTest {
         identifier = existingRecord.prisonerNumberOfChildrenId,
         noms = prisonerNumber,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
       verify(outboundEventsService, never()).send(
         outboundEvent = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
         identifier = response.data.id,
         noms = prisonerNumber,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
   }

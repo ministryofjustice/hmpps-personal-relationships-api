@@ -8,6 +8,7 @@ import org.mockito.Mockito.verify
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.Status
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponse
@@ -79,6 +80,7 @@ class PrisonerDomesticStatusSyncFacadeTest {
         identifier = response.id,
         noms = prisonerNumber,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
       assertThat(result).isEqualTo(response)
     }
@@ -114,12 +116,14 @@ class PrisonerDomesticStatusSyncFacadeTest {
         identifier = 1L,
         noms = prisonerNumber,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
         identifier = 0L,
         noms = prisonerNumber,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
 
@@ -153,6 +157,7 @@ class PrisonerDomesticStatusSyncFacadeTest {
         identifier = response.id,
         noms = prisonerNumber,
         source = Source.NOMIS,
+        user = User.SYS_USER,
       )
     }
   }

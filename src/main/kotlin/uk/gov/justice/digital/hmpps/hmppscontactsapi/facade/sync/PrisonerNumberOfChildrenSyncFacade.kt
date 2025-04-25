@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerNumberOfChildrenRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.Status
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerNumberOfChildrenData
@@ -67,6 +68,7 @@ class PrisonerNumberOfChildrenSyncFacade(
       identifier = identifier,
       noms = prisonerNumber,
       source = Source.NOMIS,
+      user = User.SYS_USER,
     )
   }
 }
