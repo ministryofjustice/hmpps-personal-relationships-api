@@ -24,7 +24,8 @@ class GetContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should get identity details where the type is active`(role: String) {
-    val identity = testAPIClient.getContactIdentity(1, 1, role)
+    setCurrentUser(StubUser.READ_ONLY_USER.copy(roles = listOf(role)))
+    val identity = testAPIClient.getContactIdentity(1, 1)
 
     with(identity) {
       assertThat(contactIdentityId).isEqualTo(1)

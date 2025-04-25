@@ -192,13 +192,14 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create the phone with all fields`(role: String) {
+    setCurrentUser(StubUser.CREATING_USER.copy(roles = listOf(role)))
     val request = CreatePhoneRequest(
       phoneType = "MOB",
       phoneNumber = "+44777777777 (0123)",
       extNumber = "9999",
     )
 
-    val created = testAPIClient.createAContactPhone(savedContactId, request, role)
+    val created = testAPIClient.createAContactPhone(savedContactId, request)
 
     assertEqualsExcludingTimestamps(created, request)
 

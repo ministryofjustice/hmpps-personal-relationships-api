@@ -607,6 +607,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create the contact with all fields`(role: String) {
+    setCurrentUser(StubUser.CREATING_USER.copy(roles = listOf(role)))
     val request = CreateContactRequest(
       titleCode = "MR",
       lastName = "last",
@@ -620,7 +621,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       genderCode = "M",
     )
 
-    val contact = testAPIClient.createAContact(request, role)
+    val contact = testAPIClient.createAContact(request)
 
     assertContactsAreEqualExcludingTimestamps(contact, request)
 

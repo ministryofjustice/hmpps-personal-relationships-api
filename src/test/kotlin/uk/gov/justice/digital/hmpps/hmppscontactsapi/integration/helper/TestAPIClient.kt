@@ -84,9 +84,11 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(SyncContact::class.java)
     .returnResult().responseBody!!
 
-  fun createAContact(request: CreateContactRequest, role: String = "ROLE_CONTACTS_ADMIN"): ContactDetails = createAContactWithARelationship(request, role).createdContact
+  fun createAContact(request: CreateContactRequest): ContactDetails = createAContactWithARelationship(
+    request,
+  ).createdContact
 
-  fun createAContactWithARelationship(request: CreateContactRequest, role: String = "ROLE_CONTACTS_ADMIN"): ContactCreationResult = webTestClient.post()
+  fun createAContactWithARelationship(request: CreateContactRequest): ContactCreationResult = webTestClient.post()
     .uri("/contact")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -100,7 +102,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactCreationResult::class.java)
     .returnResult().responseBody!!
 
-  fun patchAContact(request: Any, url: String, role: String = "ROLE_CONTACTS_ADMIN"): PatchContactResponse = webTestClient.patch()
+  fun patchAContact(request: Any, url: String): PatchContactResponse = webTestClient.patch()
     .uri(url)
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -113,7 +115,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(PatchContactResponse::class.java)
     .returnResult().responseBody!!
 
-  fun getContact(id: Long, role: String = "ROLE_CONTACTS_ADMIN"): ContactDetails = webTestClient.get()
+  fun getContact(id: Long): ContactDetails = webTestClient.get()
     .uri("/contact/$id")
     .accept(MediaType.APPLICATION_JSON)
     .headers(setAuthorisationUsingCurrentUser())
@@ -124,7 +126,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactDetails::class.java)
     .returnResult().responseBody!!
 
-  fun getContactName(id: Long, role: String = "ROLE_CONTACTS_ADMIN"): ContactNameDetails = webTestClient.get()
+  fun getContactName(id: Long): ContactNameDetails = webTestClient.get()
     .uri("/contact/$id/name")
     .accept(MediaType.APPLICATION_JSON)
     .headers(setAuthorisationUsingCurrentUser())
@@ -159,7 +161,6 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     groupCode: ReferenceCodeGroup,
     sort: String? = null,
     activeOnly: Boolean? = null,
-    role: String = "ROLE_CONTACTS_ADMIN",
   ): MutableList<ReferenceCode>? = webTestClient.get()
     .uri("/reference-codes/group/$groupCode?${sort?.let { "sort=$sort&" } ?: ""}${activeOnly?.let { "&activeOnly=$activeOnly" } ?: ""}")
     .accept(MediaType.APPLICATION_JSON)
@@ -170,7 +171,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBodyList(ReferenceCode::class.java)
     .returnResult().responseBody
 
-  fun addAContactRelationship(request: AddContactRelationshipRequest, role: String = "ROLE_CONTACTS_ADMIN"): PrisonerContactRelationshipDetails = webTestClient.post()
+  fun addAContactRelationship(request: AddContactRelationshipRequest): PrisonerContactRelationshipDetails = webTestClient.post()
     .uri("/prisoner-contact")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -183,7 +184,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(PrisonerContactRelationshipDetails::class.java)
     .returnResult().responseBody!!
 
-  fun getSearchContactResults(uri: URI, role: String = "ROLE_CONTACTS_ADMIN") = webTestClient.get()
+  fun getSearchContactResults(uri: URI) = webTestClient.get()
     .uri(uri.toString())
     .accept(MediaType.APPLICATION_JSON)
     .headers(setAuthorisationUsingCurrentUser())
@@ -216,7 +217,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ErrorResponse::class.java)
     .returnResult().responseBody!!
 
-  fun createAContactPhone(contactId: Long, request: CreatePhoneRequest, role: String = "ROLE_CONTACTS_ADMIN"): ContactPhoneDetails = webTestClient.post()
+  fun createAContactPhone(contactId: Long, request: CreatePhoneRequest): ContactPhoneDetails = webTestClient.post()
     .uri("/contact/$contactId/phone")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -229,7 +230,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactPhoneDetails::class.java)
     .returnResult().responseBody!!
 
-  fun createMultipleContactPhones(contactId: Long, request: CreateMultiplePhoneNumbersRequest, role: String = "ROLE_CONTACTS_ADMIN"): List<ContactPhoneDetails> = webTestClient.post()
+  fun createMultipleContactPhones(contactId: Long, request: CreateMultiplePhoneNumbersRequest): List<ContactPhoneDetails> = webTestClient.post()
     .uri("/contact/$contactId/phones")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -242,7 +243,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBodyList(ContactPhoneDetails::class.java)
     .returnResult().responseBody!!
 
-  fun updateAContactPhone(contactId: Long, contactPhoneId: Long, request: UpdatePhoneRequest, role: String = "ROLE_CONTACTS_ADMIN"): ContactPhoneDetails = webTestClient.put()
+  fun updateAContactPhone(contactId: Long, contactPhoneId: Long, request: UpdatePhoneRequest): ContactPhoneDetails = webTestClient.put()
     .uri("/contact/$contactId/phone/$contactPhoneId")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -255,7 +256,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactPhoneDetails::class.java)
     .returnResult().responseBody!!
 
-  fun getContactPhone(contactId: Long, contactPhoneId: Long, role: String = "ROLE_CONTACTS_ADMIN"): ContactPhoneDetails = webTestClient.get()
+  fun getContactPhone(contactId: Long, contactPhoneId: Long): ContactPhoneDetails = webTestClient.get()
     .uri("/contact/$contactId/phone/$contactPhoneId")
     .accept(MediaType.APPLICATION_JSON)
     .headers(setAuthorisationUsingCurrentUser())
@@ -270,7 +271,6 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     contactId: Long,
     contactAddressId: Long,
     request: CreateContactAddressPhoneRequest,
-    role: String = "ROLE_CONTACTS_ADMIN",
   ): ContactAddressPhoneDetails = webTestClient.post()
     .uri("/contact/$contactId/address/$contactAddressId/phone")
     .accept(MediaType.APPLICATION_JSON)
@@ -284,7 +284,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactAddressPhoneDetails::class.java)
     .returnResult().responseBody!!
 
-  fun createMultipleContactAddressPhones(contactId: Long, contactAddressId: Long, request: CreateMultiplePhoneNumbersRequest, role: String = "ROLE_CONTACTS_ADMIN"): List<ContactAddressPhoneDetails> = webTestClient.post()
+  fun createMultipleContactAddressPhones(contactId: Long, contactAddressId: Long, request: CreateMultiplePhoneNumbersRequest): List<ContactAddressPhoneDetails> = webTestClient.post()
     .uri("/contact/$contactId/address/$contactAddressId/phones")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -302,7 +302,6 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     contactAddressId: Long,
     contactAddressPhoneId: Long,
     request: UpdateContactAddressPhoneRequest,
-    role: String = "ROLE_CONTACTS_ADMIN",
   ): ContactAddressPhoneDetails = webTestClient.put()
     .uri("/contact/$contactId/address/$contactAddressId/phone/$contactAddressPhoneId")
     .accept(MediaType.APPLICATION_JSON)
@@ -316,7 +315,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactAddressPhoneDetails::class.java)
     .returnResult().responseBody!!
 
-  fun createAContactIdentity(contactId: Long, request: CreateIdentityRequest, role: String = "ROLE_CONTACTS_ADMIN"): ContactIdentityDetails = webTestClient.post()
+  fun createAContactIdentity(contactId: Long, request: CreateIdentityRequest): ContactIdentityDetails = webTestClient.post()
     .uri("/contact/$contactId/identity")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -329,7 +328,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactIdentityDetails::class.java)
     .returnResult().responseBody!!
 
-  fun createMultipleContactIdentityDocuments(contactId: Long, request: CreateMultipleIdentitiesRequest, role: String = "ROLE_CONTACTS_ADMIN"): List<ContactIdentityDetails> = webTestClient.post()
+  fun createMultipleContactIdentityDocuments(contactId: Long, request: CreateMultipleIdentitiesRequest): List<ContactIdentityDetails> = webTestClient.post()
     .uri("/contact/$contactId/identities")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -346,7 +345,6 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     contactId: Long,
     contactIdentityId: Long,
     request: UpdateIdentityRequest,
-    role: String = "ROLE_CONTACTS_ADMIN",
   ): ContactIdentityDetails = webTestClient.put()
     .uri("/contact/$contactId/identity/$contactIdentityId")
     .accept(MediaType.APPLICATION_JSON)
@@ -360,7 +358,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactIdentityDetails::class.java)
     .returnResult().responseBody!!
 
-  fun getContactIdentity(contactId: Long, contactIdentityId: Long, role: String = "ROLE_CONTACTS_ADMIN"): ContactIdentityDetails = webTestClient.get()
+  fun getContactIdentity(contactId: Long, contactIdentityId: Long): ContactIdentityDetails = webTestClient.get()
     .uri("/contact/$contactId/identity/$contactIdentityId")
     .accept(MediaType.APPLICATION_JSON)
     .headers(setAuthorisationUsingCurrentUser())
@@ -371,7 +369,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactIdentityDetails::class.java)
     .returnResult().responseBody!!
 
-  fun createAContactEmail(contactId: Long, request: CreateEmailRequest, role: String = "ROLE_CONTACTS_ADMIN"): ContactEmailDetails = webTestClient.post()
+  fun createAContactEmail(contactId: Long, request: CreateEmailRequest): ContactEmailDetails = webTestClient.post()
     .uri("/contact/$contactId/email")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -384,7 +382,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactEmailDetails::class.java)
     .returnResult().responseBody!!
 
-  fun createContactEmails(contactId: Long, request: CreateMultipleEmailsRequest, role: String = "ROLE_CONTACTS_ADMIN"): List<ContactEmailDetails> = webTestClient.post()
+  fun createContactEmails(contactId: Long, request: CreateMultipleEmailsRequest): List<ContactEmailDetails> = webTestClient.post()
     .uri("/contact/$contactId/emails")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -397,7 +395,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBodyList(ContactEmailDetails::class.java)
     .returnResult().responseBody!!
 
-  fun updateAContactEmail(contactId: Long, contactEmailId: Long, request: UpdateEmailRequest, role: String = "ROLE_CONTACTS_ADMIN"): ContactEmailDetails = webTestClient.put()
+  fun updateAContactEmail(contactId: Long, contactEmailId: Long, request: UpdateEmailRequest): ContactEmailDetails = webTestClient.put()
     .uri("/contact/$contactId/email/$contactEmailId")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -410,7 +408,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactEmailDetails::class.java)
     .returnResult().responseBody!!
 
-  fun updateRelationship(prisonerContactId: Long, request: PatchRelationshipRequest, role: String = "ROLE_CONTACTS_ADMIN") {
+  fun updateRelationship(prisonerContactId: Long, request: PatchRelationshipRequest) {
     webTestClient.patch()
       .uri("/prisoner-contact/$prisonerContactId")
       .accept(MediaType.APPLICATION_JSON)
@@ -422,7 +420,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
       .isNoContent
   }
 
-  fun getContactEmail(contactId: Long, contactEmailId: Long, role: String = "ROLE_CONTACTS_ADMIN"): ContactEmailDetails = webTestClient.get()
+  fun getContactEmail(contactId: Long, contactEmailId: Long): ContactEmailDetails = webTestClient.get()
     .uri("/contact/$contactId/email/$contactEmailId")
     .accept(MediaType.APPLICATION_JSON)
     .headers(setAuthorisationUsingCurrentUser())
@@ -433,21 +431,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactEmailDetails::class.java)
     .returnResult().responseBody!!
 
-  fun setAuthorisation(
-    username: String? = "AUTH_ADM",
-    roles: List<String> = listOf(),
-    scopes: List<String> = listOf("read"),
-  ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisationHeader(username = username, scope = scopes, roles = roles)
-
-  fun setAuthorisationUsingCurrentUser(): (HttpHeaders) -> Unit = currentUser?.let {
-    jwtAuthHelper.setAuthorisationHeader(
-      username = if (it.isSystemUser) null else it.username,
-      scope = listOf("read"),
-      roles = it.roles,
-    )
-  } ?: {}
-
-  fun migrateAContact(request: MigrateContactRequest, authRole: String = "PERSONAL_RELATIONSHIPS_MIGRATION") = webTestClient.post()
+  fun migrateAContact(request: MigrateContactRequest) = webTestClient.post()
     .uri("/migrate/contact")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -460,7 +444,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(MigrateContactResponse::class.java)
     .returnResult().responseBody!!
 
-  fun getContactGlobalRestrictions(contactId: Long, role: String = "ROLE_CONTACTS_ADMIN"): List<ContactRestrictionDetails> = webTestClient.get()
+  fun getContactGlobalRestrictions(contactId: Long): List<ContactRestrictionDetails> = webTestClient.get()
     .uri("/contact/$contactId/restriction")
     .accept(MediaType.APPLICATION_JSON)
     .headers(setAuthorisationUsingCurrentUser())
@@ -473,7 +457,6 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
   fun createContactGlobalRestriction(
     contactId: Long,
     request: CreateContactRestrictionRequest,
-    role: String = "ROLE_CONTACTS_ADMIN",
   ): ContactRestrictionDetails = webTestClient.post()
     .uri("/contact/$contactId/restriction")
     .accept(MediaType.APPLICATION_JSON)
@@ -491,7 +474,6 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     contactId: Long,
     contactRestrictionId: Long,
     request: UpdateContactRestrictionRequest,
-    role: String = "ROLE_CONTACTS_ADMIN",
   ): ContactRestrictionDetails = webTestClient.put()
     .uri("/contact/$contactId/restriction/$contactRestrictionId")
     .accept(MediaType.APPLICATION_JSON)
@@ -505,7 +487,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactRestrictionDetails::class.java)
     .returnResult().responseBody!!
 
-  fun getPrisonerContactRestrictions(prisonerContactId: Long, role: String = "ROLE_CONTACTS_ADMIN"): PrisonerContactRestrictionsResponse = webTestClient.get()
+  fun getPrisonerContactRestrictions(prisonerContactId: Long): PrisonerContactRestrictionsResponse = webTestClient.get()
     .uri("/prisoner-contact/$prisonerContactId/restriction")
     .accept(MediaType.APPLICATION_JSON)
     .headers(setAuthorisationUsingCurrentUser())
@@ -518,7 +500,6 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
   fun createPrisonerContactRestriction(
     prisonerContactId: Long,
     request: CreatePrisonerContactRestrictionRequest,
-    role: String = "ROLE_CONTACTS_ADMIN",
   ): PrisonerContactRestrictionDetails = webTestClient.post()
     .uri("/prisoner-contact/$prisonerContactId/restriction")
     .accept(MediaType.APPLICATION_JSON)
@@ -536,7 +517,6 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     prisonerContactId: Long,
     prisonerRestrictionContactId: Long,
     request: UpdatePrisonerContactRestrictionRequest,
-    role: String = "ROLE_CONTACTS_ADMIN",
   ): PrisonerContactRestrictionDetails = webTestClient.put()
     .uri("/prisoner-contact/$prisonerContactId/restriction/$prisonerRestrictionContactId")
     .accept(MediaType.APPLICATION_JSON)
@@ -550,7 +530,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(PrisonerContactRestrictionDetails::class.java)
     .returnResult().responseBody!!
 
-  fun createAContactAddress(contactId: Long, request: CreateContactAddressRequest, role: String = "ROLE_CONTACTS_ADMIN"): ContactAddressResponse = webTestClient.post()
+  fun createAContactAddress(contactId: Long, request: CreateContactAddressRequest): ContactAddressResponse = webTestClient.post()
     .uri("/contact/$contactId/address")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -563,7 +543,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactAddressResponse::class.java)
     .returnResult().responseBody!!
 
-  fun updateAContactAddress(contactId: Long, contactAddressId: Long, request: UpdateContactAddressRequest, role: String = "ROLE_CONTACTS_ADMIN"): ContactAddressResponse = webTestClient.put()
+  fun updateAContactAddress(contactId: Long, contactAddressId: Long, request: UpdateContactAddressRequest): ContactAddressResponse = webTestClient.put()
     .uri("/contact/$contactId/address/$contactAddressId")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -576,7 +556,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(ContactAddressResponse::class.java)
     .returnResult().responseBody!!
 
-  fun patchAContactAddress(contactId: Long, contactAddressId: Long, request: PatchContactAddressRequest, role: String = "ROLE_CONTACTS_ADMIN"): ContactAddressResponse = webTestClient.patch()
+  fun patchAContactAddress(contactId: Long, contactAddressId: Long, request: PatchContactAddressRequest): ContactAddressResponse = webTestClient.patch()
     .uri("/contact/$contactId/address/$contactAddressId")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -599,7 +579,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(LinkedPrisonerResponse::class.java)
     .returnResult().responseBody!!
 
-  fun patchEmployments(contactId: Long, request: PatchEmploymentsRequest, role: String = "ROLE_CONTACTS_ADMIN"): List<EmploymentDetails> = webTestClient.patch()
+  fun patchEmployments(contactId: Long, request: PatchEmploymentsRequest): List<EmploymentDetails> = webTestClient.patch()
     .uri("/contact/$contactId/employment")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -612,7 +592,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBodyList(EmploymentDetails::class.java)
     .returnResult().responseBody!!
 
-  fun createAnEmployment(contactId: Long, request: CreateEmploymentRequest, role: String = "ROLE_CONTACTS_ADMIN"): EmploymentDetails = webTestClient.post()
+  fun createAnEmployment(contactId: Long, request: CreateEmploymentRequest): EmploymentDetails = webTestClient.post()
     .uri("/contact/$contactId/employment")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -626,7 +606,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(EmploymentDetails::class.java)
     .returnResult().responseBody!!
 
-  fun getAnEmployment(contactId: Long, employmentId: Long, role: String = "ROLE_CONTACTS_ADMIN"): EmploymentDetails = webTestClient.get()
+  fun getAnEmployment(contactId: Long, employmentId: Long): EmploymentDetails = webTestClient.get()
     .uri("/contact/$contactId/employment/$employmentId")
     .accept(MediaType.APPLICATION_JSON)
     .headers(setAuthorisationUsingCurrentUser())
@@ -637,7 +617,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(EmploymentDetails::class.java)
     .returnResult().responseBody!!
 
-  fun updateAnEmployment(contactId: Long, employmentId: Long, request: UpdateEmploymentRequest, role: String = "ROLE_CONTACTS_ADMIN"): EmploymentDetails = webTestClient.put()
+  fun updateAnEmployment(contactId: Long, employmentId: Long, request: UpdateEmploymentRequest): EmploymentDetails = webTestClient.put()
     .uri("/contact/$contactId/employment/$employmentId")
     .accept(MediaType.APPLICATION_JSON)
     .contentType(MediaType.APPLICATION_JSON)
@@ -650,7 +630,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(EmploymentDetails::class.java)
     .returnResult().responseBody!!
 
-  fun deleteAnEmployment(contactId: Long, employmentId: Long, role: String = "ROLE_CONTACTS_ADMIN") {
+  fun deleteAnEmployment(contactId: Long, employmentId: Long) {
     webTestClient.delete()
       .uri("/contact/$contactId/employment/$employmentId")
       .accept(MediaType.APPLICATION_JSON)
@@ -679,4 +659,12 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     val content: List<SyncContactId>,
     val page: PagedModel.PageMetadata,
   )
+
+  fun setAuthorisationUsingCurrentUser(): (HttpHeaders) -> Unit = currentUser?.let {
+    jwtAuthHelper.setAuthorisationHeader(
+      username = if (it.isSystemUser) null else it.username,
+      scope = listOf("read"),
+      roles = it.roles,
+    )
+  } ?: {}
 }

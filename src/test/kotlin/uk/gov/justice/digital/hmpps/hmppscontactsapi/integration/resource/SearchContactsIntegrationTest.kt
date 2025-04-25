@@ -52,12 +52,13 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should return contacts when first, middle names and date of birth is not in request parameters`(role: String) {
+    setCurrentUser(StubUser.READ_ONLY_USER.copy(roles = listOf(role)))
     val url = UriComponentsBuilder.fromPath("contact/search")
       .queryParam("lastName", "Twelve")
       .build()
       .toUri()
 
-    val body = testAPIClient.getSearchContactResults(url, role)
+    val body = testAPIClient.getSearchContactResults(url)
 
     with(body!!) {
       assertThat(content).isNotEmpty()

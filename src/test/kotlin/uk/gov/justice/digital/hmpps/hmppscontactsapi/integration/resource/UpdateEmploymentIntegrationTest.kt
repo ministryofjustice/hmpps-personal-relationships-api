@@ -125,9 +125,10 @@ class UpdateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should update the employment`(role: String) {
+    setCurrentUser(StubUser.UPDATING_USER.copy(roles = listOf(role)))
     val request = aMinimalRequest()
 
-    val updated = testAPIClient.updateAnEmployment(savedContactId, savedEmploymentId, request, role)
+    val updated = testAPIClient.updateAnEmployment(savedContactId, savedEmploymentId, request)
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_UPDATED,

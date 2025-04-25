@@ -223,6 +223,7 @@ class UpdateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should update the address-specific phone number`(role: String) {
+    setCurrentUser(StubUser.UPDATING_USER.copy(roles = listOf(role)))
     val request = aMinimalRequest()
 
     val updated = testAPIClient.updateAContactAddressPhone(
@@ -230,7 +231,6 @@ class UpdateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
       savedAddressId,
       savedAddressPhoneId,
       request,
-      role,
     )
 
     with(updated) {

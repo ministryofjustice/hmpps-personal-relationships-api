@@ -238,6 +238,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should update the restriction with all fields`(role: String) {
+    setCurrentUser(StubUser.UPDATING_USER.copy(roles = listOf(role)))
     stubGetUserByUsername(UserDetails("updated", "Updated User"))
     val request = UpdatePrisonerContactRestrictionRequest(
       restrictionType = "CCTV",
@@ -250,7 +251,6 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       savedPrisonerContactId,
       savedPrisonerContactRestrictionId,
       request,
-      role,
     )
 
     with(updated) {

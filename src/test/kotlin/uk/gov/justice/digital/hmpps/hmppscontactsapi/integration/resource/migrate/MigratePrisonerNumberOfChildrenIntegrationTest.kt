@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource.migrate
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -11,9 +12,15 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.Numbe
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerNumberOfChildrenRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerNumberOfChildrenMigrationResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerNumberOfChildrenResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDateTime
 
 class MigratePrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase() {
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
+  }
 
   @Test
   fun `should return unauthorized if no token provided`() {
@@ -30,12 +37,13 @@ class MigratePrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBa
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should return forbidden without an authorised role on the token`(authRole: String) {
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER.copy(roles = listOf(authRole)))
     webTestClient.post()
       .uri("/migrate/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(basicMigrationRequest())
-      .headers(setAuthorisation(roles = listOf(authRole)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -48,7 +56,7 @@ class MigratePrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBa
     // When
     val response = webTestClient.post()
       .uri("/migrate/number-of-children")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(numberOfChildrenToMigrate)
       .exchange()
@@ -89,7 +97,7 @@ class MigratePrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBa
     // When
     webTestClient.post()
       .uri("/migrate/number-of-children")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(numberOfChildrenToMigrate)
       .exchange()
@@ -113,7 +121,7 @@ class MigratePrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBa
     // When
     webTestClient.put()
       .uri("/sync/$prisonerNumber/number-of-children")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(numberOfChildrenToSync)
       .exchange()
@@ -124,7 +132,7 @@ class MigratePrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBa
 
     val response = webTestClient.post()
       .uri("/migrate/number-of-children")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(numberOfChildrenToMigrate)
       .exchange()
@@ -143,7 +151,7 @@ class MigratePrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBa
 
     val syncResponse = webTestClient.get()
       .uri("/sync/$prisonerNumber/number-of-children")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus().isOk
       .expectHeader().contentType(MediaType.APPLICATION_JSON)

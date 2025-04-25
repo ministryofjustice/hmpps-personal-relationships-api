@@ -195,11 +195,12 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create the emails`(role: String) {
+    setCurrentUser(StubUser.CREATING_USER.copy(roles = listOf(role)))
     val request = CreateMultipleEmailsRequest(
       emailAddresses = listOf(EmailAddress("test@example.com"), EmailAddress("another@example.com")),
     )
 
-    val created = testAPIClient.createContactEmails(savedContactId, request, role)
+    val created = testAPIClient.createContactEmails(savedContactId, request)
 
     request.emailAddresses.forEach { requestedEmailAddress ->
       val createdEmailAddress = created.find { it.emailAddress == requestedEmailAddress.emailAddress }

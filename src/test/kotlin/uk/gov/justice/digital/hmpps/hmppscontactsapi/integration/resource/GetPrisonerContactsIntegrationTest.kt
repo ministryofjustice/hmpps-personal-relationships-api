@@ -6,8 +6,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 import org.openapitools.jackson.nullable.JsonNullable
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -51,14 +49,13 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       .isNotFound
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
-  fun `should return social and official contacts`(role: String) {
+  @Test
+  fun `should return social and official contacts`() {
     stubPrisonSearchWithResponse("A4162DZ")
 
     val contacts = webTestClient.get()
       .uri("/prisoner/A4162DZ/contact")
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -122,7 +119,7 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val firstPage = webTestClient.get()
       .uri("$GET_PRISONER_CONTACT?size=2&page=0&sort=contactId")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk

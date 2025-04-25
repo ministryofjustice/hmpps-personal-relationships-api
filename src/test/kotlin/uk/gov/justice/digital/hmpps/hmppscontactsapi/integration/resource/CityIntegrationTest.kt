@@ -1,19 +1,24 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.City
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 
 class CityIntegrationTest : PostgresIntegrationTestBase() {
 
   companion object {
     private const val GET_CITY_REFERENCE_DATA = "/city-reference"
+  }
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.READ_ONLY_USER)
   }
 
   @Nested
@@ -30,9 +35,10 @@ class CityIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden if no role`() {
+      setCurrentUser(StubUser.USER_WITH_NO_ROLES)
       webTestClient.get()
         .uri("$GET_CITY_REFERENCE_DATA/001")
-        .headers(setAuthorisation())
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -40,20 +46,20 @@ class CityIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden if wrong role`() {
+      setCurrentUser(StubUser.USER_WITH_WRONG_ROLES)
       webTestClient.get()
         .uri("$GET_CITY_REFERENCE_DATA/001")
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
-    fun `should return not found if no city found`(role: String) {
+    @Test
+    fun `should return not found if no city found`() {
       webTestClient.get()
         .uri("$GET_CITY_REFERENCE_DATA/9999")
-        .headers(setAuthorisation(roles = listOf(role)))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isNotFound
@@ -70,7 +76,7 @@ class CityIntegrationTest : PostgresIntegrationTestBase() {
 
     private fun WebTestClient.getCityReferenceData(url: String): MutableList<City> = get()
       .uri(url)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -93,9 +99,10 @@ class CityIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden if no role`() {
+      setCurrentUser(StubUser.USER_WITH_NO_ROLES)
       webTestClient.get()
         .uri("$GET_CITY_REFERENCE_DATA/nomis-code/YU")
-        .headers(setAuthorisation())
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -103,9 +110,10 @@ class CityIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden if wrong role`() {
+      setCurrentUser(StubUser.USER_WITH_WRONG_ROLES)
       webTestClient.get()
         .uri("$GET_CITY_REFERENCE_DATA/nomis-code/YU")
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -115,7 +123,7 @@ class CityIntegrationTest : PostgresIntegrationTestBase() {
     fun `should return not found if no city found`() {
       webTestClient.get()
         .uri("$GET_CITY_REFERENCE_DATA/nomis-code/YY")
-        .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isNotFound
@@ -132,7 +140,7 @@ class CityIntegrationTest : PostgresIntegrationTestBase() {
 
     private fun WebTestClient.getCityReferenceData(url: String): MutableList<City> = get()
       .uri(url)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -155,9 +163,10 @@ class CityIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden if no role`() {
+      setCurrentUser(StubUser.USER_WITH_NO_ROLES)
       webTestClient.get()
         .uri(GET_CITY_REFERENCE_DATA)
-        .headers(setAuthorisation())
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -165,9 +174,10 @@ class CityIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden if wrong role`() {
+      setCurrentUser(StubUser.USER_WITH_WRONG_ROLES)
       webTestClient.get()
         .uri(GET_CITY_REFERENCE_DATA)
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -177,7 +187,7 @@ class CityIntegrationTest : PostgresIntegrationTestBase() {
     fun `should return not found if no city found`() {
       webTestClient.get()
         .uri("$GET_CITY_REFERENCE_DATA/10009")
-        .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isNotFound
@@ -199,7 +209,7 @@ class CityIntegrationTest : PostgresIntegrationTestBase() {
 
     private fun WebTestClient.getCityReferenceData(url: String): MutableList<City> = get()
       .uri(url)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -9,11 +10,17 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.Country
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 
 class CountryIntegrationTest : PostgresIntegrationTestBase() {
 
   companion object {
     private const val GET_COUNTRY_REFERENCE_DATA = "/country-reference"
+  }
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.READ_ONLY_USER)
   }
 
   @Nested
@@ -30,9 +37,10 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden if no role`() {
+      setCurrentUser(StubUser.USER_WITH_NO_ROLES)
       webTestClient.get()
         .uri("$GET_COUNTRY_REFERENCE_DATA/001")
-        .headers(setAuthorisation())
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -40,9 +48,10 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden if wrong role`() {
+      setCurrentUser(StubUser.USER_WITH_WRONG_ROLES)
       webTestClient.get()
         .uri("$GET_COUNTRY_REFERENCE_DATA/001")
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -52,28 +61,24 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
     fun `should return not found if no country found`() {
       webTestClient.get()
         .uri("$GET_COUNTRY_REFERENCE_DATA/999")
-        .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isNotFound
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
-    fun `should return country reference data when using the id`(role: String) {
-      val countryReferences = webTestClient.getCountryReferenceData(
-        "$GET_COUNTRY_REFERENCE_DATA/264",
-        role,
-      )
+    @Test
+    fun `should return country reference data when using the id`() {
+      val countryReferences = webTestClient.getCountryReferenceData("$GET_COUNTRY_REFERENCE_DATA/264")
 
       assertThat(countryReferences).extracting("nomisDescription").contains("Yugoslavia")
       assertThat(countryReferences).extracting("nomisCode").contains("YU")
       assertThat(countryReferences).hasSize(1)
     }
 
-    private fun WebTestClient.getCountryReferenceData(url: String, role: String): MutableList<Country> = get()
+    private fun WebTestClient.getCountryReferenceData(url: String): MutableList<Country> = get()
       .uri(url)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -96,9 +101,10 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden if no role`() {
+      setCurrentUser(StubUser.USER_WITH_NO_ROLES)
       webTestClient.get()
         .uri("$GET_COUNTRY_REFERENCE_DATA/nomis-code/YU")
-        .headers(setAuthorisation())
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -106,9 +112,10 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden if wrong role`() {
+      setCurrentUser(StubUser.USER_WITH_WRONG_ROLES)
       webTestClient.get()
         .uri("$GET_COUNTRY_REFERENCE_DATA/nomis-code/YU")
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -118,28 +125,24 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
     fun `should return not found if no country found`() {
       webTestClient.get()
         .uri("$GET_COUNTRY_REFERENCE_DATA/nomis-code/YY")
-        .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isNotFound
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
-    fun `should return country reference data when using the nomis code`(role: String) {
-      val countryReferences = webTestClient.getCountryReferenceData(
-        "$GET_COUNTRY_REFERENCE_DATA/nomis-code/YU",
-        role,
-      )
+    @Test
+    fun `should return country reference data when using the nomis code`() {
+      val countryReferences = webTestClient.getCountryReferenceData("$GET_COUNTRY_REFERENCE_DATA/nomis-code/YU")
 
       assertThat(countryReferences).extracting("nomisDescription").contains("Yugoslavia")
       assertThat(countryReferences).extracting("nomisCode").contains("YU")
       assertThat(countryReferences).hasSize(1)
     }
 
-    private fun WebTestClient.getCountryReferenceData(url: String, role: String): MutableList<Country> = get()
+    private fun WebTestClient.getCountryReferenceData(url: String): MutableList<Country> = get()
       .uri(url)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -162,9 +165,10 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden if no role`() {
+      setCurrentUser(StubUser.USER_WITH_NO_ROLES)
       webTestClient.get()
         .uri("$GET_COUNTRY_REFERENCE_DATA/iso-alpha2/b6")
-        .headers(setAuthorisation())
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -172,9 +176,10 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden if wrong role`() {
+      setCurrentUser(StubUser.USER_WITH_WRONG_ROLES)
       webTestClient.get()
         .uri("$GET_COUNTRY_REFERENCE_DATA/iso-alpha2/b6")
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -184,28 +189,24 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
     fun `should return not found if no country found`() {
       webTestClient.get()
         .uri("$GET_COUNTRY_REFERENCE_DATA/iso-alpha2/z6")
-        .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isNotFound
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
-    fun `should return country reference data when using the iso alpha code 2`(role: String) {
-      val countryReferences = webTestClient.getCountryReferenceData(
-        "$GET_COUNTRY_REFERENCE_DATA/iso-alpha2/b6",
-        role,
-      )
+    @Test
+    fun `should return country reference data when using the iso alpha code 2`() {
+      val countryReferences = webTestClient.getCountryReferenceData("$GET_COUNTRY_REFERENCE_DATA/iso-alpha2/b6")
 
       assertThat(countryReferences).extracting("nomisDescription").contains("Yugoslavia")
       assertThat(countryReferences).extracting("nomisCode").contains("YU")
       assertThat(countryReferences).hasSize(1)
     }
 
-    private fun WebTestClient.getCountryReferenceData(url: String, role: String): MutableList<Country> = get()
+    private fun WebTestClient.getCountryReferenceData(url: String): MutableList<Country> = get()
       .uri(url)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -228,9 +229,10 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden if no role`() {
+      setCurrentUser(StubUser.USER_WITH_NO_ROLES)
       webTestClient.get()
         .uri("$GET_COUNTRY_REFERENCE_DATA/iso-alpha3/bn6")
-        .headers(setAuthorisation())
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -238,9 +240,10 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden if wrong role`() {
+      setCurrentUser(StubUser.USER_WITH_WRONG_ROLES)
       webTestClient.get()
         .uri("$GET_COUNTRY_REFERENCE_DATA/iso-alpha3/bn6")
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -250,7 +253,7 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
     fun `should return not found if no country found`() {
       webTestClient.get()
         .uri("$GET_COUNTRY_REFERENCE_DATA/iso-alpha3/z6")
-        .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isNotFound
@@ -261,7 +264,6 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
     fun `should return country reference data when using the iso alpha code 3`(role: String) {
       val countryReferences = webTestClient.getCountryReferenceData(
         "$GET_COUNTRY_REFERENCE_DATA/iso-alpha3/bn6",
-        role,
       )
 
       assertThat(countryReferences).extracting("nomisDescription").contains("Yugoslavia")
@@ -269,9 +271,9 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
       assertThat(countryReferences).hasSize(1)
     }
 
-    private fun WebTestClient.getCountryReferenceData(url: String, role: String): MutableList<Country> = get()
+    private fun WebTestClient.getCountryReferenceData(url: String): MutableList<Country> = get()
       .uri(url)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -294,9 +296,10 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden if no role`() {
+      setCurrentUser(StubUser.USER_WITH_NO_ROLES)
       webTestClient.get()
         .uri(GET_COUNTRY_REFERENCE_DATA)
-        .headers(setAuthorisation())
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -304,9 +307,10 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `should return forbidden if wrong role`() {
+      setCurrentUser(StubUser.USER_WITH_WRONG_ROLES)
       webTestClient.get()
         .uri(GET_COUNTRY_REFERENCE_DATA)
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -316,16 +320,15 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
     fun `should return not found if no country found`() {
       webTestClient.get()
         .uri("$GET_COUNTRY_REFERENCE_DATA/10001")
-        .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isNotFound
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
-    fun `should return country reference data when get all countries`(role: String) {
-      val countryReferences = webTestClient.getCountryReferenceData(GET_COUNTRY_REFERENCE_DATA, role)
+    @Test
+    fun `should return country reference data when get all countries`() {
+      val countryReferences = webTestClient.getCountryReferenceData(GET_COUNTRY_REFERENCE_DATA)
 
       val country = Country(
         countryId = 1L,
@@ -341,9 +344,9 @@ class CountryIntegrationTest : PostgresIntegrationTestBase() {
       assertThat(countryReferences).hasSizeGreaterThan(10)
     }
 
-    private fun WebTestClient.getCountryReferenceData(url: String, role: String): MutableList<Country> = get()
+    private fun WebTestClient.getCountryReferenceData(url: String): MutableList<Country> = get()
       .uri(url)
-      .headers(setAuthorisation(roles = listOf(role)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk

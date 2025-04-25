@@ -186,6 +186,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create the restriction with all fields`(role: String) {
+    setCurrentUser(StubUser.CREATING_USER.copy(roles = listOf(role)))
     stubGetUserByUsername(UserDetails("created", "Created User"))
     val request = CreatePrisonerContactRestrictionRequest(
       restrictionType = "BAN",
@@ -194,7 +195,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       comments = "Some comments",
     )
 
-    val created = testAPIClient.createPrisonerContactRestriction(savedPrisonerContactId, request, role)
+    val created = testAPIClient.createPrisonerContactRestriction(savedPrisonerContactId, request)
 
     with(created) {
       assertThat(prisonerContactRestrictionId).isGreaterThan(0)

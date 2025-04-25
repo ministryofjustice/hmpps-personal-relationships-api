@@ -79,7 +79,8 @@ class GetEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should get the employment`(role: String) {
-    val details = testAPIClient.getAnEmployment(savedContactId, savedEmploymentId, role)
+    setCurrentUser(StubUser.READ_ONLY_USER.copy(roles = listOf(role)))
+    val details = testAPIClient.getAnEmployment(savedContactId, savedEmploymentId)
     assertThat(details.employmentId).isEqualTo(savedEmploymentId)
     assertThat(details.employer.organisationId).isEqualTo(999)
     assertThat(details.isActive).isTrue()

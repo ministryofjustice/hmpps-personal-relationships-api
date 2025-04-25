@@ -27,7 +27,7 @@ class GetContactNameIntegrationTest : SecureAPIIntegrationTestBase() {
     webTestClient.get()
       .uri("/contact/123456")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound

@@ -35,7 +35,7 @@ class GetReferenceCodesByGroupIntegrationTest : SecureAPIIntegrationTestBase() {
     val error = webTestClient.get()
       .uri("/reference-codes/group/FOO")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus().isBadRequest
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -48,10 +48,11 @@ class GetReferenceCodesByGroupIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should return a list of relationship type reference codes`(role: String) {
+    setCurrentUser(StubUser.READ_ONLY_USER.copy(roles = listOf(role)))
     val groupCode = ReferenceCodeGroup.SOCIAL_RELATIONSHIP
     referenceCodeRepository.findAllByGroupCodeEquals(groupCode, Sort.unsorted()) hasSize 36
 
-    val listOfCodes = testAPIClient.getReferenceCodes(groupCode, role = role)
+    val listOfCodes = testAPIClient.getReferenceCodes(groupCode)
 
     assertThat(listOfCodes).hasSize(36)
     assertThat(listOfCodes)
@@ -65,7 +66,7 @@ class GetReferenceCodesByGroupIntegrationTest : SecureAPIIntegrationTestBase() {
     val groupCode = ReferenceCodeGroup.PHONE_TYPE
     referenceCodeRepository.findAllByGroupCodeEquals(groupCode, Sort.unsorted()) hasSize 7
 
-    val listOfCodes = testAPIClient.getReferenceCodes(groupCode, role = "ROLE_CONTACTS_ADMIN")
+    val listOfCodes = testAPIClient.getReferenceCodes(groupCode)
 
     assertThat(listOfCodes).extracting("code").containsExactlyInAnyOrder(
       "HOME",
@@ -83,7 +84,7 @@ class GetReferenceCodesByGroupIntegrationTest : SecureAPIIntegrationTestBase() {
     val groupCode = ReferenceCodeGroup.DOMESTIC_STS
     referenceCodeRepository.findAllByGroupCodeEquals(groupCode, Sort.unsorted()) hasSize 7
 
-    val listOfCodes = testAPIClient.getReferenceCodes(groupCode, role = "ROLE_CONTACTS_ADMIN")
+    val listOfCodes = testAPIClient.getReferenceCodes(groupCode)
 
     assertThat(listOfCodes).hasSize(7)
     assertThat(listOfCodes)
@@ -94,16 +95,12 @@ class GetReferenceCodesByGroupIntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should be able to sort reference codes`() {
     val groupCode = ReferenceCodeGroup.DOMESTIC_STS
-    val listOfCodesInDisplayOrder = testAPIClient.getReferenceCodes(
-      groupCode,
-      "displayOrder",
-      role = "ROLE_CONTACTS_ADMIN",
-    )
+    val listOfCodesInDisplayOrder = testAPIClient.getReferenceCodes(groupCode, "displayOrder")
     assertThat(listOfCodesInDisplayOrder)
       .extracting("code")
       .isEqualTo(listOf("S", "C", "M", "D", "P", "W", "N"))
 
-    val listOfCodesInCodeOrder = testAPIClient.getReferenceCodes(groupCode, "code", role = "ROLE_CONTACTS_ADMIN")
+    val listOfCodesInCodeOrder = testAPIClient.getReferenceCodes(groupCode, "code")
     assertThat(listOfCodesInCodeOrder)
       .extracting("code")
       .isEqualTo(listOf("C", "D", "M", "N", "P", "S", "W"))
@@ -112,7 +109,7 @@ class GetReferenceCodesByGroupIntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should not return inactive codes by default`() {
     val groupCode = ReferenceCodeGroup.TEST_TYPE
-    assertThat(testAPIClient.getReferenceCodes(groupCode, activeOnly = null, role = "ROLE_CONTACTS_ADMIN"))
+    assertThat(testAPIClient.getReferenceCodes(groupCode, activeOnly = null))
       .extracting("code")
       .isEqualTo(listOf("ACTIVE"))
   }
@@ -120,7 +117,7 @@ class GetReferenceCodesByGroupIntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should not return inactive codes if specifically request not to`() {
     val groupCode = ReferenceCodeGroup.TEST_TYPE
-    assertThat(testAPIClient.getReferenceCodes(groupCode, activeOnly = true, role = "ROLE_CONTACTS_ADMIN"))
+    assertThat(testAPIClient.getReferenceCodes(groupCode, activeOnly = true))
       .extracting("code")
       .isEqualTo(listOf("ACTIVE"))
   }
@@ -128,7 +125,7 @@ class GetReferenceCodesByGroupIntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should return inactive codes if requested`() {
     val groupCode = ReferenceCodeGroup.TEST_TYPE
-    assertThat(testAPIClient.getReferenceCodes(groupCode, activeOnly = false, role = "ROLE_CONTACTS_ADMIN"))
+    assertThat(testAPIClient.getReferenceCodes(groupCode, activeOnly = false))
       .extracting("code")
       .isEqualTo(listOf("ACTIVE", "INACTIVE"))
   }

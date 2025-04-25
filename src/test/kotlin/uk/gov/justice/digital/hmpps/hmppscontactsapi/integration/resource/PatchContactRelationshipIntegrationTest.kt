@@ -62,7 +62,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/prisoner-contact/$prisonerContactId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(relationShipJson)
       .exchange()
       .expectStatus()
@@ -88,7 +88,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       .uri("/prisoner-contact/$prisonerContactId")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(request)
       .exchange()
       .expectStatus()
@@ -295,6 +295,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should update the contact relationship with all fields`(role: String) {
+    setCurrentUser(StubUser.READ_WRITE_USER.copy(roles = listOf(role)))
     val prisonerNumber = getRandomPrisonerCode()
     stubPrisonSearchWithResponse(prisonerNumber)
     val prisonerContact = cretePrisonerContact(prisonerNumber)
@@ -310,7 +311,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val prisonerContactId = prisonerContact.prisonerContactId
 
-    testAPIClient.updateRelationship(prisonerContactId, updateRequest, role)
+    testAPIClient.updateRelationship(prisonerContactId, updateRequest)
 
     val updatedPrisonerContacts = testAPIClient.getPrisonerContacts(prisonerNumber).content
 
