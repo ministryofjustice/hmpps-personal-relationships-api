@@ -25,7 +25,8 @@ class GetContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should get email details`(role: String) {
-    val email = testAPIClient.getContactEmail(1, 1, role)
+    setCurrentUser(StubUser.READ_ONLY_USER.copy(roles = listOf(role)))
+    val email = testAPIClient.getContactEmail(1, 1)
 
     with(email) {
       assertThat(contactEmailId).isEqualTo(1)

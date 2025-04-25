@@ -222,6 +222,7 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should update the identity with all fields`(role: String) {
+    setCurrentUser(StubUser.UPDATING_USER.copy(roles = listOf(role)))
     val request = UpdateIdentityRequest(
       identityType = "PASS",
       identityValue = "P978654312",
@@ -232,7 +233,6 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       savedContactId,
       savedContactIdentityId,
       request,
-      role,
     )
 
     with(updated) {

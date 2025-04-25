@@ -92,9 +92,10 @@ class CreateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create the employment`(role: String) {
+    setCurrentUser(StubUser.CREATING_USER.copy(roles = listOf(role)))
     val request = aMinimalRequest()
 
-    val created = testAPIClient.createAnEmployment(savedContactId, request, role)
+    val created = testAPIClient.createAnEmployment(savedContactId, request)
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_CREATED,

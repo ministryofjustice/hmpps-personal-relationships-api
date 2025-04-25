@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource.migrate
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -11,9 +12,15 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.Migra
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerDomesticStatusMigrationResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDateTime
 
 class MigratePrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() {
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
+  }
 
   @Test
   fun `should return unauthorized if no token provided`() {
@@ -30,12 +37,13 @@ class MigratePrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should return forbidden without an authorised role on the token`(authRole: String) {
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER.copy(roles = listOf(authRole)))
     webTestClient.post()
       .uri("/migrate/domestic-status")
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(basicMigrationRequest())
-      .headers(setAuthorisation(roles = listOf(authRole)))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -48,7 +56,7 @@ class MigratePrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase
     // When
     val response = webTestClient.post()
       .uri("/migrate/domestic-status")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(domesticStatusToMigrate)
       .exchange()
@@ -81,7 +89,7 @@ class MigratePrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase
     // When
     webTestClient.put()
       .uri("/sync/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(domesticStatusToSync)
       .exchange()
@@ -92,7 +100,7 @@ class MigratePrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase
 
     val response = webTestClient.post()
       .uri("/migrate/domestic-status")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(domesticStatusToMigrate)
       .exchange()
@@ -111,7 +119,7 @@ class MigratePrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase
 
     val domesticStatus = webTestClient.get()
       .uri("/sync/$prisonerNumber/domestic-status")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus().isOk
       .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -149,7 +157,7 @@ class MigratePrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase
     // When
     webTestClient.post()
       .uri("/migrate/domestic-status")
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(invalidDomesticStatus)
       .exchange()

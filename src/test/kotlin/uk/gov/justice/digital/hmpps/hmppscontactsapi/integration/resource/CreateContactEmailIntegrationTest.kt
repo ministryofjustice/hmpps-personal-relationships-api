@@ -164,9 +164,10 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create the email`(role: String) {
+    setCurrentUser(StubUser.CREATING_USER.copy(roles = listOf(role)))
     val request = aMinimalRequest()
 
-    val created = testAPIClient.createAContactEmail(savedContactId, request, role)
+    val created = testAPIClient.createAContactEmail(savedContactId, request)
 
     assertEqualsExcludingTimestamps(created, request)
 

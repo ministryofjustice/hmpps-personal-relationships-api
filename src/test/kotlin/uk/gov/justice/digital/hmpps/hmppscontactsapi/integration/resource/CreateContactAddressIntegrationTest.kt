@@ -145,9 +145,10 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create the contact address`(role: String) {
+    setCurrentUser(StubUser.CREATING_USER.copy(roles = listOf(role)))
     val request = aMinimalAddressRequest()
 
-    val created = testAPIClient.createAContactAddress(savedContactId, request, role)
+    val created = testAPIClient.createAContactAddress(savedContactId, request)
 
     assertEqualsExcludingTimestamps(created, request)
 
@@ -172,7 +173,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       ),
     )
 
-    val created = testAPIClient.createAContactAddress(savedContactId, request, "ROLE_CONTACTS_ADMIN")
+    val created = testAPIClient.createAContactAddress(savedContactId, request)
 
     assertEqualsExcludingTimestamps(created, request)
 

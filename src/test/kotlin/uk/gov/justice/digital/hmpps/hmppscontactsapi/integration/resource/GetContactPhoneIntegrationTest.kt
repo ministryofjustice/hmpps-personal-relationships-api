@@ -25,7 +25,8 @@ class GetContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should get phone details`(role: String) {
-    val phone = testAPIClient.getContactPhone(1, 2, role)
+    setCurrentUser(StubUser.READ_ONLY_USER.copy(roles = listOf(role)))
+    val phone = testAPIClient.getContactPhone(1, 2)
 
     with(phone) {
       assertThat(contactPhoneId).isEqualTo(2)

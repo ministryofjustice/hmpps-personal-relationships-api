@@ -8,6 +8,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.context.jdbc.Sql
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContactReconcile
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDate
 
 @Sql("classpath:reconcile.tests/data-for-reconcile-test.sql")
@@ -20,6 +21,7 @@ class SyncReconcileIntegrationTest : PostgresIntegrationTestBase() {
   @BeforeEach
   fun resetEvents() {
     stubEvents.reset()
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
   }
 
   @Test
@@ -34,10 +36,11 @@ class SyncReconcileIntegrationTest : PostgresIntegrationTestBase() {
 
   @Test
   fun `should return forbidden if incorrect role`() {
+    setCurrentUser(StubUser.USER_WITH_WRONG_ROLES)
     webTestClient.get()
       .uri("/sync/contact/1/reconcile")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -48,7 +51,7 @@ class SyncReconcileIntegrationTest : PostgresIntegrationTestBase() {
     val reconcileResponse = webTestClient.get()
       .uri("/sync/contact/30001/reconcile")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk

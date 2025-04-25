@@ -185,6 +185,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create multiple phones`(role: String) {
+    setCurrentUser(StubUser.CREATING_USER.copy(roles = listOf(role)))
     val request = CreateMultiplePhoneNumbersRequest(
       listOf(
         PhoneNumber(
@@ -199,7 +200,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
       ),
     )
 
-    val created = testAPIClient.createMultipleContactPhones(savedContactId, request, role)
+    val created = testAPIClient.createMultipleContactPhones(savedContactId, request)
 
     val mobile = created.find { it.phoneType == "MOB" }
     assertThat(mobile).isNotNull()

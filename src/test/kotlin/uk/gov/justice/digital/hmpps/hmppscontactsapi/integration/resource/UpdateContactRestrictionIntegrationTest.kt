@@ -207,6 +207,7 @@ class UpdateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should update the restriction with all fields`(role: String) {
+    setCurrentUser(StubUser.UPDATING_USER.copy(roles = listOf(role)))
     val request = UpdateContactRestrictionRequest(
       restrictionType = "CCTV",
       startDate = LocalDate.of(1990, 1, 1),
@@ -218,7 +219,6 @@ class UpdateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       savedContactId,
       savedContactRestrictionId,
       request,
-      role,
     )
 
     with(updated) {

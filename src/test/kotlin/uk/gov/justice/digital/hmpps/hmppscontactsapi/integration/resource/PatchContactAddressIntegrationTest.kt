@@ -189,6 +189,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should update the address`(role: String) {
+    setCurrentUser(StubUser.UPDATING_USER.copy(roles = listOf(role)))
     val request = PatchContactAddressRequest(
       addressType = JsonNullable.of("HOME"),
       primaryAddress = JsonNullable.of(true),
@@ -212,7 +213,6 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       savedContactId,
       savedContactAddressId,
       request,
-      role,
     )
 
     with(updated) {

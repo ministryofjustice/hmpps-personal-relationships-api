@@ -189,10 +189,11 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should update the email`(role: String) {
+    setCurrentUser(StubUser.UPDATING_USER.copy(roles = listOf(role)))
     val request = UpdateEmailRequest(
       emailAddress = "updated@example.com",
     )
-    val updated = testAPIClient.updateAContactEmail(savedContactId, savedContactEmailId, request, role)
+    val updated = testAPIClient.updateAContactEmail(savedContactId, savedContactEmailId, request)
 
     with(updated) {
       assertThat(emailAddress).isEqualTo("updated@example.com")

@@ -238,7 +238,8 @@ class GetContactByIdIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should get contacts with staff flag`(role: String) {
-    val contact = testAPIClient.getContact(1, role)
+    setCurrentUser(StubUser.READ_ONLY_USER.copy(roles = listOf(role)))
+    val contact = testAPIClient.getContact(1)
 
     with(contact) {
       assertThat(id).isEqualTo(1)

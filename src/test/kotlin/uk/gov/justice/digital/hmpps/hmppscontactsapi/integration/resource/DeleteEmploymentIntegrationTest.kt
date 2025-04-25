@@ -87,7 +87,8 @@ class DeleteEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should delete the employment`(role: String) {
-    testAPIClient.deleteAnEmployment(savedContactId, savedEmploymentId, role)
+    setCurrentUser(StubUser.DELETING_USER.copy(roles = listOf(role)))
+    testAPIClient.deleteAnEmployment(savedContactId, savedEmploymentId)
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_DELETED,

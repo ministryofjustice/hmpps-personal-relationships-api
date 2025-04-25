@@ -158,13 +158,13 @@ class CreateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create the address-specific phone number`(role: String) {
+    setCurrentUser(StubUser.CREATING_USER.copy(roles = listOf(role)))
     val request = aMinimalRequest().copy(contactAddressId = savedAddressId)
 
     val created = testAPIClient.createAContactAddressPhone(
       savedContactId,
       savedAddressId,
       request,
-      role,
     )
 
     assertEqualsExcludingTimestamps(created, request)

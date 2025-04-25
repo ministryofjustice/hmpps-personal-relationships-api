@@ -227,13 +227,14 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should update the phone with all fields`(role: String) {
+    setCurrentUser(StubUser.UPDATING_USER.copy(roles = listOf(role)))
     val request = UpdatePhoneRequest(
       phoneType = "MOB",
       phoneNumber = "+44777777777 (0123)",
       extNumber = "9999",
     )
 
-    val updated = testAPIClient.updateAContactPhone(savedContactId, savedContactPhoneId, request, role)
+    val updated = testAPIClient.updateAContactPhone(savedContactId, savedContactPhoneId, request)
 
     with(updated) {
       assertThat(phoneType).isEqualTo(request.phoneType)

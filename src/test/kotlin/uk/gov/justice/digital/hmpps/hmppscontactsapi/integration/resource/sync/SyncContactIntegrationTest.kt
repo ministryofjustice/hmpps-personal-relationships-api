@@ -62,10 +62,11 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
   @Test
   fun `Sync endpoints should return forbidden without an authorised role on the token`() {
+    setCurrentUser(StubUser.USER_WITH_WRONG_ROLES)
     webTestClient.get()
       .uri("/sync/contact/1")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -75,7 +76,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(createSyncContactRequest(5000L))
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -85,7 +86,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
       .bodyValue(updateContactRequest())
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -93,7 +94,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.delete()
       .uri("/sync/contact/1")
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isForbidden
@@ -106,7 +107,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
     val contact = webTestClient.get()
       .uri("/sync/contact/{contactId}", contactId)
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -189,7 +190,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
       .uri("/sync/contact/{contactId}", contact.id)
       .accept(MediaType.APPLICATION_JSON)
       .contentType(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(updateContactRequest())
       .exchange()
       .expectStatus()
@@ -232,7 +233,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.delete()
       .uri("/sync/contact/{contactId}", contact.id)
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isOk
@@ -240,7 +241,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
     webTestClient.get()
       .uri("/sync/contact/{contactId}", contact.id)
       .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound

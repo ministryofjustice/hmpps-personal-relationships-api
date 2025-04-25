@@ -213,6 +213,7 @@ class CreateMultipleIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create all the identity documents`(role: String) {
+    setCurrentUser(StubUser.CREATING_USER.copy(roles = listOf(role)))
     val request = CreateMultipleIdentitiesRequest(
       identities = listOf(
         IdentityDocument(
@@ -228,7 +229,7 @@ class CreateMultipleIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       ),
     )
 
-    val created = testAPIClient.createMultipleContactIdentityDocuments(savedContactId, request, role)
+    val created = testAPIClient.createMultipleContactIdentityDocuments(savedContactId, request)
 
     val drivingLicence = created.find { it.identityType == "DL" }!!
 

@@ -30,7 +30,7 @@ class GetPrisonerContactRestrictionsIntegrationTest : SecureAPIIntegrationTestBa
   fun `should return not found if the prisoner contact relationship is not found`() {
     webTestClient.get()
       .uri("/prisoner-contact/-1/restriction")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -39,11 +39,12 @@ class GetPrisonerContactRestrictionsIntegrationTest : SecureAPIIntegrationTestBa
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should return all relationship and global restrictions for a contact`(role: String) {
+    setCurrentUser(StubUser.READ_ONLY_USER.copy(roles = listOf(role)))
     stubGetUserByUsername(UserDetails("officer", "The Officer"))
     stubGetUserByUsername(UserDetails("editor", "The Editor"))
     stubGetUserByUsername(UserDetails("JBAKER_GEN", "James Test"))
 
-    val restrictions = testAPIClient.getPrisonerContactRestrictions(10, role)
+    val restrictions = testAPIClient.getPrisonerContactRestrictions(10)
 
     assertThat(restrictions.contactGlobalRestrictions).hasSize(2)
     with(restrictions.contactGlobalRestrictions[0]) {

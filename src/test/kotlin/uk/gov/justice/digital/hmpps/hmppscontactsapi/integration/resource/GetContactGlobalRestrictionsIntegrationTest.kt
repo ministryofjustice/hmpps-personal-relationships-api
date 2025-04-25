@@ -28,7 +28,7 @@ class GetContactGlobalRestrictionsIntegrationTest : SecureAPIIntegrationTestBase
   fun `should return not found if no contact found`() {
     webTestClient.get()
       .uri("/contact/-1/restriction")
-      .headers(setAuthorisation(roles = listOf("ROLE_CONTACTS_ADMIN")))
+      .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
@@ -38,7 +38,8 @@ class GetContactGlobalRestrictionsIntegrationTest : SecureAPIIntegrationTestBase
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should return all global restrictions for a contact`(role: String) {
     stubGetUserByUsername(UserDetails("JBAKER_GEN", "James Baker"))
-    val restrictions = testAPIClient.getContactGlobalRestrictions(3, role)
+    setCurrentUser(StubUser.READ_ONLY_USER.copy(roles = listOf(role)))
+    val restrictions = testAPIClient.getContactGlobalRestrictions(3)
     assertThat(restrictions).hasSize(2)
     with(restrictions[0]) {
       assertThat(contactRestrictionId).isNotNull()

@@ -83,16 +83,6 @@ abstract class IntegrationTestBase {
     organisationsApiMockServer.stubOrganisationSummaryNotFound(id)
   }
 
-  @Deprecated(
-    "Use setCurrentUser and setAuthorisationUsingCurrentUser instead",
-    ReplaceWith("testAPIClient.setAuthorisationUsingCurrentUser"),
-  )
-  internal fun setAuthorisation(
-    username: String? = "AUTH_ADM",
-    roles: List<String> = listOf(),
-    scopes: List<String> = listOf("read"),
-  ): (HttpHeaders) -> Unit = testAPIClient.setAuthorisation(username = username, scopes = scopes, roles = roles)
-
   /**
    * Use #setCurrentUser with a `StubUser` to set the current user. Default for all tests is no user.
    */

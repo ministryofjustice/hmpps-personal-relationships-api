@@ -171,6 +171,7 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create the restriction with all fields`(role: String) {
+    setCurrentUser(StubUser.CREATING_USER.copy(roles = listOf(role)))
     val request = CreateContactRestrictionRequest(
       restrictionType = "BAN",
       startDate = LocalDate.of(2020, 1, 1),
@@ -178,7 +179,7 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       comments = "Some comments",
     )
 
-    val created = testAPIClient.createContactGlobalRestriction(savedContactId, request, role)
+    val created = testAPIClient.createContactGlobalRestriction(savedContactId, request)
 
     with(created) {
       assertThat(contactRestrictionId).isGreaterThan(0)

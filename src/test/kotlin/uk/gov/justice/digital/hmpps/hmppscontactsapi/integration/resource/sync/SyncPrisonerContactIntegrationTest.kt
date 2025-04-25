@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource.sync
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
@@ -12,10 +13,16 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEven
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerContactInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
+  }
 
   @Nested
   inner class PrisonerContactSyncTests {
@@ -57,10 +64,11 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
 
     @Test
     fun `Sync endpoints should return forbidden without an authorised role on the token`() {
+      setCurrentUser(StubUser.USER_WITH_WRONG_ROLES)
       webTestClient.get()
         .uri("/sync/prisoner-contact/1")
         .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -70,7 +78,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(createPrisonerContactRequest())
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -80,7 +88,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(updatePrisonerContactRequest())
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -88,7 +96,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       webTestClient.delete()
         .uri("/sync/prisoner-contact/1")
         .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("ROLE_WRONG")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isForbidden
@@ -101,7 +109,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       val prisonerContact = webTestClient.get()
         .uri("/sync/prisoner-contact/{prisonerContactId}", contactId)
         .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isOk
@@ -135,7 +143,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .uri("/sync/prisoner-contact")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .bodyValue(createPrisonerContactRequest())
         .exchange()
         .expectStatus()
@@ -177,7 +185,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .uri("/sync/prisoner-contact")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .bodyValue(createPrisonerContactRequest())
         .exchange()
         .expectStatus()
@@ -210,7 +218,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .uri("/sync/prisoner-contact/{prisonerContactId}", prisonerContact.id)
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .bodyValue(updatePrisonerContactRequest())
         .exchange()
         .expectStatus()
@@ -250,7 +258,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .uri("/sync/prisoner-contact")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .bodyValue(createPrisonerContactRequest())
         .exchange()
         .expectStatus()
@@ -262,7 +270,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       webTestClient.delete()
         .uri("/sync/prisoner-contact/{prisonerContactId}", prisonerContact.id)
         .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isOk
@@ -270,7 +278,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       webTestClient.get()
         .uri("/sync/prisoner-contact/{prisonerContactId}", prisonerContact.id)
         .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("PERSONAL_RELATIONSHIPS_MIGRATION")))
+        .headers(setAuthorisationUsingCurrentUser())
         .exchange()
         .expectStatus()
         .isNotFound
