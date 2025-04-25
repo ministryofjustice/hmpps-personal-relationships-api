@@ -3,8 +3,8 @@ import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.0.0"
-  id("org.openapi.generator") version "7.11.0"
-  kotlin("plugin.spring") version "2.1.10"
+  id("org.openapi.generator") version "7.12.0"
+  kotlin("plugin.spring") version "2.1.20"
   kotlin("plugin.jpa") version "2.1.20"
 }
 
@@ -27,12 +27,12 @@ dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.2")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.2")
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.3.0")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.9.0")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.openapitools:jackson-databind-nullable:0.2.6")
 
   // CSV dependencies
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.18.3")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.19.0")
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
@@ -49,7 +49,7 @@ dependencies {
   testImplementation("net.javacrumbs.json-unit:json-unit:4.1.0")
   testImplementation("net.javacrumbs.json-unit:json-unit-assertj:4.1.0")
   testImplementation("net.javacrumbs.json-unit:json-unit-json-path:4.1.0")
-  testImplementation("org.awaitility:awaitility-kotlin:4.2.2")
+  testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("org.mockito:mockito-inline:5.2.0")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation("org.springframework.security:spring-security-test")
