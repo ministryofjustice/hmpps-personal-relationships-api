@@ -262,5 +262,6 @@ class PrisonerContactServiceTest {
     comments = "No comments",
     relationshipType = "S",
     relationshipTypeDescription = "Social",
+    staffFlag = false,
   )
 }

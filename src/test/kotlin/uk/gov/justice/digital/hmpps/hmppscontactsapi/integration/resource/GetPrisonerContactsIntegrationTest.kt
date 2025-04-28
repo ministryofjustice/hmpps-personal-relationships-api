@@ -85,6 +85,7 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(contact.countryCode).isEqualTo("ENG")
     assertThat(contact.countryDescription).isEqualTo("England")
     assertThat(contact.noFixedAddress).isFalse()
+    assertThat(contact.isStaff).isTrue()
 
     val minimal = contacts.content.find { it.firstName == "Minimal" } ?: fail("Couldn't find 'Minimal' contact")
     assertThat(minimal.firstName).isEqualTo("Minimal")
@@ -95,6 +96,7 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(minimal.countryCode).isNull()
     assertThat(minimal.countryDescription).isNull()
     assertThat(minimal.noFixedAddress).isTrue()
+    assertThat(minimal.isStaff).isFalse()
   }
 
   @Test

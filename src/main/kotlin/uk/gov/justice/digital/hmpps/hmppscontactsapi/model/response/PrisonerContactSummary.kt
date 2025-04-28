@@ -141,5 +141,8 @@ data class PrisonerContactSummary(
   @Schema(description = "Any additional comments", example = "Close family friend", nullable = true)
   val comments: String?,
 
+  @Schema(description = "Whether the contact is a staff member", example = "false", nullable = false)
+  val isStaff: Boolean = false,
+
   val restrictionSummary: RestrictionsSummary,
 ) : AddressLines<String?>
