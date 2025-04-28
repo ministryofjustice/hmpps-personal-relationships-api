@@ -43,5 +43,6 @@ fun PrisonerContactSummaryEntity.toModel(restrictionSummary: RestrictionsSummary
   isRelationshipActive = this.active,
   currentTerm = this.currentTerm,
   comments = this.comments,
+  isStaff = this.staffFlag,
   restrictionSummary = restrictionSummary,
 )

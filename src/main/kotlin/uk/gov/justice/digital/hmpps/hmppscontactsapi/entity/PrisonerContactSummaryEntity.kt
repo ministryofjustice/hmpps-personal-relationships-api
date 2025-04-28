@@ -94,4 +94,6 @@ data class PrisonerContactSummaryEntity(
   val relationshipType: String,
 
   val relationshipTypeDescription: String,
+
+  val staffFlag: Boolean,
 )

@@ -54,7 +54,8 @@ AS
       pc.current_term,
       pc.next_of_kin,
       pc.emergency_contact,
-      pc.comments
+      pc.comments,
+      c.staff_flag
   from contact c
   join prisoner_contact pc ON pc.contact_id = c.contact_id
   left join contact_address ca ON ca.contact_address_id = (

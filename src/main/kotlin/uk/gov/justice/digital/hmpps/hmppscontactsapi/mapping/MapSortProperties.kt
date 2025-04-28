@@ -79,5 +79,6 @@ fun mapSortPropertiesOfPrisonerContactSearch(property: String): String = when (p
   PrisonerContactSummary::isRelationshipActive.name -> PrisonerContactSummaryEntity::active.name
   PrisonerContactSummary::currentTerm.name -> PrisonerContactSummaryEntity::currentTerm.name
   PrisonerContactSummary::comments.name -> PrisonerContactSummaryEntity::comments.name
+  PrisonerContactSummary::isStaff.name -> PrisonerContactSummaryEntity::staffFlag.name
   else -> throw ValidationException("Unable to sort on $property")
 }

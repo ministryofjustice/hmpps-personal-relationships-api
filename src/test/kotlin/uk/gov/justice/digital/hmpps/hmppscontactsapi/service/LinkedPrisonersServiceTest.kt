@@ -322,5 +322,6 @@ class LinkedPrisonersServiceTest {
     comments = "No comments",
     relationshipType = contactType,
     relationshipTypeDescription = contactTypeDescription,
+    staffFlag = false,
   )
 }
