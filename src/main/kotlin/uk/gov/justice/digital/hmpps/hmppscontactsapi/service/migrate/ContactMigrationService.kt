@@ -412,9 +412,7 @@ class ContactMigrationService(
     contactIdentityRepository.deleteAllByContactId(contactId)
     contactRestrictionRepository.deleteAllByContactId(contactId)
     employmentRepository.deleteAllByContactId(contactId)
-    prisonerContactRepository.findAllByContactId(contactId).map { pc ->
-      prisonerContactRestrictionRepository.deleteAllByPrisonerContactId(pc.prisonerContactId)
-    }
+    prisonerContactRestrictionRepository.deleteAllByContactId(contactId)
     prisonerContactRepository.deleteAllByContactId(contactId)
     contactRepository.deleteAllByContactId(contactId)
   }

@@ -13,4 +13,15 @@ interface PrisonerContactRestrictionRepository : JpaRepository<PrisonerContactRe
   @Modifying
   @Query("delete from PrisonerContactRestrictionEntity pcr where pcr.prisonerContactId = :prisonerContactId")
   fun deleteAllByPrisonerContactId(prisonerContactId: Long): Int
+
+  @Modifying
+  @Query(
+    """
+    delete from PrisonerContactRestrictionEntity pcr 
+    where pcr.prisonerContactId in (
+      select pc.prisonerContactId from PrisonerContactEntity pc where pc.contactId = :contactId
+    )
+    """,
+  )
+  fun deleteAllByContactId(contactId: Long): Int
 }
