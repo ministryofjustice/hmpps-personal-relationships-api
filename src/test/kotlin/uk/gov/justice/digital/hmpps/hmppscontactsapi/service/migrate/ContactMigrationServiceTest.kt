@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.MockitoAnnotations.openMocks
 import org.mockito.kotlin.any
@@ -151,12 +150,9 @@ class ContactMigrationServiceTest {
       verify(contactIdentityRepository).deleteAllByContactId(request.personId)
       verify(contactRestrictionRepository).deleteAllByContactId(request.personId)
       verify(employmentRepository).deleteAllByContactId(request.personId)
-      verify(prisonerContactRepository).findAllByContactId(request.personId)
       verify(prisonerContactRepository).deleteAllByContactId(request.personId)
+      verify(prisonerContactRestrictionRepository).deleteAllByContactId(request.personId)
       verify(contactRepository).deleteAllByContactId(request.personId)
-
-      // No prisoner contact restrictions are on this request so will not be called
-      verify(prisonerContactRestrictionRepository, never()).deleteAllByPrisonerContactId(any())
 
       // Will re-save the contact with the same person/contact ID
       verify(contactRepository).save(contactCaptor.capture())
