@@ -27,6 +27,8 @@ You can configure the tests using the following system properties:
 - `testPauseRangeMax`: Attach a pause computed randomly between 2 values – the pause maximum (default: `5`)
 - `testRepeat`: Number of times to repeat the test (default: `5`)
 - `environment`: The envirnoment (default: `dev`)
+- `responseTimePercentile3`: The Response time threshold (in milliseconds) that 99.9% of requests should be under (default: `1000`)
+- `successfulRequestsPercentage`: The Minimum percentage of requests that should be successful for the test to pass (default: `95`)
 
 Example:
 
@@ -41,7 +43,9 @@ Example:
    -DtestPauseRangeMin=3 \
    -DtestPauseRangeMax=5 \
    -DtestRepeat=5 \
-   -Denvironment=dev
+   -Denvironment=dev \
+   -responseTimePercentile3=1000 \
+   -successfulRequestsPercentage=99 \
 ```
 
 ## Test Scenarios
