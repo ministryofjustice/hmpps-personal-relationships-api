@@ -69,6 +69,43 @@ values required.
 
 or you can use the `Run API Locally` run config, which should be automatically picked up in intellij but is located in .run if you need to add it manually.
 
+## Performance Testing with Gatling
+
+This project includes Gatling performance tests to evaluate the API's performance under load. The tests are located in the `src/gatling` directory.
+
+### Running Gatling Tests
+
+You can run the Gatling tests using the following Gradle command:
+
+```bash
+./gradlew gatlingRun
+```
+
+### Configuration Options
+
+You can configure the tests using the following system properties:
+
+- `baseUrl`: The base URL of the API (default: `http://localhost:8080`)
+- `userCount`: The number of virtual users to simulate (default: `10`)
+- `testDuration`: The duration of the test in seconds (default: `60`)
+- `rampUpTime`: The ramp-up time in seconds (default: `5`)
+
+Example:
+
+```bash
+./gradlew gatlingRun -DAUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token -DCLIENT_ID='**REDACTED**' -DCLIENT_SECRET='**REDACTED**' -DBASE_URL=https://localhost:8080 -ENVIRONMENT_NAME=dev
+
+```
+```markdown
+-DAUTH_TOKEN='your-jwt-token' is an optional argument. If provided, this token will be used directly for authentication instead of generating a new token using the client ID and secret
+```
+
+### Viewing Test Results
+
+After running the tests, the results will be available in the `build/reports/gatling` directory. Open the `index.html` file in a web browser to view the results.
+
+For more information about the Gatling tests, see the [Gatling README](src/gatling/README.md).
+
 ## DPS and NOMIS contact_id and person_id sync
 To allow searching for a contact by the same id in both NOMIS and DPS we are keeping contact_id in sync with NOMIS' person_id.
 To prevent an overlap of IDs we are starting the DPS contact_id sequence at 20000000. 
