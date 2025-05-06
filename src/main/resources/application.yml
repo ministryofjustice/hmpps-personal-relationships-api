@@ -20,8 +20,8 @@ spring:
     password: ${DB_PASS}
     hikari:
       pool-name: PERSONAL-RELATIONSHIPS-DB-CP
-      connection-timeout: 1000
-      validation-timeout: 500
+      connection-timeout: 15000
+      validation-timeout: 2000
       maximum-pool-size: 25
 
   jpa:
