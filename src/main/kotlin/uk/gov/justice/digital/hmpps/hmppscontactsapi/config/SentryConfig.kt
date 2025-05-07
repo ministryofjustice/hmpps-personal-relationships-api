@@ -25,6 +25,14 @@ class SentryConfig {
   }
 
   @Bean
+  fun ignoreEntityNotFoundExceptions() = SentryOptions.BeforeSendCallback { event, _ ->
+    when {
+      event.exceptions?.any { it.type == "EntityNotFoundException" } == true -> null
+      else -> event
+    }
+  }
+
+  @Bean
   fun transactionSampling(): SentryOptions.TracesSamplerCallback = SentryOptions.TracesSamplerCallback { context ->
     val request = context.customSamplingContext?.get("request") as? HttpServletRequest
 
