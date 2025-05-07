@@ -119,4 +119,5 @@ hmpps:
     queueAdminRole: CONTACTS_ADMIN
 
 sentry:
+  traces-sample-rate: ${SENTRY_TRACES_SAMPLE_RATE}
   exception-resolver-order: -2147483647
