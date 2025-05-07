@@ -61,8 +61,9 @@ generic-service:
     FEATURE_EVENT_PERSONAL_RELATIONSHIPS_API_DOMESTIC_STATUS_UPDATED: true
     FEATURE_EVENT_PERSONAL_RELATIONSHIPS_API_NUMBER_OF_CHILDREN_CREATED: true
     FEATURE_EVENT_PERSONAL_RELATIONSHIPS_API_NUMBER_OF_CHILDREN_UPDATED: true
-    SENTRY_TRACES_SAMPLE_RATE: '0.05'
-    SENTRY_IGNORED_EXCEPTIONS_FOR_TYPE: "org.apache.catalina.connector.ClientAbortException,org.springframework.web.servlet.resource.NoResourceFoundException,org.springframework.web.context.request.async.AsyncRequestNotUsableException"
+    SENTRY_TRACES_SAMPLE_RATE: "0.05"
+    SENTRY_IGNORED_EXCEPTIONS_FOR_TYPE: "org.apache.catalina.connector.ClientAbortException,org.springframework.web.servlet.resource.NoResourceFoundException,org.springframework.web.context.request.async.AsyncRequestNotUsableException,jakarta.persistence.EntityNotFoundException"
+
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:
   #   [name of kubernetes secret]:
