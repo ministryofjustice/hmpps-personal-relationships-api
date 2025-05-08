@@ -1218,7 +1218,7 @@ class ContactServiceTest {
       }
 
       @Test
-      fun `should allow a duplicate relationship if it is the same id for when code was supplied but is the same`() {
+      fun `should not flag as a duplicate if the only existing matching relationship is the one being updated`() {
         prisonerContact = prisonerContact.copy(relationshipToPrisoner = "BRO")
 
         val request = PatchRelationshipRequest(
