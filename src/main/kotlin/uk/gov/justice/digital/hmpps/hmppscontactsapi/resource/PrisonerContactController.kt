@@ -103,6 +103,11 @@ class PrisonerContactController(
         description = "Could not find the prisoner contact that this relationship relates to",
         content = [Content(schema = Schema(implementation = ErrorResponse::class))],
       ),
+      ApiResponse(
+        responseCode = "409",
+        description = "The requested combination of prisoner, contact and relationship to prisoner already exists.",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
     ],
   )
   @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__RW')")
@@ -146,6 +151,11 @@ class PrisonerContactController(
       ApiResponse(
         responseCode = "404",
         description = "Could not find the prisoner or contact that this relationship relates to",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "409",
+        description = "The requested combination of prisoner, contact and relationship to prisoner already exists.",
         content = [Content(schema = Schema(implementation = ErrorResponse::class))],
       ),
     ],
