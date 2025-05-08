@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCrea
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerContact
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate.DuplicateRelationshipException
 
 @Service
 @Transactional
@@ -23,7 +24,12 @@ class SyncPrisonerContactService(
     return contactEntity.toResponse()
   }
 
-  fun createPrisonerContact(request: SyncCreatePrisonerContactRequest): SyncPrisonerContact = prisonerContactRepository.saveAndFlush(request.toEntity()).toResponse()
+  fun createPrisonerContact(request: SyncCreatePrisonerContactRequest): SyncPrisonerContact {
+    if (prisonerContactRepository.findDuplicateRelationships(request.prisonerNumber, request.contactId, request.relationshipType).isNotEmpty()) {
+      throw DuplicateRelationshipException(request.prisonerNumber, request.contactId, request.relationshipType)
+    }
+    return prisonerContactRepository.saveAndFlush(request.toEntity()).toResponse()
+  }
 
   fun updatePrisonerContact(prisonerContactId: Long, request: SyncUpdatePrisonerContactRequest): SyncPrisonerContact {
     val contact = prisonerContactRepository.findById(prisonerContactId)

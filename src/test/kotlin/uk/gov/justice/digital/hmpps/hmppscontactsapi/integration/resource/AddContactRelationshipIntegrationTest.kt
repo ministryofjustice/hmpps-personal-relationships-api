@@ -8,6 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
@@ -120,6 +121,34 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
+  fun `Should prevent new duplicate relationships being added`() {
+    stubPrisonSearchWithResponse("A1234BC")
+
+    val request = AddContactRelationshipRequest(
+      contactId = contact.id,
+      relationship = ContactRelationship(
+        prisonerNumber = "A1234BC",
+        relationshipToPrisonerCode = "MOT",
+        isNextOfKin = true,
+        relationshipTypeCode = "S",
+        isEmergencyContact = false,
+        isApprovedVisitor = false,
+      ),
+    )
+
+    testAPIClient.addAContactRelationship(request)
+    webTestClient.post()
+      .uri("/prisoner-contact")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(testAPIClient.setAuthorisationUsingCurrentUser())
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isEqualTo(HttpStatus.CONFLICT)
+  }
+
+  @Test
   fun `should create the contact relationship with minimal fields`() {
     stubPrisonSearchWithResponse("A1234BC")
 
@@ -145,7 +174,11 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_CREATED,
-      additionalInfo = PrisonerContactInfo(createdRelationship.prisonerContactId, source = Source.DPS, "read_write_user"),
+      additionalInfo = PrisonerContactInfo(
+        createdRelationship.prisonerContactId,
+        source = Source.DPS,
+        "read_write_user",
+      ),
       personReference = PersonReference(dpsContactId = contact.id, nomsNumber = request.relationship.prisonerNumber),
     )
   }
@@ -199,7 +232,11 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_CREATED,
-      additionalInfo = PrisonerContactInfo(createdRelationship.prisonerContactId, source = Source.DPS, "read_write_user"),
+      additionalInfo = PrisonerContactInfo(
+        createdRelationship.prisonerContactId,
+        source = Source.DPS,
+        "read_write_user",
+      ),
       personReference = PersonReference(dpsContactId = contact.id, nomsNumber = request.relationship.prisonerNumber),
     )
   }

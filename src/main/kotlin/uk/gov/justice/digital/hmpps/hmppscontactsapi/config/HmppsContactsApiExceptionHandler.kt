@@ -24,6 +24,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateEmailException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.InvalidReferenceCodeGroupException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate.DuplicatePersonException
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate.DuplicateRelationshipException
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.format.DateTimeParseException
 
@@ -132,7 +133,7 @@ class HmppsContactsApiExceptionHandler {
       ),
     )
 
-  @ExceptionHandler(DuplicatePersonException::class, DuplicateEmailException::class)
+  @ExceptionHandler(DuplicatePersonException::class, DuplicateEmailException::class, DuplicateRelationshipException::class)
   fun handleDuplicateException(e: RuntimeException): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(CONFLICT)
     .body(

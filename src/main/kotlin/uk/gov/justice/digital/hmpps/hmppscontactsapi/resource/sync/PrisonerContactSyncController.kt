@@ -117,6 +117,11 @@ class PrisonerContactSyncController(
         description = "The request has invalid or missing fields",
         content = [Content(schema = Schema(implementation = ErrorResponse::class))],
       ),
+      ApiResponse(
+        responseCode = "409",
+        description = "The requested combination of prisoner, contact and relationship to prisoner already exists.",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
     ],
   )
   @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")

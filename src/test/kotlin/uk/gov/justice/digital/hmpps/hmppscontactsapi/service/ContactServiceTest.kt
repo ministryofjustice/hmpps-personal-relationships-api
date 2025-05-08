@@ -64,6 +64,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneDeta
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate.DuplicateRelationshipException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -1173,6 +1174,63 @@ class ContactServiceTest {
 
           assertUnchangedFields()
         }
+      }
+
+      @Test
+      fun `should reject a duplicate relationship if it is a different id`() {
+        prisonerContact = prisonerContact.copy(relationshipToPrisoner = "BRO")
+        val otherExistingRelationshipWithSisCode = prisonerContact.copy(prisonerContactId = 123456789, relationshipToPrisoner = "SIS")
+
+        val request = PatchRelationshipRequest(
+          relationshipToPrisonerCode = JsonNullable.of("SIS"),
+        )
+        mockBrotherRelationshipReferenceCode()
+        whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "SIS")).thenReturn(
+          ReferenceCode(1, ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "SIS", "Sister", 1, true),
+        )
+        whenever(prisonerContactRepository.findDuplicateRelationships(prisonerContact.prisonerNumber, prisonerContact.contactId, "SIS"))
+          .thenReturn(listOf(otherExistingRelationshipWithSisCode))
+        whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
+        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+
+        assertThrows<DuplicateRelationshipException> {
+          service.updateContactRelationship(prisonerContactId, request, user)
+        }
+        verify(prisonerContactRepository, never()).saveAndFlush(any())
+      }
+
+      @Test
+      fun `should skip duplicate relationship check if we're not changing it`() {
+        prisonerContact = prisonerContact.copy(relationshipToPrisoner = "BRO")
+        val otherExistingRelationshipWithSisCode = prisonerContact.copy(prisonerContactId = 123456789, relationshipToPrisoner = "BRO")
+
+        val request = PatchRelationshipRequest(
+          relationshipToPrisonerCode = JsonNullable.undefined(),
+        )
+        mockBrotherRelationshipReferenceCode()
+        whenever(prisonerContactRepository.findDuplicateRelationships(prisonerContact.prisonerNumber, prisonerContact.contactId, "SIS"))
+          .thenReturn(listOf(prisonerContact, otherExistingRelationshipWithSisCode))
+        whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
+        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        service.updateContactRelationship(prisonerContactId, request, user)
+        verify(prisonerContactRepository).saveAndFlush(any())
+        verify(prisonerContactRepository, never()).findDuplicateRelationships(any(), any(), any())
+      }
+
+      @Test
+      fun `should not flag as a duplicate if the only existing matching relationship is the one being updated`() {
+        prisonerContact = prisonerContact.copy(relationshipToPrisoner = "BRO")
+
+        val request = PatchRelationshipRequest(
+          relationshipToPrisonerCode = JsonNullable.of("BRO"),
+        )
+        mockBrotherRelationshipReferenceCode()
+        whenever(prisonerContactRepository.findDuplicateRelationships(prisonerContact.prisonerNumber, prisonerContact.contactId, "BRO"))
+          .thenReturn(listOf(prisonerContact))
+        whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
+        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        service.updateContactRelationship(prisonerContactId, request, user)
+        verify(prisonerContactRepository).saveAndFlush(any())
       }
 
       @Test
