@@ -10,9 +10,11 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.openapitools.jackson.nullable.JsonNullable
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
@@ -51,7 +53,10 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     ],
     delimiter = ';',
   )
-  fun `should return bad request when optional fields set with a null value `(expectedMessage: String, relationShipJson: String) {
+  fun `should return bad request when optional fields set with a null value `(
+    expectedMessage: String,
+    relationShipJson: String,
+  ) {
     val prisonerNumber = getRandomPrisonerCode()
     stubPrisonSearchWithResponse(prisonerNumber)
     val prisonerContact = cretePrisonerContact(prisonerNumber)
@@ -123,6 +128,42 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
+  }
+
+  @Test
+  fun `should prevent updating the contact relationship if it would create a duplicate`() {
+    val prisonerNumber = getRandomPrisonerCode()
+    stubPrisonSearchWithResponse(prisonerNumber)
+    val firstRelationship = cretePrisonerContact(prisonerNumber)
+    testAPIClient.addAContactRelationship(
+      AddContactRelationshipRequest(
+        firstRelationship.contactId,
+        ContactRelationship(
+          prisonerNumber = prisonerNumber,
+          relationshipTypeCode = "S",
+          relationshipToPrisonerCode = "SIS",
+          isNextOfKin = false,
+          isEmergencyContact = false,
+          isApprovedVisitor = false,
+          comments = null,
+        ),
+      ),
+    )
+
+    val updateRequest = PatchRelationshipRequest(
+      // try to change BRO to a second SIS
+      relationshipToPrisonerCode = JsonNullable.of("SIS"),
+    )
+
+    webTestClient.patch()
+      .uri("/prisoner-contact/${firstRelationship.prisonerContactId}")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(testAPIClient.setAuthorisationUsingCurrentUser())
+      .bodyValue(updateRequest)
+      .exchange()
+      .expectStatus()
+      .isEqualTo(HttpStatus.CONFLICT)
   }
 
   @Test
@@ -324,7 +365,10 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
   }
 
-  private fun assertUpdatedPrisonerContactEquals(prisonerContact: PrisonerContactSummary, relationship: PatchRelationshipRequest) {
+  private fun assertUpdatedPrisonerContactEquals(
+    prisonerContact: PrisonerContactSummary,
+    relationship: PatchRelationshipRequest,
+  ) {
     with(prisonerContact) {
       assertThat(relationshipToPrisonerCode).isEqualTo(relationship.relationshipToPrisonerCode.get())
       assertThat(isNextOfKin).isEqualTo(relationship.isNextOfKin.get())
@@ -394,7 +438,10 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         comments = JsonNullable.of("comments added"),
       )
       return listOf(
-        Arguments.of("comments must be <= 240 characters", relationship.copy(comments = JsonNullable.of("".padStart(241, 'X')))),
+        Arguments.of(
+          "comments must be <= 240 characters",
+          relationship.copy(comments = JsonNullable.of("".padStart(241, 'X'))),
+        ),
       )
     }
   }

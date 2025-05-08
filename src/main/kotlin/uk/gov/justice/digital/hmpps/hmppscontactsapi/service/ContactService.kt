@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneDeta
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate.DuplicateRelationshipException
 import java.time.LocalDateTime
 import kotlin.jvm.optionals.getOrNull
 
@@ -177,6 +178,9 @@ class ContactService(
   fun addContactRelationship(request: AddContactRelationshipRequest, user: User): PrisonerContactRelationshipDetails {
     validateNewRelationship(request.relationship)
     getContact(request.contactId) ?: throw EntityNotFoundException("Contact (${request.contactId}) could not be found")
+    if (prisonerContactRepository.findDuplicateRelationships(request.relationship.prisonerNumber, request.contactId, request.relationship.relationshipToPrisonerCode).isNotEmpty()) {
+      throw DuplicateRelationshipException(request.relationship.prisonerNumber, request.contactId, request.relationship.relationshipToPrisonerCode)
+    }
     val newRelationship = request.relationship.toEntity(request.contactId, user.username)
     prisonerContactRepository.saveAndFlush(newRelationship)
     return enrichRelationship(newRelationship)
@@ -306,6 +310,18 @@ class ContactService(
 
     validateRequest(request)
     validateRelationshipCodes(request, prisonerContactEntity)
+    // Reject duplicate relationships. Skip this check if we're not changing the relationship type
+    // so that existing duplicates from NOMIS can still be updated such as removing approve to
+    // visit or active status.
+    if (request.relationshipToPrisonerCode.isPresent &&
+      prisonerContactRepository.findDuplicateRelationships(
+        prisonerContactEntity.prisonerNumber,
+        prisonerContactEntity.contactId,
+        request.relationshipToPrisonerCode.get(),
+      ).any { it.prisonerContactId != prisonerContactId }
+    ) {
+      throw DuplicateRelationshipException(prisonerContactEntity.prisonerNumber, prisonerContactEntity.contactId, request.relationshipToPrisonerCode.get())
+    }
 
     val changedPrisonerContact = prisonerContactEntity.applyUpdate(request, user)
 

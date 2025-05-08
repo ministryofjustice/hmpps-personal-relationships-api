@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreatePrisonerContactRequest
@@ -259,7 +260,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .headers(setAuthorisationUsingCurrentUser())
-        .bodyValue(createPrisonerContactRequest())
+        .bodyValue(createPrisonerContactRequest("A1234BD"))
         .exchange()
         .expectStatus()
         .isOk
@@ -289,9 +290,32 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       )
     }
 
-    private fun updatePrisonerContactRequest() = SyncUpdatePrisonerContactRequest(
+    @Test
+    fun `should prevent create duplicate relationship`() {
+      val prisonerNumber = "A1234BE"
+      webTestClient.post()
+        .uri("/sync/prisoner-contact")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .bodyValue(createPrisonerContactRequest(prisonerNumber))
+        .exchange()
+        .expectStatus()
+        .isOk
+      webTestClient.post()
+        .uri("/sync/prisoner-contact")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .bodyValue(createPrisonerContactRequest(prisonerNumber))
+        .exchange()
+        .expectStatus()
+        .isEqualTo(HttpStatus.CONFLICT)
+    }
+
+    private fun updatePrisonerContactRequest(prisonerNumber: String = "A1234BC") = SyncUpdatePrisonerContactRequest(
       contactId = 1L,
-      prisonerNumber = "A1234BC",
+      prisonerNumber = prisonerNumber,
       contactType = "O",
       relationshipType = "LAW",
       nextOfKin = true,
@@ -306,9 +330,9 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       updatedTime = LocalDateTime.now(),
     )
 
-    private fun createPrisonerContactRequest() = SyncCreatePrisonerContactRequest(
+    private fun createPrisonerContactRequest(prisonerNumber: String = "A1234BC") = SyncCreatePrisonerContactRequest(
       contactId = 1L,
-      prisonerNumber = "A1234BC",
+      prisonerNumber = prisonerNumber,
       contactType = "S",
       relationshipType = "FRI",
       nextOfKin = true,

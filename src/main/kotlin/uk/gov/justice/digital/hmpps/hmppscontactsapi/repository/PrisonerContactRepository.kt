@@ -19,4 +19,14 @@ interface PrisonerContactRepository : JpaRepository<PrisonerContactEntity, Long>
   @Modifying
   @Query("delete from PrisonerContactEntity pc where pc.prisonerNumber = :prisonerNumber")
   fun deleteAllByPrisonerNumber(prisonerNumber: String): Int
+
+  @Query(
+    """
+    SELECT pc FROM PrisonerContactEntity pc 
+    WHERE pc.prisonerNumber = :prisonerNumber 
+    AND pc.contactId = :contactId
+    AND pc.relationshipToPrisoner = :relationshipToPrisoner
+    AND pc.currentTerm = true""",
+  )
+  fun findDuplicateRelationships(prisonerNumber: String, contactId: Long, relationshipToPrisoner: String): List<PrisonerContactEntity>
 }
