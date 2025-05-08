@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.Restrictions
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRelationshipCountRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRestrictionCountsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactSearchRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactSummaryRepository
 import kotlin.jvm.optionals.getOrNull
 
 @Service
@@ -22,6 +23,7 @@ class PrisonerContactService(
   private val prisonerContactRestrictionCountsRepository: PrisonerContactRestrictionCountsRepository,
   private val prisonerService: PrisonerService,
   private val prisonerContactRelationshipCountRepository: PrisonerContactRelationshipCountRepository,
+  private val prisonerContactSummaryRepository: PrisonerContactSummaryRepository,
 ) {
   fun getAllContacts(params: PrisonerContactSearchParams): PagedModel<PrisonerContactSummary> {
     prisonerService.getPrisoner(params.prisonerNumber)
@@ -40,6 +42,25 @@ class PrisonerContactService(
         )
       },
     )
+  }
+
+  fun getAllSummariesForPrisonerAndContact(prisonerNumber: String, contactId: Long): List<PrisonerContactSummary> {
+    prisonerService.getPrisoner(prisonerNumber)
+      ?: throw EntityNotFoundException("Prisoner number $prisonerNumber - not found")
+    val relationshipsBetweenPrisonerAndContact =
+      prisonerContactSummaryRepository.findByPrisonerNumberAndContactId(prisonerNumber, contactId)
+    val prisonerContactIds = relationshipsBetweenPrisonerAndContact.toList().map { it.prisonerContactId }.toSet()
+    val restrictionsByPrisonerContactId =
+      prisonerContactRestrictionCountsRepository.findAllByPrisonerContactIdIn(prisonerContactIds)
+        .groupBy { it.prisonerContactId }
+    return relationshipsBetweenPrisonerAndContact
+      .map { prisonerContactSummaryEntity ->
+        prisonerContactSummaryEntity.toModel(
+          toRestrictionSummary(
+            restrictionsByPrisonerContactId[prisonerContactSummaryEntity.prisonerContactId] ?: emptyList(),
+          ),
+        )
+      }
   }
 
   fun countContactRelationships(prisonerNumber: String): PrisonerContactRelationshipCount = prisonerContactRelationshipCountRepository.findById(prisonerNumber)

@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.Restrictions
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRelationshipCountRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRestrictionCountsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactSearchRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactSummaryRepository
 import java.time.LocalDate
 import java.util.*
 
@@ -46,6 +47,9 @@ class PrisonerContactServiceTest {
 
   @Mock
   private lateinit var prisonerContactRelationshipCountRepository: PrisonerContactRelationshipCountRepository
+
+  @Mock
+  private lateinit var prisonerContactSummaryRepository: PrisonerContactSummaryRepository
 
   @InjectMocks
   private lateinit var prisonerContactService: PrisonerContactService
@@ -264,4 +268,64 @@ class PrisonerContactServiceTest {
     relationshipTypeDescription = "Social",
     staffFlag = false,
   )
+
+  @Test
+  fun `should fetch all summaries for a prisoner and contact pair`() {
+    val dateOfBirth = LocalDate.of(1980, 5, 10)
+    val c1 = makePrisonerContact(
+      prisonerContactId = 1L,
+      contactId = 2L,
+      dateOfBirth,
+      firstName = "John",
+      lastName = "Doe",
+    )
+    val c2 = makePrisonerContact(
+      prisonerContactId = 2L,
+      contactId = 2L,
+      dateOfBirth,
+      firstName = "David",
+      lastName = "Doe",
+    )
+    val contacts = listOf(c1, c2)
+
+    whenever(prisonerService.getPrisoner(prisonerNumber)).thenReturn(prisoner)
+    whenever(prisonerContactSummaryRepository.findByPrisonerNumberAndContactId(prisonerNumber, 2L)).thenReturn(contacts)
+    whenever(prisonerContactRestrictionCountsRepository.findAllByPrisonerContactIdIn(any())).thenReturn(
+      listOf(
+        PrisonerContactRestrictionCountsEntity(1L, "BAN", "Banned", false, 1),
+        PrisonerContactRestrictionCountsEntity(1L, "NONCON", "Non-contact visit", true, 3),
+        PrisonerContactRestrictionCountsEntity(1L, "CCTV", "CCTV", false, 1),
+        PrisonerContactRestrictionCountsEntity(2L, "BAN", "Banned", true, 2),
+        PrisonerContactRestrictionCountsEntity(2L, "CCTV", "CCTV", false, 1),
+        PrisonerContactRestrictionCountsEntity(2L, "NONCON", "Non-contact visit", true, 3),
+      ),
+    )
+    val result = prisonerContactService.getAllSummariesForPrisonerAndContact(prisonerNumber, 2L)
+
+    result hasSize 2
+    assertThat(result).containsAll(
+      listOf(
+        c1.toModel(
+          RestrictionsSummary(
+            setOf(
+              RestrictionTypeDetails("BAN", "Banned"),
+              RestrictionTypeDetails("CCTV", "CCTV"),
+            ),
+            2,
+            3,
+          ),
+        ),
+        c2.toModel(
+          RestrictionsSummary(
+            setOf((RestrictionTypeDetails("CCTV", "CCTV"))),
+            1,
+            5,
+          ),
+        ),
+      ),
+    )
+
+    verify(prisonerContactSummaryRepository).findByPrisonerNumberAndContactId(prisonerNumber, 2L)
+    verify(prisonerContactRestrictionCountsRepository).findAllByPrisonerContactIdIn(setOf(1L, 2L))
+  }
 }
