@@ -102,6 +102,41 @@ class PrisonerController(private val prisonerContactService: PrisonerContactServ
     return prisonerContactService.getAllContacts(params)
   }
 
+  @Operation(
+    summary = "Get all relationships between a specific prisoner and contact",
+    description = """Prisoners can have multiple relationships defined with a single contact which is a security risk and highly discouraged.
+      |This API should be used to help dissuade users from creating multiple relationships between a single prisoner and contact wherever possible.
+    """,
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "A page of matching contact relationships for the prisoner",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "The Prisoner was not found.",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = ErrorResponse::class),
+          ),
+        ],
+      ),
+    ],
+  )
+  @GetMapping(value = ["/{prisonNumber}/contact/{contactId}"], produces = [MediaType.APPLICATION_JSON_VALUE])
+  @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__R', 'ROLE_CONTACTS__RW')")
+  fun getAllSummariesForPrisonerAndContact(
+    @PathVariable("prisonNumber") @PrisonNumberDoc prisonerNumber: String,
+    @PathVariable("contactId") @Parameter(
+      name = "contactId",
+      description = "The id of the contact",
+      example = "123456",
+    ) contactId: Long,
+  ): List<PrisonerContactSummary> = prisonerContactService.getAllSummariesForPrisonerAndContact(prisonerNumber, contactId)
+
   @Operation(summary = "Count of a prisoner's active contact relationships for their current term by relationship type")
   @ApiResponses(
     value = [

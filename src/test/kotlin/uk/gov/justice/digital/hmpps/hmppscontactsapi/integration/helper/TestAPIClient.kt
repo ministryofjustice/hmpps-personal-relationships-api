@@ -147,6 +147,16 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(PrisonerContactSummaryResponse::class.java)
     .returnResult().responseBody!!
 
+  fun getAllSummariesForPrisonerAndContact(prisonerNumber: String, contactId: Long): List<PrisonerContactSummary> = webTestClient.get()
+    .uri("/prisoner/$prisonerNumber/contact/$contactId")
+    .headers(setAuthorisationUsingCurrentUser())
+    .exchange()
+    .expectStatus()
+    .isOk
+    .expectHeader().contentType(MediaType.APPLICATION_JSON)
+    .expectBodyList(PrisonerContactSummary::class.java)
+    .returnResult().responseBody!!
+
   fun getPrisonerContactRelationshipCount(prisonerNumber: String): PrisonerContactRelationshipCount = webTestClient.get()
     .uri("/prisoner/$prisonerNumber/contact/count")
     .headers(setAuthorisationUsingCurrentUser())
