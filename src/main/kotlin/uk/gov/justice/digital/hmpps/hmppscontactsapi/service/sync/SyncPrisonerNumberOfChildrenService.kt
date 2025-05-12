@@ -56,7 +56,7 @@ class SyncPrisonerNumberOfChildrenService(
       val deactivatedCount = existingCount.copy(
         active = false,
       )
-      numberOfChildrenRepository.save(deactivatedCount)
+      numberOfChildrenRepository.saveAndFlush(deactivatedCount)
     }
 
     // Create new active numberOfChildren
@@ -67,7 +67,7 @@ class SyncPrisonerNumberOfChildrenService(
       createdTime = request.createdTime,
       active = true,
     )
-    val saved = newNumberOfChildren.let { numberOfChildrenRepository.save(it) }
+    val saved = newNumberOfChildren.let { numberOfChildrenRepository.saveAndFlush(it) }
       ?: throw IllegalArgumentException("Cannot save number of children for prisoner")
 
     if (existingCount != null) {

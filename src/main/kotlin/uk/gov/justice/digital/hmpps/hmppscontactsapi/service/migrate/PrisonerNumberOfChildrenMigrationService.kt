@@ -53,5 +53,6 @@ class PrisonerNumberOfChildrenMigrationService(
 
   private fun removeExistingRecords(request: MigratePrisonerNumberOfChildrenRequest) {
     prisonerNumberOfChildrenRepository.deleteByPrisonerNumber(request.prisonerNumber)
+    prisonerNumberOfChildrenRepository.flush()
   }
 }

@@ -101,7 +101,7 @@ class PrisonerNumberOfChildrenServiceTest {
         createdTime = LocalDateTime.now(),
       )
 
-      whenever(prisonerNumberOfChildrenRepository.save(any()))
+      whenever(prisonerNumberOfChildrenRepository.saveAndFlush(any()))
         .thenReturn(newNumberOfChildrenCount)
 
       // When
@@ -117,7 +117,7 @@ class PrisonerNumberOfChildrenServiceTest {
         assertThat(numberOfChildren).isEqualTo("1")
         assertThat(active).isTrue
       }
-      verify(prisonerNumberOfChildrenRepository, times(1)).save(any())
+      verify(prisonerNumberOfChildrenRepository, times(1)).saveAndFlush(any())
     }
 
     @Test
@@ -139,7 +139,7 @@ class PrisonerNumberOfChildrenServiceTest {
         createdTime = LocalDateTime.now(),
       )
 
-      whenever(prisonerNumberOfChildrenRepository.save(any()))
+      whenever(prisonerNumberOfChildrenRepository.saveAndFlush(any()))
         .thenReturn(newNumberOfChildren)
 
       // When
@@ -155,7 +155,7 @@ class PrisonerNumberOfChildrenServiceTest {
         assertThat(numberOfChildren).isEqualTo(null)
         assertThat(active).isTrue
       }
-      verify(prisonerNumberOfChildrenRepository, times(1)).save(any())
+      verify(prisonerNumberOfChildrenRepository, times(1)).saveAndFlush(any())
     }
 
     @Test
@@ -176,7 +176,7 @@ class PrisonerNumberOfChildrenServiceTest {
       whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
         .thenReturn(existingNumberOfChildrenCount)
 
-      whenever(prisonerNumberOfChildrenRepository.save(any()))
+      whenever(prisonerNumberOfChildrenRepository.saveAndFlush(any()))
         .thenReturn(existingNumberOfChildrenCount)
         .thenReturn(existingNumberOfChildrenCount.copy(numberOfChildren = "2", active = true))
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
@@ -188,14 +188,14 @@ class PrisonerNumberOfChildrenServiceTest {
         user,
       )
 
-      verify(prisonerNumberOfChildrenRepository, times(1)).save(
+      verify(prisonerNumberOfChildrenRepository, times(1)).saveAndFlush(
         check { savedNumberOfChildrenCount ->
           assertThat(savedNumberOfChildrenCount.active).isFalse()
           assertThat(savedNumberOfChildrenCount.numberOfChildren).isEqualTo("1")
         },
       )
 
-      verify(prisonerNumberOfChildrenRepository, times(1)).save(
+      verify(prisonerNumberOfChildrenRepository, times(1)).saveAndFlush(
         check { savedNumberOfChildrenCount ->
           assertThat(savedNumberOfChildrenCount.active).isTrue()
           assertThat(savedNumberOfChildrenCount.numberOfChildren).isEqualTo("1")

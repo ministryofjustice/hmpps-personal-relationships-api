@@ -37,11 +37,12 @@ class PrisonerNumberOfChildrenService(
       ?: throw EntityNotFoundException("Prisoner number $prisonerNumber - not found")
 
     // Find existing numberOfChildren, If exists, deactivate it
-    prisonerNumberOfChildrenActive(prisonerNumber)?.let {
+    val prisonerNumberOfChildrenActive = prisonerNumberOfChildrenActive(prisonerNumber)
+    prisonerNumberOfChildrenActive?.let {
       val deactivatedNumberOfChildrenCount = it.copy(
         active = false,
       )
-      prisonerNumberOfChildrenRepository.save(deactivatedNumberOfChildrenCount)
+      prisonerNumberOfChildrenRepository.saveAndFlush(deactivatedNumberOfChildrenCount)
     }
 
     // Create new active numberOfChildren
@@ -53,7 +54,7 @@ class PrisonerNumberOfChildrenService(
       active = true,
     )
     // Save and return the new numberOfChildren
-    return prisonerNumberOfChildrenRepository.save(newNumberOfChildren).toModel()
+    return prisonerNumberOfChildrenRepository.saveAndFlush(newNumberOfChildren).toModel()
   }
 
   private fun prisonerNumberOfChildrenActive(prisonerNumber: String) = prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(

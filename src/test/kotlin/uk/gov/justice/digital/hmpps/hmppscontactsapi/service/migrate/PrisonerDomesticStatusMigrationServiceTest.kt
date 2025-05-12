@@ -81,12 +81,12 @@ class PrisonerDomesticStatusMigrationServiceTest {
 
     // When
     whenever(referenceCodeRepository.findByGroupCodeAndCode(any(), any())).thenReturn(referenceData)
-    whenever(prisonerDomesticStatusRepository.saveAll<PrisonerDomesticStatus>(any())).thenReturn(listOf(savedEntity1, savedEntity2))
+    whenever(prisonerDomesticStatusRepository.saveAllAndFlush<PrisonerDomesticStatus>(any())).thenReturn(listOf(savedEntity1, savedEntity2))
 
     val result = domesticStatusMigrationService.migrateDomesticStatus(request)
 
     // Then
-    verify(prisonerDomesticStatusRepository).saveAll(
+    verify(prisonerDomesticStatusRepository).saveAllAndFlush(
       check<List<PrisonerDomesticStatus>> { items ->
         assertThat(items).hasSize(2)
         assertThat(items[0].prisonerNumber).isEqualTo(prisonerNumber)
@@ -134,14 +134,14 @@ class PrisonerDomesticStatusMigrationServiceTest {
 
     // When
     whenever(referenceCodeRepository.findByGroupCodeAndCode(any(), any())).thenReturn(referenceData)
-    whenever(prisonerDomesticStatusRepository.saveAll<PrisonerDomesticStatus>(any()))
+    whenever(prisonerDomesticStatusRepository.saveAllAndFlush<PrisonerDomesticStatus>(any()))
       .thenReturn(listOf(savedEntity))
 
     // When
     val result = domesticStatusMigrationService.migrateDomesticStatus(request)
 
     // Then
-    verify(prisonerDomesticStatusRepository).saveAll(
+    verify(prisonerDomesticStatusRepository).saveAllAndFlush(
       check<List<PrisonerDomesticStatus>> { items ->
         assertThat(items).hasSize(1)
         assertThat(items[0].prisonerNumber).isEqualTo(prisonerNumber)
@@ -196,7 +196,7 @@ class PrisonerDomesticStatusMigrationServiceTest {
 
     // When
     whenever(referenceCodeRepository.findByGroupCodeAndCode(any(), any())).thenReturn(referenceData)
-    whenever(prisonerDomesticStatusRepository.saveAll<PrisonerDomesticStatus>(any())).thenReturn(listOf(savedCurrent, savedHistory))
+    whenever(prisonerDomesticStatusRepository.saveAllAndFlush<PrisonerDomesticStatus>(any())).thenReturn(listOf(savedCurrent, savedHistory))
     whenever(prisonerDomesticStatusRepository.deleteByPrisonerNumber(prisonerNumber)).then {}
 
     val result = domesticStatusMigrationService.migrateDomesticStatus(request)
@@ -207,7 +207,7 @@ class PrisonerDomesticStatusMigrationServiceTest {
 
     // Then
     val argumentCaptor = argumentCaptor<List<PrisonerDomesticStatus>>()
-    verify(prisonerDomesticStatusRepository).saveAll(argumentCaptor.capture())
+    verify(prisonerDomesticStatusRepository).saveAllAndFlush(argumentCaptor.capture())
     val items = argumentCaptor.firstValue
     assertThat(items).hasSize(2)
     assertThat(items[0].prisonerNumber).isEqualTo(prisonerNumber)
@@ -248,13 +248,13 @@ class PrisonerDomesticStatusMigrationServiceTest {
 
     // When
     whenever(referenceCodeRepository.findByGroupCodeAndCode(any(), any())).thenReturn(referenceData)
-    whenever(prisonerDomesticStatusRepository.saveAll<PrisonerDomesticStatus>(any()))
+    whenever(prisonerDomesticStatusRepository.saveAllAndFlush<PrisonerDomesticStatus>(any()))
       .thenReturn(listOf(savedEntity))
 
     val result = domesticStatusMigrationService.migrateDomesticStatus(request)
 
     // Then
-    verify(prisonerDomesticStatusRepository).saveAll<PrisonerDomesticStatus>(any())
+    verify(prisonerDomesticStatusRepository).saveAllAndFlush<PrisonerDomesticStatus>(any())
     assertThat(result.history).hasSize(1)
     assertThat(result.current).isNull()
   }

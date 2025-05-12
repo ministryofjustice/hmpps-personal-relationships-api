@@ -93,7 +93,7 @@ class SyncPrisonerNumberOfChildrenServiceTest {
       .thenReturn(existingNumberOfChildrenCount)
 
     val deactivatedNumberOfChildrenCount = existingNumberOfChildrenCount.copy(active = false)
-    whenever(numberOfChildrenRepository.save(any())).thenReturn(deactivatedNumberOfChildrenCount)
+    whenever(numberOfChildrenRepository.saveAndFlush(any())).thenReturn(deactivatedNumberOfChildrenCount)
 
     // When
     val response = syncNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, updateRequest)
@@ -146,7 +146,7 @@ class SyncPrisonerNumberOfChildrenServiceTest {
     whenever(numberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
       .thenReturn(null)
 
-    whenever(numberOfChildrenRepository.save(any())).thenReturn(
+    whenever(numberOfChildrenRepository.saveAndFlush(any())).thenReturn(
       PrisonerNumberOfChildren(
         prisonerNumber = prisonerNumber,
         numberOfChildren = "1",
@@ -162,7 +162,7 @@ class SyncPrisonerNumberOfChildrenServiceTest {
     // Then
     verify(numberOfChildrenRepository).findByPrisonerNumberAndActiveTrue(prisonerNumber)
     val numberOfChildrenCaptor = argumentCaptor<PrisonerNumberOfChildren>()
-    verify(numberOfChildrenRepository, times(1)).save(numberOfChildrenCaptor.capture())
+    verify(numberOfChildrenRepository, times(1)).saveAndFlush(numberOfChildrenCaptor.capture())
     val savedNumberOfChildren = numberOfChildrenCaptor.firstValue
     assertThat(savedNumberOfChildren.prisonerNumber).isEqualTo(prisonerNumber)
     assertThat(savedNumberOfChildren.numberOfChildren).isEqualTo("1")

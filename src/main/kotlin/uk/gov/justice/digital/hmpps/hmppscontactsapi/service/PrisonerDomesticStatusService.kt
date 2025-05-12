@@ -40,11 +40,12 @@ class PrisonerDomesticStatusService(
     request.domesticStatusCode?.let { checkReferenceDataExists(it) }
 
     // Find existing status, If exists, deactivate it
-    getPrisonerDomesticStatusActive(prisonerNumber)?.let {
+    val prisonerDomesticStatusActive = getPrisonerDomesticStatusActive(prisonerNumber)
+    prisonerDomesticStatusActive?.let {
       val deactivatedStatus = it.copy(
         active = false,
       )
-      prisonerDomesticStatusRepository.save(deactivatedStatus)
+      prisonerDomesticStatusRepository.saveAndFlush(deactivatedStatus)
     }
 
     // Create new active status
@@ -57,7 +58,7 @@ class PrisonerDomesticStatusService(
     )
 
     // Save and return the new status
-    return prisonerDomesticStatusRepository.save(newDomesticStatus).toModel()
+    return prisonerDomesticStatusRepository.saveAndFlush(newDomesticStatus).toModel()
   }
   private fun PrisonerDomesticStatus.toModel() = PrisonerDomesticStatusResponse(
     id = prisonerDomesticStatusId,

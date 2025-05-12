@@ -50,7 +50,7 @@ class PrisonerDomesticStatusMigrationService(
     }
 
     // Batch save all entities
-    val savedEntities = prisonerDomesticStatusRepository.saveAll(entitiesToSave)
+    val savedEntities = prisonerDomesticStatusRepository.saveAllAndFlush(entitiesToSave)
 
     return PrisonerDomesticStatusMigrationResponse(
       prisonerNumber = request.prisonerNumber,
@@ -61,6 +61,7 @@ class PrisonerDomesticStatusMigrationService(
 
   private fun removeExistingRecords(request: MigratePrisonerDomesticStatusRequest) {
     prisonerDomesticStatusRepository.deleteByPrisonerNumber(request.prisonerNumber)
+    prisonerDomesticStatusRepository.flush()
   }
 
   private fun validateReferenceDataExists(code: String) = referenceCodeRepository

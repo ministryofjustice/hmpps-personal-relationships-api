@@ -57,7 +57,7 @@ class SyncPrisonerDomesticStatusService(
       val deactivatedStatus = existingStatus.copy(
         active = false,
       )
-      domesticStatusRepository.save(deactivatedStatus)
+      domesticStatusRepository.saveAndFlush(deactivatedStatus)
     }
 
     // Create new active status
@@ -69,7 +69,7 @@ class SyncPrisonerDomesticStatusService(
       active = true,
     )
 
-    val saved = domesticStatusRepository.save(newDomesticStatus)
+    val saved = domesticStatusRepository.saveAndFlush(newDomesticStatus)
       ?: throw IllegalArgumentException("Cannot save domestic status for prisoner")
 
     // set UPDATED status if existingStatus is not null and request domestic status value is not same as existing value , return created if existing status is null

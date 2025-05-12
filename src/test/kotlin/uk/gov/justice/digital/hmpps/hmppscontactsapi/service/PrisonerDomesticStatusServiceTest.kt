@@ -125,7 +125,7 @@ class PrisonerDomesticStatusServiceTest {
         createdTime = LocalDateTime.now(),
       )
 
-      whenever(prisonerDomesticStatusRepository.save(any()))
+      whenever(prisonerDomesticStatusRepository.saveAndFlush(any()))
         .thenReturn(newStatus)
 
       // When
@@ -142,7 +142,7 @@ class PrisonerDomesticStatusServiceTest {
         assertThat(domesticStatusDescription).isEqualTo("Single")
         assertThat(active).isTrue
       }
-      verify(prisonerDomesticStatusRepository, times(1)).save(any())
+      verify(prisonerDomesticStatusRepository, times(1)).saveAndFlush(any())
     }
 
     @Test
@@ -164,7 +164,7 @@ class PrisonerDomesticStatusServiceTest {
         createdTime = LocalDateTime.now(),
       )
 
-      whenever(prisonerDomesticStatusRepository.save(any()))
+      whenever(prisonerDomesticStatusRepository.saveAndFlush(any()))
         .thenReturn(newStatus)
 
       // When
@@ -181,7 +181,7 @@ class PrisonerDomesticStatusServiceTest {
         assertThat(domesticStatusDescription).isEqualTo(null)
         assertThat(active).isTrue
       }
-      verify(prisonerDomesticStatusRepository, times(1)).save(any())
+      verify(prisonerDomesticStatusRepository, times(1)).saveAndFlush(any())
     }
 
     @Test
@@ -211,7 +211,7 @@ class PrisonerDomesticStatusServiceTest {
         ),
       ).thenReturn(ReferenceCodeEntity(1L, ReferenceCodeGroup.DOMESTIC_STS, "D", "Divorced", 0, true, "name"))
 
-      whenever(prisonerDomesticStatusRepository.save(any()))
+      whenever(prisonerDomesticStatusRepository.saveAndFlush(any()))
         .thenReturn(existingStatus)
         .thenReturn(existingStatus.copy(domesticStatusCode = "D", active = true))
 
@@ -223,7 +223,7 @@ class PrisonerDomesticStatusServiceTest {
       )
 
       val statusCaptor = argumentCaptor<PrisonerDomesticStatus>()
-      verify(prisonerDomesticStatusRepository, times(2)).save(statusCaptor.capture())
+      verify(prisonerDomesticStatusRepository, times(2)).saveAndFlush(statusCaptor.capture())
       assertThat(statusCaptor.firstValue.active).isFalse()
       assertThat(statusCaptor.firstValue.domesticStatusCode).isEqualTo("M")
       assertThat(statusCaptor.secondValue.active).isTrue()
