@@ -47,9 +47,9 @@ dependencies {
   // Test dependencies
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
-  testImplementation("net.javacrumbs.json-unit:json-unit:4.1.0")
-  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:4.1.0")
-  testImplementation("net.javacrumbs.json-unit:json-unit-json-path:4.1.0")
+  testImplementation("net.javacrumbs.json-unit:json-unit:4.1.1")
+  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:4.1.1")
+  testImplementation("net.javacrumbs.json-unit:json-unit-json-path:4.1.1")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("org.mockito:mockito-inline:5.2.0")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
