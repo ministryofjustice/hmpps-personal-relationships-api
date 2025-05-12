@@ -14,6 +14,14 @@ class CreateOrUpdateDomesticStatusSimulation : BaseSimulation() {
 
   private val prisonerNumberFeeder = csv("data/prisoner-numbers-$environment.csv").random()
 
+  private fun callGetDomesticStatus() = exec(
+    http("Get Prisoner Domestic Status")
+      .get("/prisoner/#{prisonerNumber}/domestic-status")
+      .headers(authorisationHeader)
+      .check(status().shouldBe(200))
+      .check(jsonPath("$.id").exists().saveAs("id")),
+  )
+
   private fun callCreateOrUpdateDomesticStatus() = exec(
     http("Create or Update Prisoner Domestic Status")
       .put("/prisoner/#{prisonerNumber}/domestic-status")
@@ -30,14 +38,6 @@ class CreateOrUpdateDomesticStatusSimulation : BaseSimulation() {
       .check(status().shouldBe(200)),
   )
 
-  private fun getDomesticStatus() = exec(
-    http("Get Prisoner Domestic Status")
-      .get("/prisoner/#{prisonerNumber}/domestic-status")
-      .headers(authorisationHeader)
-      .check(status().shouldBe(200))
-      .check(jsonPath("$.id").exists().saveAs("id")),
-  )
-
   private val domesticStatusScenario = scenario("Create or Update Prisoner Domestic Status")
     .exec(getToken)
     .feed(prisonerNumberFeeder.circular())
@@ -45,8 +45,9 @@ class CreateOrUpdateDomesticStatusSimulation : BaseSimulation() {
     .on(
       exec(
         callCreateOrUpdateDomesticStatus(),
-        getDomesticStatus(),
-      ),
+        callGetDomesticStatus(),
+      )
+        .pause(ofSeconds(testPauseRangeMin.toLong()), ofSeconds(testPauseRangeMax.toLong())),
     )
 
   // Initialize the simulation configuration

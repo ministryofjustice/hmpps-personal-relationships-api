@@ -34,7 +34,7 @@ class CreateOrUpdatePrisonerNumberOfChildrenSimulation : BaseSimulation() {
         },
       ).asJson()
       .headers(authorisationHeader)
-      .check(status().`in`(200, 409)),
+      .check(status().shouldBe(200)),
   )
 
   private val putNumberOfChildren = scenario("Create or Update Prisoner number of children")
@@ -52,7 +52,7 @@ class CreateOrUpdatePrisonerNumberOfChildrenSimulation : BaseSimulation() {
   init {
     setUp(
       putNumberOfChildren.injectOpen(
-        constantUsersPerSec(userCount.toDouble()).during(testDuration.toLong()),
+        constantUsersPerSec(userCount.toDouble()).during(ofSeconds(testDuration.toLong())),
       ),
     ).protocols(httpProtocol)
       .assertions(
