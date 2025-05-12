@@ -12,7 +12,7 @@ spring:
     web:
       pageable:
         default-page-size: 10
-        max-page-size: 300
+        max-page-size: 500
 
   datasource:
     url: 'jdbc:postgresql://${DB_SERVER}/${DB_NAME}?sslmode=${DB_SSL_MODE}'
