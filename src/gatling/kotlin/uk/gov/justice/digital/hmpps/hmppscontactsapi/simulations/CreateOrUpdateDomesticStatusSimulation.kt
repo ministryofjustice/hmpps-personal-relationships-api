@@ -54,7 +54,9 @@ class CreateOrUpdateDomesticStatusSimulation : BaseSimulation() {
   init {
     setUp(
       domesticStatusScenario.injectOpen(
-        constantUsersPerSec(userCount.toDouble()).during(ofSeconds(testDuration.toLong())),
+        constantUsersPerSec(userCount.toDouble())
+          .during(ofSeconds(testDuration.toLong()))
+          .randomized(),
       ),
     ).protocols(httpProtocol)
       .assertions(
