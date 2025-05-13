@@ -37,8 +37,7 @@ class PrisonerNumberOfChildrenService(
       ?: throw EntityNotFoundException("Prisoner number $prisonerNumber - not found")
 
     // Find existing numberOfChildren, If exists, deactivate it
-    val prisonerNumberOfChildrenActive = prisonerNumberOfChildrenActive(prisonerNumber)
-    prisonerNumberOfChildrenActive?.let {
+    prisonerNumberOfChildrenActive(prisonerNumber)?.let {
       val deactivatedNumberOfChildrenCount = it.copy(
         active = false,
       )

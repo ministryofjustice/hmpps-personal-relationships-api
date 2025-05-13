@@ -40,8 +40,7 @@ class PrisonerDomesticStatusService(
     request.domesticStatusCode?.let { checkReferenceDataExists(it) }
 
     // Find existing status, If exists, deactivate it
-    val prisonerDomesticStatusActive = getPrisonerDomesticStatusActive(prisonerNumber)
-    prisonerDomesticStatusActive?.let {
+    getPrisonerDomesticStatusActive(prisonerNumber)?.let {
       val deactivatedStatus = it.copy(
         active = false,
       )
