@@ -5,11 +5,13 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.FeatureSwitches
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.telemetry.TelemetryService
 
 @Service
 class OutboundEventsService(
   private val publisher: OutboundEventsPublisher,
   private val featureSwitches: FeatureSwitches,
+  private val telemetryService: TelemetryService,
 ) {
   companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -169,7 +171,9 @@ class OutboundEventsService(
     personReference: PersonReference? = null,
   ) {
     try {
-      publisher.send(outboundEvent.event(additionalInformation, personReference))
+      val event = outboundEvent.event(additionalInformation, personReference)
+      publisher.send(event)
+      telemetryService.track(event)
     } catch (e: Exception) {
       log.error(
         "Unable to send event with type {}, info {}, person {}",
