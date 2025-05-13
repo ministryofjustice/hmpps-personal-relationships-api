@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events
 
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.telemetry.StandardTelemetryEvent
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * An enum class containing all events that can be raised from the service.
@@ -293,19 +295,34 @@ enum class OutboundEvent(val eventType: String) {
  * This is inherited and expanded individually for each event type.
  */
 
-open class AdditionalInformation(open val source: Source, open val username: String)
+open class AdditionalInformation(open val source: Source, open val username: String) {
+  open fun toTelemetryValues(): List<Pair<String, String>> = listOf(
+    "source" to source.toString(),
+    "username" to username,
+  )
+}
 
 /**
  * The class representing outbound domain events
  */
 data class OutboundHMPPSDomainEvent(
-  val eventType: String,
+  override val eventType: String,
   val additionalInformation: AdditionalInformation,
   val personReference: PersonReference? = null,
   val version: String = "1",
   val description: String,
   val occurredAt: LocalDateTime = LocalDateTime.now(),
-)
+) : StandardTelemetryEvent(eventType) {
+  override fun properties() = listOfNotNull(
+    personReference?.nomsNumber()?.let { "prisoner_number" to it },
+    personReference?.dpsContactId()?.let { "contact_id" to it },
+    "version" to version,
+    "description" to description,
+    "occurred_at" to occurredAt.format(DateTimeFormatter.ISO_DATE_TIME),
+    "source" to additionalInformation.source.toString(),
+    "username" to additionalInformation.username,
+  ).toMap()
+}
 
 /**
  * These are classes which define the different event content for AdditionalInformation.
