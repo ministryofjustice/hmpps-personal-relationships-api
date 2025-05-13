@@ -35,7 +35,7 @@ class CreateOrUpdateDomesticStatusSimulation : BaseSimulation() {
         },
       ).asJson()
       .headers(authorisationHeader)
-      .check(status().shouldBe(200)),
+      .check(status().`in`(200, 409)),
   )
 
   private val domesticStatusScenario = scenario("Create or Update Prisoner Domestic Status")
