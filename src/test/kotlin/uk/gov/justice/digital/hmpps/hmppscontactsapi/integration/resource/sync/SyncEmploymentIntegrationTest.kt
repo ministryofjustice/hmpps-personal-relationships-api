@@ -156,7 +156,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_CREATED,
-      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, "SYS"),
+      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, "CREATOR"),
       personReference = PersonReference(dpsContactId = employment.contactId),
     )
   }
@@ -191,7 +191,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_UPDATED,
-      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, "SYS"),
+      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, updateEmploymentRequest.updatedBy),
       personReference = PersonReference(dpsContactId = updatedEmployment.contactId),
     )
   }

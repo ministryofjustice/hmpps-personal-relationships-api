@@ -90,7 +90,7 @@ class SyncFacade(
         identifier = it.id,
         contactId = it.id,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.createdBy),
       )
     }
 
@@ -101,7 +101,7 @@ class SyncFacade(
         identifier = it.id,
         contactId = it.id,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.updatedBy),
       )
     }
 
@@ -112,7 +112,7 @@ class SyncFacade(
         identifier = contactId,
         contactId = contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(),
       )
     }
 
@@ -131,7 +131,7 @@ class SyncFacade(
         identifier = it.contactPhoneId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.createdBy),
       )
     }
 
@@ -142,7 +142,7 @@ class SyncFacade(
         identifier = it.contactPhoneId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.updatedBy),
       )
     }
 
@@ -153,7 +153,7 @@ class SyncFacade(
         identifier = contactPhoneId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(),
       )
     }
 
@@ -170,7 +170,7 @@ class SyncFacade(
         identifier = it.contactEmailId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.createdBy),
       )
     }
 
@@ -181,7 +181,7 @@ class SyncFacade(
         identifier = it.contactEmailId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.updatedBy),
       )
     }
 
@@ -192,7 +192,7 @@ class SyncFacade(
         identifier = it.contactEmailId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(),
       )
     }
 
@@ -209,7 +209,7 @@ class SyncFacade(
         identifier = it.contactIdentityId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.createdBy),
       )
     }
 
@@ -220,7 +220,7 @@ class SyncFacade(
         identifier = it.contactIdentityId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.updatedBy),
       )
     }
 
@@ -231,7 +231,7 @@ class SyncFacade(
         identifier = it.contactIdentityId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(),
       )
     }
 
@@ -248,7 +248,7 @@ class SyncFacade(
         identifier = it.contactRestrictionId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.createdBy),
       )
     }
 
@@ -259,7 +259,7 @@ class SyncFacade(
         identifier = it.contactRestrictionId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.updatedBy),
       )
     }
 
@@ -270,7 +270,7 @@ class SyncFacade(
         identifier = it.contactRestrictionId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(),
       )
     }
 
@@ -287,7 +287,7 @@ class SyncFacade(
         identifier = it.contactAddressId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.createdBy),
       )
     }
 
@@ -298,7 +298,7 @@ class SyncFacade(
         identifier = it.contactAddressId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.updatedBy),
       )
     }
 
@@ -309,7 +309,7 @@ class SyncFacade(
         identifier = it.contactAddressId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(),
       )
     }
 
@@ -326,7 +326,7 @@ class SyncFacade(
         contactId = it.contactId,
         source = Source.NOMIS,
         secondIdentifier = it.contactAddressId,
-        user = User.SYS_USER,
+        user = userOrDefault(request.createdBy),
       )
     }
 
@@ -338,7 +338,7 @@ class SyncFacade(
         contactId = it.contactId,
         source = Source.NOMIS,
         secondIdentifier = it.contactAddressId,
-        user = User.SYS_USER,
+        user = userOrDefault(request.updatedBy),
       )
     }
 
@@ -350,7 +350,7 @@ class SyncFacade(
         contactId = it.contactId,
         source = Source.NOMIS,
         secondIdentifier = it.contactAddressId,
-        user = User.SYS_USER,
+        user = userOrDefault(),
       )
     }
 
@@ -368,7 +368,7 @@ class SyncFacade(
         contactId = it.contactId,
         noms = it.prisonerNumber,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.createdBy),
       )
     }
 
@@ -380,7 +380,7 @@ class SyncFacade(
         contactId = it.contactId,
         noms = it.prisonerNumber,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.updatedBy),
       )
     }
 
@@ -392,7 +392,7 @@ class SyncFacade(
         contactId = it.contactId,
         noms = it.prisonerNumber,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(),
       )
     }
 
@@ -410,7 +410,7 @@ class SyncFacade(
         contactId = it.contactId,
         noms = it.prisonerNumber,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.createdBy),
       )
     }
 
@@ -422,7 +422,7 @@ class SyncFacade(
         contactId = it.contactId,
         noms = it.prisonerNumber,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.updatedBy),
       )
     }
 
@@ -434,7 +434,7 @@ class SyncFacade(
         contactId = it.contactId,
         noms = it.prisonerNumber,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(),
       )
     }
 
@@ -451,7 +451,7 @@ class SyncFacade(
         identifier = it.employmentId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.createdBy),
       )
     }
 
@@ -462,7 +462,7 @@ class SyncFacade(
         identifier = it.employmentId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(request.updatedBy),
       )
     }
 
@@ -473,7 +473,7 @@ class SyncFacade(
         identifier = it.employmentId,
         contactId = it.contactId,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(),
       )
     }
 
@@ -521,7 +521,7 @@ class SyncFacade(
         contactId = removed.contactId,
         noms = removed.prisonerNumber,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(null),
       )
     }
 
@@ -531,7 +531,7 @@ class SyncFacade(
       contactId = removed.contactId,
       noms = removed.prisonerNumber,
       source = Source.NOMIS,
-      user = User.SYS_USER,
+      user = userOrDefault(null),
     )
   }
 
@@ -546,7 +546,7 @@ class SyncFacade(
         contactId = created.contactId,
         noms = prisonerNumber,
         source = Source.NOMIS,
-        user = User.SYS_USER,
+        user = userOrDefault(),
       )
     }
 
@@ -556,7 +556,9 @@ class SyncFacade(
       contactId = created.contactId,
       noms = prisonerNumber,
       source = Source.NOMIS,
-      user = User.SYS_USER,
+      user = userOrDefault(),
     )
   }
+
+  private fun userOrDefault(username: String? = null): User = username?.let { User(username) } ?: User.SYS_USER
 }

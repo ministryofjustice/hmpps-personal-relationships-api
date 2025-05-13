@@ -161,7 +161,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
-        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS, "SYS"),
+        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS, "admin"),
         personReference = PersonReference(dpsContactId = prisonerContactRestriction.contactId, nomsNumber = prisonerContactRestriction.prisonerNumber),
       )
     }
@@ -222,7 +222,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
-        additionalInfo = PrisonerContactRestrictionInfo(updatedPrisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS, "SYS"),
+        additionalInfo = PrisonerContactRestrictionInfo(updatedPrisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS, "UpdatedUser"),
         personReference = PersonReference(dpsContactId = updatedPrisonerContactRestriction.contactId, nomsNumber = updatedPrisonerContactRestriction.prisonerNumber),
       )
     }

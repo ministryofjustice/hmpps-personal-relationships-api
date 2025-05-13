@@ -156,7 +156,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_CREATED,
-      additionalInfo = ContactRestrictionInfo(contactRestriction.contactRestrictionId, Source.NOMIS, "SYS"),
+      additionalInfo = ContactRestrictionInfo(contactRestriction.contactRestrictionId, Source.NOMIS, "CREATE"),
       personReference = PersonReference(dpsContactId = contactRestriction.contactId),
     )
   }
@@ -212,7 +212,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_UPDATED,
-      additionalInfo = ContactRestrictionInfo(updatedRestriction.contactRestrictionId, Source.NOMIS, "SYS"),
+      additionalInfo = ContactRestrictionInfo(updatedRestriction.contactRestrictionId, Source.NOMIS, "UPDATE"),
       personReference = PersonReference(dpsContactId = updatedRestriction.contactId),
     )
   }
