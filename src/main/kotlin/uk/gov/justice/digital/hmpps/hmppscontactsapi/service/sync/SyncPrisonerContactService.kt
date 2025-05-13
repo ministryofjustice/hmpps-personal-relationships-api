@@ -25,7 +25,7 @@ class SyncPrisonerContactService(
   }
 
   fun createPrisonerContact(request: SyncCreatePrisonerContactRequest): SyncPrisonerContact {
-    if (prisonerContactRepository.findDuplicateRelationships(request.prisonerNumber, request.contactId, request.relationshipType).isNotEmpty()) {
+    if (request.currentTerm == true && prisonerContactRepository.findDuplicateRelationships(request.prisonerNumber, request.contactId, request.relationshipType).isNotEmpty()) {
       throw DuplicateRelationshipException(request.prisonerNumber, request.contactId, request.relationshipType)
     }
     return prisonerContactRepository.saveAndFlush(request.toEntity()).toResponse()

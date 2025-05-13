@@ -313,6 +313,31 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .isEqualTo(HttpStatus.CONFLICT)
     }
 
+    @Test
+    fun `should allow create duplicate relationship if not current term`() {
+      val prisonerNumber = "A1234BF"
+      val request = createPrisonerContactRequest(prisonerNumber).copy(currentTerm = false)
+      webTestClient.post()
+        .uri("/sync/prisoner-contact")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .bodyValue(request)
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      webTestClient.post()
+        .uri("/sync/prisoner-contact")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .bodyValue(request)
+        .exchange()
+        .expectStatus()
+        .isOk
+    }
+
     private fun updatePrisonerContactRequest(prisonerNumber: String = "A1234BC") = SyncUpdatePrisonerContactRequest(
       contactId = 1L,
       prisonerNumber = prisonerNumber,
