@@ -133,7 +133,7 @@ class HmppsContactsApiExceptionHandler {
       ),
     )
 
-  @ExceptionHandler(DuplicatePersonException::class, DuplicateEmailException::class, DuplicateRelationshipException::class)
+  @ExceptionHandler(DuplicatePersonException::class, DuplicateEmailException::class, DuplicateRelationshipException::class, ConcurrentModificationException::class)
   fun handleDuplicateException(e: RuntimeException): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(CONFLICT)
     .body(

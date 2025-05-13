@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 
 import jakarta.persistence.EntityNotFoundException
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
@@ -36,24 +37,23 @@ class PrisonerNumberOfChildrenService(
     prisonerService.getPrisoner(prisonerNumber)
       ?: throw EntityNotFoundException("Prisoner number $prisonerNumber - not found")
 
-    // Find existing numberOfChildren, If exists, deactivate it
-    prisonerNumberOfChildrenActive(prisonerNumber)?.let {
-      val deactivatedNumberOfChildrenCount = it.copy(
-        active = false,
+    try {
+      // Use a single atomic operation to update the existing active record
+      prisonerNumberOfChildrenRepository.deactivateExistingActiveRecord(prisonerNumber)
+      prisonerNumberOfChildrenRepository.flush()
+      // Create new active numberOfChildren
+      val newNumberOfChildren = PrisonerNumberOfChildren(
+        prisonerNumber = prisonerNumber,
+        numberOfChildren = request.numberOfChildren?.toString(),
+        createdBy = user.username,
+        createdTime = LocalDateTime.now(),
+        active = true,
       )
-      prisonerNumberOfChildrenRepository.saveAndFlush(deactivatedNumberOfChildrenCount)
-    }
 
-    // Create new active numberOfChildren
-    val newNumberOfChildren = PrisonerNumberOfChildren(
-      prisonerNumber = prisonerNumber,
-      numberOfChildren = request.numberOfChildren?.toString(),
-      createdBy = user.username,
-      createdTime = LocalDateTime.now(),
-      active = true,
-    )
-    // Save and return the new numberOfChildren
-    return prisonerNumberOfChildrenRepository.saveAndFlush(newNumberOfChildren).toModel()
+      return prisonerNumberOfChildrenRepository.saveAndFlush(newNumberOfChildren).toModel()
+    } catch (e: DataIntegrityViolationException) {
+      throw ConcurrentModificationException("Failed to update number of children due to concurrent modification")
+    }
   }
 
   private fun prisonerNumberOfChildrenActive(prisonerNumber: String) = prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(

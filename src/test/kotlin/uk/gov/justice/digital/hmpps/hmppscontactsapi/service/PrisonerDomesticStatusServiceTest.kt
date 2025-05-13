@@ -106,8 +106,6 @@ class PrisonerDomesticStatusServiceTest {
         domesticStatusCode = "S",
       )
 
-      whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
-        .thenReturn(null)
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
       whenever(
         referenceCodeRepository.findByGroupCodeAndCode(
@@ -152,8 +150,6 @@ class PrisonerDomesticStatusServiceTest {
         domesticStatusCode = null,
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
-      whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
-        .thenReturn(null)
 
       val newStatus = PrisonerDomesticStatus(
         prisonerDomesticStatusId = 1,
@@ -201,8 +197,6 @@ class PrisonerDomesticStatusServiceTest {
         domesticStatusCode = "D",
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
-      whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
-        .thenReturn(existingStatus)
 
       whenever(
         referenceCodeRepository.findByGroupCodeAndCode(
@@ -212,7 +206,6 @@ class PrisonerDomesticStatusServiceTest {
       ).thenReturn(ReferenceCodeEntity(1L, ReferenceCodeGroup.DOMESTIC_STS, "D", "Divorced", 0, true, "name"))
 
       whenever(prisonerDomesticStatusRepository.saveAndFlush(any()))
-        .thenReturn(existingStatus)
         .thenReturn(existingStatus.copy(domesticStatusCode = "D", active = true))
 
       // When
@@ -223,11 +216,9 @@ class PrisonerDomesticStatusServiceTest {
       )
 
       val statusCaptor = argumentCaptor<PrisonerDomesticStatus>()
-      verify(prisonerDomesticStatusRepository, times(2)).saveAndFlush(statusCaptor.capture())
-      assertThat(statusCaptor.firstValue.active).isFalse()
-      assertThat(statusCaptor.firstValue.domesticStatusCode).isEqualTo("M")
-      assertThat(statusCaptor.secondValue.active).isTrue()
-      assertThat(statusCaptor.secondValue.domesticStatusCode).isEqualTo("D")
+      verify(prisonerDomesticStatusRepository, times(1)).saveAndFlush(statusCaptor.capture())
+      assertThat(statusCaptor.firstValue.active).isTrue()
+      assertThat(statusCaptor.firstValue.domesticStatusCode).isEqualTo("D")
 
       // new code is returned
       with(result) {

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 
 import jakarta.persistence.EntityNotFoundException
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
@@ -38,27 +39,27 @@ class PrisonerDomesticStatusService(
     prisonerService.getPrisoner(prisonerNumber)
       ?: throw EntityNotFoundException("Prisoner number $prisonerNumber - not found")
     request.domesticStatusCode?.let { checkReferenceDataExists(it) }
+    try {
+      // Find existing status, If exists, deactivate it
+      prisonerDomesticStatusRepository.deactivateExistingActiveRecord(prisonerNumber)
+      prisonerDomesticStatusRepository.flush()
 
-    // Find existing status, If exists, deactivate it
-    getPrisonerDomesticStatusActive(prisonerNumber)?.let {
-      val deactivatedStatus = it.copy(
-        active = false,
+      // Create new active status
+      val newDomesticStatus = PrisonerDomesticStatus(
+        prisonerNumber = prisonerNumber,
+        domesticStatusCode = request.domesticStatusCode,
+        createdBy = user.username,
+        createdTime = LocalDateTime.now(),
+        active = true,
       )
-      prisonerDomesticStatusRepository.saveAndFlush(deactivatedStatus)
+
+      // Save and return the new status
+      return prisonerDomesticStatusRepository.saveAndFlush(newDomesticStatus).toModel()
+    } catch (e: DataIntegrityViolationException) {
+      throw ConcurrentModificationException("Failed to update number of children due to concurrent modification")
     }
-
-    // Create new active status
-    val newDomesticStatus = PrisonerDomesticStatus(
-      prisonerNumber = prisonerNumber,
-      domesticStatusCode = request.domesticStatusCode,
-      createdBy = user.username,
-      createdTime = LocalDateTime.now(),
-      active = true,
-    )
-
-    // Save and return the new status
-    return prisonerDomesticStatusRepository.saveAndFlush(newDomesticStatus).toModel()
   }
+
   private fun PrisonerDomesticStatus.toModel() = PrisonerDomesticStatusResponse(
     id = prisonerDomesticStatusId,
     domesticStatusCode = domesticStatusCode,

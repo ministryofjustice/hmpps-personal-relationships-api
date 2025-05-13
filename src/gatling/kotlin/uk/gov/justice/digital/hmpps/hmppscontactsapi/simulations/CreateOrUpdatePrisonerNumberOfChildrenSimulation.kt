@@ -34,10 +34,10 @@ class CreateOrUpdatePrisonerNumberOfChildrenSimulation : BaseSimulation() {
         },
       ).asJson()
       .headers(authorisationHeader)
-      .check(status().shouldBe(200)),
+      .check(status().`in`(200, 409)),
   )
 
-  private val putNumberOfChildren = scenario("Create or Update Prisoner number of children")
+  private val numberOfChildrenScenario = scenario("Create or Update Prisoner number of children")
     .exec(getToken)
     .feed(prisonerNumberFeeder.circular())
     .repeat(testRepeat)
@@ -51,7 +51,7 @@ class CreateOrUpdatePrisonerNumberOfChildrenSimulation : BaseSimulation() {
 
   init {
     setUp(
-      putNumberOfChildren.injectOpen(
+      numberOfChildrenScenario.injectOpen(
         constantUsersPerSec(userCount.toDouble())
           .during(ofSeconds(testDuration.toLong()))
           .randomized(),

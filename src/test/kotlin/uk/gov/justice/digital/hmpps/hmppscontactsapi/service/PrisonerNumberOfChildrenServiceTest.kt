@@ -89,8 +89,6 @@ class PrisonerNumberOfChildrenServiceTest {
         numberOfChildren = 1,
       )
 
-      whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
-        .thenReturn(null)
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
       val newNumberOfChildrenCount = PrisonerNumberOfChildren(
         prisonerNumberOfChildrenId = 1,
@@ -127,8 +125,6 @@ class PrisonerNumberOfChildrenServiceTest {
         numberOfChildren = null,
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
-      whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
-        .thenReturn(null)
 
       val newNumberOfChildren = PrisonerNumberOfChildren(
         prisonerNumberOfChildrenId = 1,
@@ -173,11 +169,8 @@ class PrisonerNumberOfChildrenServiceTest {
       val request = CreateOrUpdatePrisonerNumberOfChildrenRequest(
         numberOfChildren = 1,
       )
-      whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
-        .thenReturn(existingNumberOfChildrenCount)
 
       whenever(prisonerNumberOfChildrenRepository.saveAndFlush(any()))
-        .thenReturn(existingNumberOfChildrenCount)
         .thenReturn(existingNumberOfChildrenCount.copy(numberOfChildren = "2", active = true))
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
 
@@ -188,12 +181,7 @@ class PrisonerNumberOfChildrenServiceTest {
         user,
       )
 
-      verify(prisonerNumberOfChildrenRepository, times(1)).saveAndFlush(
-        check { savedNumberOfChildrenCount ->
-          assertThat(savedNumberOfChildrenCount.active).isFalse()
-          assertThat(savedNumberOfChildrenCount.numberOfChildren).isEqualTo("1")
-        },
-      )
+      verify(prisonerNumberOfChildrenRepository, times(1)).deactivateExistingActiveRecord(prisonerNumber)
 
       verify(prisonerNumberOfChildrenRepository, times(1)).saveAndFlush(
         check { savedNumberOfChildrenCount ->
