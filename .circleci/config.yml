@@ -44,12 +44,45 @@ jobs:
           path: build/test-results
       - store_artifacts:
           path: build/reports/tests
+          
+  gatling_performance_tests:
+    executor:
+      name: hmpps/java
+      jdk_tag: << pipeline.parameters.java-version >>
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - gradle-{{ checksum "build.gradle.kts" }}
+            - gradle-
+      - run:
+          name: Run Gatling Performance Tests
+          command: |
+            ./gradlew runGatling \
+              -DbaseUrl=${GATLING_BASE_URL:-http://localhost:8080} \
+              -DuserCount=${GATLING_USER_COUNT:-10} \
+              -DtestDuration=${GATLING_TEST_DURATION:-60} \
+              -DtestPauseRangeMin=${GATLING_PAUSE_MIN:-3} \
+              -DtestPauseRangeMax=${GATLING_PAUSE_MAX:-5} \
+              -DtestRepeat=${GATLING_TEST_REPEAT:-5} \
+              -Denvironment=${GATLING_ENVIRONMENT:-dev} \
+              -DresponseTimePercentile3=${GATLING_RESPONSE_TIME_PERCENTILE:-1000} \
+              -DsuccessfulRequestsPercentage=${GATLING_SUCCESS_PERCENTAGE:-95}
+      - store_artifacts:
+          path: build/reports/gatling
+          destination: gatling-reports
+      - store_test_results:
+          path: build/reports/gatling
 
 workflows:
   version: 2
   build-test-and-deploy:
     jobs:
       - validate:
+          filters:
+            tags:
+              ignore: /.*/
+      - gatling_performance_tests:
           filters:
             tags:
               ignore: /.*/
@@ -74,6 +107,7 @@ workflows:
                 - main
           requires:
             - validate
+            - gatling_performance_tests
             - build_docker
             - helm_lint
           helm_timeout: 5m
@@ -156,4 +190,15 @@ workflows:
             - veracode-credentials
             - hmpps-common-vars
 
-
+  performance:
+    triggers:
+      - schedule:
+          cron: "0 2 * * 1" # Run at 2:00 AM every Monday
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - gatling_performance_tests:
+          context:
+            - hmpps-common-vars

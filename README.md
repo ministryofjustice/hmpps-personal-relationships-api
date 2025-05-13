@@ -78,7 +78,7 @@ This project includes Gatling performance tests to evaluate the API's performanc
 You can run the Gatling tests using the following Gradle command:
 
 ```bash
-./gradlew gatlingRun
+./gradlew runGatling
 ```
 
 ### Configuration Options
@@ -88,14 +88,24 @@ You can configure the tests using the following system properties:
 - `baseUrl`: The base URL of the API (default: `http://localhost:8080`)
 - `userCount`: The number of virtual users to simulate (default: `10`)
 - `testDuration`: The duration of the test in seconds (default: `60`)
-- `rampUpTime`: The ramp-up time in seconds (default: `5`)
+- `testPauseRangeMin`: Minimum pause duration (in seconds) between simulated user actions (default: `3`)
+- `testPauseRangeMax`: Maximum pause duration (in seconds) between simulated user actions (default: `5`)
+- `testRepeat`: Number of iterations to repeat the test scenario (default: `5`)
+- `environment`: Target environment for the load test (default: `dev`)
+- `responseTimePercentile3`: Response time threshold (in milliseconds) that 99.9% of requests should be under (default: `1000`)
+- `successfulRequestsPercentage`: Minimum percentage of requests that should be successful for the test to pass (default: `95`)
 
 Example:
 
 ```bash
-./gradlew gatlingRun -DAUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token -DCLIENT_ID='**REDACTED**' -DCLIENT_SECRET='**REDACTED**' -DBASE_URL=https://localhost:8080 -ENVIRONMENT_NAME=dev
-
+./gradlew runGatling \
+  -DAUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token \
+  -DCLIENT_ID='**REDACTED**' \
+  -DCLIENT_SECRET='**REDACTED**' \
+  -DbaseUrl=https://localhost:8080 \
+  -Denvironment=dev
 ```
+
 ```markdown
 -DAUTH_TOKEN='your-jwt-token' is an optional argument. If provided, this token will be used directly for authentication instead of generating a new token using the client ID and secret
 ```
@@ -103,6 +113,14 @@ Example:
 ### Viewing Test Results
 
 After running the tests, the results will be available in the `build/reports/gatling` directory. Open the `index.html` file in a web browser to view the results.
+
+### CircleCI Integration
+
+Gatling tests are integrated into the CircleCI pipeline and run:
+1. As part of the main build-test-and-deploy workflow for every commit
+2. On a weekly schedule (every Monday at 2:00 AM) as part of the performance workflow
+
+For more information about the CircleCI configuration, see the [CircleCI README](.circleci/README.md).
 
 For more information about the Gatling tests, see the [Gatling README](src/gatling/README.md).
 
