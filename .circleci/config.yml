@@ -62,8 +62,8 @@ jobs:
       - run:
           name: Fetch client ID and secret from Kubernetes
           command: |
-            user=$(kubectl -n hmpps-contacts-dev get secret hmpps-contacts-ui -o jsonpath='{.data.SYSTEM_CLIENT_ID}' | base64 --decode)
-            secret=$(kubectl -n hmpps-contacts-dev get secret hmpps-contacts-ui -o jsonpath='{.data.SYSTEM_CLIENT_SECRET}' | base64 --decode)
+            user=$(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-api-client-creds -o jsonpath='{.data.SYSTEM_CLIENT_ID}' | base64 --decode)
+            secret=$(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-api-client-creds -o jsonpath='{.data.SYSTEM_CLIENT_SECRET}' | base64 --decode)
             
             echo "export CLIENT_ID=$user" >> "$BASH_ENV"
             echo "export CLIENT_SECRET=$secret" >> "$BASH_ENV"
