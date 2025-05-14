@@ -54,6 +54,7 @@ jobs:
       tag: << pipeline.parameters.java-tag >>
     steps:
       - checkout
+      - hmpps/k8s_setup
       - restore_cache:
           keys:
             - gradle-{{ checksum "build.gradle.kts" }}
