@@ -243,7 +243,7 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
     assertThat(mobile).isNotNull()
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
-      additionalInfo = ContactAddressPhoneInfo(mobile!!.contactAddressPhoneId, savedAddressId, Source.DPS, "created"),
+      additionalInfo = ContactAddressPhoneInfo(mobile!!.contactAddressPhoneId, savedAddressId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
@@ -251,7 +251,7 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
     assertThat(home).isNotNull()
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
-      additionalInfo = ContactAddressPhoneInfo(home!!.contactAddressPhoneId, savedAddressId, Source.DPS, "created"),
+      additionalInfo = ContactAddressPhoneInfo(home!!.contactAddressPhoneId, savedAddressId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }

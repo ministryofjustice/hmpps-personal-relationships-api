@@ -63,7 +63,7 @@ class DeleteContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_IDENTITY_DELETED,
-      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "deleted"),
+      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "deleted", "BXI"),
     )
   }
 
@@ -84,7 +84,7 @@ class DeleteContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_IDENTITY_DELETED,
-      additionalInfo = ContactIdentityInfo(-99, Source.DPS, "deleted"),
+      additionalInfo = ContactIdentityInfo(-99, Source.DPS, "deleted", "BXI"),
     )
   }
 
@@ -108,7 +108,7 @@ class DeleteContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_DELETED,
-      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "deleted"),
+      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "deleted", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }

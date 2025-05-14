@@ -55,7 +55,7 @@ class MigrateContactIntegrationTest : PostgresIntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should return forbidden without an authorised role on the token`(authRole: String) {
-    setCurrentUser(StubUser(authRole, authRole, listOf(authRole), caseload = null, isSystemUser = true))
+    setCurrentUser(StubUser(authRole, authRole, listOf(authRole), activeCaseloadId = null, isSystemUser = true))
     webTestClient.post()
       .uri("/migrate/contact")
       .accept(MediaType.APPLICATION_JSON)

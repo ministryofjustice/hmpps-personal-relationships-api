@@ -184,7 +184,7 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(created.contactPhoneId, Source.DPS, "created"),
+      additionalInfo = ContactPhoneInfo(created.contactPhoneId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }
@@ -205,7 +205,7 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(created.contactPhoneId, Source.DPS, "created"),
+      additionalInfo = ContactPhoneInfo(created.contactPhoneId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }

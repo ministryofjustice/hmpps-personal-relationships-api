@@ -211,22 +211,22 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_CREATED,
-      additionalInfo = EmploymentInfo(newEmployment.employmentId, source = Source.DPS, "updated"),
+      additionalInfo = EmploymentInfo(newEmployment.employmentId, source = Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_UPDATED,
-      additionalInfo = EmploymentInfo(employmentToBeUpdated.employmentId, source = Source.DPS, "updated"),
+      additionalInfo = EmploymentInfo(employmentToBeUpdated.employmentId, source = Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_DELETED,
-      additionalInfo = EmploymentInfo(employmentToBeDeleted.employmentId, source = Source.DPS, "updated"),
+      additionalInfo = EmploymentInfo(employmentToBeDeleted.employmentId, source = Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.EMPLOYMENT_UPDATED,
-      additionalInfo = EmploymentInfo(employmentToRemainUntouched.employmentId, source = Source.DPS, "updated"),
+      additionalInfo = EmploymentInfo(employmentToRemainUntouched.employmentId, source = Source.DPS, "updated", "BXI"),
     )
   }
 

@@ -178,6 +178,7 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         createdRelationship.prisonerContactId,
         source = Source.DPS,
         "read_write_user",
+        "BXI",
       ),
       personReference = PersonReference(dpsContactId = contact.id, nomsNumber = request.relationship.prisonerNumber),
     )
@@ -236,6 +237,7 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         createdRelationship.prisonerContactId,
         source = Source.DPS,
         "read_write_user",
+        "BXI",
       ),
       personReference = PersonReference(dpsContactId = contact.id, nomsNumber = request.relationship.prisonerNumber),
     )

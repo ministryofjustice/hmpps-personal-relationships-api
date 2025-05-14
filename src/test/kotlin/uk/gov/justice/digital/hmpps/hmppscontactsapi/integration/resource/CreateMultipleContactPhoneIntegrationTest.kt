@@ -206,7 +206,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
     assertThat(mobile).isNotNull()
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(mobile!!.contactPhoneId, Source.DPS, "created"),
+      additionalInfo = ContactPhoneInfo(mobile!!.contactPhoneId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
@@ -214,7 +214,7 @@ class CreateMultipleContactPhoneIntegrationTest : SecureAPIIntegrationTestBase()
     assertThat(home).isNotNull()
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(home!!.contactPhoneId, Source.DPS, "created"),
+      additionalInfo = ContactPhoneInfo(home!!.contactPhoneId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }

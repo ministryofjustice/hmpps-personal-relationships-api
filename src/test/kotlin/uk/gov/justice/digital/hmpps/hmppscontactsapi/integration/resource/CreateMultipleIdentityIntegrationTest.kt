@@ -242,7 +242,7 @@ class CreateMultipleIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(createdTime).isNotNull()
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_IDENTITY_CREATED,
-        additionalInfo = ContactIdentityInfo(contactIdentityId, Source.DPS, "created"),
+        additionalInfo = ContactIdentityInfo(contactIdentityId, Source.DPS, "created", "BXI"),
         personReference = PersonReference(savedContactId),
       )
     }
@@ -257,7 +257,7 @@ class CreateMultipleIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(createdTime).isNotNull()
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_IDENTITY_CREATED,
-        additionalInfo = ContactIdentityInfo(contactIdentityId, Source.DPS, "created"),
+        additionalInfo = ContactIdentityInfo(contactIdentityId, Source.DPS, "created", "BXI"),
         personReference = PersonReference(savedContactId),
       )
     }

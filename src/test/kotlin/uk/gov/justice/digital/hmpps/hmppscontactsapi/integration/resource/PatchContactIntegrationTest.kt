@@ -58,7 +58,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -78,7 +78,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -95,7 +95,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       val errors = testAPIClient.getBadResponseErrorsWithPatch(req, uri)
       assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported language (FOO)")
 
-      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS, "read_write_user"))
+      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"))
     }
 
     @Test
@@ -113,7 +113,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -150,7 +150,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -168,7 +168,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -188,7 +188,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported interpreter required type null.")
 
-      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS, "read_write_user"))
+      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"))
     }
 
     private fun resetInterpreterRequired(resetValue: Boolean) {
@@ -221,7 +221,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -240,7 +240,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -260,7 +260,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -277,7 +277,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       val errors = testAPIClient.getBadResponseErrorsWithPatch(req, uri)
       assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported domestic status (FOO)")
 
-      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS, "read_write_user"))
+      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"))
     }
 
     private fun resetDomesticStatus() {
@@ -312,7 +312,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -330,7 +330,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactId),
       )
     }
@@ -350,7 +350,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported staff flag value null.")
 
-      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS, "read_write_user"))
+      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"))
     }
 
     private fun resetStaffFlag(resetValue: Boolean) {
@@ -393,7 +393,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactIdThatHasDOB, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactIdThatHasDOB, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactIdThatHasDOB),
       )
     }
@@ -411,7 +411,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactIdThatHasDOB, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactIdThatHasDOB, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactIdThatHasDOB),
       )
     }
@@ -429,7 +429,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactIdThatHasDOB, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactIdThatHasDOB, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactIdThatHasDOB),
       )
     }
@@ -465,7 +465,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactThatHasAllNameFields),
       )
     }
@@ -497,7 +497,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactThatHasAllNameFields),
       )
     }
@@ -518,7 +518,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactThatHasAllNameFields),
       )
     }
@@ -539,7 +539,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactThatHasAllNameFields),
       )
     }
@@ -558,7 +558,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasNoEvents(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "read_write_user", "BXI"),
       )
     }
 
@@ -576,7 +576,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasNoEvents(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactThatHasAllNameFields, Source.DPS, "read_write_user", "BXI"),
       )
     }
   }
@@ -608,7 +608,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactWithAGender, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactWithAGender, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactWithAGender),
       )
     }
@@ -625,7 +625,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactWithAGender, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactWithAGender, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactWithAGender),
       )
     }
@@ -642,7 +642,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactWithAGender, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactWithAGender, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactWithAGender),
       )
     }
@@ -659,7 +659,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
       val errors = testAPIClient.getBadResponseErrorsWithPatch(req, uri)
       assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported gender (FOO)")
 
-      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactWithAGender, Source.DPS, "read_write_user"))
+      stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_UPDATED, ContactInfo(contactWithAGender, Source.DPS, "read_write_user", "BXI"))
     }
   }
 
@@ -696,7 +696,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactWithDeceasedDate, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactWithDeceasedDate, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactWithDeceasedDate),
       )
     }
@@ -715,7 +715,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactWithDeceasedDate, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactWithDeceasedDate, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactWithDeceasedDate),
       )
     }
@@ -733,7 +733,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_UPDATED,
-        additionalInfo = ContactInfo(contactWithDeceasedDate, Source.DPS, "read_write_user"),
+        additionalInfo = ContactInfo(contactWithDeceasedDate, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactWithDeceasedDate),
       )
     }

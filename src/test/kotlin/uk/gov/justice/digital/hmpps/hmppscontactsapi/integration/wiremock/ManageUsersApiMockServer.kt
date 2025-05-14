@@ -20,6 +20,7 @@ class ManageUsersApiMockServer : MockServer(8093) {
                 {
                   "username": "${user.username}",
                   "name": "${user.name}"
+                  ${user.activeCaseloadId?.let {", \"activeCaseloadId\": \"${user.activeCaseloadId}\""} ?: ""}
                 }
               """.trimIndent(),
             )

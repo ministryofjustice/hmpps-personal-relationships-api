@@ -99,7 +99,7 @@ class CreateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_CREATED,
-      additionalInfo = EmploymentInfo(created.employmentId, Source.DPS, "created"),
+      additionalInfo = EmploymentInfo(created.employmentId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }

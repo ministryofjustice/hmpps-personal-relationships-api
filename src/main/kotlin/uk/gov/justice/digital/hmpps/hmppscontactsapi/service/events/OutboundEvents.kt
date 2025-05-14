@@ -295,12 +295,7 @@ enum class OutboundEvent(val eventType: String) {
  * This is inherited and expanded individually for each event type.
  */
 
-open class AdditionalInformation(open val source: Source, open val username: String) {
-  open fun toTelemetryValues(): List<Pair<String, String>> = listOf(
-    "source" to source.toString(),
-    "username" to username,
-  )
-}
+open class AdditionalInformation(open val source: Source, open val username: String, open val activeCaseloadId: String?)
 
 /**
  * The class representing outbound domain events
@@ -321,6 +316,7 @@ data class OutboundHMPPSDomainEvent(
     "occurred_at" to occurredAt.format(DateTimeFormatter.ISO_DATE_TIME),
     "source" to additionalInformation.source.toString(),
     "username" to additionalInformation.username,
+    "active_caseload_id" to (additionalInformation.activeCaseloadId ?: "unknown"),
   ).toMap()
 }
 
@@ -330,18 +326,18 @@ data class OutboundHMPPSDomainEvent(
  * The additional information is mapped into JSON by the ObjectMapper as part of the event body.
  */
 
-data class ContactInfo(val contactId: Long, override val source: Source = Source.DPS, override val username: String) : AdditionalInformation(source, username)
-data class ContactAddressInfo(val contactAddressId: Long, override val source: Source = Source.DPS, override val username: String) : AdditionalInformation(source, username)
-data class ContactPhoneInfo(val contactPhoneId: Long, override val source: Source = Source.DPS, override val username: String) : AdditionalInformation(source, username)
-data class ContactAddressPhoneInfo(val contactAddressPhoneId: Long, val contactAddressId: Long, override val source: Source = Source.DPS, override val username: String) : AdditionalInformation(source, username)
-data class ContactEmailInfo(val contactEmailId: Long, override val source: Source = Source.DPS, override val username: String) : AdditionalInformation(source, username)
-data class ContactIdentityInfo(val contactIdentityId: Long, override val source: Source = Source.DPS, override val username: String) : AdditionalInformation(source, username)
-data class ContactRestrictionInfo(val contactRestrictionId: Long, override val source: Source = Source.DPS, override val username: String) : AdditionalInformation(source, username)
-data class PrisonerContactInfo(val prisonerContactId: Long, override val source: Source = Source.DPS, override val username: String) : AdditionalInformation(source, username)
-data class PrisonerContactRestrictionInfo(val prisonerContactRestrictionId: Long, override val source: Source = Source.DPS, override val username: String) : AdditionalInformation(source, username)
-data class EmploymentInfo(val employmentId: Long, override val source: Source = Source.DPS, override val username: String) : AdditionalInformation(source, username)
-data class PrisonerDomesticStatus(val domesticStatusId: Long, override val source: Source = Source.DPS, override val username: String) : AdditionalInformation(source, username)
-data class PrisonerNumberOfChildren(val prisonerNumberOfChildrenId: Long, override val source: Source = Source.DPS, override val username: String) : AdditionalInformation(source, username)
+data class ContactInfo(val contactId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseloadId: String? = null) : AdditionalInformation(source, username, activeCaseloadId)
+data class ContactAddressInfo(val contactAddressId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseloadId: String? = null) : AdditionalInformation(source, username, activeCaseloadId)
+data class ContactPhoneInfo(val contactPhoneId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseloadId: String? = null) : AdditionalInformation(source, username, activeCaseloadId)
+data class ContactAddressPhoneInfo(val contactAddressPhoneId: Long, val contactAddressId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseloadId: String? = null) : AdditionalInformation(source, username, activeCaseloadId)
+data class ContactEmailInfo(val contactEmailId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseloadId: String? = null) : AdditionalInformation(source, username, activeCaseloadId)
+data class ContactIdentityInfo(val contactIdentityId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseloadId: String? = null) : AdditionalInformation(source, username, activeCaseloadId)
+data class ContactRestrictionInfo(val contactRestrictionId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseloadId: String? = null) : AdditionalInformation(source, username, activeCaseloadId)
+data class PrisonerContactInfo(val prisonerContactId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseloadId: String? = null) : AdditionalInformation(source, username, activeCaseloadId)
+data class PrisonerContactRestrictionInfo(val prisonerContactRestrictionId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseloadId: String? = null) : AdditionalInformation(source, username, activeCaseloadId)
+data class EmploymentInfo(val employmentId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseloadId: String? = null) : AdditionalInformation(source, username, activeCaseloadId)
+data class PrisonerDomesticStatus(val domesticStatusId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseloadId: String? = null) : AdditionalInformation(source, username, activeCaseloadId)
+data class PrisonerNumberOfChildren(val prisonerNumberOfChildrenId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseloadId: String? = null) : AdditionalInformation(source, username, activeCaseloadId)
 
 /**
  * The event source.
