@@ -61,8 +61,8 @@ jobs:
       - run:
           name: Run Gatling Performance Tests
           command: |
-            ./gradlew gatlingRun \
-              -DbaseUrl=${GATLING_BASE_URL:-http://localhost:8080} \
+            ./gradlew gatlingRun --all\
+              -DbaseUrl=${GATLING_BASE_URL:-https://personal-relationships-api-dev.hmpps.service.justice.gov.uk} \
               -DuserCount=${GATLING_USER_COUNT:-10} \
               -DtestDuration=${GATLING_TEST_DURATION:-60} \
               -DtestPauseRangeMin=${GATLING_PAUSE_MIN:-3} \
