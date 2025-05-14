@@ -20,7 +20,7 @@ parameters:
     default: "16"
   java-tag:
     type: string
-    default: "cimg/openjdk:17.0"
+    default: "17.0"
 
 jobs:
   validate:
