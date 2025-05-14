@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  hmpps: ministryofjustice/hmpps@10
+  hmpps: ministryofjustice/hmpps@11.0.0
 
 parameters:
   slack-channel-prod-alerts:
@@ -18,6 +18,9 @@ parameters:
   postgres-tag:
     type: string
     default: "16"
+  java-tag:
+    type: string
+    default: "21.0"
 
 jobs:
   validate:
@@ -45,11 +48,60 @@ jobs:
       - store_artifacts:
           path: build/reports/tests
 
+  gatling_performance_tests:
+    executor:
+      name: hmpps/java
+      tag: << pipeline.parameters.java-tag >>
+    steps:
+      - checkout
+      - hmpps/k8s_setup
+      - restore_cache:
+          keys:
+            - gradle-{{ checksum "build.gradle.kts" }}
+            - gradle-
+      - run:
+          name: Running gatling tests
+          command: |
+            set +x        
+              read -r user secret jwt < <(echo $(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-perf-test-creds -o json | jq '.data[] |= @base64d' | jq -r '.data.SYSTEM_CLIENT_ID, .data.SYSTEM_CLIENT_SECRET'))
+              AUTH_HOST="https://sign-in-dev.hmpps.service.justice.gov.uk"
+              BASIC_AUTH="$(echo -n $user:$secret | base64)"
+              TOKEN_RESPONSE=$(curl -s -k -d "" -X POST "$AUTH_HOST/auth/oauth/token?grant_type=client_credentials" -H "Authorization: Basic $BASIC_AUTH")
+              TOKEN=$(echo "$TOKEN_RESPONSE" | jq -er .access_token)
+              if [[ $? -ne 0 ]]; then
+              echo "Failed to read token from credentials response"
+              echo "$TOKEN_RESPONSE"
+              exit 1
+              fi
+              export AUTH_TOKEN=$TOKEN
+              export BASE_URL=https://personal-relationships-api-dev.hmpps.service.justice.gov.uk
+              
+              ./gradlew gatlingRun --simulation uk.gov.justice.digital.hmpps.hmppscontactsapi.simulations.CreateOrUpdateDomesticStatusSimulation \
+              -DbaseUrl=${BASE_URL} \
+              -DtestDuration=${GATLING_TEST_DURATION:-1} \
+              -DtestPauseRangeMin=${GATLING_PAUSE_MIN:-3} \
+              -DtestPauseRangeMax=${GATLING_PAUSE_MAX:-5} \
+              -DtestRepeat=${GATLING_TEST_REPEAT:-1} \
+              -Denvironment=${GATLING_ENVIRONMENT:-dev} \
+              -DresponseTimePercentile3=${GATLING_RESPONSE_TIME_PERCENTILE:-1000} \
+              -DsuccessfulRequestsPercentage=${GATLING_SUCCESS_PERCENTAGE:-95}
+          
+            set -x
+
+      - store_artifacts:
+          path: build/reports/gatling
+          destination: gatling-reports
+      - store_test_results:
+          path: build/reports/gatling
+
 workflows:
-  version: 2
   build-test-and-deploy:
     jobs:
       - validate:
+          filters:
+            tags:
+              ignore: /.*/
+      - gatling_performance_tests:
           filters:
             tags:
               ignore: /.*/
@@ -156,4 +208,15 @@ workflows:
             - veracode-credentials
             - hmpps-common-vars
 
-
+  performance:
+    triggers:
+      - schedule:
+          cron: "0 2 * * 1" # Run at 2:00 AM every Monday
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - gatling_performance_tests:
+          context:
+            - hmpps-common-vars
