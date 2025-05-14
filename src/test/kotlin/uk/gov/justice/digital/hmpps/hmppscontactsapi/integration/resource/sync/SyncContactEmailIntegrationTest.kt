@@ -148,7 +148,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_CREATED,
-      additionalInfo = ContactEmailInfo(contactEmail.contactEmailId, Source.NOMIS, "SYS"),
+      additionalInfo = ContactEmailInfo(contactEmail.contactEmailId, Source.NOMIS, "CREATE"),
       personReference = PersonReference(dpsContactId = contactEmail.contactId),
     )
   }
@@ -199,7 +199,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(contactEmail.contactEmailId, Source.NOMIS, "SYS"),
+      additionalInfo = ContactEmailInfo(contactEmail.contactEmailId, Source.NOMIS, "UPDATE"),
       personReference = PersonReference(dpsContactId = contactEmail.contactId),
     )
   }

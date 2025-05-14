@@ -152,7 +152,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_CREATED,
-      additionalInfo = ContactIdentityInfo(contactIdentity.contactIdentityId, Source.NOMIS, "SYS"),
+      additionalInfo = ContactIdentityInfo(contactIdentity.contactIdentityId, Source.NOMIS, "CREATE"),
       personReference = PersonReference(dpsContactId = contactIdentity.contactId),
     )
   }
@@ -213,7 +213,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_UPDATED,
-      additionalInfo = ContactIdentityInfo(updatedIdentity.contactIdentityId, Source.NOMIS, "SYS"),
+      additionalInfo = ContactIdentityInfo(updatedIdentity.contactIdentityId, Source.NOMIS, "UPDATE"),
       personReference = PersonReference(dpsContactId = updatedIdentity.contactId),
     )
   }

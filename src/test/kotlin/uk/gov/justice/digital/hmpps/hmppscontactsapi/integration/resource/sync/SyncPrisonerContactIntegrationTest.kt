@@ -175,7 +175,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_CREATED,
-        additionalInfo = PrisonerContactInfo(prisonerContact.id, Source.NOMIS, "SYS"),
+        additionalInfo = PrisonerContactInfo(prisonerContact.id, Source.NOMIS, "adminUser"),
         personReference = PersonReference(dpsContactId = prisonerContact.contactId, nomsNumber = prisonerContact.prisonerNumber),
       )
     }
@@ -248,7 +248,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "SYS"),
+        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser"),
         personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
       )
     }
