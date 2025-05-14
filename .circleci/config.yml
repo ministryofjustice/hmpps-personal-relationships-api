@@ -59,6 +59,15 @@ jobs:
             - gradle-{{ checksum "build.gradle.kts" }}
             - gradle-
       - run:
+          name: Fetch client ID and secret from Kubernetes
+          command: |
+            user=$(kubectl -n hmpps-abc-dev get secret hmpps-abc-cd -o jsonpath='{.data.SYSTEM_CLIENT_ID}' | base64 --decode)
+            secret=$(kubectl -n hmpps-abc-dev get secret hmpps-abc-cd -o jsonpath='{.data.SYSTEM_CLIENT_SECRET}' | base64 --decode)
+            
+            echo "export CLIENT_ID=$user" >> "$BASH_ENV"
+            echo "export CLIENT_SECRET=$secret" >> "$BASH_ENV"
+
+      - run:
           name: Run Gatling Performance Tests
           command: |
             ./gradlew gatlingRun --all\
