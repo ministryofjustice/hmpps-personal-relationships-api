@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.openapitools.jackson.nullable.JsonNullable
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.organisationsapi.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.helper.TestAPIClient.PrisonerContactSummaryResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
@@ -214,6 +215,20 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(defaultToAllStates.content).hasSize(2)
     assertThat(defaultToAllStates.content.first().lastName).isEqualTo("Active")
     assertThat(defaultToAllStates.content.last().lastName).isEqualTo("Inactive")
+  }
+
+  @Test
+  fun `should only accept S or O for relationshipType`() {
+    val error = webTestClient.get()
+      .uri("/prisoner/A4385DZ/contact?relationshipType=X")
+      .headers(setAuthorisationUsingCurrentUser())
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+    assertThat(error.userMessage).isEqualTo("Validation failure: getAllContacts.relationshipType: must be one of 'S' or 'O'")
   }
 
   @Test

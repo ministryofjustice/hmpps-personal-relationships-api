@@ -9,11 +9,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.constraints.Pattern
 import org.springdoc.core.converters.models.PageableAsQueryParam
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PagedModel
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -30,6 +32,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 @RestController
 @RequestMapping(value = ["prisoner"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @AuthApiResponses
+@Validated
 class PrisonerController(private val prisonerContactService: PrisonerContactService) {
 
   @Operation(summary = "Fetch contact relationships by prisoner number with the requested filtering applied with pagination")
@@ -69,6 +72,7 @@ class PrisonerController(private val prisonerContactService: PrisonerContactServ
       schema = Schema(allowableValues = ["S", "O"]),
       required = false,
     )
+    @Pattern(regexp = "[SO]", message = "must be one of 'S' or 'O'")
     relationshipType: String? = null,
     @Parameter(
       `in` = ParameterIn.QUERY,
