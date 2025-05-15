@@ -8,6 +8,7 @@ import jakarta.persistence.criteria.Order
 import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
 import org.hibernate.query.NullPrecedence
+import org.hibernate.query.criteria.HibernateCriteriaBuilder
 import org.hibernate.query.criteria.JpaOrder
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -91,17 +92,16 @@ class ContactSearchRepository(
     contact: Root<ContactWithAddressEntity>,
   ): MutableList<Predicate> {
     val predicates: MutableList<Predicate> = ArrayList()
-
-    predicates.add(cb.ilikePredicate(contact, "lastName", request.lastName))
-
+    if (cb !is HibernateCriteriaBuilder) {
+      throw RuntimeException("Configuration issue. Cannot do ilike unless using hibernate.")
+    }
+    predicates.add(cb.ilike(contact.get("lastName"), "%${request.lastName}%", '#'))
     request.firstName?.let {
-      predicates.add(cb.ilikePredicate(contact, "firstName", it))
+      predicates.add(cb.ilike(contact.get("firstName"), "%$it%", '#'))
     }
-
     request.middleNames?.let {
-      predicates.add(cb.ilikePredicate(contact, "middleNames", it))
+      predicates.add(cb.ilike(contact.get("middleNames"), "%$it%", '#'))
     }
-
     request.dateOfBirth?.let {
       predicates.add(
         cb.equal(
