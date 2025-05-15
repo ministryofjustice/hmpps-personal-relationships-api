@@ -46,7 +46,7 @@ class UserRequestContextInterceptor(private val manageUsersService: ManageUsersS
       logger.error("Unhandled exception getting user {}", username, e)
       null
     }
-    return User(username = username, userDetails?.activeCaseloadId)
+    return User(username = username, userDetails?.activeCaseLoadId)
   }
 
   private fun authentication(): AuthAwareAuthenticationToken = SecurityContextHolder.getContext().authentication as AuthAwareAuthenticationToken?

@@ -711,4 +711,4 @@ fun createOrganisationSummary(
   businessPhoneNumberExtension,
 )
 
-fun aUser(username: String = "USER1", activeCaseloadId: String? = null): User = User(username, activeCaseloadId)
+fun aUser(username: String = "USER1", activeCaseLoadId: String? = null): User = User(username, activeCaseLoadId)

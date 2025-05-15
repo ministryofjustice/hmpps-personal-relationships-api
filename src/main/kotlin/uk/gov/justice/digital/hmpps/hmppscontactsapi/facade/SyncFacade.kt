@@ -572,7 +572,7 @@ class SyncFacade(
       logger.error("Unhandled exception getting user {}", username, e)
       null
     }
-    return User(username, userDetails?.activeCaseloadId)
+    return User(username, userDetails?.activeCaseLoadId)
   }
 
   companion object {

@@ -36,7 +36,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactInfo(identifier, source, user.username, user.activeCaseloadId),
+            ContactInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }
@@ -47,7 +47,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactAddressInfo(identifier, source, user.username, user.activeCaseloadId),
+            ContactAddressInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }
@@ -58,7 +58,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactPhoneInfo(identifier, source, user.username, user.activeCaseloadId),
+            ContactPhoneInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }
@@ -69,7 +69,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactAddressPhoneInfo(identifier, secondIdentifier!!, source, user.username, user.activeCaseloadId),
+            ContactAddressPhoneInfo(identifier, secondIdentifier!!, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }
@@ -80,7 +80,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactEmailInfo(identifier, source, user.username, user.activeCaseloadId),
+            ContactEmailInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }
@@ -91,7 +91,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactIdentityInfo(identifier, source, user.username, user.activeCaseloadId),
+            ContactIdentityInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }
@@ -102,7 +102,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactRestrictionInfo(identifier, source, user.username, user.activeCaseloadId),
+            ContactRestrictionInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }
@@ -113,7 +113,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            PrisonerContactInfo(identifier, source, user.username, user.activeCaseloadId),
+            PrisonerContactInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it, nomsNumber = noms) },
           )
         }
@@ -124,7 +124,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            PrisonerContactRestrictionInfo(identifier, source, user.username, user.activeCaseloadId),
+            PrisonerContactRestrictionInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it, nomsNumber = noms) },
           )
         }
@@ -135,7 +135,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            EmploymentInfo(identifier, source, user.username, user.activeCaseloadId),
+            EmploymentInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(it) },
           )
         }
@@ -145,7 +145,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            PrisonerDomesticStatus(identifier, source, user.username, user.activeCaseloadId),
+            PrisonerDomesticStatus(identifier, source, user.username, user.activeCaseLoadId),
             PersonReference(noms),
           )
         }
@@ -155,7 +155,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            PrisonerNumberOfChildren(identifier, source, user.username, user.activeCaseloadId),
+            PrisonerNumberOfChildren(identifier, source, user.username, user.activeCaseLoadId),
             PersonReference(noms),
           )
         }
