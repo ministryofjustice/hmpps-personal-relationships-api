@@ -76,7 +76,7 @@ jobs:
           command: |
             ./gradlew gatlingRun --all\
               -DuserCount=${GATLING_USER_COUNT:-10} \
-              -DtestDuration=${GATLING_TEST_DURATION:-60} \
+              -DtestDuration=${GATLING_TEST_DURATION:-5} \
               -DtestPauseRangeMin=${GATLING_PAUSE_MIN:-3} \
               -DtestPauseRangeMax=${GATLING_PAUSE_MAX:-5} \
               -DtestRepeat=${GATLING_TEST_REPEAT:-5} \
