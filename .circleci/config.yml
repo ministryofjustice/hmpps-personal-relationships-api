@@ -60,12 +60,19 @@ jobs:
             - gradle-{{ checksum "build.gradle.kts" }}
             - gradle-
       - run:
+          name: Check Kubernetes identity
+          command: |
+            kubectl auth whoami
+            kubectl config view --minify | grep -v token
+            echo "Current namespace: $NAMESPACE"
+      - run:
           name: Fetch client ID and secret from Kubernetes
           command: |
             user=$(kubectl -n hmpps-contacts-dev get secret hmpps-contacts-ui -o jsonpath='{.data.SYSTEM_CLIENT_ID}' | base64 --decode)
             secret=$(kubectl -n hmpps-contacts-dev get secret hmpps-contacts-ui -o jsonpath='{.data.SYSTEM_CLIENT_SECRET}' | base64 --decode)
-            set +x
+        
             echo 'export CLIENT_ID=$user' >> $BASH_ENV
+            set +x
             echo 'export CLIENT_SECRET=$secret' >> $BASH_ENV
             echo 'export AUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token' >> $BASH_ENV
             echo 'export BASE_URL=https://personal-relationships-api-dev.hmpps.service.justice.gov.uk' >> $BASH_ENV
