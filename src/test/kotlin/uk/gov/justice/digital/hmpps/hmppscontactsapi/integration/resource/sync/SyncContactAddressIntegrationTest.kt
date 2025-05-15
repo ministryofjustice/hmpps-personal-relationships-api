@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactAddressRequest
@@ -31,6 +32,8 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
     setCurrentUser(StubUser.READ_WRITE_USER)
     contactId = testAPIClient.createAContact(aMinimalCreateContactRequest()).id
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
+    stubGetUserByUsername(UserDetails("CREATE", "Create", "KMI"))
+    stubGetUserByUsername(UserDetails("UPDATE", "Update", "BXI"))
   }
 
   @Test
@@ -159,7 +162,7 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(contactAddress.contactAddressId, Source.NOMIS, "CREATE"),
+      additionalInfo = ContactAddressInfo(contactAddress.contactAddressId, Source.NOMIS, "CREATE", "KMI"),
       personReference = PersonReference(dpsContactId = contactId),
     )
   }
@@ -214,7 +217,7 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(contactAddress.contactAddressId, Source.NOMIS, "UPDATE"),
+      additionalInfo = ContactAddressInfo(contactAddress.contactAddressId, Source.NOMIS, "UPDATE", "BXI"),
       personReference = PersonReference(dpsContactId = contactId),
     )
   }
@@ -284,7 +287,7 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
     assertThat(beforeCount).isEqualTo((afterCount + 1))
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_DELETED,
-      additionalInfo = ContactAddressInfo(5, Source.NOMIS, "SYS"),
+      additionalInfo = ContactAddressInfo(5, Source.NOMIS, "SYS", null),
       personReference = PersonReference(dpsContactId = 4),
     )
   }

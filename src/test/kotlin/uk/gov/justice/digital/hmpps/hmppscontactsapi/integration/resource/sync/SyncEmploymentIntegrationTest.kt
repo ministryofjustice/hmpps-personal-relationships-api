@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateEmploymentRequest
@@ -24,6 +25,8 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
   fun resetEvents() {
     stubEvents.reset()
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
+    stubGetUserByUsername(UserDetails("CREATOR", "Create", "KMI"))
+    stubGetUserByUsername(UserDetails("UPDATER", "Update", "BXI"))
   }
 
   @Test
@@ -156,7 +159,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_CREATED,
-      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, "CREATOR"),
+      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, "CREATOR", "KMI"),
       personReference = PersonReference(dpsContactId = employment.contactId),
     )
   }
@@ -191,7 +194,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_UPDATED,
-      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, updateEmploymentRequest.updatedBy),
+      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, updateEmploymentRequest.updatedBy, "BXI"),
       personReference = PersonReference(dpsContactId = updatedEmployment.contactId),
     )
   }
@@ -218,7 +221,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_DELETED,
-      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, "SYS"),
+      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, "SYS", null),
       personReference = PersonReference(dpsContactId = employment.contactId),
     )
   }

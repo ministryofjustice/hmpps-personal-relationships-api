@@ -36,7 +36,7 @@ class OutboundEventsServiceTest {
     outboundEventsService.send(OutboundEvent.CONTACT_CREATED, 1L, 1L, user = aUser("foo"))
     verify(
       expectedEventType = "contacts-api.contact.created",
-      expectedAdditionalInformation = ContactInfo(contactId = 1L, source = Source.DPS, "foo"),
+      expectedAdditionalInformation = ContactInfo(contactId = 1L, source = Source.DPS, "foo", null),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact has been created",
     )
@@ -48,7 +48,7 @@ class OutboundEventsServiceTest {
     outboundEventsService.send(OutboundEvent.CONTACT_UPDATED, 1L, 1L, user = aUser("foo"))
     verify(
       expectedEventType = "contacts-api.contact.updated",
-      expectedAdditionalInformation = ContactInfo(contactId = 1L, source = Source.DPS, "foo"),
+      expectedAdditionalInformation = ContactInfo(contactId = 1L, source = Source.DPS, "foo", null),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact has been updated",
     )
@@ -60,7 +60,7 @@ class OutboundEventsServiceTest {
     outboundEventsService.send(OutboundEvent.CONTACT_DELETED, 1L, 1L, user = aUser("foo"))
     verify(
       expectedEventType = "contacts-api.contact.deleted",
-      expectedAdditionalInformation = ContactInfo(contactId = 1L, source = Source.DPS, "foo"),
+      expectedAdditionalInformation = ContactInfo(contactId = 1L, source = Source.DPS, "foo", null),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact has been deleted",
     )
@@ -76,6 +76,7 @@ class OutboundEventsServiceTest {
         contactAddressId = 1L,
         source = Source.DPS,
         username = "address",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact address has been created",
@@ -92,6 +93,7 @@ class OutboundEventsServiceTest {
         contactAddressId = 1L,
         source = Source.DPS,
         username = "address",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact address has been updated",
@@ -108,6 +110,7 @@ class OutboundEventsServiceTest {
         contactAddressId = 1L,
         source = Source.DPS,
         username = "address",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact address has been deleted",
@@ -120,7 +123,7 @@ class OutboundEventsServiceTest {
     outboundEventsService.send(OutboundEvent.CONTACT_EMAIL_CREATED, 1L, 1L, user = aUser("email"))
     verify(
       expectedEventType = "contacts-api.contact-email.created",
-      expectedAdditionalInformation = ContactEmailInfo(contactEmailId = 1L, source = Source.DPS, username = "email"),
+      expectedAdditionalInformation = ContactEmailInfo(contactEmailId = 1L, source = Source.DPS, username = "email", activeCaseloadId = null),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact email address has been created",
     )
@@ -132,7 +135,7 @@ class OutboundEventsServiceTest {
     outboundEventsService.send(OutboundEvent.CONTACT_EMAIL_UPDATED, 1L, 1L, user = aUser("email"))
     verify(
       expectedEventType = "contacts-api.contact-email.updated",
-      expectedAdditionalInformation = ContactEmailInfo(contactEmailId = 1, source = Source.DPS, username = "email"),
+      expectedAdditionalInformation = ContactEmailInfo(contactEmailId = 1, source = Source.DPS, username = "email", activeCaseloadId = null),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact email address has been updated",
     )
@@ -144,7 +147,7 @@ class OutboundEventsServiceTest {
     outboundEventsService.send(OutboundEvent.CONTACT_EMAIL_DELETED, 1L, 1L, user = aUser("email"))
     verify(
       expectedEventType = "contacts-api.contact-email.deleted",
-      expectedAdditionalInformation = ContactEmailInfo(contactEmailId = 1, source = Source.DPS, username = "email"),
+      expectedAdditionalInformation = ContactEmailInfo(contactEmailId = 1, source = Source.DPS, username = "email", activeCaseloadId = null),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact email address has been deleted",
     )
@@ -156,7 +159,7 @@ class OutboundEventsServiceTest {
     outboundEventsService.send(OutboundEvent.CONTACT_PHONE_CREATED, 1L, 1L, user = aUser("phone"))
     verify(
       expectedEventType = "contacts-api.contact-phone.created",
-      expectedAdditionalInformation = ContactPhoneInfo(contactPhoneId = 1L, source = Source.DPS, username = "phone"),
+      expectedAdditionalInformation = ContactPhoneInfo(contactPhoneId = 1L, source = Source.DPS, username = "phone", activeCaseloadId = null),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact phone number has been created",
     )
@@ -168,7 +171,7 @@ class OutboundEventsServiceTest {
     outboundEventsService.send(OutboundEvent.CONTACT_PHONE_UPDATED, 1L, 1L, user = aUser("phone"))
     verify(
       expectedEventType = "contacts-api.contact-phone.updated",
-      expectedAdditionalInformation = ContactPhoneInfo(contactPhoneId = 1, source = Source.DPS, username = "phone"),
+      expectedAdditionalInformation = ContactPhoneInfo(contactPhoneId = 1, source = Source.DPS, username = "phone", activeCaseloadId = null),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact phone number has been updated",
     )
@@ -180,7 +183,7 @@ class OutboundEventsServiceTest {
     outboundEventsService.send(OutboundEvent.CONTACT_PHONE_DELETED, 1L, 1L, user = aUser("phone"))
     verify(
       expectedEventType = "contacts-api.contact-phone.deleted",
-      expectedAdditionalInformation = ContactPhoneInfo(contactPhoneId = 1, source = Source.DPS, username = "phone"),
+      expectedAdditionalInformation = ContactPhoneInfo(contactPhoneId = 1, source = Source.DPS, username = "phone", activeCaseloadId = null),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact phone number has been deleted",
     )
@@ -203,6 +206,7 @@ class OutboundEventsServiceTest {
         contactAddressId = 99L,
         source = Source.DPS,
         username = "phone",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact address phone number has been created",
@@ -226,6 +230,7 @@ class OutboundEventsServiceTest {
         contactAddressId = 99L,
         source = Source.DPS,
         username = "phone",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact address phone number has been updated",
@@ -249,6 +254,7 @@ class OutboundEventsServiceTest {
         contactAddressId = 99L,
         source = Source.DPS,
         username = "phone",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact address phone number has been deleted",
@@ -265,6 +271,7 @@ class OutboundEventsServiceTest {
         contactIdentityId = 1L,
         source = Source.DPS,
         username = "id_user",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact proof of identity has been created",
@@ -281,6 +288,7 @@ class OutboundEventsServiceTest {
         contactIdentityId = 1,
         source = Source.DPS,
         username = "id_user",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact proof of identity has been updated",
@@ -297,6 +305,7 @@ class OutboundEventsServiceTest {
         contactIdentityId = 1,
         source = Source.DPS,
         username = "id_user",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact proof of identity has been deleted",
@@ -313,6 +322,7 @@ class OutboundEventsServiceTest {
         contactRestrictionId = 1L,
         source = Source.DPS,
         username = "restriction_user",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact restriction has been created",
@@ -329,6 +339,7 @@ class OutboundEventsServiceTest {
         contactRestrictionId = 1L,
         source = Source.DPS,
         username = "restriction_user",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact restriction has been updated",
@@ -345,6 +356,7 @@ class OutboundEventsServiceTest {
         contactRestrictionId = 1L,
         source = Source.DPS,
         username = "restriction_user",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L),
       expectedDescription = "A contact restriction has been deleted",
@@ -361,6 +373,7 @@ class OutboundEventsServiceTest {
         prisonerContactId = 1L,
         source = Source.DPS,
         username = "foo",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact has been created",
@@ -377,6 +390,7 @@ class OutboundEventsServiceTest {
         prisonerContactId = 1L,
         source = Source.DPS,
         username = "foo",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact has been updated",
@@ -393,6 +407,7 @@ class OutboundEventsServiceTest {
         prisonerContactId = 1L,
         source = Source.DPS,
         username = "foo",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact has been deleted",
@@ -438,6 +453,7 @@ class OutboundEventsServiceTest {
         prisonerContactRestrictionId = 1L,
         source = Source.DPS,
         username = "restriction_user",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact restriction has been updated",
@@ -460,6 +476,7 @@ class OutboundEventsServiceTest {
         prisonerContactRestrictionId = 1L,
         source = Source.DPS,
         username = "restriction_user",
+        activeCaseloadId = null,
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact restriction has been deleted",

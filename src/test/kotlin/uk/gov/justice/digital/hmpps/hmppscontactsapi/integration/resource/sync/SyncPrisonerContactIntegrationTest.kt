@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreatePrisonerContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerContactRequest
@@ -23,6 +24,8 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
   @BeforeEach
   fun setUp() {
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
+    stubGetUserByUsername(UserDetails("adminUser", "Create", "KMI"))
+    stubGetUserByUsername(UserDetails("UpdatedUser", "Update", "BXI"))
   }
 
   @Nested
@@ -175,7 +178,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_CREATED,
-        additionalInfo = PrisonerContactInfo(prisonerContact.id, Source.NOMIS, "adminUser"),
+        additionalInfo = PrisonerContactInfo(prisonerContact.id, Source.NOMIS, "adminUser", "KMI"),
         personReference = PersonReference(dpsContactId = prisonerContact.contactId, nomsNumber = prisonerContact.prisonerNumber),
       )
     }
@@ -248,7 +251,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser"),
+        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", "BXI"),
         personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
       )
     }
@@ -285,7 +288,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .isNotFound
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_DELETED,
-        additionalInfo = PrisonerContactInfo(prisonerContact.id, Source.NOMIS, "SYS"),
+        additionalInfo = PrisonerContactInfo(prisonerContact.id, Source.NOMIS, "SYS", null),
         personReference = PersonReference(dpsContactId = prisonerContact.contactId, nomsNumber = prisonerContact.prisonerNumber),
       )
     }

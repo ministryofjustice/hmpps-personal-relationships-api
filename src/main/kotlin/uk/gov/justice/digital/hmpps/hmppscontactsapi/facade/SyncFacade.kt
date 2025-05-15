@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
 
+import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PagedModel
 import org.springframework.stereotype.Service
@@ -28,6 +29,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpda
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.PrisonerContactAndRestrictionIds
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.PrisonerRelationshipIds
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ManageUsersService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -76,6 +78,7 @@ class SyncFacade(
   private val syncAdminService: SyncAdminService,
   private val syncContactReconciliationService: SyncContactReconciliationService,
   private val outboundEventsService: OutboundEventsService,
+  private val manageUsersService: ManageUsersService,
 ) {
   // ================================================================
   //  Contact
@@ -560,5 +563,19 @@ class SyncFacade(
     )
   }
 
-  private fun userOrDefault(username: String? = null): User = username?.let { User(username) } ?: User.SYS_USER
+  private fun userOrDefault(username: String? = null): User = username?.let { enrichIfPossible(username) } ?: User.SYS_USER
+
+  private fun enrichIfPossible(username: String): User {
+    val userDetails = try {
+      manageUsersService.getUserByUsername(username)
+    } catch (e: Exception) {
+      logger.error("Unhandled exception getting user {}", username, e)
+      null
+    }
+    return User(username, userDetails?.activeCaseloadId)
+  }
+
+  companion object {
+    private val logger = LoggerFactory.getLogger(this::class.java)
+  }
 }

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerContactRestrictionRequest
@@ -22,6 +23,8 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
   @BeforeEach
   fun setUp() {
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
+    stubGetUserByUsername(UserDetails("admin", "Create", "KMI"))
+    stubGetUserByUsername(UserDetails("UpdatedUser", "Update", "BXI"))
   }
 
   @Nested
@@ -161,7 +164,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
-        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS, "admin"),
+        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS, "admin", "KMI"),
         personReference = PersonReference(dpsContactId = prisonerContactRestriction.contactId, nomsNumber = prisonerContactRestriction.prisonerNumber),
       )
     }
@@ -222,7 +225,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
-        additionalInfo = PrisonerContactRestrictionInfo(updatedPrisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS, "UpdatedUser"),
+        additionalInfo = PrisonerContactRestrictionInfo(updatedPrisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS, "UpdatedUser", "BXI"),
         personReference = PersonReference(dpsContactId = updatedPrisonerContactRestriction.contactId, nomsNumber = updatedPrisonerContactRestriction.prisonerNumber),
       )
     }
@@ -259,7 +262,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .isNotFound
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED,
-        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS, "SYS"),
+        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS, "SYS", null),
         personReference = PersonReference(dpsContactId = prisonerContactRestriction.contactId, nomsNumber = prisonerContactRestriction.prisonerNumber),
       )
     }
