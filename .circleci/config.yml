@@ -68,8 +68,10 @@ jobs:
       - run:
           name: Fetch client ID and secret from Kubernetes
           command: |
-            user=$(kubectl -n hmpps-contacts-dev get secret hmpps-contacts-ui -o jsonpath='{.data.SYSTEM_CLIENT_ID}' | base64 --decode)
-            secret=$(kubectl -n hmpps-contacts-dev get secret hmpps-contacts-ui -o jsonpath='{.data.SYSTEM_CLIENT_SECRET}' | base64 --decode)
+            kubectl auth whoami
+            kubectl config view --minify | grep -v token
+            echo "Current namespace: $NAMESPACE"
+            user=$(kubectl -n hmpps-contacts-dev get secret contacts-ui-sentry -o jsonpath='{.data.SENTRY_LOADER_SCRIPT_ID}')
         
             echo 'export CLIENT_ID=$user' >> $BASH_ENV
             set +x
