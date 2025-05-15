@@ -208,7 +208,7 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_EMAIL_CREATED,
-        additionalInfo = ContactEmailInfo(createdEmailAddress!!.contactEmailId, Source.DPS, "created"),
+        additionalInfo = ContactEmailInfo(createdEmailAddress!!.contactEmailId, Source.DPS, "created", "BXI"),
         personReference = PersonReference(dpsContactId = savedContactId),
       )
     }

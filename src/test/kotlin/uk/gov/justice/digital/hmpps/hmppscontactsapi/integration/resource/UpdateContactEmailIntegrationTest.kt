@@ -81,7 +81,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated"),
+      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated", "BXI"),
     )
   }
 
@@ -105,7 +105,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated"),
+      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated", "BXI"),
     )
   }
 
@@ -130,7 +130,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated"),
+      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated", "BXI"),
     )
   }
 
@@ -155,7 +155,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(-99, Source.DPS, "updated"),
+      additionalInfo = ContactEmailInfo(-99, Source.DPS, "updated", "BXI"),
     )
   }
 
@@ -182,7 +182,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(-99, Source.DPS, "updated"),
+      additionalInfo = ContactEmailInfo(-99, Source.DPS, "updated", "BXI"),
     )
   }
 
@@ -205,7 +205,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated"),
+      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }
@@ -235,7 +235,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(-99, Source.DPS, "updated"),
+      additionalInfo = ContactEmailInfo(-99, Source.DPS, "updated", "BXI"),
     )
   }
 
@@ -256,7 +256,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated"),
+      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }

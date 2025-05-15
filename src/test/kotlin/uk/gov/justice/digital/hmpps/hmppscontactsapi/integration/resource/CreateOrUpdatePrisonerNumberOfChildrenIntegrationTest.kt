@@ -67,7 +67,7 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-      additionalInfo = PrisonerNumberOfChildren(response!!.id, Source.DPS, "read_write_user"),
+      additionalInfo = PrisonerNumberOfChildren(response!!.id, Source.DPS, "read_write_user", "BXI"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -103,7 +103,7 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-      additionalInfo = PrisonerNumberOfChildren(response!!.id, Source.DPS, "read_write_user"),
+      additionalInfo = PrisonerNumberOfChildren(response!!.id, Source.DPS, "read_write_user", "BXI"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -150,7 +150,7 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-      additionalInfo = PrisonerNumberOfChildren(response.id, Source.DPS, "read_write_user"),
+      additionalInfo = PrisonerNumberOfChildren(response.id, Source.DPS, "read_write_user", "BXI"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }

@@ -132,7 +132,7 @@ class UpdateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_UPDATED,
-      additionalInfo = EmploymentInfo(updated.employmentId, Source.DPS, "updated"),
+      additionalInfo = EmploymentInfo(updated.employmentId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
   }

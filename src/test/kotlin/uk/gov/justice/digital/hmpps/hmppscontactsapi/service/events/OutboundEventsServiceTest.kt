@@ -407,7 +407,7 @@ class OutboundEventsServiceTest {
       1L,
       1L,
       "A1234AA",
-      user = aUser("restriction_user"),
+      user = aUser("restriction_user", "CLI"),
     )
     verify(
       expectedEventType = "contacts-api.prisoner-contact-restriction.created",
@@ -415,6 +415,7 @@ class OutboundEventsServiceTest {
         prisonerContactRestrictionId = 1L,
         source = Source.DPS,
         username = "restriction_user",
+        activeCaseloadId = "CLI",
       ),
       expectedPersonReference = PersonReference(dpsContactId = 1L, nomsNumber = "A1234AA"),
       expectedDescription = "A prisoner contact restriction has been created",
@@ -511,6 +512,11 @@ class OutboundEventsServiceTest {
       assertThat(properties()["source"]).isEqualTo(expectedAdditionalInformation.source.toString())
       assertThat(properties()["username"]).isEqualTo(expectedAdditionalInformation.username)
       assertThat(properties()["occurred_at"]).isNotNull()
+      if (expectedAdditionalInformation.activeCaseloadId != null) {
+        assertThat(properties()["active_caseload_id"]).isEqualTo(expectedAdditionalInformation.activeCaseloadId)
+      } else {
+        assertThat(properties()["active_caseload_id"]).isEqualTo("unknown")
+      }
     }
 
     verifyNoMoreInteractions(eventsPublisher)

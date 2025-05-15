@@ -214,7 +214,7 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_UPDATED,
-      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "updated"),
+      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }
@@ -247,7 +247,7 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_UPDATED,
-      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "updated"),
+      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }

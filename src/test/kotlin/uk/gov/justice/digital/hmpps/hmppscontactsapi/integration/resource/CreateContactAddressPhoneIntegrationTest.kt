@@ -171,7 +171,7 @@ class CreateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
-      additionalInfo = ContactAddressPhoneInfo(created.contactAddressPhoneId, created.contactAddressId, Source.DPS, "created"),
+      additionalInfo = ContactAddressPhoneInfo(created.contactAddressPhoneId, created.contactAddressId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }

@@ -92,7 +92,7 @@ class DeleteEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_DELETED,
-      additionalInfo = EmploymentInfo(savedEmploymentId, Source.DPS, "deleted"),
+      additionalInfo = EmploymentInfo(savedEmploymentId, Source.DPS, "deleted", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }

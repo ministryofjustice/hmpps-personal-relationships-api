@@ -95,7 +95,7 @@ abstract class IntegrationTestBase {
   fun setCurrentUser(user: StubUser?) {
     testAPIClient.currentUser = user
     if (user != null && !user.isSystemUser) {
-      manageUsersApiMockServer.stubGetUser(UserDetails(username = user.username, name = user.displayName))
+      manageUsersApiMockServer.stubGetUser(UserDetails(username = user.username, name = user.displayName, activeCaseloadId = user.activeCaseloadId))
     }
   }
 
