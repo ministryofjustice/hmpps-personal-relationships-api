@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncCon
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncEmployment
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerContact
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerContactRestriction
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ManageUsersService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -72,6 +73,7 @@ class SyncFacadeTest {
   private val syncAdminService: SyncAdminService = mock()
   private val syncContactReconciliationService: SyncContactReconciliationService = mock()
   private val outboundEventsService: OutboundEventsService = mock()
+  private val manageUsersService: ManageUsersService = mock()
 
   private val facade = SyncFacade(
     syncContactService,
@@ -87,6 +89,7 @@ class SyncFacadeTest {
     syncAdminService,
     syncContactReconciliationService,
     outboundEventsService,
+    manageUsersService,
   )
 
   @Nested

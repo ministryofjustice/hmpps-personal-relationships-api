@@ -185,7 +185,7 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(savedDomesticStatus.id, Source.NOMIS, "SYS"),
+      additionalInfo = PrisonerDomesticStatus(savedDomesticStatus.id, Source.NOMIS, "SYS", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -264,13 +264,13 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     assertThat(historicalRecord[0].createdBy).isEqualTo("user")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
-      additionalInfo = PrisonerDomesticStatus(historicalRecord[0].prisonerDomesticStatusId, Source.NOMIS, "SYS"),
+      additionalInfo = PrisonerDomesticStatus(historicalRecord[0].prisonerDomesticStatusId, Source.NOMIS, "SYS", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(savedDomesticStatus.id, Source.NOMIS, "SYS"),
+      additionalInfo = PrisonerDomesticStatus(savedDomesticStatus.id, Source.NOMIS, "SYS", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }

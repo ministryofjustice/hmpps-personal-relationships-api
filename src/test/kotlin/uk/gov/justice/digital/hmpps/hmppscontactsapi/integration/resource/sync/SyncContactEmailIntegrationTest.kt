@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactEmailRequest
@@ -27,6 +28,8 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
     setCurrentUser(StubUser.READ_WRITE_USER)
     savedContactId = testAPIClient.createAContact(aMinimalCreateContactRequest()).id
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
+    stubGetUserByUsername(UserDetails("CREATE", "Create", "KMI"))
+    stubGetUserByUsername(UserDetails("UPDATE", "Update", "BXI"))
   }
 
   @Test
@@ -148,7 +151,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_CREATED,
-      additionalInfo = ContactEmailInfo(contactEmail.contactEmailId, Source.NOMIS, "CREATE"),
+      additionalInfo = ContactEmailInfo(contactEmail.contactEmailId, Source.NOMIS, "CREATE", "KMI"),
       personReference = PersonReference(dpsContactId = contactEmail.contactId),
     )
   }
@@ -199,7 +202,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_UPDATED,
-      additionalInfo = ContactEmailInfo(contactEmail.contactEmailId, Source.NOMIS, "UPDATE"),
+      additionalInfo = ContactEmailInfo(contactEmail.contactEmailId, Source.NOMIS, "UPDATE", "BXI"),
       personReference = PersonReference(dpsContactId = contactEmail.contactId),
     )
   }
@@ -225,7 +228,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
       .isNotFound
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_DELETED,
-      additionalInfo = ContactEmailInfo(contactEmailId, Source.NOMIS, "SYS"),
+      additionalInfo = ContactEmailInfo(contactEmailId, Source.NOMIS, "SYS", null),
       personReference = PersonReference(dpsContactId = 3),
     )
   }

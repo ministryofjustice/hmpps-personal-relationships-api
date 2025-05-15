@@ -335,7 +335,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
       relationship.prisonerContactRestrictionIds.map { restrictionId ->
         stubEvents.assertHasEvent(
           event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED,
-          additionalInfo = PrisonerContactRestrictionInfo(restrictionId, Source.NOMIS, "SYS"),
+          additionalInfo = PrisonerContactRestrictionInfo(restrictionId, Source.NOMIS, "SYS", null),
           personReference = PersonReference(
             dpsContactId = relationship.contactId,
             nomsNumber = relationship.prisonerNumber,
@@ -344,7 +344,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_DELETED,
-        additionalInfo = PrisonerContactInfo(relationship.prisonerContactId, Source.NOMIS, "SYS"),
+        additionalInfo = PrisonerContactInfo(relationship.prisonerContactId, Source.NOMIS, "SYS", null),
         personReference = PersonReference(
           dpsContactId = relationship.contactId,
           nomsNumber = relationship.prisonerNumber,
@@ -356,7 +356,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
       created.restrictions.map { restriction ->
         stubEvents.assertHasEvent(
           event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
-          additionalInfo = PrisonerContactRestrictionInfo(restriction.dpsId, Source.NOMIS, "SYS"),
+          additionalInfo = PrisonerContactRestrictionInfo(restriction.dpsId, Source.NOMIS, "SYS", null),
           personReference = PersonReference(
             dpsContactId = created.contactId,
             nomsNumber = createdPrisonerNumber,
@@ -366,7 +366,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_CREATED,
-        additionalInfo = PrisonerContactInfo(created.relationship.dpsId, Source.NOMIS, "SYS"),
+        additionalInfo = PrisonerContactInfo(created.relationship.dpsId, Source.NOMIS, "SYS", null),
         personReference = PersonReference(
           dpsContactId = created.contactId,
           nomsNumber = createdPrisonerNumber,

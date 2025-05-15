@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactRequest
@@ -23,6 +24,8 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
   fun resetEvents() {
     stubEvents.reset()
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
+    stubGetUserByUsername(UserDetails("JD000001", "JD000001", "KMI"))
+    stubGetUserByUsername(UserDetails("UPDATE", "Update", "BXI"))
   }
 
   @Test
@@ -161,7 +164,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contact.id, Source.NOMIS, "JD000001"),
+      additionalInfo = ContactInfo(contact.id, Source.NOMIS, "JD000001", "KMI"),
       personReference = PersonReference(dpsContactId = contact.id),
     )
   }
@@ -182,7 +185,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contact.id, Source.NOMIS, "JD000001"),
+      additionalInfo = ContactInfo(contact.id, Source.NOMIS, "JD000001", "KMI"),
       personReference = PersonReference(dpsContactId = contact.id),
     )
 
@@ -221,7 +224,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_UPDATED,
-      additionalInfo = ContactInfo(contact.id, Source.NOMIS, "UPDATE"),
+      additionalInfo = ContactInfo(contact.id, Source.NOMIS, "UPDATE", "BXI"),
       personReference = PersonReference(dpsContactId = contact.id),
     )
   }
@@ -248,13 +251,13 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contact.id, Source.NOMIS, "JD000001"),
+      additionalInfo = ContactInfo(contact.id, Source.NOMIS, "JD000001", "KMI"),
       personReference = PersonReference(dpsContactId = contact.id),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_DELETED,
-      additionalInfo = ContactInfo(contact.id, Source.NOMIS, User.SYS_USER.username),
+      additionalInfo = ContactInfo(contact.id, Source.NOMIS, User.SYS_USER.username, null),
       personReference = PersonReference(dpsContactId = contact.id),
     )
   }

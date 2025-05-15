@@ -170,6 +170,7 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
         response.id,
         Source.NOMIS,
         "SYS",
+        null,
       ),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
@@ -267,13 +268,13 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     assertThat(historicalRecord[0].createdBy).isEqualTo("user")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_UPDATED,
-      additionalInfo = PrisonerNumberOfChildren(historicalRecord[0].prisonerNumberOfChildrenId, Source.NOMIS, "SYS"),
+      additionalInfo = PrisonerNumberOfChildren(historicalRecord[0].prisonerNumberOfChildrenId, Source.NOMIS, "SYS", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-      additionalInfo = PrisonerNumberOfChildren(numberOfChildren.id, Source.NOMIS, "SYS"),
+      additionalInfo = PrisonerNumberOfChildren(numberOfChildren.id, Source.NOMIS, "SYS", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }

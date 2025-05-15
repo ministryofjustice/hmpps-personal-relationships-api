@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactPhoneRequest
@@ -27,6 +28,8 @@ class SyncContactPhoneIntegrationTest : PostgresIntegrationTestBase() {
     setCurrentUser(StubUser.READ_WRITE_USER)
     savedContactId = testAPIClient.createAContact(aMinimalCreateContactRequest()).id
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
+    stubGetUserByUsername(UserDetails("CREATE", "Create", "KMI"))
+    stubGetUserByUsername(UserDetails("UPDATE", "Update", "BXI"))
   }
 
   @Test
@@ -153,7 +156,7 @@ class SyncContactPhoneIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(contactPhone.contactPhoneId, Source.NOMIS, "CREATE"),
+      additionalInfo = ContactPhoneInfo(contactPhone.contactPhoneId, Source.NOMIS, "CREATE", "KMI"),
       personReference = PersonReference(dpsContactId = contactPhone.contactId),
     )
   }
@@ -207,7 +210,7 @@ class SyncContactPhoneIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_UPDATED,
-      additionalInfo = ContactPhoneInfo(contactPhone.contactPhoneId, Source.NOMIS, "UPDATE"),
+      additionalInfo = ContactPhoneInfo(contactPhone.contactPhoneId, Source.NOMIS, "UPDATE", "BXI"),
       personReference = PersonReference(dpsContactId = contactPhone.contactId),
     )
   }
@@ -233,7 +236,7 @@ class SyncContactPhoneIntegrationTest : PostgresIntegrationTestBase() {
       .isNotFound
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_DELETED,
-      additionalInfo = ContactPhoneInfo(contactPhoneId, Source.NOMIS, "SYS"),
+      additionalInfo = ContactPhoneInfo(contactPhoneId, Source.NOMIS, "SYS", null),
       personReference = PersonReference(dpsContactId = 10),
     )
   }
