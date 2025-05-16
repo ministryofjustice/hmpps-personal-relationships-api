@@ -69,6 +69,7 @@ jobs:
             echo 'export AUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token' >> $BASH_ENV
             echo 'export BASE_URL=https://personal-relationships-api-dev.hmpps.service.justice.gov.uk' >> $BASH_ENV
             set -x
+            echo "env value: $user"
             ./gradlew gatlingRun --all \
             -DtestDuration=${GATLING_TEST_DURATION:-5} \
             -DtestPauseRangeMin=${GATLING_PAUSE_MIN:-3} \
