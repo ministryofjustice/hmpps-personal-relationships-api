@@ -63,18 +63,13 @@ jobs:
           name: Running gatling tests
           command: |
             set +x        
-            user=$(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-perf-test-creds -o jsonpath='{.data.SYSTEM_CLIENT_ID}')
-            secret=$(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-perf-test-creds -o jsonpath='{.data.SYSTEM_CLIENT_SECRET}')
+            read -r user secret < <(echo $(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-perf-test-creds -o json | jq '.data[] |= @base64d' | jq -r '.data.SYSTEM_CLIENT_ID, .data.SYSTEM_CLIENT_SECRET'))
             echo 'export CLIENT_ID=$user' >> $BASH_ENV
             echo 'export CLIENT_SECRET=$secret' >> $BASH_ENV
             echo 'export AUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token' >> $BASH_ENV
             echo 'export BASE_URL=https://personal-relationships-api-dev.hmpps.service.justice.gov.uk' >> $BASH_ENV
             set -x
             ./gradlew gatlingRun --all \
-            -DAUTH_URL=${AUTH_URL} \
-            -DBASE_URL=${BASE_URL} \
-            -DCLIENT_ID=${CLIENT_ID} \
-            -DCLIENT_SECRET=${CLIENT_SECRET} \
             -DtestDuration=${GATLING_TEST_DURATION:-5} \
             -DtestPauseRangeMin=${GATLING_PAUSE_MIN:-3} \
             -DtestPauseRangeMax=${GATLING_PAUSE_MAX:-5} \
