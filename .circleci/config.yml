@@ -77,34 +77,6 @@ jobs:
             echo "token******"
             echo "$TOKEN"
             echo "token******"
-            set +x        
-            # Use double quotes instead of single quotes to allow variable expansion
-            read -r user secret < <(echo $(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-perf-test-creds -o json | jq '.data[] |= @base64d' | jq -r '.data.SYSTEM_CLIENT_ID, .data.SYSTEM_CLIENT_SECRET'))
-            export CLIENT_ID=$user
-            export CLIENT_SECRET=$secret
-            export AUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token
-            export BASE_URL=https://personal-relationships-api-dev.hmpps.service.justice.gov.uk
-            export AUTH_TOKEN=eyJraWQiOiJobXBwcy1hdXRoLWRldi0yMDIzMDMwNiIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJobXBwcy1jb250YWN0cy11aS1zeXN0ZW0tMyIsIm5iZiI6MTc0NzQwMjA3MiwiZ3JhbnRfdHlwZSI6ImNsaWVudF9jcmVkZW50aWFscyIsImF1dGhfc291cmNlIjoibm9uZSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSJdLCJpc3MiOiJodHRwczovL3NpZ24taW4tZGV2LmhtcHBzLnNlcnZpY2UuanVzdGljZS5nb3YudWsvYXV0aC9pc3N1ZXIiLCJleHAiOjE3NDc0MDMyNzIsImlhdCI6MTc0NzQwMjA3MiwianRpIjoicFhWUE82OVFuVFV0dmwzVU9nWUxrZkVNRVhzIiwiYXV0aG9yaXRpZXMiOlsiUk9MRV9PUkdBTklTQVRJT05TX19SIiwiUk9MRV9WSUVXX1BSSVNPTkVSX0RBVEEiLCJST0xFX0NPTlRBQ1RTX0FETUlOIiwiUk9MRV9QUklTT05FUl9TRUFSQ0giXSwiY2xpZW50X2lkIjoiaG1wcHMtY29udGFjdHMtdWktc3lzdGVtLTMifQ.AK22iH_EmmY869aDTnHH-tQc1Kk1sbWZGhwpiOBCJmNsVDiLzRC_5PK9YGrmLLFxyx5B9CJV-T1x9wUKL92z7TYm9u7G7mv-t4ojgYc_YitNWM6A0dQ-3WUsygbe3s38YRfpM8hgJVfakRqHUEs2g6L9BIOdSJ_dMYOSiNRkxvlNEYBfpCl79aI8JOUI9A-czxlNPVT7djP7CmFLOe0fxA6fGK_eDRdmXEUZ5-xMel30-nCfMdZSUI3qMuOnGQr9tfb6dQR4qg-vf8FbISnuf9iUUSNGqcRmIXoW6dQvO_rHRNWlS4cwheS6Brvj9ZgHsOGrF8OVVHtK87jyula0fA
-            echo "export CLIENT_ID=$user" >> $BASH_ENV
-            echo "export CLIENT_SECRET=$secret" >> $BASH_ENV
-            echo "export AUTH_URL=$AUTH_URL" >> $BASH_ENV
-            echo "export BASE_URL=$BASE_URL" >> $BASH_ENV
-   
-            ./gradlew gatlingRun --all \
-            -DclientId=${CLIENT_ID} \
-            -DclientSecret=${CLIENT_SECRET} \
-            -DauthUrl=${AUTH_URL} \
-            -DauthToken=${AUTH_TOKEN} \
-            -DbaseUrl=${BASE_URL} \
-            -DtestDuration=${GATLING_TEST_DURATION:-5} \
-            -DtestPauseRangeMin=${GATLING_PAUSE_MIN:-3} \
-            -DtestPauseRangeMax=${GATLING_PAUSE_MAX:-5} \
-            -DtestRepeat=${GATLING_TEST_REPEAT:-5} \
-            -Denvironment=${GATLING_ENVIRONMENT:-dev} \
-            -DresponseTimePercentile3=${GATLING_RESPONSE_TIME_PERCENTILE:-1000} \
-            -DsuccessfulRequestsPercentage=${GATLING_SUCCESS_PERCENTAGE:-95}
-            
-            set -x
 
       - store_artifacts:
           path: build/reports/gatling
