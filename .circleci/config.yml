@@ -63,8 +63,8 @@ jobs:
           name: Fetch client ID and secret from Kubernetes
           command: |
             set +x        
-            user=$(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-perf-test-creds -o jsonpath='{.data.SENTRY_LOADER_SCRIPT_ID}')
-            secret=$(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-perf-test-creds -o jsonpath='{.data.SENTRY_LOADER_SCRIPT_ID}')
+            user=$(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-perf-test-creds -o jsonpath='{.data.SYSTEM_CLIENT_ID}')
+            secret=$(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-perf-test-creds -o jsonpath='{.data.SYSTEM_CLIENT_SECRET}')
             echo 'export CLIENT_ID=$user' >> $BASH_ENV
             echo 'export CLIENT_SECRET=$secret' >> $BASH_ENV
             echo 'export AUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token' >> $BASH_ENV
