@@ -63,11 +63,13 @@ jobs:
           name: Running gatling tests
           command: |
             set +x        
+            # Use double quotes instead of single quotes to allow variable expansion
             read -r user secret < <(echo $(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-perf-test-creds -o json | jq '.data[] |= @base64d' | jq -r '.data.SYSTEM_CLIENT_ID, .data.SYSTEM_CLIENT_SECRET'))
-            echo 'export CLIENT_ID=$user' >> $BASH_ENV
-            echo 'export CLIENT_SECRET=$secret' >> $BASH_ENV
-            echo 'export AUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token' >> $BASH_ENV
-            echo 'export BASE_URL=https://personal-relationships-api-dev.hmpps.service.justice.gov.uk' >> $BASH_ENV
+            echo "export CLIENT_ID=$user" >> $BASH_ENV
+            echo "export CLIENT_SECRET=$secret" >> $BASH_ENV
+            echo "export AUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token" >> $BASH_ENV
+            echo "export BASE_URL=https://personal-relationships-api-dev.hmpps.service.justice.gov.uk" >> $BASH_ENV
+            source $BASH_ENV  # Make sure to source the environment variables
             set -x
             ./gradlew gatlingRun --all \
             -DclientId=${CLIENT_ID} \
@@ -81,6 +83,8 @@ jobs:
             -Denvironment=${GATLING_ENVIRONMENT:-dev} \
             -DresponseTimePercentile3=${GATLING_RESPONSE_TIME_PERCENTILE:-1000} \
             -DsuccessfulRequestsPercentage=${GATLING_SUCCESS_PERCENTAGE:-95}
+            
+            set -x
 
       - store_artifacts:
           path: build/reports/gatling
