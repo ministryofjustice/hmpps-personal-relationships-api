@@ -62,6 +62,21 @@ jobs:
       - run:
           name: Running gatling tests
           command: |
+            AUTH_HOST="https://sign-in-dev.hmpps.service.justice.gov.uk"
+  
+            read -r user secret < <(echo $(kubectl -n hmpps-contacts-dev get secret hmpps-contacts-ui -o json | jq '.data[] |= @base64d' | jq -r '.data.SYSTEM_CLIENT_ID, .data.SYSTEM_CLIENT_SECRET'))
+            
+            BASIC_AUTH="$(echo -n $user:$secret | base64)"
+            TOKEN_RESPONSE=$(curl -s -k -d "" -X POST "$AUTH_HOST/auth/oauth/token?grant_type=client_credentials" -H "Authorization: Basic $BASIC_AUTH")
+            TOKEN=$(echo "$TOKEN_RESPONSE" | jq -er .access_token)
+            if [[ $? -ne 0 ]]; then
+            echo "Failed to read token from credentials response"
+            echo "$TOKEN_RESPONSE"
+            exit 1
+            fi
+            echo "token******"
+            echo "$TOKEN"
+            echo "token******"
             set +x        
             # Use double quotes instead of single quotes to allow variable expansion
             read -r user secret < <(echo $(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-perf-test-creds -o json | jq '.data[] |= @base64d' | jq -r '.data.SYSTEM_CLIENT_ID, .data.SYSTEM_CLIENT_SECRET'))
