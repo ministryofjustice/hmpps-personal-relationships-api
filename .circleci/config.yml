@@ -60,7 +60,7 @@ jobs:
             - gradle-{{ checksum "build.gradle.kts" }}
             - gradle-
       - run:
-          name: Fetch client ID and secret from Kubernetes
+          name: Running gatling tests
           command: |
             set +x        
             user=$(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-perf-test-creds -o jsonpath='{.data.SYSTEM_CLIENT_ID}')
@@ -70,19 +70,19 @@ jobs:
             echo 'export AUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token' >> $BASH_ENV
             echo 'export BASE_URL=https://personal-relationships-api-dev.hmpps.service.justice.gov.uk' >> $BASH_ENV
             set -x
-
-      - run:
-          name: Run Gatling Performance Tests
-          command: |
             ./gradlew gatlingRun --all\
-              -DuserCount=${GATLING_USER_COUNT:-10} \
-              -DtestDuration=${GATLING_TEST_DURATION:-5} \
-              -DtestPauseRangeMin=${GATLING_PAUSE_MIN:-3} \
-              -DtestPauseRangeMax=${GATLING_PAUSE_MAX:-5} \
-              -DtestRepeat=${GATLING_TEST_REPEAT:-5} \
-              -Denvironment=${GATLING_ENVIRONMENT:-dev} \
-              -DresponseTimePercentile3=${GATLING_RESPONSE_TIME_PERCENTILE:-1000} \
-              -DsuccessfulRequestsPercentage=${GATLING_SUCCESS_PERCENTAGE:-95}
+            -DAUTH_URL=${AUTH_URL} \
+            -DBASE_URL=${BASE_URL} \
+            -DCLIENT_ID=${CLIENT_ID} \
+            -DCLIENT_SECRET=${CLIENT_SECRET} \
+            -DtestDuration=${GATLING_TEST_DURATION:-5} \
+            -DtestPauseRangeMin=${GATLING_PAUSE_MIN:-3} \
+            -DtestPauseRangeMax=${GATLING_PAUSE_MAX:-5} \
+            -DtestRepeat=${GATLING_TEST_REPEAT:-5} \
+            -Denvironment=${GATLING_ENVIRONMENT:-dev} \
+            -DresponseTimePercentile3=${GATLING_RESPONSE_TIME_PERCENTILE:-1000} \
+            -DsuccessfulRequestsPercentage=${GATLING_SUCCESS_PERCENTAGE:-95}
+
       - store_artifacts:
           path: build/reports/gatling
           destination: gatling-reports
