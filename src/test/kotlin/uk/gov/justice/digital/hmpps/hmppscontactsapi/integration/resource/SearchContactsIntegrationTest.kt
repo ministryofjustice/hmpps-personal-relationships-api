@@ -6,10 +6,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.util.UriComponentsBuilder
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.organisationsapi.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
@@ -29,6 +31,26 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()
     .uri(CONTACT_SEARCH_URL.toString())
     .accept(MediaType.APPLICATION_JSON)
+
+  @ParameterizedTest
+  @CsvSource(
+    "contact/search?lastName=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure(s): lastName must be a letter or punctuation",
+    "contact/search?lastName=foo&middleNames=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure(s): middleNames must be a letter or punctuation",
+    "contact/search?lastName=foo&firstName=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure(s): firstName must be a letter or punctuation",
+    "contact/search?lastName=   &middleNames=foo,Validation failure(s): lastName must not be blank",
+  )
+  fun `should return bad request if the query params are invalid`(url: String, expectedError: String) {
+    val body = webTestClient.get()
+      .uri(url)
+      .accept(MediaType.APPLICATION_JSON)
+      .headers(testAPIClient.setAuthorisationUsingCurrentUser())
+      .exchange()
+      .expectStatus().isBadRequest
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody
+    assertThat(body?.userMessage).isEqualTo(expectedError)
+  }
 
   @Test
   fun `should return empty list if the contact doesn't exist`() {
@@ -441,7 +463,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val errors = testAPIClient.getBadResponseErrors(uri)
 
-    assertThat(errors.userMessage).isEqualTo("Validation failure(s): lastName cannot be blank.")
+    assertThat(errors.userMessage).isEqualTo("Validation failure(s): lastName must not be blank")
   }
 
   @Test

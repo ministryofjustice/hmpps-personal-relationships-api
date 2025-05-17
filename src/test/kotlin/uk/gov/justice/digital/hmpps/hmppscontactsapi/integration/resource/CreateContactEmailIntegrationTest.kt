@@ -173,7 +173,7 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_CREATED,
-      additionalInfo = ContactEmailInfo(created.contactEmailId, Source.DPS, "created"),
+      additionalInfo = ContactEmailInfo(created.contactEmailId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
   }

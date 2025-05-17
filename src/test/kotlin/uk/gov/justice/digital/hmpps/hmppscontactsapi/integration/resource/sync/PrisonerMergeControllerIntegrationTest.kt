@@ -168,13 +168,13 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-      additionalInfo = PrisonerNumberOfChildren(retainedNumberOfChildren.id, Source.DPS, "SYS"),
+      additionalInfo = PrisonerNumberOfChildren(retainedNumberOfChildren.id, Source.DPS, "SYS", null),
       personReference = PersonReference(nomsNumber = KEEP_PRISONER),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(retainedDomesticStatus.id, Source.DPS, "SYS"),
+      additionalInfo = PrisonerDomesticStatus(retainedDomesticStatus.id, Source.DPS, "SYS", null),
       personReference = PersonReference(nomsNumber = KEEP_PRISONER),
     )
   }

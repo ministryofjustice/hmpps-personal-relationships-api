@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactRestrictionRequest
@@ -28,6 +29,8 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     setCurrentUser(StubUser.READ_WRITE_USER)
     savedContactId = testAPIClient.createAContact(aMinimalCreateContactRequest()).id
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
+    stubGetUserByUsername(UserDetails("CREATE", "Create", "KMI"))
+    stubGetUserByUsername(UserDetails("UPDATE", "Update", "BXI"))
   }
 
   @Test
@@ -156,7 +159,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_CREATED,
-      additionalInfo = ContactRestrictionInfo(contactRestriction.contactRestrictionId, Source.NOMIS, "SYS"),
+      additionalInfo = ContactRestrictionInfo(contactRestriction.contactRestrictionId, Source.NOMIS, "CREATE", "KMI"),
       personReference = PersonReference(dpsContactId = contactRestriction.contactId),
     )
   }
@@ -212,7 +215,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_UPDATED,
-      additionalInfo = ContactRestrictionInfo(updatedRestriction.contactRestrictionId, Source.NOMIS, "SYS"),
+      additionalInfo = ContactRestrictionInfo(updatedRestriction.contactRestrictionId, Source.NOMIS, "UPDATE", "BXI"),
       personReference = PersonReference(dpsContactId = updatedRestriction.contactId),
     )
   }
@@ -238,7 +241,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
       .isNotFound
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_DELETED,
-      additionalInfo = ContactRestrictionInfo(contactRestrictionId, Source.NOMIS, "SYS"),
+      additionalInfo = ContactRestrictionInfo(contactRestrictionId, Source.NOMIS, "SYS", null),
       personReference = PersonReference(dpsContactId = 3),
     )
   }

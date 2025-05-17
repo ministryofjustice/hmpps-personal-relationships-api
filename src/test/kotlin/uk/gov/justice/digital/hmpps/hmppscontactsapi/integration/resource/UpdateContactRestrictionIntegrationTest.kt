@@ -199,7 +199,7 @@ class UpdateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_UPDATED,
-      additionalInfo = ContactRestrictionInfo(updated.contactRestrictionId, Source.DPS, "updated"),
+      additionalInfo = ContactRestrictionInfo(updated.contactRestrictionId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
   }
@@ -238,7 +238,7 @@ class UpdateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_UPDATED,
-      additionalInfo = ContactRestrictionInfo(updated.contactRestrictionId, Source.DPS, "updated"),
+      additionalInfo = ContactRestrictionInfo(updated.contactRestrictionId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
   }

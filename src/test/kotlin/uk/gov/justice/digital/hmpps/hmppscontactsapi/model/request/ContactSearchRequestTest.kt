@@ -39,7 +39,7 @@ class ContactSearchRequestTest {
     val violations = validator.validate(request)
 
     assertThat(violations).hasSize(1)
-    assertThat(violations.first().message).isEqualTo("lastName cannot be blank.")
+    assertThat(violations.first().message).isEqualTo("must not be blank")
   }
 
   @Test

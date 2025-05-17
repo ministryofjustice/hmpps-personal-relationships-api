@@ -245,7 +245,7 @@ class UpdateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_PHONE_UPDATED,
-      additionalInfo = ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId, Source.DPS, "updated"),
+      additionalInfo = ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(savedContactId),
     )
   }

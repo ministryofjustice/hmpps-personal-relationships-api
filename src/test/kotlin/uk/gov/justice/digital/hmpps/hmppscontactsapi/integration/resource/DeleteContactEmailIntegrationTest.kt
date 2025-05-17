@@ -62,7 +62,7 @@ class DeleteContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_EMAIL_DELETED,
-      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "deleted"),
+      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "deleted", "BXI"),
     )
   }
 
@@ -83,7 +83,7 @@ class DeleteContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_EMAIL_DELETED,
-      additionalInfo = ContactEmailInfo(-99, Source.DPS, "deleted"),
+      additionalInfo = ContactEmailInfo(-99, Source.DPS, "deleted", "BXI"),
     )
   }
 
@@ -109,7 +109,7 @@ class DeleteContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_DELETED,
-      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "deleted"),
+      additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "deleted", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }

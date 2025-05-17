@@ -240,7 +240,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "updated"),
+      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }
@@ -261,7 +261,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "updated"),
+      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }
@@ -284,12 +284,12 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "updated"),
+      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(primary.contactAddressId, Source.DPS, "updated"),
+      additionalInfo = ContactAddressInfo(primary.contactAddressId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
   }
@@ -312,7 +312,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "updated"),
+      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
   }
@@ -335,12 +335,12 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "updated"),
+      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(mail.contactAddressId, Source.DPS, "updated"),
+      additionalInfo = ContactAddressInfo(mail.contactAddressId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
   }
@@ -363,7 +363,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "updated"),
+      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
   }
@@ -397,22 +397,22 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "updated"),
+      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(primary.contactAddressId, Source.DPS, "updated"),
+      additionalInfo = ContactAddressInfo(primary.contactAddressId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(mail.contactAddressId, Source.DPS, "updated"),
+      additionalInfo = ContactAddressInfo(mail.contactAddressId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(other.contactAddressId, Source.DPS, "updated"),
+      additionalInfo = ContactAddressInfo(other.contactAddressId, Source.DPS, "updated", "BXI"),
     )
   }
 
@@ -442,12 +442,12 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "updated"),
+      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
-      additionalInfo = ContactAddressInfo(primaryAndMail.contactAddressId, Source.DPS, "updated"),
+      additionalInfo = ContactAddressInfo(primaryAndMail.contactAddressId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
   }

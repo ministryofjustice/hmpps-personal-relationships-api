@@ -70,7 +70,7 @@ class DeleteContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_ADDRESS_DELETED,
-      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "deleted"),
+      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "deleted", "BXI"),
     )
   }
 
@@ -114,7 +114,7 @@ class DeleteContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_DELETED,
-      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "deleted"),
+      additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "deleted", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }

@@ -151,7 +151,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
 
   @Test
   fun `should create the restriction with minimal fields`() {
-    stubGetUserByUsername(UserDetails("created", "Created User"))
+    stubGetUserByUsername(UserDetails("created", "Created User", "BXI"))
     val request = CreatePrisonerContactRestrictionRequest(
       restrictionType = "BAN",
       startDate = LocalDate.of(2020, 1, 1),
@@ -178,7 +178,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
-      additionalInfo = PrisonerContactRestrictionInfo(created.prisonerContactRestrictionId, Source.DPS, "created"),
+      additionalInfo = PrisonerContactRestrictionInfo(created.prisonerContactRestrictionId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
     )
   }
@@ -187,7 +187,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create the restriction with all fields`(role: String) {
     setCurrentUser(StubUser.CREATING_USER.copy(roles = listOf(role)))
-    stubGetUserByUsername(UserDetails("created", "Created User"))
+    stubGetUserByUsername(UserDetails("created", "Created User", "BXI"))
     val request = CreatePrisonerContactRestrictionRequest(
       restrictionType = "BAN",
       startDate = LocalDate.of(2020, 1, 1),
@@ -214,7 +214,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
-      additionalInfo = PrisonerContactRestrictionInfo(created.prisonerContactRestrictionId, Source.DPS, "created"),
+      additionalInfo = PrisonerContactRestrictionInfo(created.prisonerContactRestrictionId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
     )
   }

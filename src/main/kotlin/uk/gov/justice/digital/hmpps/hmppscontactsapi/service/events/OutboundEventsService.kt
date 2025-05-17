@@ -5,11 +5,13 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.FeatureSwitches
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.telemetry.TelemetryService
 
 @Service
 class OutboundEventsService(
   private val publisher: OutboundEventsPublisher,
   private val featureSwitches: FeatureSwitches,
+  private val telemetryService: TelemetryService,
 ) {
   companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -34,7 +36,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactInfo(identifier, source, user.username),
+            ContactInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }
@@ -45,7 +47,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactAddressInfo(identifier, source, user.username),
+            ContactAddressInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }
@@ -56,7 +58,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactPhoneInfo(identifier, source, user.username),
+            ContactPhoneInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }
@@ -67,7 +69,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactAddressPhoneInfo(identifier, secondIdentifier!!, source, user.username),
+            ContactAddressPhoneInfo(identifier, secondIdentifier!!, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }
@@ -78,7 +80,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactEmailInfo(identifier, source, user.username),
+            ContactEmailInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }
@@ -89,7 +91,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactIdentityInfo(identifier, source, user.username),
+            ContactIdentityInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }
@@ -100,7 +102,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            ContactRestrictionInfo(identifier, source, user.username),
+            ContactRestrictionInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it) },
           )
         }
@@ -111,7 +113,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            PrisonerContactInfo(identifier, source, user.username),
+            PrisonerContactInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it, nomsNumber = noms) },
           )
         }
@@ -122,7 +124,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            PrisonerContactRestrictionInfo(identifier, source, user.username),
+            PrisonerContactRestrictionInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it, nomsNumber = noms) },
           )
         }
@@ -133,7 +135,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            EmploymentInfo(identifier, source, user.username),
+            EmploymentInfo(identifier, source, user.username, user.activeCaseLoadId),
             contactId?.let { PersonReference(it) },
           )
         }
@@ -143,7 +145,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            PrisonerDomesticStatus(identifier, source, user.username),
+            PrisonerDomesticStatus(identifier, source, user.username, user.activeCaseLoadId),
             PersonReference(noms),
           )
         }
@@ -153,7 +155,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            PrisonerNumberOfChildren(identifier, source, user.username),
+            PrisonerNumberOfChildren(identifier, source, user.username, user.activeCaseLoadId),
             PersonReference(noms),
           )
         }
@@ -169,7 +171,9 @@ class OutboundEventsService(
     personReference: PersonReference? = null,
   ) {
     try {
-      publisher.send(outboundEvent.event(additionalInformation, personReference))
+      val event = outboundEvent.event(additionalInformation, personReference)
+      publisher.send(event)
+      telemetryService.track(event)
     } catch (e: Exception) {
       log.error(
         "Unable to send event with type {}, info {}, person {}",

@@ -37,11 +37,9 @@ class HmppsQueueOutboundEventsPublisher(
           .message(mapper.writeValueAsString(event))
           .messageAttributes(metaData(event))
           .build(),
-      ).also { log.debug("Published {}", event) }
-
+      )
       return
     }
-
     log.info("Ignoring publishing of event $event (feature switched off)")
   }
 

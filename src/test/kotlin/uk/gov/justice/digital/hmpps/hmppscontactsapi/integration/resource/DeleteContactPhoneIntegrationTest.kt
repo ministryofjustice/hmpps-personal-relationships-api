@@ -115,7 +115,7 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_DELETED,
-      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "deleted"),
+      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "deleted", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }
@@ -171,7 +171,7 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_DELETED,
-      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "deleted"),
+      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "deleted", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
