@@ -9,19 +9,38 @@ import java.time.LocalDate
  * by Syscon to run a no-frills check that the main data items are aligned.
  */
 
+@Schema(description = "Reconciliation data for one contact")
 data class SyncContactReconcile(
+  @Schema(description = "Unique identifier for a contact", example = "1111")
   val contactId: Long,
+
+  @Schema(description = "Contact first name", example = "Bob")
   val firstName: String,
+
+  @Schema(description = "Contact last name", example = "Smith")
   val lastName: String,
+
+  @Schema(description = "Contact middle names", example = "David", nullable = true)
   val middleNames: String? = null,
+
+  @Schema(description = "Contact data of birth", example = "2001-02-01")
   val dateOfBirth: LocalDate? = null,
+
+  @Schema(description = "Staff indicator", example = "false")
   val staffFlag: Boolean = false,
+
   val phones: List<ReconcilePhone> = emptyList(),
+
   val addresses: List<ReconcileAddress> = emptyList(),
+
   val emails: List<ReconcileEmail> = emptyList(),
+
   val identities: List<ReconcileIdentity> = emptyList(),
+
   val restrictions: List<ReconcileRestriction> = emptyList(),
+
   val relationships: List<ReconcileRelationship> = emptyList(),
+
   val employments: List<ReconcileEmployment> = emptyList(),
 )
 
@@ -173,4 +192,50 @@ data class ReconcileRelationshipRestriction(
 
   @Schema(description = "Restriction end date ", example = "2024-01-01")
   val expiryDate: LocalDate? = null,
+)
+
+// These are used when reconciling from the prisoner's perspective
+
+@Schema(description = "Prisoner relationship reconciliation")
+data class SyncPrisonerReconcile(
+  val relationships: List<ReconcilePrisonerRelationship>,
+)
+
+@Schema(description = "Prisoner single relationship reconciliation")
+data class ReconcilePrisonerRelationship(
+  @Schema(description = "The ID of the contact", example = "12345")
+  val contactId: Long,
+
+  @Schema(description = "The ID of the prisoner contact", example = "12345")
+  val prisonerContactId: Long,
+
+  @Schema(description = "Contact first name", example = "Bob")
+  val firstName: String? = null,
+
+  @Schema(description = "Contact last name", example = "Smith")
+  val lastName: String? = null,
+
+  @Schema(description = "The prisoner number", example = "A1234BC")
+  val prisonerNumber: String,
+
+  @Schema(description = "Social or official contact", example = "S")
+  val relationshipTypeCode: String,
+
+  @Schema(description = "The relationship code from reference data", example = "FRIEND")
+  val relationshipToPrisoner: String,
+
+  @Schema(description = "Indicates if the prisoner contact is next of kin", example = "true")
+  val nextOfKin: Boolean,
+
+  @Schema(description = "Indicates if the prisoner contact is an emergency contact", example = "true")
+  val emergencyContact: Boolean,
+
+  @Schema(description = "Indicates if the prisoner contact is active", example = "true")
+  val active: Boolean,
+
+  @Schema(description = "Indicates if the prisoner contact is an approved visitor", example = "true")
+  val approvedVisitor: Boolean,
+
+  @Schema(description = "The list of restrictions on this relationship")
+  val restrictions: List<ReconcileRelationshipRestriction> = emptyList(),
 )

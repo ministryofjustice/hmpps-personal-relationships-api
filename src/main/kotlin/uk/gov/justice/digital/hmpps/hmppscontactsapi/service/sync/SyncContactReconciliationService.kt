@@ -11,10 +11,12 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.Reconci
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.ReconcileEmployment
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.ReconcileIdentity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.ReconcilePhone
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.ReconcilePrisonerRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.ReconcileRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.ReconcileRelationshipRestriction
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.ReconcileRestriction
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContactReconcile
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerReconcile
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPhoneRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactEmailRepository
@@ -132,6 +134,39 @@ class SyncContactReconciliationService(
           )
         },
     )
+  }
+
+  fun getContactsByPrisonerNumber(prisonerNumber: String): SyncPrisonerReconcile {
+    val relationships = prisonerContactRepository.findAllByPrisonerNumber(prisonerNumber)
+      .map { relationship ->
+        val contactEntity = contactRepository.findById(relationship.contactId)
+          .orElseThrow { EntityNotFoundException("Contact with ID ${relationship.contactId} not found. Reconcile for $prisonerNumber, prisonerContactId ${relationship.prisonerContactId}") }
+
+        ReconcilePrisonerRelationship(
+          contactId = relationship.contactId,
+          prisonerContactId = relationship.prisonerContactId,
+          firstName = contactEntity.firstName,
+          lastName = contactEntity.lastName,
+          prisonerNumber = relationship.prisonerNumber,
+          relationshipTypeCode = relationship.relationshipType,
+          relationshipToPrisoner = relationship.relationshipToPrisoner,
+          nextOfKin = relationship.nextOfKin,
+          emergencyContact = relationship.emergencyContact,
+          approvedVisitor = relationship.approvedVisitor,
+          active = relationship.active,
+          restrictions = prisonerContactRestrictionRepository.findAllByPrisonerContactId(relationship.prisonerContactId)
+            .map { restriction ->
+              ReconcileRelationshipRestriction(
+                prisonerContactRestrictionId = restriction.prisonerContactRestrictionId,
+                restrictionType = restriction.restrictionType,
+                startDate = restriction.startDate,
+                expiryDate = restriction.expiryDate,
+              )
+            },
+        )
+      }
+
+    return SyncPrisonerReconcile(relationships)
   }
 
   private fun getAddressPhoneNumbers(
