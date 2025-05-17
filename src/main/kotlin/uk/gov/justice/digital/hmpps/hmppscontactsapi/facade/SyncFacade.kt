@@ -477,34 +477,37 @@ class SyncFacade(
       )
     }
 
-  // ===============================================================================
-  // RECONCILE - a single contact by ID - returns a very basic summary of data for
-  // one contact and its sub-entities to reconcile against.
-  // ===============================================================================
-
+  /**
+   * Reconcile a single contact by ID - returns a very basic summary of data for
+   * one contact and its sub-entities to reconcile against.
+   */
   fun reconcileSingleContact(contactId: Long) = syncContactReconciliationService.getContactDetailsById(contactId)
 
-  // =====================================================================================
-  //  MERGE - Replace the full set of relationships and restrictions for two prisoners
-  //  after an offender merge in NOMIS. This request contains a removed prisoner number
-  //  and a retained prisoner number along with the full set of relationships and
-  //  restrictions as they are in NOMIS after the merge for the retained prisoner.
-  // =====================================================================================
+  /**
+   * Reconcile a single prisoner by prisonerNumber - returns a summary of the prisoner's relationships
+   * and relationship restrictions to reconcile against.
+   */
+  fun reconcileSinglePrisoner(prisonerNumber: String) = syncContactReconciliationService.getContactsByPrisonerNumber(prisonerNumber)
 
+  /**
+   * Merge - to replace the set of relationships and restrictions for two prisoners
+   * after an offender merge in NOMIS. This request contains a removed prisoner number
+   * and a retained prisoner number, along with the new set of relationships and
+   * restrictions, as they are in NOMIS, for the retained prisoner only.
+   */
   fun mergePrisonerContacts(request: MergePrisonerContactRequest) = syncAdminService.mergePrisonerContacts(request)
     .also {
       sendEventsForRelationshipsRemoved(it.relationshipsRemoved)
       sendEventsForRelationshipsCreated(request.retainedPrisonerNumber, it.relationshipsCreated)
     }
 
-  // ======================================================================================
-  //  RESET - Replaces the full set of relationships and restrictions for a single prisoner.
-  //  This is called by the Syscon sync service when one of the following events occur:
-  //    - A new booking is recorded for the prisoner in NOMIS
-  //    - A booking move (from one prisoner to another) is completed in NOMIS
-  //    - An old booking (for the same prisoner) is reinstated
-  // ===========================================================================================================
-
+  /**
+   * Reset - to replace the set of relationships and restrictions for a single prisoner.
+   * This is called by the Syscon sync service when one of the following events occur:
+   *  - A new booking is recorded for the prisoner in NOMIS
+   *  - A booking move (from one prisoner to another) is completed in NOMIS
+   *  - An old booking (for the same prisoner) is reinstated
+   */
   fun resetPrisonerContacts(request: ResetPrisonerContactRequest) = syncAdminService.resetPrisonerContacts(request)
     .also {
       sendEventsForRelationshipsRemoved(it.relationshipsRemoved)

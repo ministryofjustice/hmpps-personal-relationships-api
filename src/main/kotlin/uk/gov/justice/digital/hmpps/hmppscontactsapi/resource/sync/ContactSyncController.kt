@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpda
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContact
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContactId
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContactReconcile
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerReconcile
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
@@ -219,4 +220,29 @@ class ContactSyncController(
     @Parameter(description = "The internal ID for the contact.", required = true)
     @PathVariable contactId: Long,
   ) = syncFacade.reconcileSingleContact(contactId)
+
+  @GetMapping("/prisoner/{prisonerNumber}/reconcile")
+  @Operation(
+    summary = "Reconciliation endpoint for a single prisoner by prisoner number",
+    description = "Get all the relationships, active and inactive, and their restrictions for one prisoner",
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = SyncPrisonerReconcile::class),
+          ),
+        ],
+        description = "Reconciliation object for one contact",
+      ),
+    ],
+  )
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
+  fun reconcileSinglePrisoner(
+    @Parameter(description = "The internal ID for the contact.", required = true)
+    @PathVariable prisonerNumber: String,
+  ) = syncFacade.reconcileSinglePrisoner(prisonerNumber)
 }
