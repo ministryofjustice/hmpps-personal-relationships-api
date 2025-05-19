@@ -23,6 +23,7 @@ spring:
       connection-timeout: 15000
       validation-timeout: 2000
       maximum-pool-size: 25
+      max-lifetime: 600000
 
   jpa:
     open-in-view: false
