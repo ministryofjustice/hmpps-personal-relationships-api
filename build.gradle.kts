@@ -4,7 +4,7 @@ import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.1.0"
   id("org.openapi.generator") version "7.13.0"
-  id("io.gatling.gradle") version "3.14.1.3"
+  id("io.gatling.gradle") version "3.14.1.4"
   kotlin("plugin.spring") version "2.1.21"
   kotlin("plugin.jpa") version "2.1.21"
 }
@@ -42,7 +42,7 @@ dependencies {
   // OpenAPI
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8")
 
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.15.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.16.0")
 
   // Test dependencies
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
