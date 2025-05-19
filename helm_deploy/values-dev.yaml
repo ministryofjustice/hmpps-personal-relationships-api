@@ -15,9 +15,9 @@ generic-service:
     API_BASE_URL_MANAGE_USERS: "https://manage-users-api-dev.hmpps.service.justice.gov.uk"
     API_BASE_URL_ORGANISATIONS: "https://organisations-api-dev.hmpps.service.justice.gov.uk"
 
-  allowlist:
-    groups:
-      - circleci
+allowlist:
+  groups:
+    - circleci
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
