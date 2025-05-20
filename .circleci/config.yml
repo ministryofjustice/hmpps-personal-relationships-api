@@ -63,48 +63,33 @@ jobs:
           name: Running gatling tests
           command: |
             set +x        
-            echo "Running gatling tests"
-            read -r user secret jwt < <(echo $(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-perf-test-creds -o json | jq '.data[] |= @base64d' | jq -r '.data.SYSTEM_CLIENT_ID, .data.SYSTEM_CLIENT_SECRET'))
-            
-              echo "generating basic auth token"
-            
-              BASIC_AUTH="$(echo -n "${user}:${secret}" | base64)"
-              
-              echo "getting jwt token"
-            
-              echo "${BASIC_AUTH}"
-            
-              TOKEN_RESPONSE=$(curl -s -k -d "" -X POST "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token?grant_type=client_credentials" -H "Authorization: Basic ${BASIC_AUTH}")
+            # Use double quotes instead of single quotes to allow variable expansion
+            read -r user secret jwt < <(echo $(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-perf-test-creds -o json | jq '.data[] |= @base64d' | jq -r '.data.SYSTEM_CLIENT_ID, .data.SYSTEM_CLIENT_SECRET, .data.JWT'))
+            export CLIENT_ID=$user
+            export CLIENT_SECRET=$secret
+            export AUTH_TOKEN=$jwt
+            export AUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token
+            export BASE_URL=https://personal-relationships-api-dev.hmpps.service.justice.gov.uk
+            echo "export CLIENT_ID=$user" >> $BASH_ENV
+            echo "export CLIENT_SECRET=$secret" >> $BASH_ENV
+            echo "export AUTH_TOKEN=$jwt" >> $BASH_ENV
+            echo "export AUTH_URL=$AUTH_URL" >> $BASH_ENV
+            echo "export BASE_URL=$BASE_URL" >> $BASH_ENV
 
-              echo "generated jwt token"
+            ./gradlew gatlingRun --all \
+            -DclientId=${CLIENT_ID} \
+            -DclientSecret=${CLIENT_SECRET} \
+            -DauthUrl=${AUTH_URL} \
+            -DbaseUrl=${BASE_URL} \
+            -DauthToken=${AUTH_TOKEN} \
+            -DtestDuration=${GATLING_TEST_DURATION:-5} \
+            -DtestPauseRangeMin=${GATLING_PAUSE_MIN:-3} \
+            -DtestPauseRangeMax=${GATLING_PAUSE_MAX:-5} \
+            -DtestRepeat=${GATLING_TEST_REPEAT:-5} \
+            -Denvironment=${GATLING_ENVIRONMENT:-dev} \
+            -DresponseTimePercentile3=${GATLING_RESPONSE_TIME_PERCENTILE:-1000} \
+            -DsuccessfulRequestsPercentage=${GATLING_SUCCESS_PERCENTAGE:-95}
             
-              echo "${TOKEN_RESPONSE}"
-            
-            if [ "$(echo "${TOKEN_RESPONSE}" | jq -er '.error')" != null ]; then
-                echo "Error getting auth token"
-                echo "${TOKEN_RESPONSE}" | jq -r '.error_description'
-                exit 1
-              fi
-            
-              TOKEN=$(echo "${TOKEN_RESPONSE}" | jq -er '.access_token')
-            
-              echo "exporting auth token"
-              export AUTH_TOKEN=$TOKEN
-            
-              export BASE_URL=https://personal-relationships-api-dev.hmpps.service.justice.gov.uk
-              
-              echo "running gatling tests"
-            
-              ./gradlew gatlingRun --simulation uk.gov.justice.digital.hmpps.hmppscontactsapi.simulations.CreateOrUpdateDomesticStatusSimulation \
-              -DbaseUrl=${BASE_URL} \
-              -DtestDuration=${GATLING_TEST_DURATION:-1} \
-              -DtestPauseRangeMin=${GATLING_PAUSE_MIN:-3} \
-              -DtestPauseRangeMax=${GATLING_PAUSE_MAX:-5} \
-              -DtestRepeat=${GATLING_TEST_REPEAT:-1} \
-              -Denvironment=${GATLING_ENVIRONMENT:-dev} \
-              -DresponseTimePercentile3=${GATLING_RESPONSE_TIME_PERCENTILE:-1000} \
-              -DsuccessfulRequestsPercentage=${GATLING_SUCCESS_PERCENTAGE:-95}
-          
             set -x
 
       - store_artifacts:
