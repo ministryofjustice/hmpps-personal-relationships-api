@@ -66,12 +66,12 @@ jobs:
             echo "Running gatling tests"
             read -r user secret jwt < <(echo $(kubectl -n hmpps-personal-relationships-dev get secret hmpps-personal-relationships-perf-test-creds -o json | jq '.data[] |= @base64d' | jq -r '.data.SYSTEM_CLIENT_ID, .data.SYSTEM_CLIENT_SECRET'))
             
-             echo "getting token for gatling tests"
-              AUTH_HOST="https://sign-in-dev.hmpps.service.justice.gov.uk"
+              echo "generating basic auth token"
+            
+              BASIC_AUTH="$(echo -n "${user}:${secret}" | base64)"
               
-              BASIC_AUTH="$(echo -n $user:$secret | base64)"
-              
-              TOKEN_RESPONSE=$(curl -s -k -d "" -X POST "$AUTH_HOST/auth/oauth/token?grant_type=client_credentials" -H "Authorization: Basic $BASIC_AUTH")
+              echo "getting auth token"
+              TOKEN_RESPONSE=$(curl -s -k -d "" -X POST "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token?grant_type=client_credentials" -H "Authorization: Basic $BASIC_AUTH")
               
               TOKEN=$(echo "$TOKEN_RESPONSE" | jq -er .access_token)
               echo "toke generated tests"
