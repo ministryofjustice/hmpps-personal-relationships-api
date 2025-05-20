@@ -75,6 +75,13 @@ jobs:
 
               echo "generated auth token"
             
+            echo "${TOKEN_RESPONSE}" | jq
+            if [ "$(echo "${TOKEN_RESPONSE}" | jq -er '.error')" != null ]; then
+                echo "Error getting auth token"
+                echo "${TOKEN_RESPONSE}" | jq -r '.error_description'
+                exit 1
+              fi
+            
               TOKEN=$(echo "${TOKEN_RESPONSE}" | jq -er '.access_token')
             
               echo "exporting auth token"
