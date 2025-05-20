@@ -71,15 +71,19 @@ jobs:
               BASIC_AUTH="$(echo -n "${user}:${secret}" | base64)"
               
               echo "getting auth token"
-              TOKEN_RESPONSE=$(curl -s -k -d "" -X POST "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token?grant_type=client_credentials" -H "Authorization: Basic $BASIC_AUTH")
-              
-              TOKEN=$(echo "$TOKEN_RESPONSE" | jq -er .access_token)
-              echo "toke generated tests"
+              TOKEN_RESPONSE="$(curl -s -k -d "" -X POST "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token?grant_type=client_credentials" -H "Authorization: Basic ${BASIC_AUTH}")"
+
+              echo "generated auth token"
             
+              TOKEN=$(echo "${TOKEN_RESPONSE}" | jq -er '.access_token')
+            
+              echo "exporting auth token"
               export AUTH_TOKEN=$TOKEN
             
               export BASE_URL=https://personal-relationships-api-dev.hmpps.service.justice.gov.uk
               
+              echo "running gatling tests"
+            
               ./gradlew gatlingRun --simulation uk.gov.justice.digital.hmpps.hmppscontactsapi.simulations.CreateOrUpdateDomesticStatusSimulation \
               -DbaseUrl=${BASE_URL} \
               -DtestDuration=${GATLING_TEST_DURATION:-1} \
