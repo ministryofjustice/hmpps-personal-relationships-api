@@ -4,6 +4,9 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    ignore:
+      - dependency-name: "io.gatling.gradle"
+        versions: [ "= 3.13.5.4" ]
     groups:
       production-dependencies:
         dependency-type: "production"
