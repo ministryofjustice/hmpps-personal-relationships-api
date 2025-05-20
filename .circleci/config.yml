@@ -76,7 +76,7 @@ jobs:
 
               echo "generated jwt token"
             
-              echo "${TOKEN_RESPONSE}" | jq
+              echo "${TOKEN_RESPONSE}" | jq '.'
             
             if [ "$(echo "${TOKEN_RESPONSE}" | jq -er '.error')" != null ]; then
                 echo "Error getting auth token"
