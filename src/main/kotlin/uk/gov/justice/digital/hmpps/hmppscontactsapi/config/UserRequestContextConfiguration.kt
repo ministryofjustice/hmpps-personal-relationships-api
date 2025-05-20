@@ -29,12 +29,17 @@ class UserRequestContextInterceptor(private val manageUsersService: ManageUsersS
   }
 
   override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
-    val username = authentication().name?.trim()
+    val username = authentication().userName?.trim()
     // Require a valid username for all modifying methods
-    if (username === null && request.method in arrayOf("POST", "PUT", "PATCH", "DELETE")) {
-      throw AccessDeniedException("Username is missing from token")
+    val isModifyingAction = request.method in arrayOf("POST", "PUT", "PATCH", "DELETE")
+    val user = if (isModifyingAction) {
+      if (username === null) {
+        throw AccessDeniedException("Username is missing from token")
+      }
+      enrichUserIfPossible(username)
+    } else {
+      username?.let { User(username) } ?: User.SYS_USER
     }
-    val user = username?.let { enrichUserIfPossible(it) } ?: User.SYS_USER
     request.setAttribute(User.REQUEST_ATTRIBUTE, user)
     return true
   }
