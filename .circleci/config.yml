@@ -70,12 +70,14 @@ jobs:
             
               BASIC_AUTH="$(echo -n "${user}:${secret}" | base64)"
               
-              echo "getting auth token"
-              TOKEN_RESPONSE="$(curl -s -k -d "" -X POST "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token?grant_type=client_credentials" -H "Authorization: Basic ${BASIC_AUTH}")"
-
-              echo "generated auth token"
+              echo "getting jwt token"
             
-            echo "${TOKEN_RESPONSE}" | jq
+              TOKEN_RESPONSE=$(curl -s -k -d "" -X POST "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token?grant_type=client_credentials" -H "Authorization: Basic ${BASIC_AUTH}")
+
+              echo "generated jwt token"
+            
+              echo "${TOKEN_RESPONSE}" | jq
+            
             if [ "$(echo "${TOKEN_RESPONSE}" | jq -er '.error')" != null ]; then
                 echo "Error getting auth token"
                 echo "${TOKEN_RESPONSE}" | jq -r '.error_description'
