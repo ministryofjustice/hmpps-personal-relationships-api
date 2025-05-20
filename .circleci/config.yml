@@ -49,6 +49,7 @@ jobs:
           path: build/reports/tests
 
   gatling_performance_tests:
+    circleci_ip_ranges: true
     executor:
       name: hmpps/java
       tag: << pipeline.parameters.java-tag >>
