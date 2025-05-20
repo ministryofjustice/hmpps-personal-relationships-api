@@ -72,6 +72,8 @@ jobs:
               
               echo "getting jwt token"
             
+              echo "${BASIC_AUTH}"
+            
               TOKEN_RESPONSE=$(curl -s -k -d "" -X POST "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token?grant_type=client_credentials" -H "Authorization: Basic ${BASIC_AUTH}")
 
               echo "generated jwt token"
