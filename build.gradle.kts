@@ -68,6 +68,10 @@ tasks {
   }
 }
 
+dependencyCheck {
+  suppressionFiles.add("dependencyCheck/suppression.xml")
+}
+
 val configValues = mapOf(
   "dateLibrary" to "java8-localdatetime",
   "serializationLibrary" to "jackson",
