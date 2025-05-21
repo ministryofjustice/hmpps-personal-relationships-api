@@ -13,8 +13,11 @@ This directory contains Gatling performance tests for the HMPPS Personal Relatio
 You can run the Gatling tests using the following Gradle command:
 
 ```bash
-./gradlew runGatling
+./gradlew gatlingRun
 ```
+Please refer to run-perf-tests.sh for easy run of the gatling tests
+
+Alternatively use this script to run gatling tests [run-perf-tests.sh](../../scripts/run-perf-tests.sh).
 
 ### Configuration Options
 
@@ -33,7 +36,7 @@ You can configure the tests using the following system properties:
 Example:
 
 ```bash
-./gradlew runGatling 
+./gradlew  gatlingRun
    -DAUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token \
    -DCLIENT_ID='**REDACTED**' \
    -DCLIENT_SECRET='**REDACTED**' \
