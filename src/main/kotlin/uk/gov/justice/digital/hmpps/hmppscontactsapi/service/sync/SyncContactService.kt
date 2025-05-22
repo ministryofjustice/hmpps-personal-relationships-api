@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicatePersonException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync.mapEntityToSyncResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync.mapSyncRequestToEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync.toModelIds
@@ -14,7 +15,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpda
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContact
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContactId
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactWithFixedIdRepository
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate.DuplicatePersonException
 
 @Service
 @Transactional

@@ -3,13 +3,13 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateRelationshipException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync.toEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync.toResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreatePrisonerContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerContact
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRepository
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate.DuplicateRelationshipException
 
 @Service
 @Transactional
