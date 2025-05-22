@@ -14,7 +14,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # First, create a file to sore the prisoner numbers and add the header
-echo "prisonerNumber" > ../src/gatling/resources/data/prisoner-numbers-dev.csv
+mkdir -p ../src/gatling/resources/data && echo "prisonerNumber" > ../src/gatling/resources/data/prisoner-numbers-dev.csv
 
 # Then append the prisoner numbers
 curl --silent --location 'https://prisoner-search-dev.prison.service.justice.gov.uk/prisoner-search/prison/WMI?page=0&size=250' \
