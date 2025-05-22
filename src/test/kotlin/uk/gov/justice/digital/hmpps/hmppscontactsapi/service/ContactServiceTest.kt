@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressPhoneE
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateRelationshipException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.contactAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createAddress
@@ -64,7 +65,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneDeta
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRepository
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate.DuplicateRelationshipException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*

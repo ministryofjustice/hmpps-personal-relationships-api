@@ -12,11 +12,11 @@ import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithFixedIdEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicatePersonException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync.mapSyncRequestToEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactWithFixedIdRepository
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate.DuplicatePersonException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*

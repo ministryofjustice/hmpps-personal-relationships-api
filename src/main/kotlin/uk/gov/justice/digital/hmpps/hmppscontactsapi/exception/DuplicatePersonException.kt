@@ -1,3 +1,3 @@
-package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.migrate
+package uk.gov.justice.digital.hmpps.hmppscontactsapi.exception
 
 class DuplicatePersonException(message: String) : RuntimeException(message)
