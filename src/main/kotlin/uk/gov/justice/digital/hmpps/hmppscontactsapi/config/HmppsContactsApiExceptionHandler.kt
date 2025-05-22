@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateRelation
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.InvalidReferenceCodeGroupException
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.format.DateTimeParseException
+import java.util.*
 
 @RestControllerAdvice
 class HmppsContactsApiExceptionHandler {
@@ -93,15 +94,18 @@ class HmppsContactsApiExceptionHandler {
   }
 
   @ExceptionHandler(Exception::class)
-  fun handleException(e: Exception): ResponseEntity<ErrorResponse> = ResponseEntity
-    .status(INTERNAL_SERVER_ERROR)
-    .body(
-      ErrorResponse(
-        status = INTERNAL_SERVER_ERROR,
-        userMessage = "Unexpected error: ${e.message}",
-        developerMessage = e.message,
-      ),
-    ).also { log.error("Unexpected exception", e) }
+  fun handleException(e: Exception): ResponseEntity<ErrorResponse> {
+    val ref = UUID.randomUUID().toString()
+    return ResponseEntity
+      .status(INTERNAL_SERVER_ERROR)
+      .body(
+        ErrorResponse(
+          status = INTERNAL_SERVER_ERROR,
+          userMessage = "Unexpected error",
+          developerMessage = "Unexpected error. Reference ($ref)",
+        ),
+      ).also { log.error("Unexpected error. Reference ($ref)", e) }
+  }
 
   @ExceptionHandler(HttpMessageNotReadableException::class)
   fun handleHttpMessageNotReadableException(e: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> {
@@ -153,7 +157,7 @@ class HmppsContactsApiExceptionHandler {
         userMessage = "Validation failure: ${e.message}",
         developerMessage = e.message,
       ),
-    ).also { log.info("Validation exception: {}", e.message) }
+    ).also { log.info("Request param validation exception: {}", e.message) }
 
   private fun sanitiseMismatchInputException(cause: MismatchedInputException): String {
     val name = cause.path.fold("") { jsonPath, ref ->
@@ -174,10 +178,10 @@ class HmppsContactsApiExceptionHandler {
     var message = error.defaultMessage ?: ""
     if (error is FieldError) {
       val lastPathPart = error.field.substringAfterLast(".")
-      if (message.startsWith(lastPathPart)) {
-        message = error.field.substring(0, error.field.length - lastPathPart.length) + message
+      message = if (message.startsWith(lastPathPart)) {
+        error.field.substring(0, error.field.length - lastPathPart.length) + message
       } else {
-        message = error.field + " " + message
+        error.field + " " + message
       }
     }
     return message
