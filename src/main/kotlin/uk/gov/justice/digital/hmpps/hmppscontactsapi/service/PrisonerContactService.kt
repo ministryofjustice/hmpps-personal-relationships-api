@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 
-import jakarta.persistence.EntityNotFoundException
 import org.springframework.data.web.PagedModel
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactRestrictionCountsEntity
@@ -26,9 +25,11 @@ class PrisonerContactService(
   private val prisonerContactSummaryRepository: PrisonerContactSummaryRepository,
 ) {
   fun getAllContacts(params: PrisonerContactSearchParams): PagedModel<PrisonerContactSummary> {
-    prisonerService.getPrisoner(params.prisonerNumber)
-      ?: throw EntityNotFoundException("Prisoner number ${params.prisonerNumber} - not found")
     val searchPrisonerContacts = prisonerContactSearchRepository.searchPrisonerContacts(params)
+    if (searchPrisonerContacts.isEmpty) {
+      // if the prisoner has contacts then they must exist
+      prisonerService.checkPrisonerExists(params.prisonerNumber)
+    }
     val prisonerContactIds = searchPrisonerContacts.toList().map { it.prisonerContactId }.toSet()
     val restrictionsByPrisonerContactId =
       prisonerContactRestrictionCountsRepository.findAllByPrisonerContactIdIn(prisonerContactIds)
@@ -45,10 +46,11 @@ class PrisonerContactService(
   }
 
   fun getAllSummariesForPrisonerAndContact(prisonerNumber: String, contactId: Long): List<PrisonerContactSummary> {
-    prisonerService.getPrisoner(prisonerNumber)
-      ?: throw EntityNotFoundException("Prisoner number $prisonerNumber - not found")
     val relationshipsBetweenPrisonerAndContact =
       prisonerContactSummaryRepository.findByPrisonerNumberAndContactId(prisonerNumber, contactId)
+    if (relationshipsBetweenPrisonerAndContact.isEmpty()) {
+      prisonerService.checkPrisonerExists(prisonerNumber)
+    }
     val prisonerContactIds = relationshipsBetweenPrisonerAndContact.toList().map { it.prisonerContactId }.toSet()
     val restrictionsByPrisonerContactId =
       prisonerContactRestrictionCountsRepository.findAllByPrisonerContactIdIn(prisonerContactIds)

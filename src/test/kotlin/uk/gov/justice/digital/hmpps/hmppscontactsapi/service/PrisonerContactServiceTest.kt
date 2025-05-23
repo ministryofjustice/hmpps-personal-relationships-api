@@ -10,6 +10,8 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doNothing
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageImpl
@@ -86,7 +88,6 @@ class PrisonerContactServiceTest {
     val page = PageImpl(contacts, pageable, contacts.size.toLong())
     val request = PrisonerContactSearchParams(prisonerNumber, null, null, null, null, null, Pageable.unpaged())
 
-    whenever(prisonerService.getPrisoner(prisonerNumber)).thenReturn(prisoner)
     whenever(prisonerContactSearchRepository.searchPrisonerContacts(any())).thenReturn(page)
     whenever(prisonerContactRestrictionCountsRepository.findAllByPrisonerContactIdIn(any())).thenReturn(
       listOf(
@@ -125,6 +126,7 @@ class PrisonerContactServiceTest {
 
     verify(prisonerContactSearchRepository).searchPrisonerContacts(request)
     verify(prisonerContactRestrictionCountsRepository).findAllByPrisonerContactIdIn(setOf(1L, 2L))
+    verify(prisonerService, never()).checkPrisonerExists(prisonerNumber)
   }
 
   @Test
@@ -148,7 +150,6 @@ class PrisonerContactServiceTest {
     val page = PageImpl(contacts, pageable, contacts.size.toLong())
     val request = PrisonerContactSearchParams(prisonerNumber, null, null, null, null, null, Pageable.unpaged())
 
-    whenever(prisonerService.getPrisoner(prisonerNumber)).thenReturn(prisoner)
     whenever(prisonerContactSearchRepository.searchPrisonerContacts(any())).thenReturn(page)
     whenever(prisonerContactRestrictionCountsRepository.findAllByPrisonerContactIdIn(any())).thenReturn(
       listOf(
@@ -181,8 +182,31 @@ class PrisonerContactServiceTest {
   }
 
   @Test
-  fun `should throw exception`() {
-    whenever(prisonerService.getPrisoner(prisonerNumber)).thenReturn(null)
+  fun `should check prisoner exists after finding no results`() {
+    val page = PageImpl(emptyList<PrisonerContactSummaryEntity>(), pageable, 0)
+    whenever(prisonerContactSearchRepository.searchPrisonerContacts(any())).thenReturn(page)
+    doNothing().whenever(prisonerService).checkPrisonerExists(prisonerNumber)
+
+    val result = prisonerContactService.getAllContacts(
+      PrisonerContactSearchParams(
+        prisonerNumber,
+        null,
+        null,
+        null,
+        null,
+        null,
+        Pageable.unpaged(),
+      ),
+    )
+    assertThat(result.content).isEmpty()
+    assertThat(result.metadata!!.totalElements).isEqualTo(0)
+  }
+
+  @Test
+  fun `should pass exception checking prisoner exists after finding no results`() {
+    val page = PageImpl(emptyList<PrisonerContactSummaryEntity>(), pageable, 0)
+    whenever(prisonerContactSearchRepository.searchPrisonerContacts(any())).thenReturn(page)
+    whenever(prisonerService.checkPrisonerExists(prisonerNumber)).thenThrow(EntityNotFoundException("Prisoner not found"))
     val exception = assertThrows<EntityNotFoundException> {
       prisonerContactService.getAllContacts(
         PrisonerContactSearchParams(
@@ -196,7 +220,7 @@ class PrisonerContactServiceTest {
         ),
       )
     }
-    exception.message isEqualTo "Prisoner number $prisonerNumber - not found"
+    exception.message isEqualTo "Prisoner not found"
   }
 
   @Test
@@ -288,7 +312,6 @@ class PrisonerContactServiceTest {
     )
     val contacts = listOf(c1, c2)
 
-    whenever(prisonerService.getPrisoner(prisonerNumber)).thenReturn(prisoner)
     whenever(prisonerContactSummaryRepository.findByPrisonerNumberAndContactId(prisonerNumber, 2L)).thenReturn(contacts)
     whenever(prisonerContactRestrictionCountsRepository.findAllByPrisonerContactIdIn(any())).thenReturn(
       listOf(
@@ -327,5 +350,37 @@ class PrisonerContactServiceTest {
 
     verify(prisonerContactSummaryRepository).findByPrisonerNumberAndContactId(prisonerNumber, 2L)
     verify(prisonerContactRestrictionCountsRepository).findAllByPrisonerContactIdIn(setOf(1L, 2L))
+    verify(prisonerService, never()).checkPrisonerExists(prisonerNumber)
+  }
+
+  @Test
+  fun `should check prisoner exists if no summaries`() {
+    whenever(
+      prisonerContactSummaryRepository.findByPrisonerNumberAndContactId(
+        prisonerNumber,
+        2L,
+      ),
+    ).thenReturn(emptyList())
+    doNothing().whenever(prisonerService).checkPrisonerExists(prisonerNumber)
+    val result = prisonerContactService.getAllSummariesForPrisonerAndContact(prisonerNumber, 2L)
+
+    assertThat(result).isEmpty()
+    verify(prisonerContactSummaryRepository).findByPrisonerNumberAndContactId(prisonerNumber, 2L)
+    verify(prisonerService).checkPrisonerExists(prisonerNumber)
+  }
+
+  @Test
+  fun `should pass on exception if prisoner does not exist`() {
+    whenever(
+      prisonerContactSummaryRepository.findByPrisonerNumberAndContactId(
+        prisonerNumber,
+        2L,
+      ),
+    ).thenReturn(emptyList())
+    whenever(prisonerService.checkPrisonerExists(prisonerNumber)).thenThrow(EntityNotFoundException("Prisoner not found"))
+    val result = assertThrows<EntityNotFoundException> {
+      prisonerContactService.getAllSummariesForPrisonerAndContact(prisonerNumber, 2L)
+    }
+    assertThat(result.message).isEqualTo("Prisoner not found")
   }
 }
