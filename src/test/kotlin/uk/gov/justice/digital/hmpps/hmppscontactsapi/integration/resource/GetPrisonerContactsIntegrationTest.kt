@@ -40,14 +40,31 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @Test
   fun `should return not found if no prisoner found`() {
-    stubPrisonSearchWithNotFoundResponse("A4385DZ")
+    stubPrisonSearchWithNotFoundResponse("A9999AA")
 
     webTestClient.get()
-      .uri("/prisoner/A4385DZ/contact")
+      .uri("/prisoner/A9999AA/contact")
       .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus()
       .isNotFound
+  }
+
+  @Test
+  fun `should return no results if no contacts`() {
+    stubPrisonSearchWithResponse("A9999AA")
+
+    val contacts = webTestClient.get()
+      .uri("/prisoner/A9999AA/contact")
+      .headers(setAuthorisationUsingCurrentUser())
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(PrisonerContactSummaryResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(contacts.content).hasSize(0)
   }
 
   @Test
