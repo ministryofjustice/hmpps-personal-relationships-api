@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
+import org.springframework.cache.CacheManager
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.test.context.ActiveProfiles
@@ -40,12 +41,16 @@ abstract class IntegrationTestBase {
   @Autowired
   protected lateinit var stubEvents: StubOutboundEventsPublisher
 
+  @Autowired
+  private lateinit var cacheManager: CacheManager
+
   protected lateinit var testAPIClient: TestAPIClient
 
   @BeforeEach
-  fun setupTestApiClient() {
+  fun setupForTestBase() {
     testAPIClient = TestAPIClient(webTestClient, jwtAuthHelper, null)
     stubEvents.reset()
+    cacheManager.clearAllCaches()
   }
 
   protected fun stubPingWithResponse(status: Int) {
@@ -108,5 +113,9 @@ abstract class IntegrationTestBase {
     val result = action()
     setCurrentUser(previousUser)
     return result
+  }
+
+  private fun CacheManager.clearAllCaches() {
+    cacheNames.forEach { cacheManager.getCache(it)?.clear() }
   }
 }

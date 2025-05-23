@@ -10,7 +10,6 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
@@ -151,7 +150,6 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
 
   @Test
   fun `should create the restriction with minimal fields`() {
-    stubGetUserByUsername(UserDetails("created", "Created User", "BXI"))
     val request = CreatePrisonerContactRestrictionRequest(
       restrictionType = "BAN",
       startDate = LocalDate.of(2020, 1, 1),
@@ -171,7 +169,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       assertThat(expiryDate).isNull()
       assertThat(comments).isNull()
       assertThat(enteredByUsername).isEqualTo("created")
-      assertThat(enteredByDisplayName).isEqualTo("Created User")
+      assertThat(enteredByDisplayName).isEqualTo("Created")
       assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
     }
@@ -187,7 +185,6 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should create the restriction with all fields`(role: String) {
     setCurrentUser(StubUser.CREATING_USER.copy(roles = listOf(role)))
-    stubGetUserByUsername(UserDetails("created", "Created User", "BXI"))
     val request = CreatePrisonerContactRestrictionRequest(
       restrictionType = "BAN",
       startDate = LocalDate.of(2020, 1, 1),
@@ -207,7 +204,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       assertThat(expiryDate).isEqualTo(request.expiryDate)
       assertThat(comments).isEqualTo(request.comments)
       assertThat(enteredByUsername).isEqualTo("created")
-      assertThat(enteredByDisplayName).isEqualTo("Created User")
+      assertThat(enteredByDisplayName).isEqualTo("Created")
       assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
     }
