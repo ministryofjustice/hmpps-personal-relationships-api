@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.1.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.2.0"
   id("org.openapi.generator") version "7.13.0"
   id("io.gatling.gradle") version "3.14.3"
   kotlin("plugin.spring") version "2.1.21"
@@ -25,10 +25,10 @@ dependencies {
   // Spring boot dependencies
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.3")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.5")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.4")
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.12.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.5")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.13.0")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.openapitools:jackson-databind-nullable:0.2.6")
 
@@ -57,7 +57,7 @@ dependencies {
   testImplementation("org.testcontainers:postgresql:1.21.0")
   testImplementation("org.testcontainers:localstack:1.21.0")
   testImplementation("org.wiremock:wiremock-standalone:3.13.0")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.3")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.5")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.50.0")
 }
 
