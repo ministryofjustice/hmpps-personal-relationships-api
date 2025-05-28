@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -303,4 +304,41 @@ class PrisonerContactController(
     @Valid @RequestBody request: UpdatePrisonerContactRestrictionRequest,
     @RequestAttribute user: User,
   ): PrisonerContactRestrictionDetails = prisonerContactRestrictionsFacade.updatePrisonerContactRestriction(prisonerContactId, prisonerContactRestrictionId, request, user)
+
+  @DeleteMapping("{prisonerContactId}")
+  @Operation(
+    summary = "Delete prisoner contact relationship",
+    description = "Delete the relationship between the contact and a prisoner. Only allowed if there are no relationship restrictions.",
+  )
+  @Tag(name = "Prisoner relationships")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "204",
+        description = "Deleted the relationship successfully",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Could not find the prisoner contact that this relationship relates to",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "409",
+        description = "The relationship has attached entities such as restrictions and cannot be deleted.",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__RW')")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  fun deleteContactRelationship(
+    @PathVariable("prisonerContactId") @Parameter(
+      name = "prisonerContactId",
+      description = "The id of the prisoner contact",
+      example = "123456",
+    ) prisonerContactId: Long,
+    @RequestAttribute user: User,
+  ) {
+    contactFacade.deleteContactRelationship(prisonerContactId, user)
+  }
 }

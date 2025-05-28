@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.patch
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactIdenti
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactPhoneNumberDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createEmploymentDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createPrisonerContactRelationshipDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.DeletedRelationshipIds
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
@@ -363,6 +365,57 @@ class ContactFacadeTest {
       prisonerNumber,
       user = user,
     )
+  }
+
+  @Nested
+  inner class DeleteContactRelationship {
+    @Test
+    fun `delete contact relationship sends event on success`() {
+      val contactId = 321L
+      val prisonerContactId = 123L
+      val prisonerNumber = "A1234BC"
+      val user = aUser("deleted")
+
+      whenever(contactService.deleteContactRelationship(prisonerContactId)).thenReturn(
+        DeletedRelationshipIds(contactId, prisonerNumber, prisonerContactId),
+      )
+
+      contactFacade.deleteContactRelationship(prisonerContactId, user)
+
+      verify(contactService).deleteContactRelationship(prisonerContactId)
+      verify(outboundEventsService).send(
+        OutboundEvent.PRISONER_CONTACT_DELETED,
+        prisonerContactId,
+        contactId,
+        prisonerNumber,
+        user = user,
+      )
+    }
+
+    @Test
+    fun `delete contact relationship does not send event on failure`() {
+      val contactId = 321L
+      val prisonerContactId = 123L
+      val prisonerNumber = "A1234BC"
+      val user = aUser("deleted")
+      val expectedException = RuntimeException("Boom")
+
+      whenever(contactService.deleteContactRelationship(prisonerContactId)).thenThrow(expectedException)
+
+      val exception = assertThrows<RuntimeException> {
+        contactFacade.deleteContactRelationship(prisonerContactId, user)
+      }
+
+      assertThat(exception).isEqualTo(expectedException)
+      verify(contactService).deleteContactRelationship(prisonerContactId)
+      verify(outboundEventsService, never()).send(
+        OutboundEvent.PRISONER_CONTACT_DELETED,
+        prisonerContactId,
+        contactId,
+        prisonerNumber,
+        user = user,
+      )
+    }
   }
 
   private fun aContactDetails() = ContactDetails(

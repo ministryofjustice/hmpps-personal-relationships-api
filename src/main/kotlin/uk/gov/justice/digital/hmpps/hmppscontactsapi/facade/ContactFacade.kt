@@ -137,9 +137,21 @@ class ContactFacade(
   fun patchRelationship(prisonerContactId: Long, request: PatchRelationshipRequest, user: User) {
     contactService.updateContactRelationship(prisonerContactId, request, user)
       .also {
-        logger.info("Send patch relationship domain event to {} {} ", OutboundEvent.PRISONER_CONTACT_UPDATED, it.contactId)
         outboundEventsService.send(
           outboundEvent = OutboundEvent.PRISONER_CONTACT_UPDATED,
+          identifier = it.prisonerContactId,
+          contactId = it.contactId,
+          noms = it.prisonerNumber,
+          user = user,
+        )
+      }
+  }
+
+  fun deleteContactRelationship(prisonerContactId: Long, user: User) {
+    contactService.deleteContactRelationship(prisonerContactId)
+      .also {
+        outboundEventsService.send(
+          outboundEvent = OutboundEvent.PRISONER_CONTACT_DELETED,
           identifier = it.prisonerContactId,
           contactId = it.contactId,
           noms = it.prisonerNumber,

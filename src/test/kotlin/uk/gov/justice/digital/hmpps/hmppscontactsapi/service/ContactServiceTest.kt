@@ -27,7 +27,9 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressPhoneE
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactRestrictionEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateRelationshipException
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.RelationshipCannotBeRemovedDueToDependencyException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.aUser
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.contactAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createAddress
@@ -43,6 +45,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createPhoneNumber
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.prisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.DeletedRelationshipIds
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
@@ -65,6 +68,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneDeta
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRestrictionRepository
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -86,6 +90,7 @@ class ContactServiceTest {
   private val contactAddressService: ContactAddressService = mock()
   private val contactPhoneService: ContactPhoneService = mock()
   private val contactEmailService: ContactEmailService = mock()
+  private val prisonerContactRestrictionRepository: PrisonerContactRestrictionRepository = mock()
   private val service = ContactService(
     contactRepository,
     prisonerContactRepository,
@@ -102,6 +107,7 @@ class ContactServiceTest {
     contactAddressService,
     contactPhoneService,
     contactEmailService,
+    prisonerContactRestrictionRepository,
   )
 
   private val aContactAddressDetailsEntity = createContactAddressDetailsEntity()
@@ -130,11 +136,18 @@ class ContactServiceTest {
         addresses = listOf(addressWithPhoneNumber),
         phoneNumbers = listOf(phoneNumber),
         emailAddresses = listOf(EmailAddress("test@example.com")),
-        employments = listOf(Employment(organisationId = 1, isActive = true), Employment(organisationId = 2, isActive = false)),
+        employments = listOf(
+          Employment(organisationId = 1, isActive = true),
+          Employment(organisationId = 2, isActive = false),
+        ),
       )
       whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(contactAddressDetailsRepository.findByContactId(any())).thenReturn(listOf(aContactAddressDetailsEntity))
-      whenever(contactIdentityService.createMultiple(any(), any(), any())).thenReturn(listOf(createContactIdentityDetails()))
+      whenever(contactIdentityService.createMultiple(any(), any(), any())).thenReturn(
+        listOf(
+          createContactIdentityDetails(),
+        ),
+      )
       val identityEntity1 =
         createContactIdentityDetailsEntity(id = 1, identityType = "PNC", identityValue = "1923/1Z34567A")
       whenever(contactIdentityDetailsRepository.findByContactId(123L)).thenReturn(listOf(identityEntity1))
@@ -148,7 +161,11 @@ class ContactServiceTest {
           emptySet(),
         ),
       )
-      whenever(contactPhoneService.createMultiple(any(), any(), any())).thenReturn(listOf(createContactPhoneNumberDetails()))
+      whenever(contactPhoneService.createMultiple(any(), any(), any())).thenReturn(
+        listOf(
+          createContactPhoneNumberDetails(),
+        ),
+      )
       whenever(contactEmailService.createMultiple(any(), any(), any())).thenReturn(listOf(createContactEmailDetails()))
 
       val result = service.createContact(request, user)
@@ -681,7 +698,12 @@ class ContactServiceTest {
       val emailAddressEntity1 = createContactEmailEntity(id = 1)
       val emailAddressEntity2 = createContactEmailEntity(id = 2)
 
-      whenever(contactEmailRepository.findByContactId(contactId)).thenReturn(listOf(emailAddressEntity1, emailAddressEntity2))
+      whenever(contactEmailRepository.findByContactId(contactId)).thenReturn(
+        listOf(
+          emailAddressEntity1,
+          emailAddressEntity2,
+        ),
+      )
 
       val entity = createContactEntity()
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(entity))
@@ -702,7 +724,12 @@ class ContactServiceTest {
       val identityEntity1 = createContactIdentityDetailsEntity(id = 1)
       val identityEntity2 = createContactIdentityDetailsEntity(id = 2)
 
-      whenever(contactIdentityDetailsRepository.findByContactId(contactId)).thenReturn(listOf(identityEntity1, identityEntity2))
+      whenever(contactIdentityDetailsRepository.findByContactId(contactId)).thenReturn(
+        listOf(
+          identityEntity1,
+          identityEntity2,
+        ),
+      )
 
       val entity = createContactEntity()
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(entity))
@@ -721,7 +748,9 @@ class ContactServiceTest {
     @Test
     fun `should get a contact with language code`() {
       val languageReference = ReferenceCode(1, ReferenceCodeGroup.LANGUAGE, "FRE-FRA", "French", 1, true)
-      whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.LANGUAGE, "FRE-FRA")).thenReturn(languageReference)
+      whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.LANGUAGE, "FRE-FRA")).thenReturn(
+        languageReference,
+      )
 
       val entity = createContactEntity().copy(languageCode = "FRE-FRA", interpreterRequired = true)
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(entity))
@@ -740,7 +769,9 @@ class ContactServiceTest {
     @Test
     fun `should get a contact with a title code`() {
       val titleReference = ReferenceCode(1, ReferenceCodeGroup.TITLE, "MR", "Mr", 1, true)
-      whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.TITLE, "MR")).thenReturn(titleReference)
+      whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.TITLE, "MR")).thenReturn(
+        titleReference,
+      )
 
       val entity = createContactEntity().copy(title = "MR")
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(entity))
@@ -888,8 +919,19 @@ class ContactServiceTest {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
       whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
       val referenceCode = ReferenceCode(1, ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "MOT", "Mother", 1, true)
-      whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "MOT")).thenReturn(referenceCode)
-      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "MOT", allowInactive = false)).thenReturn(referenceCode)
+      whenever(
+        referenceCodeService.getReferenceDataByGroupAndCode(
+          ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
+          "MOT",
+        ),
+      ).thenReturn(referenceCode)
+      whenever(
+        referenceCodeService.validateReferenceCode(
+          ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
+          "MOT",
+          allowInactive = false,
+        ),
+      ).thenReturn(referenceCode)
 
       service.addContactRelationship(request, user)
 
@@ -903,7 +945,11 @@ class ContactServiceTest {
         assertThat(comments).isEqualTo("Foo")
         assertThat(createdBy).isEqualTo("RELATIONSHIP_USER")
       }
-      verify(referenceCodeService).validateReferenceCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "MOT", allowInactive = false)
+      verify(referenceCodeService).validateReferenceCode(
+        ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
+        "MOT",
+        allowInactive = false,
+      )
     }
 
     @Test
@@ -1022,7 +1068,10 @@ class ContactServiceTest {
           "O,OFFICIAL_RELATIONSHIP",
         ],
       )
-      fun `should update the contact relationship type using original relationship type code if not specified`(relationshipType: String, expectedReferenceCodeGroup: ReferenceCodeGroup) {
+      fun `should update the contact relationship type using original relationship type code if not specified`(
+        relationshipType: String,
+        expectedReferenceCodeGroup: ReferenceCodeGroup,
+      ) {
         val relationShipTypeCode = "FRI"
         prisonerContact = prisonerContact.copy(relationshipType = relationshipType).apply {
           approvedBy = "officer456"
@@ -1037,11 +1086,21 @@ class ContactServiceTest {
           relationshipToPrisonerCode = JsonNullable.of(relationShipTypeCode),
         )
         mockBrotherRelationshipReferenceCode()
-        whenever(referenceCodeService.getReferenceDataByGroupAndCode(expectedReferenceCodeGroup, relationShipTypeCode)).thenReturn(
+        whenever(
+          referenceCodeService.getReferenceDataByGroupAndCode(
+            expectedReferenceCodeGroup,
+            relationShipTypeCode,
+          ),
+        ).thenReturn(
           ReferenceCode(1, expectedReferenceCodeGroup, "FRI", "Friend", 1, true),
         )
 
-        whenever(referenceCodeService.getReferenceDataByGroupAndCode(expectedReferenceCodeGroup, relationShipTypeCode)).thenReturn(
+        whenever(
+          referenceCodeService.getReferenceDataByGroupAndCode(
+            expectedReferenceCodeGroup,
+            relationShipTypeCode,
+          ),
+        ).thenReturn(
           ReferenceCode(1, expectedReferenceCodeGroup, "FRI", "Friend", 1, true),
         )
 
@@ -1076,7 +1135,11 @@ class ContactServiceTest {
           "S,O,OFFICIAL_RELATIONSHIP",
         ],
       )
-      fun `should update the contact relationship type using new relationship type code`(originalRelationshipType: String, newRelationshipType: String, expectedReferenceCodeGroup: ReferenceCodeGroup) {
+      fun `should update the contact relationship type using new relationship type code`(
+        originalRelationshipType: String,
+        newRelationshipType: String,
+        expectedReferenceCodeGroup: ReferenceCodeGroup,
+      ) {
         val relationshipToPrisonerCode = "FRI"
         prisonerContact = prisonerContact.copy(relationshipType = originalRelationshipType).apply {
           approvedBy = "officer456"
@@ -1091,11 +1154,21 @@ class ContactServiceTest {
           relationshipToPrisonerCode = JsonNullable.of(relationshipToPrisonerCode),
         )
         mockBrotherRelationshipReferenceCode()
-        whenever(referenceCodeService.getReferenceDataByGroupAndCode(expectedReferenceCodeGroup, relationshipToPrisonerCode)).thenReturn(
+        whenever(
+          referenceCodeService.getReferenceDataByGroupAndCode(
+            expectedReferenceCodeGroup,
+            relationshipToPrisonerCode,
+          ),
+        ).thenReturn(
           ReferenceCode(1, expectedReferenceCodeGroup, "FRI", "Friend", 1, true),
         )
 
-        whenever(referenceCodeService.getReferenceDataByGroupAndCode(expectedReferenceCodeGroup, relationshipToPrisonerCode)).thenReturn(
+        whenever(
+          referenceCodeService.getReferenceDataByGroupAndCode(
+            expectedReferenceCodeGroup,
+            relationshipToPrisonerCode,
+          ),
+        ).thenReturn(
           ReferenceCode(1, expectedReferenceCodeGroup, "FRI", "Friend", 1, true),
         )
 
@@ -1130,7 +1203,11 @@ class ContactServiceTest {
           "S,O,OFFICIAL_RELATIONSHIP",
         ],
       )
-      fun `should re-validate relationship to prisoner even if only relationship type is changing`(originalRelationshipType: String, newRelationshipType: String, expectedReferenceCodeGroup: ReferenceCodeGroup) {
+      fun `should re-validate relationship to prisoner even if only relationship type is changing`(
+        originalRelationshipType: String,
+        newRelationshipType: String,
+        expectedReferenceCodeGroup: ReferenceCodeGroup,
+      ) {
         prisonerContact = prisonerContact.copy(relationshipType = originalRelationshipType).apply {
           approvedBy = "officer456"
           approvedTime = LocalDateTime.now()
@@ -1179,16 +1256,28 @@ class ContactServiceTest {
       @Test
       fun `should reject a duplicate relationship if it is a different id`() {
         prisonerContact = prisonerContact.copy(relationshipToPrisoner = "BRO")
-        val otherExistingRelationshipWithSisCode = prisonerContact.copy(prisonerContactId = 123456789, relationshipToPrisoner = "SIS")
+        val otherExistingRelationshipWithSisCode =
+          prisonerContact.copy(prisonerContactId = 123456789, relationshipToPrisoner = "SIS")
 
         val request = PatchRelationshipRequest(
           relationshipToPrisonerCode = JsonNullable.of("SIS"),
         )
         mockBrotherRelationshipReferenceCode()
-        whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "SIS")).thenReturn(
+        whenever(
+          referenceCodeService.getReferenceDataByGroupAndCode(
+            ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
+            "SIS",
+          ),
+        ).thenReturn(
           ReferenceCode(1, ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "SIS", "Sister", 1, true),
         )
-        whenever(prisonerContactRepository.findDuplicateRelationships(prisonerContact.prisonerNumber, prisonerContact.contactId, "SIS"))
+        whenever(
+          prisonerContactRepository.findDuplicateRelationships(
+            prisonerContact.prisonerNumber,
+            prisonerContact.contactId,
+            "SIS",
+          ),
+        )
           .thenReturn(listOf(otherExistingRelationshipWithSisCode))
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
@@ -1202,13 +1291,20 @@ class ContactServiceTest {
       @Test
       fun `should skip duplicate relationship check if we're not changing it`() {
         prisonerContact = prisonerContact.copy(relationshipToPrisoner = "BRO")
-        val otherExistingRelationshipWithSisCode = prisonerContact.copy(prisonerContactId = 123456789, relationshipToPrisoner = "BRO")
+        val otherExistingRelationshipWithSisCode =
+          prisonerContact.copy(prisonerContactId = 123456789, relationshipToPrisoner = "BRO")
 
         val request = PatchRelationshipRequest(
           relationshipToPrisonerCode = JsonNullable.undefined(),
         )
         mockBrotherRelationshipReferenceCode()
-        whenever(prisonerContactRepository.findDuplicateRelationships(prisonerContact.prisonerNumber, prisonerContact.contactId, "SIS"))
+        whenever(
+          prisonerContactRepository.findDuplicateRelationships(
+            prisonerContact.prisonerNumber,
+            prisonerContact.contactId,
+            "SIS",
+          ),
+        )
           .thenReturn(listOf(prisonerContact, otherExistingRelationshipWithSisCode))
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
@@ -1225,7 +1321,13 @@ class ContactServiceTest {
           relationshipToPrisonerCode = JsonNullable.of("BRO"),
         )
         mockBrotherRelationshipReferenceCode()
-        whenever(prisonerContactRepository.findDuplicateRelationships(prisonerContact.prisonerNumber, prisonerContact.contactId, "BRO"))
+        whenever(
+          prisonerContactRepository.findDuplicateRelationships(
+            prisonerContact.prisonerNumber,
+            prisonerContact.contactId,
+            "BRO",
+          ),
+        )
           .thenReturn(listOf(prisonerContact))
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
@@ -1272,7 +1374,13 @@ class ContactServiceTest {
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
         val expectedException = ValidationException("Invalid")
-        whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "OOO", allowInactive = true)).thenThrow(expectedException)
+        whenever(
+          referenceCodeService.validateReferenceCode(
+            ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
+            "OOO",
+            allowInactive = true,
+          ),
+        ).thenThrow(expectedException)
 
         val exception = assertThrows<ValidationException> {
           service.updateContactRelationship(prisonerContactId, request, user)
@@ -1480,7 +1588,12 @@ class ContactServiceTest {
           comments = JsonNullable.of("a comment"),
         )
         mockBrotherRelationshipReferenceCode()
-        whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, relationShipTypeCode)).thenReturn(
+        whenever(
+          referenceCodeService.getReferenceDataByGroupAndCode(
+            ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
+            relationShipTypeCode,
+          ),
+        ).thenReturn(
           ReferenceCode(1, ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "FRI", "Friend", 1, true),
         )
 
@@ -1514,7 +1627,12 @@ class ContactServiceTest {
           comments = JsonNullable.of(null),
         )
         mockBrotherRelationshipReferenceCode()
-        whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, relationShipTypeCode)).thenReturn(
+        whenever(
+          referenceCodeService.getReferenceDataByGroupAndCode(
+            ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
+            relationShipTypeCode,
+          ),
+        ).thenReturn(
           ReferenceCode(1, ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "FRI", "Friend", 1, true),
         )
 
@@ -1607,7 +1725,9 @@ class ContactServiceTest {
         middleNames = "Middle Names",
       )
       val titleReference = ReferenceCode(1, ReferenceCodeGroup.TITLE, "MR", "Mr", 1, true)
-      whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.TITLE, "MR")).thenReturn(titleReference)
+      whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.TITLE, "MR")).thenReturn(
+        titleReference,
+      )
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contactEntity))
 
       val names = service.getContactName(contactId)
@@ -1706,8 +1826,71 @@ class ContactServiceTest {
   )
 
   private fun mockBrotherRelationshipReferenceCode() {
-    whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "BRO")).thenReturn(
+    whenever(
+      referenceCodeService.getReferenceDataByGroupAndCode(
+        ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
+        "BRO",
+      ),
+    ).thenReturn(
       ReferenceCode(1, ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "BRO", "Brother", 1, true),
     )
+  }
+
+  @Nested
+  inner class DeleteContactRelationship {
+    private val prisonerContactId = 897654L
+    private val prisonerContactEntity = PrisonerContactEntity(
+      prisonerContactId = prisonerContactId,
+      contactId = 1L,
+      prisonerNumber = "A1234BC",
+      relationshipType = "S",
+      relationshipToPrisoner = "BRO",
+      nextOfKin = true,
+      emergencyContact = true,
+      approvedVisitor = true,
+      active = true,
+      currentTerm = true,
+      comments = "Updated relationship type to Brother",
+      createdBy = "TEST",
+      createdTime = LocalDateTime.now(),
+    )
+
+    @Test
+    fun `should delete the relationship if no restrictions`() {
+      whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContactEntity))
+      whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId)).thenReturn(emptyList())
+
+      val result = service.deleteContactRelationship(prisonerContactId)
+
+      assertThat(result).isEqualTo(DeletedRelationshipIds(1, "A1234BC", prisonerContactId))
+    }
+
+    @Test
+    fun `should throw exception deleting the relationship if it does not exist`() {
+      whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.empty())
+      whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId)).thenReturn(emptyList())
+
+      val exception = assertThrows<EntityNotFoundException> {
+        service.deleteContactRelationship(prisonerContactId)
+      }
+
+      assertThat(exception.message).isEqualTo("Prisoner contact with prisoner contact ID $prisonerContactId not found")
+    }
+
+    @Test
+    fun `should throw exception deleting the relationship if there are restrictions`() {
+      whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContactEntity))
+      whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId)).thenReturn(
+        listOf(
+          PrisonerContactRestrictionEntity(1, prisonerContactId, "BAN", LocalDate.now(), null, null, "FOO", LocalDateTime.now()),
+        ),
+      )
+
+      val exception = assertThrows<RelationshipCannotBeRemovedDueToDependencyException> {
+        service.deleteContactRelationship(prisonerContactId)
+      }
+
+      assertThat(exception.message).isEqualTo("Cannot delete relationship ($prisonerContactId) as there are dependent entities")
+    }
   }
 }
