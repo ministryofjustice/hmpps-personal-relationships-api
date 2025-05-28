@@ -37,7 +37,7 @@ dependencies {
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
-  runtimeOnly("org.postgresql:postgresql:42.7.5")
+  runtimeOnly("org.postgresql:postgresql:42.7.6")
 
   // OpenAPI
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8")
