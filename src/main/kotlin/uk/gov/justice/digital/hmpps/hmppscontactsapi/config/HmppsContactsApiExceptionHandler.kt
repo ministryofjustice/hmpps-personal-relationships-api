@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateEmailExc
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicatePersonException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateRelationshipException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.InvalidReferenceCodeGroupException
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.RelationshipCannotBeRemovedDueToDependencyException
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.format.DateTimeParseException
 import java.util.*
@@ -139,6 +140,17 @@ class HmppsContactsApiExceptionHandler {
 
   @ExceptionHandler(DuplicatePersonException::class, DuplicateEmailException::class, DuplicateRelationshipException::class)
   fun handleDuplicateException(e: RuntimeException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(CONFLICT)
+    .body(
+      ErrorResponse(
+        status = CONFLICT,
+        userMessage = e.message,
+        developerMessage = e.message,
+      ),
+    )
+
+  @ExceptionHandler(RelationshipCannotBeRemovedDueToDependencyException::class)
+  fun handleRelationshipCannotBeRemovedDueToDependencyException(e: RelationshipCannotBeRemovedDueToDependencyException): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(CONFLICT)
     .body(
       ErrorResponse(

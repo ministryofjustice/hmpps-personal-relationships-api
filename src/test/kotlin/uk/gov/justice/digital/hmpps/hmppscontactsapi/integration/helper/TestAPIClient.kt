@@ -650,6 +650,14 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
       .isNoContent
   }
 
+  fun deletePrisonerContact(prisonerContactId: Long) {
+    webTestClient.delete()
+      .uri("/prisoner-contact/$prisonerContactId")
+      .headers(setAuthorisationUsingCurrentUser())
+      .exchange()
+      .expectStatus()
+      .isNoContent
+  }
   data class ContactSearchResponse(
     val content: List<ContactSearchResultItem>,
     val page: PagedModel.PageMetadata,

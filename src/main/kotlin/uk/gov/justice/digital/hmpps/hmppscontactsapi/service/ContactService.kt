@@ -12,9 +12,11 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressPhoneE
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateRelationshipException
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.RelationshipCannotBeRemovedDueToDependencyException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.DeletedRelationshipIds
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
@@ -39,6 +41,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneDeta
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRestrictionRepository
 import java.time.LocalDateTime
 import kotlin.jvm.optionals.getOrNull
 
@@ -59,6 +62,7 @@ class ContactService(
   private val contactAddressService: ContactAddressService,
   private val contactPhoneService: ContactPhoneService,
   private val contactEmailService: ContactEmailService,
+  private val prisonerContactRestrictionRepository: PrisonerContactRestrictionRepository,
 ) {
   companion object {
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -80,7 +84,7 @@ class ContactService(
       ?.let { prisonerContactRepository.saveAndFlush(it) }
 
     createIdentityInformation(createdContact, request, user)
-    createAddresses(createdContact.id(), user.username, request.addresses, user)
+    createAddresses(createdContact.id(), request.addresses, user)
     createPhoneNumbers(request, createdContact, user)
     createEmailAddresses(request, createdContact, user)
     createEmployments(request, createdContact, user)
@@ -131,7 +135,7 @@ class ContactService(
   fun getContact(id: Long): ContactDetails? = contactRepository.findById(id).getOrNull()
     ?.let { enrichContact(it) }
 
-  private fun createAddresses(contactId: Long, createdBy: String, addresses: List<Address>, user: User) {
+  private fun createAddresses(contactId: Long, addresses: List<Address>, user: User) {
     addresses.forEach { address ->
       contactAddressService.create(
         contactId,
@@ -306,7 +310,7 @@ class ContactService(
     request: PatchRelationshipRequest,
     user: User,
   ): PrisonerContactRelationshipDetails {
-    val prisonerContactEntity = getPrisonerContactEntity(prisonerContactId)
+    val prisonerContactEntity = requirePrisonerContactEntity(prisonerContactId)
 
     validateRequest(request)
     validateRelationshipCodes(request, prisonerContactEntity)
@@ -329,6 +333,17 @@ class ContactService(
     return enrichRelationship(prisonerContactEntity)
   }
 
+  @Transactional
+  fun deleteContactRelationship(prisonerContactId: Long): DeletedRelationshipIds {
+    val relationship = requirePrisonerContactEntity(prisonerContactId)
+    val relationshipRestrictions = prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId)
+    if (relationshipRestrictions.isNotEmpty()) {
+      throw RelationshipCannotBeRemovedDueToDependencyException(prisonerContactId)
+    }
+    prisonerContactRepository.delete(relationship)
+    return DeletedRelationshipIds(relationship.contactId, relationship.prisonerNumber, relationship.prisonerContactId)
+  }
+
   private fun validateRequest(request: PatchRelationshipRequest) {
     unsupportedRelationshipType(request)
     unsupportedRelationshipToPrisoner(request)
@@ -338,11 +353,8 @@ class ContactService(
     unsupportedRelationshipActive(request)
   }
 
-  private fun getPrisonerContactEntity(prisonerContactId: Long): PrisonerContactEntity {
-    val contact = prisonerContactRepository.findById(prisonerContactId)
-      .orElseThrow { EntityNotFoundException("Prisoner contact with prisoner contact ID $prisonerContactId not found") }
-    return contact
-  }
+  private fun requirePrisonerContactEntity(prisonerContactId: Long): PrisonerContactEntity = prisonerContactRepository.findById(prisonerContactId)
+    .orElseThrow { EntityNotFoundException("Prisoner contact with prisoner contact ID $prisonerContactId not found") }
 
   private fun PrisonerContactEntity.applyUpdate(
     request: PatchRelationshipRequest,
@@ -458,7 +470,7 @@ class ContactService(
     }
   }
 
-  fun createIdentityInformation(
+  private fun createIdentityInformation(
     createdContact: ContactEntity,
     request: CreateContactRequest,
     user: User,
