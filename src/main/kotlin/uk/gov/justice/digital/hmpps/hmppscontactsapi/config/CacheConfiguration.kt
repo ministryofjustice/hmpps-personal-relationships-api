@@ -19,7 +19,7 @@ class CacheConfiguration {
   companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
     const val USER_DETAILS_CACHE = "user_details"
-    private const val USER_DETAILS_EVICT_HOURS = 12L
+    private const val USER_DETAILS_EVICT_MINUTES = 1L
   }
 
   @Bean
@@ -28,8 +28,8 @@ class CacheConfiguration {
   )
 
   @CacheEvict(value = [USER_DETAILS_CACHE], allEntries = true)
-  @Scheduled(fixedDelay = USER_DETAILS_EVICT_HOURS, timeUnit = TimeUnit.HOURS)
+  @Scheduled(fixedDelay = USER_DETAILS_EVICT_MINUTES, timeUnit = TimeUnit.MINUTES)
   fun cacheEvictUserDetails() {
-    log.info("Evicting cache: $USER_DETAILS_CACHE after $USER_DETAILS_EVICT_HOURS hours")
+    log.info("Evicting cache: $USER_DETAILS_CACHE after $USER_DETAILS_EVICT_MINUTES minutes")
   }
 }
