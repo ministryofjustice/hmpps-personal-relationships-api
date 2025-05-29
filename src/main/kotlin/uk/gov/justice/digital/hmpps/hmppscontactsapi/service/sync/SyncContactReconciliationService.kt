@@ -138,6 +138,7 @@ class SyncContactReconciliationService(
 
   fun getContactsByPrisonerNumber(prisonerNumber: String): SyncPrisonerReconcile {
     val relationships = prisonerContactRepository.findAllByPrisonerNumber(prisonerNumber)
+      .filter { it.currentTerm }
       .map { relationship ->
         val contactEntity = contactRepository.findById(relationship.contactId)
           .orElseThrow { EntityNotFoundException("Contact with ID ${relationship.contactId} not found. Reconcile for $prisonerNumber, prisonerContactId ${relationship.prisonerContactId}") }

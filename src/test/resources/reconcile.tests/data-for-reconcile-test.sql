@@ -8,12 +8,13 @@ insert into contact(contact_id, title, last_name, first_name, date_of_birth, gen
 values (30001,  'MR', 'Ma', 'John', '2000-11-21', 'M', 'M', 'ENG', 'TIM', false, false),
        (30002,  'MR', 'Mb', 'Jack', '2000-11-22', 'M', 'D', 'ENG', 'TIM', false, false);
 
-insert into prisoner_contact (prisoner_contact_id, contact_id, prisoner_number, relationship_type, active, relationship_to_prisoner, created_at_prison, created_by, created_time)
-values (40001, 30001, 'A3333AA', 'S', true, 'BRO', 'MDI', 'TIM', current_timestamp),
-       (40002, 30001, 'A3333AA', 'O', true, 'POL', 'MDI', 'TIM', current_timestamp),
-       (40003, 30001, 'A4444AA', 'S', true, 'MOT', 'MDI', 'TIM', current_timestamp),
-       (40004, 30001, 'A4444AA', 'S', true, 'SIS', 'MDI', 'TIM', current_timestamp),
-       (40005, 30002, 'A4444AA', 'O', true, 'POL', 'MDI', 'TIM', current_timestamp);
+insert into prisoner_contact (prisoner_contact_id, contact_id, prisoner_number, relationship_type, active, current_term, relationship_to_prisoner, created_at_prison, created_by, created_time)
+values (40001, 30001, 'A3333AA', 'S', true, true, 'BRO', 'MDI', 'TIM', current_timestamp),
+       (40002, 30001, 'A3333AA', 'O', true, true, 'POL', 'MDI', 'TIM', current_timestamp),
+       (40003, 30001, 'A4444AA', 'S', true, true, 'MOT', 'MDI', 'TIM', current_timestamp),
+       (40004, 30001, 'A4444AA', 'S', true, true, 'SIS', 'MDI', 'TIM', current_timestamp),
+       (40005, 30002, 'A4444AA', 'O', true, true, 'POL', 'MDI', 'TIM', current_timestamp),
+       (40006, 30002, 'A4444AA', 'S', true, false, 'BRO', 'MDI', 'TIM', current_timestamp);
 
 insert into prisoner_contact_restriction (prisoner_contact_id, restriction_type, start_date, expiry_date, comments, created_by, created_time)
 values (40001, 'BAN', '2025-01-01', '2025-05-02', 'Restriction A', 'TIM', current_timestamp),
