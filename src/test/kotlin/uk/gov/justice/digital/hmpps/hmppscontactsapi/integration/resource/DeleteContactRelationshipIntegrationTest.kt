@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -11,6 +12,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelati
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreateContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.DeletedPrisonerContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerContactInfo
@@ -25,6 +27,9 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
   private var savedPrisonerContactId = 0L
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
+
+  @Autowired
+  private lateinit var deletedPrisonerContactRepository: DeletedPrisonerContactRepository
 
   @BeforeEach
   fun initialiseData() {
@@ -103,6 +108,8 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
       additionalInfo = PrisonerContactInfo(savedPrisonerContactId, Source.DPS, "deleted", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumber),
     )
+    val deleted = deletedPrisonerContactRepository.findByPrisonerContactId(savedPrisonerContactId)
+    assertThat(deleted).isNotNull
   }
 
   @Test

@@ -376,13 +376,13 @@ class ContactFacadeTest {
       val prisonerNumber = "A1234BC"
       val user = aUser("deleted")
 
-      whenever(contactService.deleteContactRelationship(prisonerContactId)).thenReturn(
+      whenever(contactService.deleteContactRelationship(prisonerContactId, user)).thenReturn(
         DeletedRelationshipIds(contactId, prisonerNumber, prisonerContactId),
       )
 
       contactFacade.deleteContactRelationship(prisonerContactId, user)
 
-      verify(contactService).deleteContactRelationship(prisonerContactId)
+      verify(contactService).deleteContactRelationship(prisonerContactId, user)
       verify(outboundEventsService).send(
         OutboundEvent.PRISONER_CONTACT_DELETED,
         prisonerContactId,
@@ -400,14 +400,14 @@ class ContactFacadeTest {
       val user = aUser("deleted")
       val expectedException = RuntimeException("Boom")
 
-      whenever(contactService.deleteContactRelationship(prisonerContactId)).thenThrow(expectedException)
+      whenever(contactService.deleteContactRelationship(prisonerContactId, user)).thenThrow(expectedException)
 
       val exception = assertThrows<RuntimeException> {
         contactFacade.deleteContactRelationship(prisonerContactId, user)
       }
 
       assertThat(exception).isEqualTo(expectedException)
-      verify(contactService).deleteContactRelationship(prisonerContactId)
+      verify(contactService).deleteContactRelationship(prisonerContactId, user)
       verify(outboundEventsService, never()).send(
         OutboundEvent.PRISONER_CONTACT_DELETED,
         prisonerContactId,

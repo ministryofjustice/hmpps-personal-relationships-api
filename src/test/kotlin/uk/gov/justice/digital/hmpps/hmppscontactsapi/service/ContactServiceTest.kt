@@ -26,6 +26,7 @@ import org.springframework.data.domain.PageRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressPhoneEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.DeletedPrisonerContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactRestrictionEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateRelationshipException
@@ -67,6 +68,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactIdentityD
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.DeletedPrisonerContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRestrictionRepository
 import java.time.LocalDate
@@ -91,6 +93,7 @@ class ContactServiceTest {
   private val contactPhoneService: ContactPhoneService = mock()
   private val contactEmailService: ContactEmailService = mock()
   private val prisonerContactRestrictionRepository: PrisonerContactRestrictionRepository = mock()
+  private val deletedPrisonerContactRepository: DeletedPrisonerContactRepository = mock()
   private val service = ContactService(
     contactRepository,
     prisonerContactRepository,
@@ -108,6 +111,7 @@ class ContactServiceTest {
     contactPhoneService,
     contactEmailService,
     prisonerContactRestrictionRepository,
+    deletedPrisonerContactRepository,
   )
 
   private val aContactAddressDetailsEntity = createContactAddressDetailsEntity()
@@ -1853,16 +1857,54 @@ class ContactServiceTest {
       comments = "Updated relationship type to Brother",
       createdBy = "TEST",
       createdTime = LocalDateTime.now(),
-    )
+    ).apply {
+      createdAtPrison = "FOO"
+      approvedBy = "APP"
+      approvedTime = LocalDateTime.of(2025, 1, 2, 10, 30)
+      expiryDate = LocalDate.of(2025, 2, 3)
+      updatedBy = "UPD"
+      updatedTime = LocalDateTime.of(2025, 3, 4, 11, 45)
+    }
+    private val user = aUser("deleted")
 
     @Test
-    fun `should delete the relationship if no restrictions`() {
+    fun `should delete the relationship and keep a history of it if there are no restrictions`() {
+      val now = LocalDateTime.now()
       whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContactEntity))
       whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId)).thenReturn(emptyList())
+      whenever(deletedPrisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as DeletedPrisonerContactEntity) }
 
-      val result = service.deleteContactRelationship(prisonerContactId)
+      val result = service.deleteContactRelationship(prisonerContactId, user)
 
       assertThat(result).isEqualTo(DeletedRelationshipIds(1, "A1234BC", prisonerContactId))
+      val deletedCaptor = argumentCaptor<DeletedPrisonerContactEntity>()
+      verify(deletedPrisonerContactRepository).saveAndFlush(deletedCaptor.capture())
+      assertThat(deletedCaptor.firstValue).usingRecursiveComparison().ignoringFields("deletedTime").isEqualTo(
+        DeletedPrisonerContactEntity(
+          deletedPrisonerContactId = 0,
+          prisonerContactId = prisonerContactId,
+          contactId = 1L,
+          prisonerNumber = "A1234BC",
+          relationshipType = "S",
+          relationshipToPrisoner = "BRO",
+          nextOfKin = true,
+          emergencyContact = true,
+          approvedVisitor = true,
+          active = true,
+          currentTerm = true,
+          comments = "Updated relationship type to Brother",
+          createdBy = "TEST",
+          createdTime = prisonerContactEntity.createdTime,
+          approvedBy = "APP",
+          approvedTime = LocalDateTime.of(2025, 1, 2, 10, 30),
+          expiryDate = LocalDate.of(2025, 2, 3),
+          updatedBy = "UPD",
+          updatedTime = LocalDateTime.of(2025, 3, 4, 11, 45),
+          createdAtPrison = "FOO",
+          deletedBy = "deleted",
+          deletedTime = LocalDateTime.now(),
+        ),
+      )
     }
 
     @Test
@@ -1871,7 +1913,7 @@ class ContactServiceTest {
       whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId)).thenReturn(emptyList())
 
       val exception = assertThrows<EntityNotFoundException> {
-        service.deleteContactRelationship(prisonerContactId)
+        service.deleteContactRelationship(prisonerContactId, user)
       }
 
       assertThat(exception.message).isEqualTo("Prisoner contact with prisoner contact ID $prisonerContactId not found")
@@ -1882,12 +1924,21 @@ class ContactServiceTest {
       whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContactEntity))
       whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId)).thenReturn(
         listOf(
-          PrisonerContactRestrictionEntity(1, prisonerContactId, "BAN", LocalDate.now(), null, null, "FOO", LocalDateTime.now()),
+          PrisonerContactRestrictionEntity(
+            1,
+            prisonerContactId,
+            "BAN",
+            LocalDate.now(),
+            null,
+            null,
+            "FOO",
+            LocalDateTime.now(),
+          ),
         ),
       )
 
       val exception = assertThrows<RelationshipCannotBeRemovedDueToDependencyException> {
-        service.deleteContactRelationship(prisonerContactId)
+        service.deleteContactRelationship(prisonerContactId, user)
       }
 
       assertThat(exception.message).isEqualTo("Cannot delete relationship ($prisonerContactId) as there are dependent entities")
