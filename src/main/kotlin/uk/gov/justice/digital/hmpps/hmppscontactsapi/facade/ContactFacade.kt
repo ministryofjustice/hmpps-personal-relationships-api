@@ -148,7 +148,7 @@ class ContactFacade(
   }
 
   fun deleteContactRelationship(prisonerContactId: Long, user: User) {
-    contactService.deleteContactRelationship(prisonerContactId)
+    contactService.deleteContactRelationship(prisonerContactId, user)
       .also {
         outboundEventsService.send(
           outboundEvent = OutboundEvent.PRISONER_CONTACT_DELETED,

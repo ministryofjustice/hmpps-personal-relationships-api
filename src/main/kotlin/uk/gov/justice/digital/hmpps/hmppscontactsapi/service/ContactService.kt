@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressPhoneEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.DeletedPrisonerContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateRelationshipException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.RelationshipCannotBeRemovedDueToDependencyException
@@ -40,6 +41,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactIdentityD
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.DeletedPrisonerContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRestrictionRepository
 import java.time.LocalDateTime
@@ -63,6 +65,7 @@ class ContactService(
   private val contactPhoneService: ContactPhoneService,
   private val contactEmailService: ContactEmailService,
   private val prisonerContactRestrictionRepository: PrisonerContactRestrictionRepository,
+  private val deletedPrisonerContactRepository: DeletedPrisonerContactRepository,
 ) {
   companion object {
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -334,13 +337,39 @@ class ContactService(
   }
 
   @Transactional
-  fun deleteContactRelationship(prisonerContactId: Long): DeletedRelationshipIds {
+  fun deleteContactRelationship(prisonerContactId: Long, user: User): DeletedRelationshipIds {
     val relationship = requirePrisonerContactEntity(prisonerContactId)
     val relationshipRestrictions = prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId)
     if (relationshipRestrictions.isNotEmpty()) {
       throw RelationshipCannotBeRemovedDueToDependencyException(prisonerContactId)
     }
     prisonerContactRepository.delete(relationship)
+    deletedPrisonerContactRepository.saveAndFlush(
+      DeletedPrisonerContactEntity(
+        deletedPrisonerContactId = 0,
+        prisonerContactId = relationship.prisonerContactId,
+        contactId = relationship.contactId,
+        prisonerNumber = relationship.prisonerNumber,
+        relationshipType = relationship.relationshipType,
+        relationshipToPrisoner = relationship.relationshipToPrisoner,
+        nextOfKin = relationship.nextOfKin,
+        emergencyContact = relationship.emergencyContact,
+        comments = relationship.comments,
+        active = relationship.active,
+        approvedVisitor = relationship.approvedVisitor,
+        currentTerm = relationship.currentTerm,
+        createdBy = relationship.createdBy,
+        createdTime = relationship.createdTime,
+        approvedBy = relationship.approvedBy,
+        approvedTime = relationship.approvedTime,
+        expiryDate = relationship.expiryDate,
+        createdAtPrison = relationship.createdAtPrison,
+        updatedBy = relationship.updatedBy,
+        updatedTime = relationship.updatedTime,
+        deletedBy = user.username,
+        deletedTime = LocalDateTime.now(),
+      ),
+    )
     return DeletedRelationshipIds(relationship.contactId, relationship.prisonerNumber, relationship.prisonerContactId)
   }
 
