@@ -17,7 +17,7 @@ fi
 mkdir -p ../src/gatling/resources/data && echo "prisonerNumber" > ../src/gatling/resources/data/prisoner-numbers-dev.csv
 
 # Then append the prisoner numbers
-curl --silent --location 'https://prisoner-search-dev.prison.service.justice.gov.uk/prisoner-search/prison/WMI?page=0&size=250' \
+curl --silent --location 'https://prisoner-search-dev.prison.service.justice.gov.uk/prisoner-search/prison/WMI?page=0&size=2000' \
 --header 'accept: application/json' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer ${TOKEN}" \
@@ -44,15 +44,26 @@ export BASE_URL="https://personal-relationships-api-dev.hmpps.service.justice.go
 export AUTH_TOKEN=${TOKEN}
 
 echo "Running gatling tests"
-
+# add specific simulation file here to run it
+# Users: 60 concurrent users per second
+# Duration: 300 seconds (5 minutes)
+# Virtual users of 15,000 users
+# Pause: 3-5 seconds
+# Repeat: 1 time
+# Environment: dev
+# Response time percentile: 1000ms
+# Successful requests percentage: 95%
+cd src/gatling/bin
 cd ..
-./gradlew gatlingRun --simulation uk.gov.justice.digital.hmpps.hmppscontactsapi.simulations.CreateOrUpdateDomesticStatusSimulation # add specific simulation file here to run it
--DtestDuration=${GATLING_TEST_DURATION:-1} \
+./gradlew gatlingRun --simulation uk.gov.justice.digital.hmpps.hmppscontactsapi.simulations.GetPrisonerContactSimulation \
+-DuserCount=60 \
+-DtestDuration=300 \
 -DtestPauseRangeMin=${GATLING_PAUSE_MIN:-3} \
 -DtestPauseRangeMax=${GATLING_PAUSE_MAX:-5} \
--DtestRepeat=${GATLING_TEST_REPEAT:-5} \
+-DtestRepeat=${GATLING_TEST_REPEAT:-1} \
 -Denvironment=${GATLING_ENVIRONMENT:-dev} \
 -DresponseTimePercentile3=${GATLING_RESPONSE_TIME_PERCENTILE:-1000} \
 -DsuccessfulRequestsPercentage=${GATLING_SUCCESS_PERCENTAGE:-95}
+
 
 # End
