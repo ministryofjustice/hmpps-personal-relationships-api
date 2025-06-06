@@ -54,8 +54,8 @@ echo "Running gatling tests"
 # Successful requests percentage: 95%
 cd ..
 ./gradlew gatlingRun --simulation uk.gov.justice.digital.hmpps.hmppscontactsapi.simulations.AddContactRelationshipSimulation \
--DuserCount=1 \
--DtestDuration=30 \
+-DuserCount=60 \
+-DtestDuration=300 \
 -DtestPauseRangeMin=${GATLING_PAUSE_MIN:-3} \
 -DtestPauseRangeMax=${GATLING_PAUSE_MAX:-5} \
 -DtestRepeat=${GATLING_TEST_REPEAT:-1} \
