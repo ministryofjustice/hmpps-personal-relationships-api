@@ -1,11 +1,10 @@
-#!/bin/bash
 # Get the token
 AUTH_HOST="https://sign-in-dev.hmpps.service.justice.gov.uk"
 
 read -r user secret < <(echo $(kubectl -n hmpps-contacts-dev get secret hmpps-contacts-ui -o json | jq '.data[] |= @base64d' | jq -r '.data.SYSTEM_CLIENT_ID, .data.SYSTEM_CLIENT_SECRET'))
 
 BASIC_AUTH="$(echo -n $user:$secret | base64)"
-TOKEN_RESPONSE=$(curl -s -k -d "" -X POST "$AUTH_HOST/auth/oauth/token?grant_type=client_credentials&username=prabash_gen" -H "Authorization: Basic $BASIC_AUTH")
+TOKEN_RESPONSE=$(curl -s -k -d "" -X POST "$AUTH_HOST/auth/oauth/token?grant_type=client_credentials&username=perf_test_user" -H "Authorization: Basic $BASIC_AUTH")
 TOKEN=$(echo "$TOKEN_RESPONSE" | jq -er .access_token)
 if [[ $? -ne 0 ]]; then
   echo "Failed to read token from credentials response"
@@ -53,11 +52,10 @@ echo "Running gatling tests"
 # Environment: dev
 # Response time percentile: 1000ms
 # Successful requests percentage: 95%
-cd src/gatling/bin
 cd ..
-./gradlew gatlingRun --simulation uk.gov.justice.digital.hmpps.hmppscontactsapi.simulations.GetPrisonerContactSimulation \
--DuserCount=60 \
--DtestDuration=300 \
+./gradlew gatlingRun --simulation uk.gov.justice.digital.hmpps.hmppscontactsapi.simulations.AddContactRelationshipSimulation \
+-DuserCount=1 \
+-DtestDuration=30 \
 -DtestPauseRangeMin=${GATLING_PAUSE_MIN:-3} \
 -DtestPauseRangeMax=${GATLING_PAUSE_MAX:-5} \
 -DtestRepeat=${GATLING_TEST_REPEAT:-1} \
@@ -65,5 +63,15 @@ cd ..
 -DresponseTimePercentile3=${GATLING_RESPONSE_TIME_PERCENTILE:-1000} \
 -DsuccessfulRequestsPercentage=${GATLING_SUCCESS_PERCENTAGE:-95}
 
-
+# Check if the gatling tests were successful
+if [ $? -eq 0 ]; then
+    echo "Gatling tests completed successfully"
+    #  clear test data
+    cd scripts
+    chmod +x clear-test-data.sh
+    ./clear-test-data.sh
+else
+    echo "Error: Gatling tests failed"
+    exit 1
+fi
 # End
