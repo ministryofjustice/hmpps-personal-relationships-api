@@ -25,7 +25,7 @@ dependencies {
   // Spring boot dependencies
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.5")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.6")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.5")
   implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.13.2")
@@ -57,7 +57,7 @@ dependencies {
   testImplementation("org.testcontainers:postgresql:1.21.1")
   testImplementation("org.testcontainers:localstack:1.21.1")
   testImplementation("org.wiremock:wiremock-standalone:3.13.0")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.5")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.6")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.50.0")
 }
 
