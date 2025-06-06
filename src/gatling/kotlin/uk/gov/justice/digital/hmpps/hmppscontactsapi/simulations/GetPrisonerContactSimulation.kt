@@ -21,12 +21,23 @@ class GetPrisonerContactSimulation : BaseSimulation() {
       .check(jsonPath("$.page.size").exists().saveAs("pageSize")),
   )
 
+  private fun getContactsCount() = exec(
+    http("Get Prisoner Contacts Count")
+      .get("/prisoner/#{prisonerNumber}/contact/count")
+      .headers(authorisationHeader)
+      .check(status().shouldBe(200))
+      .check(jsonPath("$.social").exists()),
+  )
+
   private val getContacts = scenario("Get Prisoner contacts paginated")
     .exec(getToken)
     .feed(prisonerNumbers)
     .repeat(testRepeat)
     .on(
-      exec(searchContacts())
+      exec(
+        getContactsCount(),
+        searchContacts(),
+      )
         .pause(ofSeconds(testPauseRangeMin.toLong()), ofSeconds(testPauseRangeMax.toLong())),
     )
 
