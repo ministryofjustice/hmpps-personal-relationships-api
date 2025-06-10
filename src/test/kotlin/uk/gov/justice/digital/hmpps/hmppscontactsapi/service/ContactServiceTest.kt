@@ -20,12 +20,8 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.same
 import org.mockito.kotlin.whenever
 import org.openapitools.jackson.nullable.JsonNullable
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.PageRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressPhoneEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.DeletedPrisonerContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactRestrictionEntity
@@ -49,7 +45,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.DeletedRelationshipIds
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.CreateContactAddressRequest
@@ -58,7 +53,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.employment.Em
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateMultipleIdentitiesRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.IdentityDocument
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameDetails
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.CreateAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressDetailsRepository
@@ -67,7 +61,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactEmailRepo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactIdentityDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.DeletedPrisonerContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRestrictionRepository
@@ -80,7 +73,6 @@ class ContactServiceTest {
   private val contactRepository: ContactRepository = mock()
   private val prisonerContactRepository: PrisonerContactRepository = mock()
   private val prisonerService: PrisonerService = mock()
-  private val contactSearchRepository: ContactSearchRepository = mock()
   private val contactAddressDetailsRepository: ContactAddressDetailsRepository = mock()
   private val contactPhoneDetailsRepository: ContactPhoneDetailsRepository = mock()
   private val contactAddressPhoneRepository: ContactAddressPhoneRepository = mock()
@@ -98,7 +90,6 @@ class ContactServiceTest {
     contactRepository,
     prisonerContactRepository,
     prisonerService,
-    contactSearchRepository,
     contactAddressDetailsRepository,
     contactPhoneDetailsRepository,
     contactAddressPhoneRepository,
@@ -992,65 +983,6 @@ class ContactServiceTest {
   }
 
   @Nested
-  inner class SearchContact {
-
-    @Test
-    fun `test searchContacts with lastName , firstName , middleName and date of birth`() {
-      // Given
-      val pageable = PageRequest.of(0, 10)
-      val contactWithAddressEntity = getContactWithAddressEntity()
-
-      val results = listOf(contactWithAddressEntity)
-
-      val pageContacts = PageImpl(results, pageable, results.size.toLong())
-
-      // When
-      whenever(
-        contactSearchRepository.searchContacts(
-          ContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1)),
-          pageable,
-        ),
-      ).thenReturn(pageContacts)
-
-      // Act
-      val result: Page<ContactSearchResultItem> = service.searchContacts(
-        pageable,
-        ContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1)),
-      )
-
-      // Then
-      assertNotNull(result)
-      assertThat(result.totalElements).isEqualTo(1)
-      assertThat(result.content[0].lastName).isEqualTo("last")
-      assertThat(result.content[0].firstName).isEqualTo("first")
-    }
-
-    private fun getContactWithAddressEntity() = ContactWithAddressEntity(
-      contactId = 1L,
-      title = "Mr",
-      lastName = "last",
-      middleNames = "middle",
-      firstName = "first",
-      dateOfBirth = LocalDate.of(1980, 2, 1),
-      deceasedDate = null,
-      contactAddressId = 1L,
-      primaryAddress = true,
-      verified = false,
-      addressType = "HOME",
-      flat = "Mr",
-      property = "last",
-      street = "middle",
-      area = "first",
-      cityCode = "",
-      countyCode = "null",
-      postCode = "user",
-      countryCode = "user",
-      createdBy = "TEST",
-      createdTime = LocalDateTime.now(),
-    )
-  }
-
-  @Nested
   inner class UpdateContactRelationship {
     private val prisonerContactId = 2L
 
@@ -1869,7 +1801,6 @@ class ContactServiceTest {
 
     @Test
     fun `should delete the relationship and keep a history of it if there are no restrictions`() {
-      val now = LocalDateTime.now()
       whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContactEntity))
       whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId)).thenReturn(emptyList())
       whenever(deletedPrisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as DeletedPrisonerContactEntity) }

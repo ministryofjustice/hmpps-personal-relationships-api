@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearc
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PatchContactResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactPatchService
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
@@ -26,6 +27,7 @@ class ContactFacade(
   private val outboundEventsService: OutboundEventsService,
   private val contactPatchService: ContactPatchService,
   private val contactService: ContactService,
+  private val contactSearchService: ContactSearchService,
 ) {
   companion object {
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -132,7 +134,7 @@ class ContactFacade(
 
   fun getContactName(id: Long): ContactNameDetails? = contactService.getContactName(id)
 
-  fun searchContacts(pageable: Pageable, request: ContactSearchRequest): PagedModel<ContactSearchResultItem> = PagedModel(contactService.searchContacts(pageable, request))
+  fun searchContacts(pageable: Pageable, request: ContactSearchRequest): PagedModel<ContactSearchResultItem> = PagedModel(contactSearchService.searchContacts(pageable, request))
 
   fun patchRelationship(prisonerContactId: Long, request: PatchRelationshipRequest, user: User) {
     contactService.updateContactRelationship(prisonerContactId, request, user)

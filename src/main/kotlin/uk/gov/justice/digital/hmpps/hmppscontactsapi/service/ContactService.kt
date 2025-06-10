@@ -4,8 +4,6 @@ import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
 import jakarta.validation.ValidationException
 import org.slf4j.LoggerFactory
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAddressPhoneEntity
@@ -20,7 +18,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.DeletedRelationshipIds
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.Address
@@ -31,7 +28,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreat
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactPhoneDetails
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressDetailsRepository
@@ -40,7 +36,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactEmailRepo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactIdentityDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.DeletedPrisonerContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRestrictionRepository
@@ -52,7 +47,6 @@ class ContactService(
   private val contactRepository: ContactRepository,
   private val prisonerContactRepository: PrisonerContactRepository,
   private val prisonerService: PrisonerService,
-  private val contactSearchRepository: ContactSearchRepository,
   private val contactAddressDetailsRepository: ContactAddressDetailsRepository,
   private val contactPhoneDetailsRepository: ContactPhoneDetailsRepository,
   private val contactAddressPhoneRepository: ContactAddressPhoneRepository,
@@ -179,14 +173,21 @@ class ContactService(
       )
     }
 
-  fun searchContacts(pageable: Pageable, request: ContactSearchRequest): Page<ContactSearchResultItem> = contactSearchRepository.searchContacts(request, pageable).toModel()
-
   @Transactional
   fun addContactRelationship(request: AddContactRelationshipRequest, user: User): PrisonerContactRelationshipDetails {
     validateNewRelationship(request.relationship)
     getContact(request.contactId) ?: throw EntityNotFoundException("Contact (${request.contactId}) could not be found")
-    if (prisonerContactRepository.findDuplicateRelationships(request.relationship.prisonerNumber, request.contactId, request.relationship.relationshipToPrisonerCode).isNotEmpty()) {
-      throw DuplicateRelationshipException(request.relationship.prisonerNumber, request.contactId, request.relationship.relationshipToPrisonerCode)
+    if (prisonerContactRepository.findDuplicateRelationships(
+        request.relationship.prisonerNumber,
+        request.contactId,
+        request.relationship.relationshipToPrisonerCode,
+      ).isNotEmpty()
+    ) {
+      throw DuplicateRelationshipException(
+        request.relationship.prisonerNumber,
+        request.contactId,
+        request.relationship.relationshipToPrisonerCode,
+      )
     }
     val newRelationship = request.relationship.toEntity(request.contactId, user.username)
     prisonerContactRepository.saveAndFlush(newRelationship)
@@ -327,7 +328,11 @@ class ContactService(
         request.relationshipToPrisonerCode.get(),
       ).any { it.prisonerContactId != prisonerContactId }
     ) {
-      throw DuplicateRelationshipException(prisonerContactEntity.prisonerNumber, prisonerContactEntity.contactId, request.relationshipToPrisonerCode.get())
+      throw DuplicateRelationshipException(
+        prisonerContactEntity.prisonerNumber,
+        prisonerContactEntity.contactId,
+        request.relationshipToPrisonerCode.get(),
+      )
     }
 
     val changedPrisonerContact = prisonerContactEntity.applyUpdate(request, user)

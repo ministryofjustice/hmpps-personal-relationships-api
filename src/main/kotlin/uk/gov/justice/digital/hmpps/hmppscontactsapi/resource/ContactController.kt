@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.resource
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.headers.Header
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
@@ -9,16 +10,19 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Past
+import jakarta.validation.constraints.Pattern
 import org.slf4j.LoggerFactory
-import org.springdoc.core.annotations.ParameterObject
 import org.springdoc.core.converters.models.PageableAsQueryParam
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PagedModel
+import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -39,16 +43,23 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PatchContact
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.net.URI
+import java.time.LocalDate
 
 @Tag(name = "Contacts")
 @RestController
 @RequestMapping(value = ["contact"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @AuthApiResponses
+@Validated
 class ContactController(
   val contactFacade: ContactFacade,
 ) {
   companion object {
     private val logger = LoggerFactory.getLogger(this::class.java)
+
+    private const val VALID_NAME_REGEX = "[a-zA-Z\\s,.'-]*"
+    private const val VALID_NAME_MESSAGE = "must be a letter or punctuation"
+    private const val VALID_LETTER_OR_NUMBER_REGEX = "[a-zA-Z0-9]*"
+    private const val VALID_LETTER_OR_NUMBER_MESSAGE = "must contain only letters or numbers"
   }
 
   @PostMapping(consumes = [MediaType.APPLICATION_JSON_VALUE])
@@ -200,8 +211,44 @@ class ContactController(
   fun searchContacts(
     @Parameter(hidden = true)
     pageable: Pageable,
-    @ModelAttribute @Valid @ParameterObject request: ContactSearchRequest,
-  ): PagedModel<ContactSearchResultItem> = contactFacade.searchContacts(pageable, request)
+    @Parameter(`in` = ParameterIn.QUERY, description = "Last name of the contact", example = "Jones", required = true)
+    @NotBlank(message = "must not be blank")
+    @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
+    lastName: String,
+    @Parameter(`in` = ParameterIn.QUERY, description = "First name of the contact", example = "Elton", required = false)
+    @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
+    firstName: String?,
+    @Parameter(`in` = ParameterIn.QUERY, description = "Middle names of the contact", example = "Simon", required = false)
+    @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
+    middleNames: String?,
+    @Parameter(
+      `in` = ParameterIn.QUERY,
+      description = "Date of Birth of the contact in ISO format",
+      example = "30/12/2010",
+      required = false,
+    )
+    @Past(message = "The date of birth must be in the past")
+    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    dateOfBirth: LocalDate?,
+    @Parameter(
+      `in` = ParameterIn.QUERY,
+      description = "If a prisoner number is specified, check all matching contacts for any existing relationships to the prisoner. " +
+        "All matching contacts are returned regardless of whether they have an existing relationship to the prisoner or not.",
+      example = "A1234BC",
+      required = false,
+    )
+    @Pattern(regexp = VALID_LETTER_OR_NUMBER_REGEX, message = VALID_LETTER_OR_NUMBER_MESSAGE)
+    includeAnyExistingRelationshipsToPrisoner: String?,
+  ): PagedModel<ContactSearchResultItem> = contactFacade.searchContacts(
+    pageable,
+    ContactSearchRequest(
+      lastName = lastName,
+      firstName = firstName,
+      middleNames = middleNames,
+      dateOfBirth = dateOfBirth,
+      includeAnyExistingRelationshipsToPrisoner = includeAnyExistingRelationshipsToPrisoner,
+    ),
+  )
 
   @PatchMapping("/{contactId}")
   @Operation(

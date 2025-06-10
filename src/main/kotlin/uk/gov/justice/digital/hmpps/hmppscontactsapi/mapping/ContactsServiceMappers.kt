@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping
 
-import org.springframework.data.domain.Page
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEntity
@@ -8,9 +7,10 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntit
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ExistingRelationshipToPrisoner
 import java.time.LocalDateTime
 
-fun ContactWithAddressEntity.toModel() = ContactSearchResultItem(
+fun ContactWithAddressEntity.toModel(existingRelationships: List<ExistingRelationshipToPrisoner>?) = ContactSearchResultItem(
   id = this.contactId,
   lastName = this.lastName,
   firstName = this.firstName,
@@ -35,9 +35,8 @@ fun ContactWithAddressEntity.toModel() = ContactSearchResultItem(
   endDate = this.endDate,
   noFixedAddress = this.noFixedAddress,
   comments = this.comments,
+  existingRelationships = existingRelationships,
 )
-
-fun Page<ContactWithAddressEntity>.toModel(): Page<ContactSearchResultItem> = map { it.toModel() }
 
 fun ContactRelationship.toEntity(
   contactId: Long,

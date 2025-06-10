@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetai
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PatchContactResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactPatchService
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
@@ -43,8 +44,9 @@ class ContactFacadeTest {
   private val outboundEventsService: OutboundEventsService = mock()
   private val contactPatchService: ContactPatchService = mock()
   private val contactService: ContactService = mock()
+  private val contactSearchService: ContactSearchService = mock()
 
-  private val contactFacade = ContactFacade(outboundEventsService, contactPatchService, contactService)
+  private val contactFacade = ContactFacade(outboundEventsService, contactPatchService, contactService, contactSearchService)
 
   @Test
   fun `patch should patch contact and send domain event`() {
@@ -322,10 +324,10 @@ class ContactFacadeTest {
   @Test
   fun `search should send no domain event`() {
     val pageable = Pageable.unpaged()
-    val request = ContactSearchRequest(lastName = "foo", firstName = null, middleNames = null, dateOfBirth = null)
+    val request = ContactSearchRequest(lastName = "foo", firstName = null, middleNames = null, dateOfBirth = null, includeAnyExistingRelationshipsToPrisoner = null)
     val result = PageImpl<ContactSearchResultItem>(listOf())
 
-    whenever(contactService.searchContacts(any(), any())).thenReturn(result)
+    whenever(contactSearchService.searchContacts(any(), any())).thenReturn(result)
 
     assertThat(contactFacade.searchContacts(pageable, request)).isEqualTo(PagedModel(result))
 
