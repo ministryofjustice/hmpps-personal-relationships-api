@@ -12,11 +12,12 @@ import kotlin.reflect.full.memberProperties
 
 class MapSortPropertiesKtTest {
 
+  private val unsortableContactSearchResultProperties = setOf(ContactSearchResultItem::existingRelationships.name)
   private val unsortablePrisonerContactProperties = setOf(PrisonerContactSummary::restrictionSummary.name)
 
   @Test
   fun `can map contact search result item fields to contact with address entity fields`() {
-    ContactSearchResultItem::class.memberProperties.forEach { property ->
+    ContactSearchResultItem::class.memberProperties.filterNot { it.name in unsortableContactSearchResultProperties }.forEach { property ->
       val mapped = mapSortPropertiesOfContactSearch(property.name)
       assertThat(mapped).isNotNull()
       assertThat(ContactWithAddressEntity::class.memberProperties.find { it.name == mapped }).isNotNull()
@@ -29,6 +30,16 @@ class MapSortPropertiesKtTest {
       mapSortPropertiesOfContactSearch("foo")
     }
     assertThat(expected.message).isEqualTo("Unable to sort on foo")
+  }
+
+  @Test
+  fun `attempting to sort on an unsortable field for contact search gives an error`() {
+    unsortableContactSearchResultProperties.forEach { property ->
+      val expected = assertThrows<ValidationException> {
+        mapSortPropertiesOfContactSearch(property)
+      }
+      assertThat(expected.message).isEqualTo("Unable to sort on $property")
+    }
   }
 
   @Test

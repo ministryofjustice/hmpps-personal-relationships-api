@@ -65,19 +65,47 @@ data class ContactSearchResultItem(
   @Schema(description = "The description of country code, if known", example = "England", nullable = true)
   val countryDescription: String? = null,
 
-  @Schema(description = "If true this address should be considered for sending mail to", nullable = true, example = "true")
+  @Schema(
+    description = "If true this address should be considered for sending mail to",
+    nullable = true,
+    example = "true",
+  )
   val mailAddress: Boolean?,
 
-  @Schema(description = "The date from which this address can be considered active", example = "2022-10-01", nullable = true)
+  @Schema(
+    description = "The date from which this address can be considered active",
+    example = "2022-10-01",
+    nullable = true,
+  )
   val startDate: LocalDate? = null,
 
-  @Schema(description = "The date after which this address should be considered inactive", example = "2023-10-02", nullable = true)
+  @Schema(
+    description = "The date after which this address should be considered inactive",
+    example = "2023-10-02",
+    nullable = true,
+  )
   val endDate: LocalDate? = null,
 
-  @Schema(description = "A flag to indicate that this address is effectively no fixed address", example = "false", nullable = true)
+  @Schema(
+    description = "A flag to indicate that this address is effectively no fixed address",
+    example = "false",
+    nullable = true,
+  )
   val noFixedAddress: Boolean? = false,
 
-  @Schema(description = "Any additional information or comments about the address", example = "Some additional information", nullable = true)
+  @Schema(
+    description = "Any additional information or comments about the address",
+    example = "Some additional information",
+    nullable = true,
+  )
   val comments: String?,
+
+  @Schema(
+    description = "A list of existing relationships to a prisoner if a check against the prisoner number was requested. " +
+      "Empty if there are no existing relationships or null if it was not requested.",
+    nullable = true,
+    required = false,
+  )
+  val existingRelationships: List<ExistingRelationshipToPrisoner>? = null,
 
 ) : AddressLines<String?>

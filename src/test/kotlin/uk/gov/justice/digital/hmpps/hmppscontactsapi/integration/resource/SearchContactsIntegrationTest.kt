@@ -8,12 +8,17 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.openapitools.jackson.nullable.JsonNullable
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.util.UriComponentsBuilder
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.organisationsapi.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ExistingRelationshipToPrisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.net.URI
 import java.time.LocalDate
@@ -34,10 +39,12 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @ParameterizedTest
   @CsvSource(
-    "contact/search?lastName=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure(s): lastName must be a letter or punctuation",
-    "contact/search?lastName=foo&middleNames=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure(s): middleNames must be a letter or punctuation",
-    "contact/search?lastName=foo&firstName=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure(s): firstName must be a letter or punctuation",
-    "contact/search?lastName=   &middleNames=foo,Validation failure(s): lastName must not be blank",
+    "contact/search?lastName=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure: searchContacts.lastName: must be a letter or punctuation",
+    "contact/search?lastName=foo&middleNames=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure: searchContacts.middleNames: must be a letter or punctuation",
+    "contact/search?lastName=foo&firstName=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure: searchContacts.firstName: must be a letter or punctuation",
+    "contact/search?lastName=   &middleNames=foo,Validation failure: searchContacts.lastName: must not be blank",
+    "contact/search?includeAnyExistingRelationshipsToPrisoner=A-B-1&lastName=foo,Validation failure: searchContacts.includeAnyExistingRelationshipsToPrisoner: must contain only letters or numbers",
+    "contact/search?dateOfBirth=30/12/2150&lastName=foo,Validation failure: searchContacts.dateOfBirth: The date of birth must be in the past",
   )
   fun `should return bad request if the query params are invalid`(url: String, expectedError: String) {
     val body = webTestClient.get()
@@ -251,6 +258,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(contact.id).isEqualTo(18)
       assertThat(contact.firstName).isEqualTo("Minimal")
       assertThat(contact.lastName).isEqualTo("Address")
+      assertThat(contact.existingRelationships).isNull() // as it was not requested
 
       assertThat(contact.property).isNull()
       assertThat(contact.street).isNull()
@@ -463,7 +471,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val errors = testAPIClient.getBadResponseErrors(uri)
 
-    assertThat(errors.userMessage).isEqualTo("Validation failure(s): lastName must not be blank")
+    assertThat(errors.developerMessage).isEqualTo("searchContacts.lastName: must not be blank")
   }
 
   @Test
@@ -476,7 +484,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val errors = testAPIClient.getBadResponseErrors(uri)
 
-    assertThat(errors.userMessage).contains("Validation failure(s): dateOfBirth Failed to convert value of type 'java.lang.String' to required type 'java.time.LocalDate';")
+    assertThat(errors.developerMessage).contains("Method parameter 'dateOfBirth': Failed to convert value of type 'java.lang.String' to required type 'java.time.LocalDate'")
   }
 
   @Test
@@ -487,7 +495,124 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val errors = testAPIClient.getBadResponseErrors(uri)
 
-    assertThat(errors.userMessage).contains("Validation failure(s): Parameter specified as non-null is null: ")
+    assertThat(errors.developerMessage).contains("searchContacts.lastName: must not be blank")
+  }
+
+  @Test
+  fun `should return existing relationships to prisoner if requested`() {
+    val prisonerNumber = "A1234BC"
+    stubPrisonSearchWithResponse(prisonerNumber)
+    val randomDob = LocalDate.now().minusDays(RandomUtils.secure().randomLong(100, 2000))
+    val contactIdToExpectedRelationships: Map<Long, List<ExistingRelationshipToPrisoner>> =
+      doWithTemporaryWritePermission {
+        val contactSingle = testAPIClient.createAContactWithARelationship(
+          CreateContactRequest(
+            lastName = "ABCDEFG",
+            firstName = "Single Relationship",
+            dateOfBirth = randomDob,
+            relationship = ContactRelationship(
+              prisonerNumber = prisonerNumber,
+              relationshipTypeCode = "S",
+              relationshipToPrisonerCode = "FRI",
+              isNextOfKin = false,
+              isEmergencyContact = false,
+              isApprovedVisitor = false,
+              comments = null,
+            ),
+          ),
+        )
+        val contactMultiple = testAPIClient.createAContactWithARelationship(
+          CreateContactRequest(
+            lastName = "ABCDEFG",
+            firstName = "Multiple Relationships",
+            dateOfBirth = randomDob,
+            relationship = ContactRelationship(
+              prisonerNumber = prisonerNumber,
+              relationshipTypeCode = "S",
+              relationshipToPrisonerCode = "MOT",
+              isNextOfKin = false,
+              isEmergencyContact = false,
+              isApprovedVisitor = false,
+              comments = null,
+            ),
+          ),
+        )
+        // ensure includes inactive relationships
+        testAPIClient.updateRelationship(
+          contactMultiple.createdRelationship!!.prisonerContactId,
+          PatchRelationshipRequest(isRelationshipActive = JsonNullable.of(false)),
+        )
+
+        val contactMultipleSecondRelationship = testAPIClient.addAContactRelationship(
+          AddContactRelationshipRequest(
+            contactId = contactMultiple.createdContact.id,
+            relationship = ContactRelationship(
+              prisonerNumber = prisonerNumber,
+              relationshipTypeCode = "O",
+              relationshipToPrisonerCode = "DR",
+              isNextOfKin = false,
+              isEmergencyContact = false,
+              isApprovedVisitor = false,
+              comments = null,
+            ),
+          ),
+        )
+        val contactNone = testAPIClient.createAContact(
+          CreateContactRequest(
+            lastName = "ABCDEFG",
+            firstName = "No Relationships",
+            dateOfBirth = randomDob,
+          ),
+        )
+        mapOf(
+          contactSingle.createdContact.id to listOf(
+            ExistingRelationshipToPrisoner(
+              prisonerContactId = contactSingle.createdRelationship!!.prisonerContactId,
+              relationshipTypeCode = "S",
+              relationshipTypeDescription = "Social",
+              relationshipToPrisonerCode = "FRI",
+              relationshipToPrisonerDescription = "Friend",
+              isRelationshipActive = true,
+            ),
+          ),
+          contactMultiple.createdContact.id to listOf(
+            ExistingRelationshipToPrisoner(
+              prisonerContactId = contactMultiple.createdRelationship!!.prisonerContactId,
+              relationshipTypeCode = "S",
+              relationshipTypeDescription = "Social",
+              relationshipToPrisonerCode = "MOT",
+              relationshipToPrisonerDescription = "Mother",
+              isRelationshipActive = false,
+            ),
+            ExistingRelationshipToPrisoner(
+              prisonerContactId = contactMultipleSecondRelationship.prisonerContactId,
+              relationshipTypeCode = "O",
+              relationshipTypeDescription = "Official",
+              relationshipToPrisonerCode = "DR",
+              relationshipToPrisonerDescription = "Doctor",
+              isRelationshipActive = true,
+            ),
+          ),
+          contactNone.id to emptyList(),
+        )
+      }
+
+    val results = testAPIClient.getSearchContactResults(
+      UriComponentsBuilder.fromPath("contact/search")
+        .queryParam("lastName", "ABCDEFG")
+        .queryParam("dateOfBirth", randomDob.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+        .queryParam("includeAnyExistingRelationshipsToPrisoner", prisonerNumber)
+        .build()
+        .toUri(),
+    )!!
+
+    assertThat(results.content).hasSize(3)
+    assertThat(contactIdToExpectedRelationships.keys).isEqualTo(results.content.map { it.id }.toSet())
+    contactIdToExpectedRelationships.forEach { (contactId, expectedRelationships) ->
+      val contactResult = results.content.find { it.id == contactId }
+      assertThat(contactResult).isNotNull
+      assertThat(contactResult!!.existingRelationships).containsExactlyInAnyOrderElementsOf(expectedRelationships)
+    }
   }
 
   companion object {
