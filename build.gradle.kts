@@ -40,7 +40,7 @@ dependencies {
   runtimeOnly("org.postgresql:postgresql:42.7.6")
 
   // OpenAPI
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
 
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.16.0")
 
@@ -58,7 +58,7 @@ dependencies {
   testImplementation("org.testcontainers:localstack:1.21.1")
   testImplementation("org.wiremock:wiremock-standalone:3.13.0")
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.6")
-  testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.50.0")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.51.0")
 }
 
 tasks {
