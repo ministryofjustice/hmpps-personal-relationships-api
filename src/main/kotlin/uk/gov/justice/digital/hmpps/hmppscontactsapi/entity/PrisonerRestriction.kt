@@ -17,17 +17,17 @@ data class PrisonerRestriction(
 
   val prisonerNumber: String,
 
-  val restrictionType: String? = null,
+  val restrictionType: String,
 
-  val effectiveDate: LocalDate? = null,
+  val effectiveDate: LocalDate,
 
   val expiryDate: LocalDate? = null,
 
   val commentText: String? = null,
 
-  val authorisedStaffId: String? = null,
+  val authorisedStaffId: Long,
 
-  val enteredStaffId: String? = null, // is a number ex 25810- different to createdBy ex EQH08G
+  val enteredStaffId: Long,
 
   val createdBy: String,
 

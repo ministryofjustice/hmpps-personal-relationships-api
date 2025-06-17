@@ -108,8 +108,8 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
       restrictionsList = listOf(
         prisonerRestrictionDetailsRequest(
           commentText = "a".repeat(241),
-          authorisedStaffId = "STAFF1_TOO_LONG",
-          enteredStaffId = "STAFF2_TOO_LONG",
+          authorisedStaffId = 12345,
+          enteredStaffId = 678905,
         ),
       ),
     )
@@ -126,8 +126,6 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
       .jsonPath("$.userMessage")
       .value { userMessage: String ->
         assertThat(userMessage).contains("restrictions[0].commentText must be less than or equal to 240 characters")
-        assertThat(userMessage).contains("restrictions[0].authorisedStaffId must be less than or equal to 10 characters")
-        assertThat(userMessage).contains("restrictions[0].enteredStaffId must be less than or equal to 10 characters")
       }
   }
 
@@ -267,8 +265,8 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
   private fun prisonerRestrictionDetailsRequest(
     restrictionType: String = "CCTV",
     commentText: String = "No visits allowed",
-    authorisedStaffId: String = "STAFF1",
-    enteredStaffId: String = "STAFF2",
+    authorisedStaffId: Long = 12345,
+    enteredStaffId: Long = 67890,
   ) = PrisonerRestrictionDetailsRequest(
     restrictionType,
     effectiveDate = LocalDate.of(2024, 1, 1),
