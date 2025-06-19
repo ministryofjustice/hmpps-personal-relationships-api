@@ -103,7 +103,7 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
   }
 
   @Test
-  fun `should not migrate prisoner restrictions when field max size validation failed`() {
+  fun `should not migrate prisoner restrictions when comment text max size validation failed`() {
     val invalidRequest = basicMigrationRequest(
       restrictionsList = listOf(
         prisonerRestrictionDetailsRequest(
@@ -198,7 +198,6 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
 
   @Test
   fun `should delete existing restrictions before migration`() {
-    // Arrange: Insert existing restrictions for the prisoner
     webTestClient.post()
       .uri("/migrate/prisoner-restrictions")
       .headers(setAuthorisationUsingCurrentUser())
@@ -223,7 +222,6 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
         assertThat(response.responseBody?.restrictionIds).hasSize(3)
       }
 
-    // Act: Migrate new restrictions for the same prisoner
     val request = basicMigrationRequest(
       prisonerNumber = "A1234ZZ",
       restrictionsList = listOf(
@@ -247,7 +245,6 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
         assertThat(response.responseBody?.restrictionIds).hasSize(2)
       }
 
-    // Assert: Only new restrictions exist
     val restrictions = prisonerRestrictionsRepository.findByPrisonerNumber("A1234ZZ")
     assertThat(restrictions).hasSize(2)
     assertThat(restrictions.map { it.restrictionType }).containsExactlyInAnyOrder("DIHCON", "NONCON")
