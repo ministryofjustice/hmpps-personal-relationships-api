@@ -23,7 +23,7 @@ class PrisonerRestrictionsMigrationService(
 
     // Validate and map incoming restrictions
     val entitiesToSave = request.restrictions.map {
-      it.restrictionType?.let { type -> validateReferenceDataExists(type) }
+      validateReferenceDataExists(it.restrictionType)
       PrisonerRestriction(
         prisonerRestrictionId = 0,
         prisonerNumber = request.prisonerNumber,
@@ -31,8 +31,7 @@ class PrisonerRestrictionsMigrationService(
         effectiveDate = it.effectiveDate,
         expiryDate = it.expiryDate,
         commentText = it.commentText,
-        authorisedStaffId = it.authorisedStaffId,
-        enteredStaffId = it.enteredStaffId,
+        authorisedUsername = it.authorisedUsername,
         createdBy = it.createdBy,
         createdTime = it.createdTime,
         updatedBy = it.updatedBy,

@@ -108,8 +108,7 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
       restrictionsList = listOf(
         prisonerRestrictionDetailsRequest(
           commentText = "a".repeat(241),
-          authorisedStaffId = 12345,
-          enteredStaffId = 678905,
+          authorisedUsername = "JSMITH",
         ),
       ),
     )
@@ -265,15 +264,13 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
   private fun prisonerRestrictionDetailsRequest(
     restrictionType: String = "CCTV",
     commentText: String = "No visits allowed",
-    authorisedStaffId: Long = 12345,
-    enteredStaffId: Long = 67890,
+    authorisedUsername: String = "JSMITH",
   ) = PrisonerRestrictionDetailsRequest(
     restrictionType,
     effectiveDate = LocalDate.of(2024, 1, 1),
     expiryDate = LocalDate.of(2024, 12, 31),
     commentText,
-    authorisedStaffId,
-    enteredStaffId,
+    authorisedUsername,
     createdBy = "user1",
     createdTime = LocalDateTime.now(),
     updatedBy = "user2",

@@ -1,5 +1,8 @@
 --
 -- The current and historical rows for prisoner restrictions
+-- authorised_username maps to authorised_staff_id in offender_restriction table in NOMIS
+-- created_by maps to entered_staff_id value in offender_restriction table in NOMIS
+-- this is the staff member who created the record
 --
 create table prisoner_restrictions
 (
@@ -10,8 +13,7 @@ create table prisoner_restrictions
     effective_date        date,
     expiry_date        date,
     comment_text        varchar(240),
-    authorised_staff_id     bigint,
-    entered_staff_id        bigint,
+    authorised_username     varchar(100) NOT NULL,
     created_by varchar(100) NOT NULL,
     created_time timestamp NOT NULL DEFAULT current_timestamp,
     updated_by varchar(100),

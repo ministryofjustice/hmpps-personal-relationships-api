@@ -34,13 +34,9 @@ data class PrisonerRestrictionDetailsRequest(
   @field:Size(max = 240, message = "commentText must be less than or equal to 240 characters")
   val commentText: String? = null,
 
-  @Schema(description = "Authorised staff id", example = "123456")
-  @field:NotNull(message = "The NOMIS authorised staff ID must be present in the request")
-  val authorisedStaffId: Long,
-
-  @Schema(description = "Entered staff id", example = "123456")
-  @field:NotNull(message = "The NOMIS entered staff ID must be present in the request")
-  val enteredStaffId: Long,
+  @Schema(description = "Authorised staff user name", example = "JSMITH")
+  @field:NotNull(message = "The NOMIS authorised staff user name must be present in the request")
+  val authorisedUsername: String,
 
   @Schema(description = "Username of the person who created the record", example = "JSMITH_ADM")
   val createdBy: String,

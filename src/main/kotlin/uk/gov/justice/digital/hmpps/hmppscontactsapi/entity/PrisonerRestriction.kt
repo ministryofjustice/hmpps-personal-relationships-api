@@ -25,9 +25,7 @@ data class PrisonerRestriction(
 
   val commentText: String? = null,
 
-  val authorisedStaffId: Long,
-
-  val enteredStaffId: Long,
+  val authorisedUsername: String,
 
   val createdBy: String,
 
