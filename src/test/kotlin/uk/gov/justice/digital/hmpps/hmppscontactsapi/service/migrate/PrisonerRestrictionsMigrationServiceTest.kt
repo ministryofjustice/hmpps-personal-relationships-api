@@ -65,14 +65,14 @@ class PrisonerRestrictionsMigrationServiceTest {
       updatedBy = "user2",
       updatedTime = now.plusDays(1),
     )
-    whenever(prisonerRestrictionsRepository.saveAll(any<List<PrisonerRestriction>>())).thenReturn(listOf(savedEntity))
+    whenever(prisonerRestrictionsRepository.saveAllAndFlush(any<List<PrisonerRestriction>>())).thenReturn(listOf(savedEntity))
 
     val captor = argumentCaptor<List<PrisonerRestriction>>()
 
     val response = migrationService.migratePrisonerRestrictions(request)
 
     verify(prisonerRestrictionsRepository).deleteByPrisonerNumber(prisonerNumber)
-    verify(prisonerRestrictionsRepository).saveAll(captor.capture())
+    verify(prisonerRestrictionsRepository).saveAllAndFlush(captor.capture())
     assertThat(captor.firstValue).hasSize(1)
     assertThat(response).isEqualTo(
       PrisonerRestrictionsMigrationResponse(
