@@ -14,6 +14,7 @@ create table prisoner_restrictions
     expiry_date        date,
     comment_text        varchar(240),
     authorised_username     varchar(100) NOT NULL,
+    current_term boolean NOT NULL DEFAULT true, -- True if it applies to latest booking sequence 1
     created_by varchar(100) NOT NULL,
     created_time timestamp NOT NULL DEFAULT current_timestamp,
     updated_by varchar(100),

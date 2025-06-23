@@ -38,6 +38,9 @@ data class PrisonerRestrictionDetailsRequest(
   @field:NotNull(message = "The NOMIS authorised staff user name must be present in the request")
   val authorisedUsername: String,
 
+  @Schema(description = "True if this restriction applies to the latest or current term in prison, false if a previous term", example = "true")
+  val currentTerm: Boolean,
+
   @Schema(description = "Username of the person who created the record", example = "JSMITH_ADM")
   val createdBy: String,
 

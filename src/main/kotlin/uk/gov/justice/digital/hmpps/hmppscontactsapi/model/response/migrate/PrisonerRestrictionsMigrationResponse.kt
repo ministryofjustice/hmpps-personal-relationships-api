@@ -8,5 +8,5 @@ data class PrisonerRestrictionsMigrationResponse(
   val prisonerNumber: String,
 
   @Schema(description = "IDs of the migrated restriction records")
-  val restrictionIds: List<Long>,
+  val prisonerRestrictionsIds: List<Long>,
 )

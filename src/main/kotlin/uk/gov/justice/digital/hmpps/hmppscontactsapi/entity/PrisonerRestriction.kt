@@ -27,6 +27,8 @@ data class PrisonerRestriction(
 
   val authorisedUsername: String,
 
+  val currentTerm: Boolean,
+
   val createdBy: String,
 
   val createdTime: LocalDateTime,

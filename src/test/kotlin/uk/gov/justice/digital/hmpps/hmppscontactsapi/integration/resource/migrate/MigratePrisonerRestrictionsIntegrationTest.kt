@@ -87,7 +87,7 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
       .expectBody(PrisonerRestrictionsMigrationResponse::class.java)
       .consumeWith { response ->
         assertThat(response.responseBody?.prisonerNumber).isEqualTo("A1234ZZ")
-        assertThat(response.responseBody?.restrictionIds).isNotEmpty
+        assertThat(response.responseBody?.prisonerRestrictionsIds).isNotEmpty
       }
 
     val restrictions = prisonerRestrictionsRepository.findByPrisonerNumber("A1234ZZ")
@@ -219,7 +219,7 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
       .expectBody(PrisonerRestrictionsMigrationResponse::class.java)
       .consumeWith { response ->
         assertThat(response.responseBody?.prisonerNumber).isEqualTo("A1234ZZ")
-        assertThat(response.responseBody?.restrictionIds).hasSize(3)
+        assertThat(response.responseBody?.prisonerRestrictionsIds).hasSize(3)
       }
 
     val request = basicMigrationRequest(
@@ -242,7 +242,7 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
       .expectBody(PrisonerRestrictionsMigrationResponse::class.java)
       .consumeWith { response ->
         assertThat(response.responseBody?.prisonerNumber).isEqualTo("A1234ZZ")
-        assertThat(response.responseBody?.restrictionIds).hasSize(2)
+        assertThat(response.responseBody?.prisonerRestrictionsIds).hasSize(2)
       }
 
     val restrictions = prisonerRestrictionsRepository.findByPrisonerNumber("A1234ZZ")
@@ -268,6 +268,7 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
     expiryDate = LocalDate.of(2024, 12, 31),
     commentText,
     authorisedUsername,
+    currentTerm = true,
     createdBy = "user1",
     createdTime = LocalDateTime.now(),
     updatedBy = "user2",

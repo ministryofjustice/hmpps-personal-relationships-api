@@ -32,6 +32,7 @@ class PrisonerRestrictionsMigrationService(
         expiryDate = it.expiryDate,
         commentText = it.commentText,
         authorisedUsername = it.authorisedUsername,
+        currentTerm = it.currentTerm,
         createdBy = it.createdBy,
         createdTime = it.createdTime,
         updatedBy = it.updatedBy,
@@ -40,11 +41,11 @@ class PrisonerRestrictionsMigrationService(
     }
 
     // Save all new restrictions
-    val savedEntities = prisonerRestrictionsRepository.saveAll(entitiesToSave)
+    val savedEntities = prisonerRestrictionsRepository.saveAllAndFlush(entitiesToSave)
 
     return PrisonerRestrictionsMigrationResponse(
       prisonerNumber = request.prisonerNumber,
-      restrictionIds = savedEntities.map { it.prisonerRestrictionId },
+      prisonerRestrictionsIds = savedEntities.map { it.prisonerRestrictionId },
     )
   }
 

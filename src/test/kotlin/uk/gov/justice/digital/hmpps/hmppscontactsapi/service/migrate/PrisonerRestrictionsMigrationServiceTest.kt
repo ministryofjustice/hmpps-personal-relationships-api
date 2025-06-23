@@ -41,6 +41,7 @@ class PrisonerRestrictionsMigrationServiceTest {
           expiryDate = LocalDate.of(2024, 12, 31),
           commentText = "No visits allowed",
           authorisedUsername = "JSMITH",
+          currentTerm = true,
           createdBy = "user1",
           createdTime = now,
           updatedBy = "user2",
@@ -58,6 +59,7 @@ class PrisonerRestrictionsMigrationServiceTest {
       expiryDate = LocalDate.of(2024, 12, 31),
       commentText = "No visits allowed",
       authorisedUsername = "JSMITH",
+      currentTerm = true,
       createdBy = "user1",
       createdTime = now,
       updatedBy = "user2",
@@ -75,7 +77,7 @@ class PrisonerRestrictionsMigrationServiceTest {
     assertThat(response).isEqualTo(
       PrisonerRestrictionsMigrationResponse(
         prisonerNumber = prisonerNumber,
-        restrictionIds = listOf(99L),
+        prisonerRestrictionsIds = listOf(99L),
       ),
     )
   }
@@ -91,6 +93,7 @@ class PrisonerRestrictionsMigrationServiceTest {
           expiryDate = LocalDate.of(2024, 12, 31),
           commentText = "Invalid restriction",
           authorisedUsername = "JSMITH",
+          currentTerm = true,
           createdBy = "user1",
           createdTime = now,
           updatedBy = "user2",
