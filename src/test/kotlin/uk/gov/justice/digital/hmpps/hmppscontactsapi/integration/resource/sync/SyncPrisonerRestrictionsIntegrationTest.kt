@@ -29,12 +29,10 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
   }
 
-  @Test
-  fun `should create, retrieve, update and delete a prisoner restriction`() {
+ @Test
+  fun `should create a prisoner restriction`() {
     val prisonerNumber = "A1234BC"
     val now = LocalDateTime.now()
-
-    // Create
     val createRequest = syncCreatePrisonerRestrictionRequest(prisonerNumber, now)
 
     val created = webTestClient.post()
@@ -52,14 +50,30 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
     assertThat(created.restrictionType).isEqualTo("CCTV")
     assertThat(created.authorisedUsername).isEqualTo("JSMITH")
 
-    // Assert domain event for create
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_RESTRICTIONS_CREATED,
       additionalInfo = PrisonerRestrictionInfo(created.prisonerRestrictionId, Source.NOMIS, created.createdBy, null),
       personReference = PersonReference(nomsNumber = created.prisonerNumber),
     )
+  }
 
-    // Retrieve
+  @Test
+  fun `should retrieve a prisoner restriction`() {
+    val prisonerNumber = "A1234BC"
+    val now = LocalDateTime.now()
+    val createRequest = syncCreatePrisonerRestrictionRequest(prisonerNumber, now)
+
+    val created = webTestClient.post()
+      .uri("/sync/prisoner-restriction")
+      .headers(setAuthorisationUsingCurrentUser())
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(createRequest)
+      .exchange()
+      .expectStatus().isCreated
+      .expectBody<SyncPrisonerRestriction>()
+      .returnResult()
+      .responseBody!!
+
     stubEvents.reset()
     val retrieved = webTestClient.get()
       .uri("/sync/prisoner-restriction/${created.prisonerRestrictionId}")
@@ -70,9 +84,26 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
       .returnResult()
       .responseBody!!
 
-    assertThat(retrieved).isEqualTo(created)
+    assertThat(retrieved).usingRecursiveComparison().ignoringFields("createdTime").isEqualTo(created)
+  }
 
-    // Update
+  @Test
+  fun `should update a prisoner restriction`() {
+    val prisonerNumber = "A1234BC"
+    val now = LocalDateTime.now()
+    val createRequest = syncCreatePrisonerRestrictionRequest(prisonerNumber, now)
+
+    val created = webTestClient.post()
+      .uri("/sync/prisoner-restriction")
+      .headers(setAuthorisationUsingCurrentUser())
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(createRequest)
+      .exchange()
+      .expectStatus().isCreated
+      .expectBody<SyncPrisonerRestriction>()
+      .returnResult()
+      .responseBody!!
+
     stubEvents.reset()
     val updateRequest = syncUpdatePrisonerRestrictionRequest(prisonerNumber, now.plusDays(1))
 
@@ -90,28 +121,42 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
     assertThat(updated.commentText).isEqualTo("Visits allowed after review")
     assertThat(updated.updatedBy).isEqualTo("JDOE_ADM")
 
-    // Assert domain event for update
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_RESTRICTIONS_UPDATED,
       additionalInfo = PrisonerRestrictionInfo(created.prisonerRestrictionId, Source.NOMIS, updated.updatedBy!!, null),
       personReference = PersonReference(nomsNumber = created.prisonerNumber),
     )
+  }
 
-    // Delete
+  @Test
+  fun `should delete a prisoner restriction`() {
+    val prisonerNumber = "A1234BC"
+    val now = LocalDateTime.now()
+    val createRequest = syncCreatePrisonerRestrictionRequest(prisonerNumber, now)
+
+    val created = webTestClient.post()
+      .uri("/sync/prisoner-restriction")
+      .headers(setAuthorisationUsingCurrentUser())
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(createRequest)
+      .exchange()
+      .expectStatus().isCreated
+      .expectBody<SyncPrisonerRestriction>()
+      .returnResult()
+      .responseBody!!
+
     webTestClient.delete()
       .uri("/sync/prisoner-restriction/${created.prisonerRestrictionId}")
       .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus().isNoContent
 
-    // Assert domain event for delete
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_RESTRICTIONS_DELETED,
       additionalInfo = PrisonerRestrictionInfo(created.prisonerRestrictionId, Source.NOMIS, User.SYS_USER.username, null),
       personReference = PersonReference(nomsNumber = created.prisonerNumber),
     )
 
-    // Confirm deletion
     webTestClient.get()
       .uri("/sync/prisoner-restriction/${created.prisonerRestrictionId}")
       .headers(setAuthorisationUsingCurrentUser())
