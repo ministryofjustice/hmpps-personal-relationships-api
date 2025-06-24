@@ -42,31 +42,5 @@ class PrisonerMergeFacade(
           )
         }
       }
-
-    prisonerMergeService.mergePrisonerRestrictions(keepingPrisonerNumber, removedPrisonerNo)
-      .also {
-        if (it.wasCreated) {
-          // send create events for merged restrictions - created as new records
-          it.keepingPrisonerRestrictionIds.forEach { restrictionId ->
-            outboundEventsService.send(
-              outboundEvent = OutboundEvent.PRISONER_RESTRICTIONS_CREATED,
-              identifier = restrictionId,
-              noms = keepingPrisonerNumber,
-              source = Source.DPS,
-              user = User.SYS_USER,
-            )
-          }
-          // send delete events for removed restrictions
-          it.removingPrisonerRestrictionIds.forEach { restrictionId ->
-            outboundEventsService.send(
-              outboundEvent = OutboundEvent.PRISONER_RESTRICTIONS_DELETED,
-              identifier = restrictionId,
-              noms = keepingPrisonerNumber,
-              source = Source.DPS,
-              user = User.SYS_USER,
-            )
-          }
-        }
-      }
   }
 }
