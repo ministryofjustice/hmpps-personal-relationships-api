@@ -230,6 +230,7 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
           "effectiveDate": "2024-06-11",
           "expiryDate": "2024-12-31",
           "commentText": "No visits allowed",
+          "currentTerm": true,
           "updatedBy": null,
           "updatedTime": null
         }
@@ -245,6 +246,7 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
           "expiryDate": "2024-12-31",
           "commentText": "No visits allowed",
           "authorisedUsername": 654321,
+          "currentTerm": true,
           "updatedBy": null,
           "updatedTime": null
         }
@@ -260,6 +262,7 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
           "effectiveDate": "2024-06-11",
           "expiryDate": "2024-12-31",
           "commentText": "No visits allowed",
+          "currentTerm": true,
           "updatedBy": null,
           "updatedTime": null
         }
