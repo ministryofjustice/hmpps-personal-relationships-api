@@ -29,7 +29,7 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
   }
 
- @Test
+  @Test
   fun `should create a prisoner restriction`() {
     val prisonerNumber = "A1234BC"
     val now = LocalDateTime.now()
