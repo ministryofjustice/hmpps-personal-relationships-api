@@ -22,7 +22,7 @@ class SyncPrisonerRestrictionFacade(
     prisonerRestrictionService.deletePrisonerRestriction(prisonerRestrictionId)
       .also {
         outboundEventsService.send(
-          outboundEvent = OutboundEvent.PRISONER_RESTRICTIONS_DELETED,
+          outboundEvent = OutboundEvent.PRISONER_RESTRICTION_DELETED,
           identifier = prisonerRestrictionId,
           noms = it.prisonerNumber,
           source = Source.NOMIS,
@@ -33,7 +33,7 @@ class SyncPrisonerRestrictionFacade(
 
   fun createPrisonerRestriction(request: SyncCreatePrisonerRestrictionRequest) = prisonerRestrictionService.createPrisonerRestriction(request).also {
     outboundEventsService.send(
-      outboundEvent = OutboundEvent.PRISONER_RESTRICTIONS_CREATED,
+      outboundEvent = OutboundEvent.PRISONER_RESTRICTION_CREATED,
       identifier = it.prisonerRestrictionId,
       noms = it.prisonerNumber,
       source = Source.NOMIS,
@@ -46,7 +46,7 @@ class SyncPrisonerRestrictionFacade(
     request: SyncUpdatePrisonerRestrictionRequest,
   ) = prisonerRestrictionService.updatePrisonerRestriction(prisonerRestrictionId, request).also {
     outboundEventsService.send(
-      outboundEvent = OutboundEvent.PRISONER_RESTRICTIONS_UPDATED,
+      outboundEvent = OutboundEvent.PRISONER_RESTRICTION_UPDATED,
       identifier = it.prisonerRestrictionId,
       noms = it.prisonerNumber,
       source = Source.NOMIS,

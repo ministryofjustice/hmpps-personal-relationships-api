@@ -282,7 +282,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A domestic status record has been updated",
     )
   },
-  PRISONER_RESTRICTIONS_CREATED("personal-relationships-api.prisoner-restrictions.created") {
+  PRISONER_RESTRICTION_CREATED("personal-relationships-api.prisoner-restriction.created") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -290,7 +290,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A prisoner restriction has been created",
     )
   },
-  PRISONER_RESTRICTIONS_UPDATED("personal-relationships-api.prisoner-restrictions.updated") {
+  PRISONER_RESTRICTION_UPDATED("personal-relationships-api.prisoner-restriction.updated") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,
@@ -298,7 +298,7 @@ enum class OutboundEvent(val eventType: String) {
       description = "A prisoner restriction has been updated",
     )
   },
-  PRISONER_RESTRICTIONS_DELETED("personal-relationships-api.prisoner-restrictions.deleted") {
+  PRISONER_RESTRICTION_DELETED("personal-relationships-api.prisoner-restriction.deleted") {
     override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
       eventType = eventType,
       additionalInformation = additionalInformation,

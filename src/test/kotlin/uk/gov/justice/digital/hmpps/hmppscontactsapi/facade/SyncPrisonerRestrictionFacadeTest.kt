@@ -50,7 +50,7 @@ class SyncPrisonerRestrictionFacadeTest {
 
     assertThat(result).isEqualTo(restriction)
     verify(outboundEventsService).send(
-      outboundEvent = OutboundEvent.PRISONER_RESTRICTIONS_CREATED,
+      outboundEvent = OutboundEvent.PRISONER_RESTRICTION_CREATED,
       identifier = restriction.prisonerRestrictionId,
       noms = restriction.prisonerNumber,
       source = Source.NOMIS,
@@ -64,16 +64,16 @@ class SyncPrisonerRestrictionFacadeTest {
     val restriction = sampleRestriction()
     whenever(prisonerRestrictionsService.updatePrisonerRestriction(1L, request)).thenReturn(restriction)
 
-    whenever(userUtil.userOrDefault(request.updatedBy)).thenReturn(User(request.updatedBy!!))
+    whenever(userUtil.userOrDefault(request.updatedBy)).thenReturn(User(request.updatedBy))
     val result = facade.updatePrisonerRestriction(1L, request)
 
     assertThat(result).isEqualTo(restriction)
     verify(outboundEventsService).send(
-      outboundEvent = OutboundEvent.PRISONER_RESTRICTIONS_UPDATED,
+      outboundEvent = OutboundEvent.PRISONER_RESTRICTION_UPDATED,
       identifier = restriction.prisonerRestrictionId,
       noms = restriction.prisonerNumber,
       source = Source.NOMIS,
-      user = User(request.updatedBy!!),
+      user = User(request.updatedBy),
     )
   }
 
@@ -85,7 +85,7 @@ class SyncPrisonerRestrictionFacadeTest {
     facade.deletePrisonerRestriction(1L)
 
     verify(outboundEventsService).send(
-      outboundEvent = OutboundEvent.PRISONER_RESTRICTIONS_DELETED,
+      outboundEvent = OutboundEvent.PRISONER_RESTRICTION_DELETED,
       identifier = restriction.prisonerRestrictionId,
       noms = restriction.prisonerNumber,
       source = Source.NOMIS,

@@ -140,9 +140,9 @@ class OutboundEventsService(
           )
         }
 
-        OutboundEvent.PRISONER_RESTRICTIONS_CREATED,
-        OutboundEvent.PRISONER_RESTRICTIONS_UPDATED,
-        OutboundEvent.PRISONER_RESTRICTIONS_DELETED,
+        OutboundEvent.PRISONER_RESTRICTION_CREATED,
+        OutboundEvent.PRISONER_RESTRICTION_UPDATED,
+        OutboundEvent.PRISONER_RESTRICTION_DELETED,
         -> {
           sendSafely(
             outboundEvent,

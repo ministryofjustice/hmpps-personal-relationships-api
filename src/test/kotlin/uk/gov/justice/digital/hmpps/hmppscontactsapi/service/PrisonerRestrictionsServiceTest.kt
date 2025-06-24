@@ -55,7 +55,7 @@ class PrisonerRestrictionsServiceTest {
     whenever(prisonerRestrictionsRepository.findById(1L)).thenReturn(Optional.of(entity))
     doNothing().whenever(prisonerRestrictionsRepository).deleteById(1L)
 
-    var response = service.deletePrisonerRestriction(1L)
+    val response = service.deletePrisonerRestriction(1L)
 
     verify(prisonerRestrictionsRepository).deleteById(1L)
     assertThat(response).usingRecursiveComparison().isEqualTo(entity)
@@ -164,7 +164,7 @@ class PrisonerRestrictionsServiceTest {
     commentText = "No visits allowed",
     authorisedUsername = "JSMITH",
     currentTerm = true,
-    updatedBy = null,
+    updatedBy = "PRISON_ADM",
     updatedTime = null,
   )
 

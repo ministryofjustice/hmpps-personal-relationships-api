@@ -54,7 +54,6 @@ class PrisonerRestrictionsService(
     validateReferenceDataExists(request.restrictionType)
 
     val changed = entity.copy(
-      prisonerNumber = request.prisonerNumber,
       restrictionType = request.restrictionType,
       effectiveDate = request.effectiveDate,
       expiryDate = request.expiryDate,

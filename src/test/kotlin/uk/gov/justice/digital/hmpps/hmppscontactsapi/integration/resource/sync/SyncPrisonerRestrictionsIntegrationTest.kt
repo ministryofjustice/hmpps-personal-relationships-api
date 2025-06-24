@@ -51,7 +51,7 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
     assertThat(created.authorisedUsername).isEqualTo("JSMITH")
 
     stubEvents.assertHasEvent(
-      event = OutboundEvent.PRISONER_RESTRICTIONS_CREATED,
+      event = OutboundEvent.PRISONER_RESTRICTION_CREATED,
       additionalInfo = PrisonerRestrictionInfo(created.prisonerRestrictionId, Source.NOMIS, created.createdBy, null),
       personReference = PersonReference(nomsNumber = created.prisonerNumber),
     )
@@ -122,7 +122,7 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
     assertThat(updated.updatedBy).isEqualTo("JDOE_ADM")
 
     stubEvents.assertHasEvent(
-      event = OutboundEvent.PRISONER_RESTRICTIONS_UPDATED,
+      event = OutboundEvent.PRISONER_RESTRICTION_UPDATED,
       additionalInfo = PrisonerRestrictionInfo(created.prisonerRestrictionId, Source.NOMIS, updated.updatedBy!!, null),
       personReference = PersonReference(nomsNumber = created.prisonerNumber),
     )
@@ -152,7 +152,7 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
       .expectStatus().isNoContent
 
     stubEvents.assertHasEvent(
-      event = OutboundEvent.PRISONER_RESTRICTIONS_DELETED,
+      event = OutboundEvent.PRISONER_RESTRICTION_DELETED,
       additionalInfo = PrisonerRestrictionInfo(created.prisonerRestrictionId, Source.NOMIS, User.SYS_USER.username, null),
       personReference = PersonReference(nomsNumber = created.prisonerNumber),
     )
@@ -275,22 +275,6 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
           "effectiveDate": "2024-06-11",
           "expiryDate": "2024-12-31",
           "commentText": "No visits allowed",
-          "currentTerm": true,
-          "updatedBy": null,
-          "updatedTime": null
-        }
-        """.trimIndent(),
-      ),
-      Arguments.of(
-        "Validation failure(s): updatedBy must not be blank",
-        """
-        {
-          "prisonerNumber": "A1234BC",
-          "restrictionType": "CCTV",
-          "effectiveDate": "2024-06-11",
-          "expiryDate": "2024-12-31",
-          "commentText": "No visits allowed",
-          "authorisedUsername": 654321,
           "currentTerm": true,
           "updatedBy": null,
           "updatedTime": null

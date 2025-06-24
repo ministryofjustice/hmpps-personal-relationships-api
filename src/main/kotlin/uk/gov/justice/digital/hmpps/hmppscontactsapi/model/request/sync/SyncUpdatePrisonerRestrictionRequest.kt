@@ -25,7 +25,7 @@ data class SyncUpdatePrisonerRestrictionRequest(
   val expiryDate: LocalDate? = null,
 
   @Schema(description = "True if this restriction applies to the latest or current term in prison, false if a previous term", example = "true")
-  val currentTerm: Boolean,
+  val currentTerm: Boolean? = true,
 
   @Schema(description = "Comment text", example = "No visits allowed")
   @field:Size(max = 240)
@@ -36,8 +36,7 @@ data class SyncUpdatePrisonerRestrictionRequest(
   val authorisedUsername: String,
 
   @Schema(description = "Username of the person who last updated the record", example = "JDOE_ADM")
-  @field:NotBlank
-  val updatedBy: String? = null,
+  val updatedBy: String,
 
   @Schema(description = "Timestamp when the record was last updated")
   val updatedTime: LocalDateTime? = null,
