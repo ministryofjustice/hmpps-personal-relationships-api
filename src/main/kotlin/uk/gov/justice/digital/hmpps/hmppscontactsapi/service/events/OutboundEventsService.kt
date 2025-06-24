@@ -140,6 +140,17 @@ class OutboundEventsService(
           )
         }
 
+        OutboundEvent.PRISONER_RESTRICTIONS_CREATED,
+        OutboundEvent.PRISONER_RESTRICTIONS_UPDATED,
+        OutboundEvent.PRISONER_RESTRICTIONS_DELETED,
+        -> {
+          sendSafely(
+            outboundEvent,
+            PrisonerRestrictionInfo(identifier, source, user.username, user.activeCaseLoadId),
+            PersonReference(noms),
+          )
+        }
+
         OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
         OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
         -> {

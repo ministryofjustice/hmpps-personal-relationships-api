@@ -282,6 +282,30 @@ enum class OutboundEvent(val eventType: String) {
       description = "A domestic status record has been updated",
     )
   },
+  PRISONER_RESTRICTIONS_CREATED("personal-relationships-api.prisoner-restrictions.created") {
+    override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
+      eventType = eventType,
+      additionalInformation = additionalInformation,
+      personReference = personReference,
+      description = "A prisoner restriction has been created",
+    )
+  },
+  PRISONER_RESTRICTIONS_UPDATED("personal-relationships-api.prisoner-restrictions.updated") {
+    override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
+      eventType = eventType,
+      additionalInformation = additionalInformation,
+      personReference = personReference,
+      description = "A prisoner restriction has been updated",
+    )
+  },
+  PRISONER_RESTRICTIONS_DELETED("personal-relationships-api.prisoner-restrictions.deleted") {
+    override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
+      eventType = eventType,
+      additionalInformation = additionalInformation,
+      personReference = personReference,
+      description = "A prisoner restriction has been deleted",
+    )
+  },
   ;
 
   abstract fun event(
@@ -336,6 +360,7 @@ data class ContactRestrictionInfo(val contactRestrictionId: Long, override val s
 data class PrisonerContactInfo(val prisonerContactId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseLoadId: String?) : AdditionalInformation(source, username, activeCaseLoadId)
 data class PrisonerContactRestrictionInfo(val prisonerContactRestrictionId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseLoadId: String?) : AdditionalInformation(source, username, activeCaseLoadId)
 data class EmploymentInfo(val employmentId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseLoadId: String?) : AdditionalInformation(source, username, activeCaseLoadId)
+data class PrisonerRestrictionInfo(val prisonerRestrictionId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseLoadId: String?) : AdditionalInformation(source, username, activeCaseLoadId)
 data class PrisonerDomesticStatus(val domesticStatusId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseLoadId: String?) : AdditionalInformation(source, username, activeCaseLoadId)
 data class PrisonerNumberOfChildren(val prisonerNumberOfChildrenId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseLoadId: String?) : AdditionalInformation(source, username, activeCaseLoadId)
 
