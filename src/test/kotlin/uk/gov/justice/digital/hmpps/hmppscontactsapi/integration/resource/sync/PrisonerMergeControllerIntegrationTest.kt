@@ -9,17 +9,23 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegra
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.DomesticStatusDetailsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerNumberOfChildrenRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.NumberOfChildrenDetailsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.PrisonerRestrictionDetailsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerRestrictionsMigrationResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerNumberOfChildrenResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerDomesticStatusRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerNumberOfChildrenRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerDomesticStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerNumberOfChildren
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerRestrictionsChangedInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
@@ -35,16 +41,20 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
   @Autowired
   private lateinit var domesticStatusRepository: PrisonerDomesticStatusRepository
 
+  @Autowired
+  private lateinit var prisonerRestrictionRepository: PrisonerRestrictionsRepository
+
   @BeforeEach
   fun setUp() {
     stubEvents.reset()
     numberOfChildrenRepository.deleteAll()
     domesticStatusRepository.deleteAll()
+    prisonerRestrictionRepository.deleteAll()
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
   }
 
   @Test
-  fun `should return unauthorized for a merge if no token provided`() {
+  fun `should return unauthorized when no token provided for merge`() {
     webTestClient.put()
       .uri(MERGE_URI)
       .accept(MediaType.APPLICATION_JSON)
@@ -53,7 +63,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
   }
 
   @Test
-  fun `should return forbidden for merge without an authorised role on the token`() {
+  fun `should return forbidden when user lacks authorised role for merge`() {
     setCurrentUser(StubUser.USER_WITH_NO_ROLES)
     webTestClient.put()
       .uri(MERGE_URI)
@@ -66,36 +76,23 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
   @Test
   fun `should not merge when remove prisoner has no records`() {
     val expectedNumberOfChildren = "4"
-    createNumberOfChildrenRecords(numberOfChildrenRequest(prisonerNumber = KEEP_PRISONER, currentValue = expectedNumberOfChildren, historyValues = listOf("3")))
+    createNumberOfChildrenRecords(numberOfChildrenRequest(KEEP_PRISONER, expectedNumberOfChildren, listOf("3")))
     val expectedDomesticStatus = "M"
-    createDomesticStatusRecords(domesticStatusRequest(prisonerNumber = KEEP_PRISONER, currentValue = expectedDomesticStatus, historyValues = listOf("D")))
+    createDomesticStatusRecords(domesticStatusRequest(KEEP_PRISONER, expectedDomesticStatus, listOf("D")))
 
-    webTestClient.put()
-      .uri("/merge/keep/${KEEP_PRISONER}/remove/$REMOVE_PRISONER")
-      .headers(setAuthorisationUsingCurrentUser())
-      .accept(MediaType.APPLICATION_JSON)
-      .exchange()
-      .expectStatus().isOk
+    performMerge()
 
-    assertDomesticStatusPresent(KEEP_PRISONER, expectedDomesticStatus)
-    assertNumberOfChildrenPresent(KEEP_PRISONER, expectedNumberOfChildren)
-    assertDomesticStatusNotPresent(REMOVE_PRISONER)
-    assertNumberOfChildrenNotPresent(REMOVE_PRISONER)
+    assertPrisonerMerge(expectedNumberOfChildren, expectedDomesticStatus)
   }
 
   @Test
   fun `should not merge when keep prisoner has no records`() {
     val expectedNumberOfChildren = "2"
     val expectedDomesticStatus = "S"
-    createNumberOfChildrenRecords(numberOfChildrenRequest(prisonerNumber = REMOVE_PRISONER, currentValue = expectedNumberOfChildren, historyValues = listOf("1")))
-    createDomesticStatusRecords(domesticStatusRequest(prisonerNumber = REMOVE_PRISONER, currentValue = expectedDomesticStatus, historyValues = listOf("C")))
+    createNumberOfChildrenRecords(numberOfChildrenRequest(REMOVE_PRISONER, expectedNumberOfChildren, listOf("1")))
+    createDomesticStatusRecords(domesticStatusRequest(REMOVE_PRISONER, expectedDomesticStatus, listOf("C")))
 
-    webTestClient.put()
-      .uri(MERGE_URI)
-      .headers(setAuthorisationUsingCurrentUser())
-      .accept(MediaType.APPLICATION_JSON)
-      .exchange()
-      .expectStatus().isOk
+    performMerge()
 
     assertDomesticStatusPresent(REMOVE_PRISONER, expectedDomesticStatus)
     assertNumberOfChildrenPresent(REMOVE_PRISONER, expectedNumberOfChildren)
@@ -153,12 +150,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
       ),
     )
 
-    webTestClient.put()
-      .uri(MERGE_URI)
-      .headers(setAuthorisationUsingCurrentUser())
-      .accept(MediaType.APPLICATION_JSON)
-      .exchange()
-      .expectStatus().isOk
+    performMerge()
 
     val retainedDomesticStatus = assertDomesticStatusPresent(KEEP_PRISONER, keepingDomesticStatus)
     assertDomesticStatusNotPresent(REMOVE_PRISONER)
@@ -228,20 +220,11 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
       ),
     )
 
-    webTestClient.put()
-      .uri(MERGE_URI)
-      .headers(setAuthorisationUsingCurrentUser())
-      .accept(MediaType.APPLICATION_JSON)
-      .exchange()
-      .expectStatus().isOk
+    performMerge()
 
     assertPrisonerMerge(expectedNumberOfChildren, expectedDomesticStatus)
-    stubEvents.assertHasNoEvents(
-      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-    )
-    stubEvents.assertHasNoEvents(
-      event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-    )
+    stubEvents.assertHasNoEvents(OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED)
+    stubEvents.assertHasNoEvents(OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED)
   }
 
   @Test
@@ -249,24 +232,51 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
     val expectedNumberOfChildren = "4"
     val expectedDomesticStatus = "M"
 
-    createNumberOfChildrenRecords(numberOfChildrenRequest(prisonerNumber = KEEP_PRISONER, currentValue = expectedNumberOfChildren, historyValues = listOf("3")))
-    createDomesticStatusRecords(domesticStatusRequest(prisonerNumber = KEEP_PRISONER, currentValue = expectedDomesticStatus, historyValues = listOf("D")))
+    createNumberOfChildrenRecords(numberOfChildrenRequest(KEEP_PRISONER, expectedNumberOfChildren, listOf("3")))
+    createDomesticStatusRecords(domesticStatusRequest(KEEP_PRISONER, expectedDomesticStatus, listOf("D")))
 
+    performMerge()
+
+    assertPrisonerMerge(expectedNumberOfChildren, expectedDomesticStatus)
+    stubEvents.assertHasNoEvents(OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED)
+    stubEvents.assertHasNoEvents(OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED)
+  }
+
+  @Test
+  fun `should fire prisoner restrictions domain event when restrictions are merged`() {
+    migratePrisonerRestrictions(KEEP_PRISONER)
+    val removingPrisonerResponse = migratePrisonerRestrictions(REMOVE_PRISONER)
+
+    performMerge()
+
+    assertPrisonerRestrictionsPresent()
+
+    // The migrated restriction from the removing prisoner will now belong to the keeping prisoner and will have an incremented ID
+    val actualKeepingRestrictionIds = removingPrisonerResponse.prisonerRestrictionsIds.map { it + 1 }
+    val actualRemovedRestrictionIds = removingPrisonerResponse.prisonerRestrictionsIds
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.PRISONER_RESTRICTIONS_CHANGED,
+      additionalInfo = PrisonerRestrictionsChangedInfo(
+        addedRestrictionIds = actualKeepingRestrictionIds,
+        removedRestrictionIds = actualRemovedRestrictionIds,
+        source = Source.NOMIS,
+        username = "SYS",
+        activeCaseLoadId = null,
+      ),
+      personReference = PersonReference(nomsNumber = KEEP_PRISONER),
+    )
+  }
+
+  // --- Helper methods below ---
+
+  private fun performMerge() {
     webTestClient.put()
       .uri(MERGE_URI)
       .headers(setAuthorisationUsingCurrentUser())
       .accept(MediaType.APPLICATION_JSON)
       .exchange()
       .expectStatus().isOk
-
-    assertPrisonerMerge(expectedNumberOfChildren, expectedDomesticStatus)
-
-    stubEvents.assertHasNoEvents(
-      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-    )
-    stubEvents.assertHasNoEvents(
-      event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-    )
   }
 
   private fun assertPrisonerMerge(
@@ -275,14 +285,13 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
   ) {
     assertDomesticStatusPresent(KEEP_PRISONER, expectedDomesticStatus)
     assertDomesticStatusNotPresent(REMOVE_PRISONER)
-
     assertNumberOfChildrenPresent(KEEP_PRISONER, expectedNumberOfChildren)
     assertNumberOfChildrenNotPresent(REMOVE_PRISONER)
   }
 
-  private fun assertDomesticStatusNotPresent(removingPrisonerNumber: String) {
+  private fun assertDomesticStatusNotPresent(prisonerNumber: String) {
     webTestClient.get()
-      .uri("/sync/$removingPrisonerNumber/domestic-status")
+      .uri("/sync/$prisonerNumber/domestic-status")
       .accept(MediaType.APPLICATION_JSON)
       .headers(setAuthorisationUsingCurrentUser())
       .exchange()
@@ -290,9 +299,9 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
       .isNotFound
   }
 
-  private fun assertDomesticStatusPresent(keepingPrisonerNumber: String, expectedValue: String): SyncPrisonerDomesticStatusResponse {
+  private fun assertDomesticStatusPresent(prisonerNumber: String, expectedValue: String): SyncPrisonerDomesticStatusResponse {
     val retainedDomesticStatus = webTestClient.get()
-      .uri("/sync/$keepingPrisonerNumber/domestic-status")
+      .uri("/sync/$prisonerNumber/domestic-status")
       .accept(MediaType.APPLICATION_JSON)
       .headers(setAuthorisationUsingCurrentUser())
       .exchange()
@@ -310,9 +319,36 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
     return retainedDomesticStatus
   }
 
-  private fun assertNumberOfChildrenNotPresent(removingPrisonerNumber: String) {
+  private fun assertPrisonerRestrictionsPresent() {
+    // to be replaced with get method once the endpoint is available
+    val prisonerRestrictions = prisonerRestrictionRepository.findAll()
+    assertThat(prisonerRestrictions).hasSize(2)
+    assertThat(prisonerRestrictions[0].restrictionType).isEqualTo("CCTV")
+    assertThat(prisonerRestrictions[0].commentText).isEqualTo("No visits allowed")
+    assertThat(prisonerRestrictions[0].authorisedUsername).isEqualTo("JSMITH")
+    assertThat(prisonerRestrictions[0].createdBy).isEqualTo("user1")
+    assertThat(prisonerRestrictions[0].createdTime).isNotNull
+    assertThat(prisonerRestrictions[0].updatedBy).isEqualTo("user2")
+    assertThat(prisonerRestrictions[0].updatedTime).isNotNull
+    assertThat(prisonerRestrictions[0].currentTerm).isTrue
+    assertThat(prisonerRestrictions[0].effectiveDate).isEqualTo(LocalDate.of(2024, 1, 1))
+    assertThat(prisonerRestrictions[0].expiryDate).isEqualTo(LocalDate.of(2024, 12, 31))
+
+    assertThat(prisonerRestrictions[1].restrictionType).isEqualTo("CCTV")
+    assertThat(prisonerRestrictions[0].commentText).isEqualTo("No visits allowed")
+    assertThat(prisonerRestrictions[1].createdBy).isEqualTo("user1")
+    assertThat(prisonerRestrictions[1].authorisedUsername).isEqualTo("JSMITH")
+    assertThat(prisonerRestrictions[1].createdTime).isNotNull
+    assertThat(prisonerRestrictions[1].updatedBy).isEqualTo("user2")
+    assertThat(prisonerRestrictions[1].updatedTime).isNotNull
+    assertThat(prisonerRestrictions[1].currentTerm).isTrue
+    assertThat(prisonerRestrictions[1].effectiveDate).isEqualTo(LocalDate.of(2024, 1, 1))
+    assertThat(prisonerRestrictions[1].expiryDate).isEqualTo(LocalDate.of(2024, 12, 31))
+  }
+
+  private fun assertNumberOfChildrenNotPresent(prisonerNumber: String) {
     webTestClient.get()
-      .uri("/sync/$removingPrisonerNumber/number-of-children")
+      .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
       .headers(setAuthorisationUsingCurrentUser())
       .exchange()
@@ -320,9 +356,9 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
       .isNotFound
   }
 
-  private fun assertNumberOfChildrenPresent(keepingPrisonerNumber: String, expectedValue: String): SyncPrisonerNumberOfChildrenResponse {
+  private fun assertNumberOfChildrenPresent(prisonerNumber: String, expectedValue: String): SyncPrisonerNumberOfChildrenResponse {
     val retainedNumberOfChildren = webTestClient.get()
-      .uri("/sync/$keepingPrisonerNumber/number-of-children")
+      .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
       .headers(setAuthorisationUsingCurrentUser())
       .exchange()
@@ -340,32 +376,47 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
     return retainedNumberOfChildren
   }
 
-  private fun createDomesticStatusRecords(domesticStatusToMigrate: MigratePrisonerDomesticStatusRequest) {
+  private fun createDomesticStatusRecords(request: MigratePrisonerDomesticStatusRequest) {
     webTestClient.post()
       .uri("/migrate/domestic-status")
       .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(domesticStatusToMigrate)
+      .bodyValue(request)
       .exchange()
       .expectStatus()
       .isOk
   }
 
-  private fun createNumberOfChildrenRecords(
-    numberOfChildrenToMigrate: MigratePrisonerNumberOfChildrenRequest,
-  ) {
+  private fun createNumberOfChildrenRecords(request: MigratePrisonerNumberOfChildrenRequest) {
     webTestClient.post()
       .uri("/migrate/number-of-children")
       .headers(setAuthorisationUsingCurrentUser())
       .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(numberOfChildrenToMigrate)
+      .bodyValue(request)
       .exchange()
       .expectStatus()
       .isOk
   }
 
+  private fun migratePrisonerRestrictions(prisonerNumber: String): PrisonerRestrictionsMigrationResponse = webTestClient.post()
+    .uri("/migrate/prisoner-restrictions")
+    .headers(setAuthorisationUsingCurrentUser())
+    .contentType(MediaType.APPLICATION_JSON)
+    .bodyValue(
+      MigratePrisonerRestrictionsRequest(
+        prisonerNumber = prisonerNumber,
+        restrictions = listOf(prisonerRestrictionDetailsRequest()),
+      ),
+    )
+    .exchange()
+    .expectStatus()
+    .isOk
+    .expectHeader().contentType(MediaType.APPLICATION_JSON)
+    .expectBody(PrisonerRestrictionsMigrationResponse::class.java)
+    .returnResult().responseBody!!
+
   private fun domesticStatusRequest(
-    prisonerNumber: String = "A1234AA",
+    prisonerNumber: String = KEEP_PRISONER,
     currentValue: String = "D",
     historyValues: List<String> = listOf("M"),
   ): MigratePrisonerDomesticStatusRequest {
@@ -376,7 +427,7 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
         createdTime = LocalDateTime.now().minusDays(1),
       )
     }
-    val domesticStatusToMigrate = MigratePrisonerDomesticStatusRequest(
+    return MigratePrisonerDomesticStatusRequest(
       prisonerNumber = prisonerNumber,
       current = DomesticStatusDetailsRequest(
         domesticStatusCode = currentValue,
@@ -385,11 +436,10 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
       ),
       history = history,
     )
-    return domesticStatusToMigrate
   }
 
   private fun numberOfChildrenRequest(
-    prisonerNumber: String = "A1234AA",
+    prisonerNumber: String = KEEP_PRISONER,
     currentValue: String = "2",
     historyValues: List<String> = listOf("1"),
   ): MigratePrisonerNumberOfChildrenRequest {
@@ -410,4 +460,21 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
       history = history,
     )
   }
+
+  private fun prisonerRestrictionDetailsRequest(
+    restrictionType: String = "CCTV",
+    commentText: String = "No visits allowed",
+    authorisedUsername: String = "JSMITH",
+  ) = PrisonerRestrictionDetailsRequest(
+    restrictionType,
+    effectiveDate = LocalDate.of(2024, 1, 1),
+    expiryDate = LocalDate.of(2024, 12, 31),
+    commentText,
+    authorisedUsername,
+    currentTerm = true,
+    createdBy = "user1",
+    createdTime = LocalDateTime.now(),
+    updatedBy = "user2",
+    updatedTime = LocalDateTime.now().plusDays(1),
+  )
 }

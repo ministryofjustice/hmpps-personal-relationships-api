@@ -151,6 +151,11 @@ class OutboundEventsService(
           )
         }
 
+        OutboundEvent.PRISONER_RESTRICTIONS_CHANGED,
+        -> {
+          throw IllegalStateException("sendPrisonerRestrictionsChanged should not be called from this context. Use the correct method signature with restrictionIds, noms, source, and user.")
+        }
+
         OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
         OutboundEvent.PRISONER_DOMESTIC_STATUS_UPDATED,
         -> {
@@ -193,6 +198,34 @@ class OutboundEventsService(
         personReference,
         e,
       )
+    }
+  }
+
+  fun sendPrisonerRestrictionsChanged(
+    updatedRestrictionIds: List<Long>,
+    removedRestrictionIds: List<Long>,
+    noms: String,
+    source: Source = Source.DPS,
+    user: User,
+  ) {
+    if (featureSwitches.isEnabled(OutboundEvent.PRISONER_RESTRICTIONS_CHANGED)) {
+      log.info("Sending PRISONER_RESTRICTION_CHANGED event for updated restrictions $updatedRestrictionIds, removed restrictions $removedRestrictionIds and noms $noms")
+      try {
+        val info = PrisonerRestrictionsChangedInfo(
+          addedRestrictionIds = updatedRestrictionIds,
+          removedRestrictionIds = removedRestrictionIds,
+          source = source,
+          username = user.username,
+          activeCaseLoadId = user.activeCaseLoadId,
+        )
+        val event = OutboundEvent.PRISONER_RESTRICTIONS_CHANGED.event(info, PersonReference(noms))
+        publisher.send(event)
+        telemetryService.track(event)
+      } catch (e: Exception) {
+        log.error("Unable to send PRISONER_RESTRICTION_CHANGED event", e)
+      }
+    } else {
+      log.warn("Outbound event type PRISONER_RESTRICTION_CHANGED feature is configured off.")
     }
   }
 }
