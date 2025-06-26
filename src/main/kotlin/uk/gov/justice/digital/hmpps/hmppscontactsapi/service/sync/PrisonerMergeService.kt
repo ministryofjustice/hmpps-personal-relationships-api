@@ -6,14 +6,12 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerDomesticStat
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerNumberOfChildren
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerDomesticStatusRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerNumberOfChildrenRepository
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
 
 @Service
 @Transactional
 class PrisonerMergeService(
   private val numberOfChildrenRepository: PrisonerNumberOfChildrenRepository,
   private val prisonerDomesticStatusRepository: PrisonerDomesticStatusRepository,
-  private val prisonerRestrictionsRepository: PrisonerRestrictionsRepository,
 ) {
 
   /**
@@ -31,7 +29,8 @@ class PrisonerMergeService(
       return MergeResponse(id = 0, wasCreated = false)
     }
 
-    val removingPrisonerHistoryRecords = numberOfChildrenRepository.findByPrisonerNumberAndActiveFalse(removingPrisonerNumber)
+    val removingPrisonerHistoryRecords =
+      numberOfChildrenRepository.findByPrisonerNumberAndActiveFalse(removingPrisonerNumber)
 
     // Move inactive records
     removingPrisonerHistoryRecords.forEach { record ->
@@ -45,7 +44,8 @@ class PrisonerMergeService(
         // 1. Set the retaining record as inactive
         // 2. Move the removing record to the new prisoner number and keep it active
         numberOfChildrenRepository.save(retainingActiveRecord.copy(active = false))
-        val updatedRecord = numberOfChildrenRepository.save(removingActiveRecord.copy(prisonerNumber = retainingPrisonerNumber))
+        val updatedRecord =
+          numberOfChildrenRepository.save(removingActiveRecord.copy(prisonerNumber = retainingPrisonerNumber))
         // When moving the removing prisoner's active record to the new prisoner number,
         // set wasCreated=true so domain events will notify listeners of the new record
         updatedRecord.toResponse(wasCreated = true)
@@ -72,15 +72,18 @@ class PrisonerMergeService(
    * otherwise it is moved as inactive.
    */
   fun mergeDomesticStatus(retainingPrisonerNumber: String, removingPrisonerNumber: String): MergeResponse {
-    val retainingActiveRecord = prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(retainingPrisonerNumber)
-    val removingActiveRecord = prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(removingPrisonerNumber)
+    val retainingActiveRecord =
+      prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(retainingPrisonerNumber)
+    val removingActiveRecord =
+      prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(removingPrisonerNumber)
 
     // Return if either record doesn't exist
     if (retainingActiveRecord == null || removingActiveRecord == null) {
       return MergeResponse(id = 0, wasCreated = false)
     }
 
-    val removingPrisonerHistoryRecords = prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveFalse(removingPrisonerNumber)
+    val removingPrisonerHistoryRecords =
+      prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveFalse(removingPrisonerNumber)
 
     // Move inactive records
     removingPrisonerHistoryRecords.forEach { record ->
@@ -94,7 +97,8 @@ class PrisonerMergeService(
         // 1. Set the retaining record as inactive
         // 2. Move the removing record to the new prisoner number and keep it active
         prisonerDomesticStatusRepository.save(retainingActiveRecord.copy(active = false))
-        val updatedRecord = prisonerDomesticStatusRepository.save(removingActiveRecord.copy(prisonerNumber = retainingPrisonerNumber))
+        val updatedRecord =
+          prisonerDomesticStatusRepository.save(removingActiveRecord.copy(prisonerNumber = retainingPrisonerNumber))
         // When moving the removing prisoner's active record to the new prisoner number,
         // set wasCreated=true so domain events will notify listeners of the new record
         updatedRecord.toResponse(wasCreated = true)
@@ -113,42 +117,6 @@ class PrisonerMergeService(
       }
     }
   }
-
-/**
-   * Merges prisoner restriction records from the removing prisoner to the retaining prisoner.
-   * Copies all restrictions from the removing prisoner to the retaining prisoner, generating new IDs.
-   * Deletes all restrictions for the removing prisoner after copying.
-   * Returns the created restriction's IDs , the removed restriction's IDs and whether any records were created.
-   */
-  fun mergePrisonerRestrictions(retainingPrisonerNumber: String, removingPrisonerNumber: String): MergeRestrictionsResponse {
-    // Get all restrictions for removingPrisonerNumber
-    val removingRestrictions = prisonerRestrictionsRepository.findByPrisonerNumber(removingPrisonerNumber)
-
-    // If there are no restrictions to move, return default response
-    if (removingRestrictions.isEmpty()) {
-      return MergeRestrictionsResponse(listOf(), listOf(), wasCreated = false)
-    }
-
-    // For each removing restriction, create a new restriction for retainingPrisonerNumber with the same details
-    val newRestrictions = prisonerRestrictionsRepository.saveAllAndFlush(
-      removingRestrictions.map { restriction ->
-        restriction.copy(
-          prisonerRestrictionId = 0, // Let JPA generate new ID
-          prisonerNumber = retainingPrisonerNumber,
-        )
-      },
-    )
-
-    // Delete all restrictions for removingPrisonerNumber
-    prisonerRestrictionsRepository.deleteByPrisonerNumber(removingPrisonerNumber)
-
-    // Return the created restriction's IDs, removed restriction IDs and wasCreated=true
-    return MergeRestrictionsResponse(
-      keepingPrisonerRestrictionIds = newRestrictions.map { it.prisonerRestrictionId },
-      removingPrisonerRestrictionIds = removingRestrictions.map { it.prisonerRestrictionId },
-      wasCreated = true,
-    )
-  }
 }
 
 private fun PrisonerNumberOfChildren.toResponse(wasCreated: Boolean): MergeResponse = MergeResponse(
@@ -163,11 +131,5 @@ private fun PrisonerDomesticStatus.toResponse(wasCreated: Boolean): MergeRespons
 
 data class MergeResponse(
   val id: Long,
-  val wasCreated: Boolean,
-)
-
-data class MergeRestrictionsResponse(
-  val keepingPrisonerRestrictionIds: List<Long>,
-  val removingPrisonerRestrictionIds: List<Long>,
   val wasCreated: Boolean,
 )

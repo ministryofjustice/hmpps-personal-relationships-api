@@ -20,8 +20,6 @@ class PrisonerMergeFacade(
     handlePrisonerNumberOfChildren(keepingPrisonerNumber, removedPrisonerNo)
 
     handlePrisonerDomesticStatus(keepingPrisonerNumber, removedPrisonerNo)
-
-    handlePrisonerRestrictions(keepingPrisonerNumber, removedPrisonerNo)
   }
 
   private fun handlePrisonerNumberOfChildren(keepingPrisonerNumber: String, removedPrisonerNo: String) {
@@ -50,24 +48,6 @@ class PrisonerMergeFacade(
             source = Source.DPS,
             user = User.SYS_USER,
           )
-        }
-      }
-  }
-
-  private fun handlePrisonerRestrictions(keepingPrisonerNumber: String, removedPrisonerNo: String) {
-    prisonerMergeService.mergePrisonerRestrictions(keepingPrisonerNumber, removedPrisonerNo)
-      .also {
-        if (it.wasCreated) {
-          val changedRestrictionIds = it.keepingPrisonerRestrictionIds + it.removingPrisonerRestrictionIds
-          if (changedRestrictionIds.isNotEmpty()) {
-            outboundEventsService.sendPrisonerRestrictionsChanged(
-              updatedRestrictionIds = it.keepingPrisonerRestrictionIds,
-              removedRestrictionIds = it.removingPrisonerRestrictionIds,
-              noms = keepingPrisonerNumber,
-              source = Source.NOMIS,
-              user = User.SYS_USER,
-            )
-          }
         }
       }
   }

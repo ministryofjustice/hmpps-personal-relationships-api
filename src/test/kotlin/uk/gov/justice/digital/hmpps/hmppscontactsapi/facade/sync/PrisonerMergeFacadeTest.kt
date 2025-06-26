@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEven
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.MergeResponse
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.MergeRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.PrisonerMergeService
 
 class PrisonerMergeFacadeTest {
@@ -30,25 +29,14 @@ class PrisonerMergeFacadeTest {
         wasCreated = true,
       )
 
-      val mergePrisonerRestrictionsResponse = MergeRestrictionsResponse(
-        wasCreated = true,
-        keepingPrisonerRestrictionIds = listOf(123L, 124L),
-        removingPrisonerRestrictionIds = listOf(222L),
-      )
-
       whenever(mergeService.mergeNumberOfChildren(retainingPrisonerNumber, removedPrisonerNumber)).thenReturn(
         updatedResponse,
       )
       whenever(mergeService.mergeDomesticStatus(retainingPrisonerNumber, removedPrisonerNumber)).thenReturn(
         updatedResponse,
       )
-      whenever(
-        mergeService.mergePrisonerRestrictions(retainingPrisonerNumber, removedPrisonerNumber),
-      ).thenReturn(mergePrisonerRestrictionsResponse)
 
       facade.merge(retainingPrisonerNumber, removedPrisonerNumber)
-
-      verify(mergeService).mergePrisonerRestrictions(retainingPrisonerNumber, removedPrisonerNumber)
 
       verify(outboundEventsService).send(
         outboundEvent = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
@@ -62,14 +50,6 @@ class PrisonerMergeFacadeTest {
         identifier = updatedResponse.id,
         noms = retainingPrisonerNumber,
         source = Source.DPS,
-        user = User.SYS_USER,
-      )
-
-      verify(outboundEventsService).sendPrisonerRestrictionsChanged(
-        updatedRestrictionIds = mergePrisonerRestrictionsResponse.keepingPrisonerRestrictionIds,
-        removedRestrictionIds = mergePrisonerRestrictionsResponse.removingPrisonerRestrictionIds,
-        noms = retainingPrisonerNumber,
-        source = Source.NOMIS,
         user = User.SYS_USER,
       )
     }
@@ -90,17 +70,7 @@ class PrisonerMergeFacadeTest {
         updatedResponse,
       )
 
-      whenever(mergeService.mergePrisonerRestrictions(retainingPrisonerNumber, removedPrisonerNumber)).thenReturn(
-        MergeRestrictionsResponse(
-          wasCreated = false,
-          keepingPrisonerRestrictionIds = emptyList(),
-          removingPrisonerRestrictionIds = emptyList(),
-        ),
-      )
-
       facade.merge(retainingPrisonerNumber, removedPrisonerNumber)
-
-      verify(mergeService).mergePrisonerRestrictions(retainingPrisonerNumber, removedPrisonerNumber)
 
       verifyNoMoreInteractions(outboundEventsService)
     }
@@ -124,13 +94,6 @@ class PrisonerMergeFacadeTest {
       whenever(mergeService.mergeDomesticStatus(retainingPrisonerNumber, removedPrisonerNumber)).thenReturn(
         domesticResponse,
       )
-      whenever(mergeService.mergePrisonerRestrictions(retainingPrisonerNumber, removedPrisonerNumber)).thenReturn(
-        MergeRestrictionsResponse(
-          wasCreated = false,
-          keepingPrisonerRestrictionIds = emptyList(),
-          removingPrisonerRestrictionIds = emptyList(),
-        ),
-      )
 
       facade.merge(retainingPrisonerNumber, removedPrisonerNumber)
 
@@ -141,7 +104,6 @@ class PrisonerMergeFacadeTest {
         source = Source.DPS,
         user = User.SYS_USER,
       )
-      verifyNoMoreInteractions(outboundEventsService)
     }
   }
 }
