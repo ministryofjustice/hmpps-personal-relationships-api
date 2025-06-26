@@ -5,7 +5,9 @@ import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerRestriction
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerRestrictionsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerRestrictionMigrationResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerRestrictionsMigrationResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ReferenceCodeRepository
@@ -52,4 +54,33 @@ class PrisonerRestrictionsMigrationService(
   private fun validateReferenceDataExists(code: String) = referenceCodeRepository
     .findByGroupCodeAndCode(ReferenceCodeGroup.RESTRICTION, code)
     ?: throw EntityNotFoundException("No reference data found for groupCode: ReferenceCodeGroup.RESTRICTION and code: $code")
+
+  fun migratePrisonerRestriction(prisonerNumber: String, request: MigratePrisonerRestrictionRequest): PrisonerRestrictionMigrationResponse {
+    // Validate reference data exists
+    validateReferenceDataExists(request.restrictionType)
+
+    // Create a new PrisonerRestriction entity
+    val entity = PrisonerRestriction(
+      prisonerRestrictionId = 0,
+      prisonerNumber = prisonerNumber,
+      restrictionType = request.restrictionType,
+      effectiveDate = request.effectiveDate,
+      expiryDate = request.expiryDate,
+      commentText = request.commentText,
+      authorisedUsername = request.authorisedUsername,
+      currentTerm = request.currentTerm,
+      createdBy = request.createdBy,
+      createdTime = request.createdTime,
+      updatedBy = request.updatedBy,
+      updatedTime = request.updatedTime,
+    )
+
+    // Save the new restriction
+    val savedEntity = prisonerRestrictionsRepository.saveAndFlush(entity)
+
+    return PrisonerRestrictionMigrationResponse(
+      prisonerRestrictionId = savedEntity.prisonerRestrictionId,
+      prisonerNumber = savedEntity.prisonerNumber,
+    )
+  }
 }
