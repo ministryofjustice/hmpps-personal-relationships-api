@@ -518,15 +518,13 @@ class OutboundEventsServiceTest {
   @Test
   fun `sendPrisonerRestrictionsChanged sends event with correct info`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_RESTRICTIONS_CHANGED) } doReturn true }
-    val updatedIds = listOf(101L, 102L)
-    val removedIds = listOf(201L)
-    val noms = "A1234BC"
+    val keepingPrisonerNumber = "A1234BC"
+    val removingPrisonerNumber = "A1234DE"
     val user = aUser("mergeuser", "MDI")
 
     outboundEventsService.sendPrisonerRestrictionsChanged(
-      updatedRestrictionIds = updatedIds,
-      removedRestrictionIds = removedIds,
-      noms = noms,
+      keepingPrisonerNumber,
+      removingPrisonerNumber,
       source = Source.DPS,
       user = user,
     )
@@ -535,13 +533,13 @@ class OutboundEventsServiceTest {
     val event = eventCaptor.firstValue
     assertThat(event.eventType).isEqualTo("personal-relationships-api.prisoner-restrictions.changed")
     assertThat(event.additionalInformation)
-      .isInstanceOf(PrisonerRestrictionsChangedInfo::class.java)
-    val info = event.additionalInformation as PrisonerRestrictionsChangedInfo
-    assertThat(info.addedRestrictionIds).isEqualTo(updatedIds)
-    assertThat(info.removedRestrictionIds).isEqualTo(removedIds)
+      .isInstanceOf(PrisonerRestrictionsChanged::class.java)
+    val info = event.additionalInformation as PrisonerRestrictionsChanged
+    assertThat(info.keepingPrisonerNumber).isEqualTo(keepingPrisonerNumber)
+    assertThat(info.removingPrisonerNumber).isEqualTo(removingPrisonerNumber)
     assertThat(info.username).isEqualTo("mergeuser")
     assertThat(info.activeCaseLoadId).isEqualTo("MDI")
-    assertThat(event.personReference?.nomsNumber()).isEqualTo(noms)
+    assertThat(event.personReference).isNull()
     assertThat(event.description).isEqualTo("A prisoner restriction has been changed")
     verify(telemetryService).track(any())
     verifyNoMoreInteractions(eventsPublisher)
@@ -550,10 +548,11 @@ class OutboundEventsServiceTest {
   @Test
   fun `sendPrisonerRestrictionsChanged does not send event if feature is off`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_RESTRICTIONS_CHANGED) } doReturn false }
+    val keepingPrisonerNumber = "A1234BC"
+    val removingPrisonerNumber = "A1234DE"
     outboundEventsService.sendPrisonerRestrictionsChanged(
-      updatedRestrictionIds = listOf(1L),
-      removedRestrictionIds = listOf(2L),
-      noms = "A1234BC",
+      keepingPrisonerNumber,
+      removingPrisonerNumber,
       source = Source.DPS,
       user = aUser("mergeuser"),
     )
@@ -565,10 +564,11 @@ class OutboundEventsServiceTest {
   fun `sendPrisonerRestrictionsChanged logs error if publisher throws`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_RESTRICTIONS_CHANGED) } doReturn true }
     whenever(eventsPublisher.send(any())).thenThrow(RuntimeException("fail"))
+    val keepingPrisonerNumber = "A1234BC"
+    val removingPrisonerNumber = "A1234DE"
     outboundEventsService.sendPrisonerRestrictionsChanged(
-      updatedRestrictionIds = listOf(1L),
-      removedRestrictionIds = listOf(2L),
-      noms = "A1234BC",
+      keepingPrisonerNumber,
+      removingPrisonerNumber,
       source = Source.DPS,
       user = aUser("mergeuser"),
     )

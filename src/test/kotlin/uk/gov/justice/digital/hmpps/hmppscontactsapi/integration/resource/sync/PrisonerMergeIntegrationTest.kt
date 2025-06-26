@@ -9,10 +9,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegra
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.DomesticStatusDetailsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerNumberOfChildrenRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.NumberOfChildrenDetailsRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.PrisonerRestrictionDetailsRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerRestrictionsMigrationResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerDomesticStatusResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerNumberOfChildrenResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerDomesticStatusRepository
@@ -22,13 +19,11 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEven
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerDomesticStatus
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerNumberOfChildren
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerRestrictionsChangedInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
-import java.time.LocalDate
 import java.time.LocalDateTime
 
-class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
+class PrisonerMergeIntegrationTest : PostgresIntegrationTestBase() {
   companion object {
     private const val KEEP_PRISONER = "A1234AA"
     private const val REMOVE_PRISONER = "B1234BB"
@@ -242,32 +237,6 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
     stubEvents.assertHasNoEvents(OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED)
   }
 
-  @Test
-  fun `should fire prisoner restrictions domain event when restrictions are merged`() {
-    migratePrisonerRestrictions(KEEP_PRISONER)
-    val removingPrisonerResponse = migratePrisonerRestrictions(REMOVE_PRISONER)
-
-    performMerge()
-
-    assertPrisonerRestrictionsPresent()
-
-    // The migrated restriction from the removing prisoner will now belong to the keeping prisoner and will have an incremented ID
-    val actualKeepingRestrictionIds = removingPrisonerResponse.prisonerRestrictionsIds.map { it + 1 }
-    val actualRemovedRestrictionIds = removingPrisonerResponse.prisonerRestrictionsIds
-
-    stubEvents.assertHasEvent(
-      event = OutboundEvent.PRISONER_RESTRICTIONS_CHANGED,
-      additionalInfo = PrisonerRestrictionsChangedInfo(
-        addedRestrictionIds = actualKeepingRestrictionIds,
-        removedRestrictionIds = actualRemovedRestrictionIds,
-        source = Source.NOMIS,
-        username = "SYS",
-        activeCaseLoadId = null,
-      ),
-      personReference = PersonReference(nomsNumber = KEEP_PRISONER),
-    )
-  }
-
   // --- Helper methods below ---
 
   private fun performMerge() {
@@ -299,7 +268,10 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
       .isNotFound
   }
 
-  private fun assertDomesticStatusPresent(prisonerNumber: String, expectedValue: String): SyncPrisonerDomesticStatusResponse {
+  private fun assertDomesticStatusPresent(
+    prisonerNumber: String,
+    expectedValue: String,
+  ): SyncPrisonerDomesticStatusResponse {
     val retainedDomesticStatus = webTestClient.get()
       .uri("/sync/$prisonerNumber/domestic-status")
       .accept(MediaType.APPLICATION_JSON)
@@ -319,33 +291,6 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
     return retainedDomesticStatus
   }
 
-  private fun assertPrisonerRestrictionsPresent() {
-    // to be replaced with get method once the endpoint is available
-    val prisonerRestrictions = prisonerRestrictionRepository.findAll()
-    assertThat(prisonerRestrictions).hasSize(2)
-    assertThat(prisonerRestrictions[0].restrictionType).isEqualTo("CCTV")
-    assertThat(prisonerRestrictions[0].commentText).isEqualTo("No visits allowed")
-    assertThat(prisonerRestrictions[0].authorisedUsername).isEqualTo("JSMITH")
-    assertThat(prisonerRestrictions[0].createdBy).isEqualTo("user1")
-    assertThat(prisonerRestrictions[0].createdTime).isNotNull
-    assertThat(prisonerRestrictions[0].updatedBy).isEqualTo("user2")
-    assertThat(prisonerRestrictions[0].updatedTime).isNotNull
-    assertThat(prisonerRestrictions[0].currentTerm).isTrue
-    assertThat(prisonerRestrictions[0].effectiveDate).isEqualTo(LocalDate.of(2024, 1, 1))
-    assertThat(prisonerRestrictions[0].expiryDate).isEqualTo(LocalDate.of(2024, 12, 31))
-
-    assertThat(prisonerRestrictions[1].restrictionType).isEqualTo("CCTV")
-    assertThat(prisonerRestrictions[0].commentText).isEqualTo("No visits allowed")
-    assertThat(prisonerRestrictions[1].createdBy).isEqualTo("user1")
-    assertThat(prisonerRestrictions[1].authorisedUsername).isEqualTo("JSMITH")
-    assertThat(prisonerRestrictions[1].createdTime).isNotNull
-    assertThat(prisonerRestrictions[1].updatedBy).isEqualTo("user2")
-    assertThat(prisonerRestrictions[1].updatedTime).isNotNull
-    assertThat(prisonerRestrictions[1].currentTerm).isTrue
-    assertThat(prisonerRestrictions[1].effectiveDate).isEqualTo(LocalDate.of(2024, 1, 1))
-    assertThat(prisonerRestrictions[1].expiryDate).isEqualTo(LocalDate.of(2024, 12, 31))
-  }
-
   private fun assertNumberOfChildrenNotPresent(prisonerNumber: String) {
     webTestClient.get()
       .uri("/sync/$prisonerNumber/number-of-children")
@@ -356,7 +301,10 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
       .isNotFound
   }
 
-  private fun assertNumberOfChildrenPresent(prisonerNumber: String, expectedValue: String): SyncPrisonerNumberOfChildrenResponse {
+  private fun assertNumberOfChildrenPresent(
+    prisonerNumber: String,
+    expectedValue: String,
+  ): SyncPrisonerNumberOfChildrenResponse {
     val retainedNumberOfChildren = webTestClient.get()
       .uri("/sync/$prisonerNumber/number-of-children")
       .accept(MediaType.APPLICATION_JSON)
@@ -397,23 +345,6 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
       .expectStatus()
       .isOk
   }
-
-  private fun migratePrisonerRestrictions(prisonerNumber: String): PrisonerRestrictionsMigrationResponse = webTestClient.post()
-    .uri("/migrate/prisoner-restrictions")
-    .headers(setAuthorisationUsingCurrentUser())
-    .contentType(MediaType.APPLICATION_JSON)
-    .bodyValue(
-      MigratePrisonerRestrictionsRequest(
-        prisonerNumber = prisonerNumber,
-        restrictions = listOf(prisonerRestrictionDetailsRequest()),
-      ),
-    )
-    .exchange()
-    .expectStatus()
-    .isOk
-    .expectHeader().contentType(MediaType.APPLICATION_JSON)
-    .expectBody(PrisonerRestrictionsMigrationResponse::class.java)
-    .returnResult().responseBody!!
 
   private fun domesticStatusRequest(
     prisonerNumber: String = KEEP_PRISONER,
@@ -460,21 +391,4 @@ class PrisonerMergeControllerIntegrationTest : PostgresIntegrationTestBase() {
       history = history,
     )
   }
-
-  private fun prisonerRestrictionDetailsRequest(
-    restrictionType: String = "CCTV",
-    commentText: String = "No visits allowed",
-    authorisedUsername: String = "JSMITH",
-  ) = PrisonerRestrictionDetailsRequest(
-    restrictionType,
-    effectiveDate = LocalDate.of(2024, 1, 1),
-    expiryDate = LocalDate.of(2024, 12, 31),
-    commentText,
-    authorisedUsername,
-    currentTerm = true,
-    createdBy = "user1",
-    createdTime = LocalDateTime.now(),
-    updatedBy = "user2",
-    updatedTime = LocalDateTime.now().plusDays(1),
-  )
 }

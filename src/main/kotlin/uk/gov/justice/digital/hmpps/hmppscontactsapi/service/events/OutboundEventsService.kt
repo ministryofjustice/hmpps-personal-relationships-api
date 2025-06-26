@@ -202,23 +202,22 @@ class OutboundEventsService(
   }
 
   fun sendPrisonerRestrictionsChanged(
-    updatedRestrictionIds: List<Long>,
-    removedRestrictionIds: List<Long>,
-    noms: String,
+    keepingPrisonerNumber: String,
+    removingPrisonerNumber: String,
     source: Source = Source.DPS,
     user: User,
   ) {
     if (featureSwitches.isEnabled(OutboundEvent.PRISONER_RESTRICTIONS_CHANGED)) {
-      log.info("Sending PRISONER_RESTRICTION_CHANGED event for updated restrictions $updatedRestrictionIds, removed restrictions $removedRestrictionIds and noms $noms")
+      log.info("Sending PRISONER_RESTRICTION_CHANGED event for updated restrictions $keepingPrisonerNumber, removed restrictions $removingPrisonerNumber")
       try {
-        val info = PrisonerRestrictionsChangedInfo(
-          addedRestrictionIds = updatedRestrictionIds,
-          removedRestrictionIds = removedRestrictionIds,
+        val info = PrisonerRestrictionsChanged(
+          keepingPrisonerNumber = keepingPrisonerNumber,
+          removingPrisonerNumber = removingPrisonerNumber,
           source = source,
           username = user.username,
           activeCaseLoadId = user.activeCaseLoadId,
         )
-        val event = OutboundEvent.PRISONER_RESTRICTIONS_CHANGED.event(info, PersonReference(noms))
+        val event = OutboundEvent.PRISONER_RESTRICTIONS_CHANGED.event(info)
         publisher.send(event)
         telemetryService.track(event)
       } catch (e: Exception) {
