@@ -11,8 +11,10 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerRestriction
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.PrisonerRestrictionDetailsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerRestrictionMigrationResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerRestrictionsMigrationResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ReferenceCodeRepository
@@ -108,4 +110,64 @@ class PrisonerRestrictionsMigrationServiceTest {
       .isInstanceOf(EntityNotFoundException::class.java)
       .hasMessageContaining("No reference data found for groupCode: ReferenceCodeGroup.RESTRICTION and code: INVALID_TYPE")
   }
+
+  @Test
+  fun `should migrate a single prisoner restriction`() {
+    val request = migratePrisonerRestrictionRequest("CCTV")
+
+    whenever(referenceCodeRepository.findByGroupCodeAndCode(ReferenceCodeGroup.RESTRICTION, "CCTV")).thenReturn(mock())
+    val savedEntity = prisonerRestriction()
+    whenever(prisonerRestrictionsRepository.saveAndFlush(any<PrisonerRestriction>())).thenReturn(savedEntity)
+
+    val response = migrationService.migratePrisonerRestriction(prisonerNumber, request)
+
+    val captor = argumentCaptor<PrisonerRestriction>()
+    verify(prisonerRestrictionsRepository).saveAndFlush(captor.capture())
+    assertThat(captor.firstValue).usingRecursiveComparison().ignoringFields("prisonerRestrictionId").isEqualTo(savedEntity)
+    assertThat(response).isEqualTo(
+      PrisonerRestrictionMigrationResponse(
+        prisonerRestrictionId = 123L,
+        prisonerNumber = prisonerNumber,
+      ),
+    )
+  }
+
+  @Test
+  fun `should throw if restriction type does not exist in reference data for single restriction`() {
+    val request = migratePrisonerRestrictionRequest("INVALID_TYPE")
+
+    whenever(referenceCodeRepository.findByGroupCodeAndCode(ReferenceCodeGroup.RESTRICTION, "INVALID_TYPE")).thenReturn(null)
+
+    assertThatThrownBy { migrationService.migratePrisonerRestriction("A21KR21", request) }
+      .isInstanceOf(EntityNotFoundException::class.java)
+      .hasMessageContaining("No reference data found for groupCode: ReferenceCodeGroup.RESTRICTION and code: INVALID_TYPE")
+  }
+
+  private fun prisonerRestriction(restrictionType: String = "CCTV") = PrisonerRestriction(
+    prisonerRestrictionId = 123L,
+    prisonerNumber = prisonerNumber,
+    restrictionType,
+    effectiveDate = now.toLocalDate(),
+    expiryDate = now.toLocalDate().plusDays(10),
+    commentText = "CCTV",
+    authorisedUsername = "JSMITH",
+    currentTerm = true,
+    createdBy = "user1",
+    createdTime = now,
+    updatedBy = "user2",
+    updatedTime = now.plusDays(1),
+  )
+
+  private fun migratePrisonerRestrictionRequest(restrictionType: String = "CCTV") = MigratePrisonerRestrictionRequest(
+    restrictionType,
+    effectiveDate = now.toLocalDate(),
+    expiryDate = now.toLocalDate().plusDays(10),
+    commentText = "CCTV",
+    authorisedUsername = "JSMITH",
+    currentTerm = true,
+    createdBy = "user1",
+    createdTime = now,
+    updatedBy = "user2",
+    updatedTime = now.plusDays(1),
+  )
 }
