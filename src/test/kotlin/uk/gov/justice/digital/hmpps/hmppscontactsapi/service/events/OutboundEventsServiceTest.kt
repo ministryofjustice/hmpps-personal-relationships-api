@@ -491,7 +491,11 @@ class OutboundEventsServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(OutboundEvent::class)
+  @EnumSource(
+    value = OutboundEvent::class,
+    mode = EnumSource.Mode.EXCLUDE,
+    names = ["PRISONER_RESTRICTIONS_CHANGED"],
+  )
   fun `should trap exception sending event`(event: OutboundEvent) {
     featureSwitches.stub { on { isEnabled(event) } doReturn true }
     whenever(eventsPublisher.send(any())).thenThrow(RuntimeException("Boom!"))
@@ -499,6 +503,77 @@ class OutboundEventsServiceTest {
     outboundEventsService.send(event, 1L, 1L, user = User.SYS_USER)
 
     verify(eventsPublisher).send(any())
+  }
+
+  @Test
+  fun `should throw error if send called with PRISONER_RESTRICTION_CHANGED`() {
+    featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_RESTRICTIONS_CHANGED) } doReturn true }
+    val exception = org.junit.jupiter.api.assertThrows<IllegalStateException> {
+      outboundEventsService.send(OutboundEvent.PRISONER_RESTRICTIONS_CHANGED, 1L, 1L, user = User.SYS_USER)
+    }
+    assertThat(exception.message).contains("sendPrisonerRestrictionsChanged should not be called from this context")
+    verifyNoInteractions(eventsPublisher)
+  }
+
+  @Test
+  fun `sendPrisonerRestrictionsChanged sends event with correct info`() {
+    featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_RESTRICTIONS_CHANGED) } doReturn true }
+    val updatedIds = listOf(101L, 102L)
+    val removedIds = listOf(201L)
+    val noms = "A1234BC"
+    val user = aUser("mergeuser", "MDI")
+
+    outboundEventsService.sendPrisonerRestrictionsChanged(
+      updatedRestrictionIds = updatedIds,
+      removedRestrictionIds = removedIds,
+      noms = noms,
+      source = Source.DPS,
+      user = user,
+    )
+
+    verify(eventsPublisher).send(eventCaptor.capture())
+    val event = eventCaptor.firstValue
+    assertThat(event.eventType).isEqualTo("personal-relationships-api.prisoner-restrictions.changed")
+    assertThat(event.additionalInformation)
+      .isInstanceOf(PrisonerRestrictionsChangedInfo::class.java)
+    val info = event.additionalInformation as PrisonerRestrictionsChangedInfo
+    assertThat(info.addedRestrictionIds).isEqualTo(updatedIds)
+    assertThat(info.removedRestrictionIds).isEqualTo(removedIds)
+    assertThat(info.username).isEqualTo("mergeuser")
+    assertThat(info.activeCaseLoadId).isEqualTo("MDI")
+    assertThat(event.personReference?.nomsNumber()).isEqualTo(noms)
+    assertThat(event.description).isEqualTo("A prisoner restriction has been changed")
+    verify(telemetryService).track(any())
+    verifyNoMoreInteractions(eventsPublisher)
+  }
+
+  @Test
+  fun `sendPrisonerRestrictionsChanged does not send event if feature is off`() {
+    featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_RESTRICTIONS_CHANGED) } doReturn false }
+    outboundEventsService.sendPrisonerRestrictionsChanged(
+      updatedRestrictionIds = listOf(1L),
+      removedRestrictionIds = listOf(2L),
+      noms = "A1234BC",
+      source = Source.DPS,
+      user = aUser("mergeuser"),
+    )
+    verifyNoInteractions(eventsPublisher)
+    verifyNoInteractions(telemetryService)
+  }
+
+  @Test
+  fun `sendPrisonerRestrictionsChanged logs error if publisher throws`() {
+    featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_RESTRICTIONS_CHANGED) } doReturn true }
+    whenever(eventsPublisher.send(any())).thenThrow(RuntimeException("fail"))
+    outboundEventsService.sendPrisonerRestrictionsChanged(
+      updatedRestrictionIds = listOf(1L),
+      removedRestrictionIds = listOf(2L),
+      noms = "A1234BC",
+      source = Source.DPS,
+      user = aUser("mergeuser"),
+    )
+    verify(eventsPublisher).send(any())
+    // error is logged, but test does not fail
   }
 
   private fun verify(

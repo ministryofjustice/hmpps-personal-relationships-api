@@ -29,7 +29,8 @@ class PrisonerMergeService(
       return MergeResponse(id = 0, wasCreated = false)
     }
 
-    val removingPrisonerHistoryRecords = numberOfChildrenRepository.findByPrisonerNumberAndActiveFalse(removingPrisonerNumber)
+    val removingPrisonerHistoryRecords =
+      numberOfChildrenRepository.findByPrisonerNumberAndActiveFalse(removingPrisonerNumber)
 
     // Move inactive records
     removingPrisonerHistoryRecords.forEach { record ->
@@ -43,7 +44,8 @@ class PrisonerMergeService(
         // 1. Set the retaining record as inactive
         // 2. Move the removing record to the new prisoner number and keep it active
         numberOfChildrenRepository.save(retainingActiveRecord.copy(active = false))
-        val updatedRecord = numberOfChildrenRepository.save(removingActiveRecord.copy(prisonerNumber = retainingPrisonerNumber))
+        val updatedRecord =
+          numberOfChildrenRepository.save(removingActiveRecord.copy(prisonerNumber = retainingPrisonerNumber))
         // When moving the removing prisoner's active record to the new prisoner number,
         // set wasCreated=true so domain events will notify listeners of the new record
         updatedRecord.toResponse(wasCreated = true)
@@ -70,15 +72,18 @@ class PrisonerMergeService(
    * otherwise it is moved as inactive.
    */
   fun mergeDomesticStatus(retainingPrisonerNumber: String, removingPrisonerNumber: String): MergeResponse {
-    val retainingActiveRecord = prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(retainingPrisonerNumber)
-    val removingActiveRecord = prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(removingPrisonerNumber)
+    val retainingActiveRecord =
+      prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(retainingPrisonerNumber)
+    val removingActiveRecord =
+      prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(removingPrisonerNumber)
 
     // Return if either record doesn't exist
     if (retainingActiveRecord == null || removingActiveRecord == null) {
       return MergeResponse(id = 0, wasCreated = false)
     }
 
-    val removingPrisonerHistoryRecords = prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveFalse(removingPrisonerNumber)
+    val removingPrisonerHistoryRecords =
+      prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveFalse(removingPrisonerNumber)
 
     // Move inactive records
     removingPrisonerHistoryRecords.forEach { record ->
@@ -92,7 +97,8 @@ class PrisonerMergeService(
         // 1. Set the retaining record as inactive
         // 2. Move the removing record to the new prisoner number and keep it active
         prisonerDomesticStatusRepository.save(retainingActiveRecord.copy(active = false))
-        val updatedRecord = prisonerDomesticStatusRepository.save(removingActiveRecord.copy(prisonerNumber = retainingPrisonerNumber))
+        val updatedRecord =
+          prisonerDomesticStatusRepository.save(removingActiveRecord.copy(prisonerNumber = retainingPrisonerNumber))
         // When moving the removing prisoner's active record to the new prisoner number,
         // set wasCreated=true so domain events will notify listeners of the new record
         updatedRecord.toResponse(wasCreated = true)

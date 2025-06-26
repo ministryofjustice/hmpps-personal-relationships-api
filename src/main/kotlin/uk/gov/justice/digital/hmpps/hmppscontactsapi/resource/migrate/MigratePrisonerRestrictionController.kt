@@ -58,7 +58,7 @@ class MigratePrisonerRestrictionController(
     ],
   )
   @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
-  fun migratePrisonerRestrictions(
+  fun migratePrisonerRestriction(
     @Parameter(description = "The internal ID for the prisoner in NOMIS.", required = true)
     @PathVariable prisonerNumber: String,
     @Valid @RequestBody request: MigratePrisonerRestrictionRequest,

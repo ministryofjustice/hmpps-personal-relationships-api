@@ -306,7 +306,14 @@ enum class OutboundEvent(val eventType: String) {
       description = "A prisoner restriction has been deleted",
     )
   },
-  ;
+  PRISONER_RESTRICTIONS_CHANGED("personal-relationships-api.prisoner-restrictions.changed") {
+    override fun event(additionalInformation: AdditionalInformation, personReference: PersonReference?) = OutboundHMPPSDomainEvent(
+      eventType = eventType,
+      additionalInformation = additionalInformation,
+      personReference = personReference,
+      description = "A prisoner restriction has been changed",
+    )
+  }, ;
 
   abstract fun event(
     additionalInformation: AdditionalInformation,
@@ -363,6 +370,7 @@ data class EmploymentInfo(val employmentId: Long, override val source: Source = 
 data class PrisonerRestrictionInfo(val prisonerRestrictionId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseLoadId: String?) : AdditionalInformation(source, username, activeCaseLoadId)
 data class PrisonerDomesticStatus(val domesticStatusId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseLoadId: String?) : AdditionalInformation(source, username, activeCaseLoadId)
 data class PrisonerNumberOfChildren(val prisonerNumberOfChildrenId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseLoadId: String?) : AdditionalInformation(source, username, activeCaseLoadId)
+data class PrisonerRestrictionsChangedInfo(val addedRestrictionIds: List<Long>, val removedRestrictionIds: List<Long>, override val source: Source = Source.DPS, override val username: String, override val activeCaseLoadId: String?) : AdditionalInformation(source, username, activeCaseLoadId)
 
 /**
  * The event source.

@@ -78,3 +78,5 @@ feature:
         created: true
         updated: true
         deleted: true
+      prisoner-restrictions:
+        changed: true
