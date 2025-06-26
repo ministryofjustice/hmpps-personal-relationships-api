@@ -65,6 +65,7 @@ tasks {
   withType<KotlinCompile> {
     dependsOn("buildOrganisationApiModel")
     compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+    compilerOptions.freeCompilerArgs.add("-Xannotation-default-target=param-property")
   }
 }
 
