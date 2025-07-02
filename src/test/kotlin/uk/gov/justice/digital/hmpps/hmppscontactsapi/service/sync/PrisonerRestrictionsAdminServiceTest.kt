@@ -19,18 +19,18 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 @ExtendWith(MockitoExtension::class)
-class PrisonerRestrictionsMergeServiceTest {
+class PrisonerRestrictionsAdminServiceTest {
   @Mock
   private lateinit var prisonerRestrictionsRepository: PrisonerRestrictionsRepository
 
   @InjectMocks
-  private lateinit var prisonerMergeService: PrisonerRestrictionsMergeService
+  private lateinit var restrictionsAdminService: PrisonerRestrictionsAdminService
+
+  private val retainingPrisonerNumber = "A1234BC"
+  private val removingPrisonerNumber = "B2345CD"
 
   @Nested
   inner class PrisonerMergeRestrictions {
-
-    private val retainingPrisonerNumber = "A1234BC"
-    private val removingPrisonerNumber = "B2345CD"
 
     @Test
     fun `should move restrictions from removing to retaining prisoner and delete old restrictions`() {
@@ -51,7 +51,7 @@ class PrisonerRestrictionsMergeServiceTest {
           restrictions.mapIndexed { idx, restriction -> restriction.copy(prisonerRestrictionId = (idx + databaseNextIndex)) }
         }
       // When
-      val result = prisonerMergeService.mergePrisonerRestrictions(retainingPrisonerNumber, removingPrisonerNumber)
+      val result = restrictionsAdminService.mergePrisonerRestrictions(retainingPrisonerNumber, removingPrisonerNumber)
 
       // Then
       verify(prisonerRestrictionsRepository).findByPrisonerNumber(removingPrisonerNumber)
@@ -67,7 +67,7 @@ class PrisonerRestrictionsMergeServiceTest {
         .thenReturn(emptyList())
 
       // When
-      val result = prisonerMergeService.mergePrisonerRestrictions(retainingPrisonerNumber, removingPrisonerNumber)
+      val result = restrictionsAdminService.mergePrisonerRestrictions(retainingPrisonerNumber, removingPrisonerNumber)
 
       // Then
       verify(prisonerRestrictionsRepository).findByPrisonerNumber(removingPrisonerNumber)
@@ -85,26 +85,82 @@ class PrisonerRestrictionsMergeServiceTest {
         .thenThrow(RuntimeException("DB error"))
 
       assertThrows<RuntimeException> {
-        prisonerMergeService.mergePrisonerRestrictions(retainingPrisonerNumber, removingPrisonerNumber)
+        restrictionsAdminService.mergePrisonerRestrictions(retainingPrisonerNumber, removingPrisonerNumber)
       }.message isEqualTo "DB error"
     }
-
-    private fun restriction(
-      prisonerRestrictionId: Long = 1L,
-      prisonerNumber: String = removingPrisonerNumber,
-    ) = PrisonerRestriction(
-      prisonerRestrictionId,
-      prisonerNumber = prisonerNumber,
-      restrictionType = "NO_VISIT",
-      effectiveDate = LocalDate.of(2024, 1, 1),
-      expiryDate = LocalDate.of(2024, 12, 31),
-      commentText = "No visits allowed",
-      authorisedUsername = "JSMITH",
-      currentTerm = true,
-      createdBy = "user1",
-      createdTime = LocalDateTime.of(2024, 6, 1, 12, 0),
-      updatedBy = "user2",
-      updatedTime = LocalDateTime.of(2024, 6, 1, 12, 0).plusDays(1),
-    )
   }
+
+  @Nested
+  inner class ResetPrisonerRestrictions {
+    private val prisonerNumber = "A1234BC"
+
+    @Test
+    fun `should delete all restrictions for prisoner and return deleted restrictions`() {
+      // Given
+      val restriction1 = restriction(1L, prisonerNumber)
+      val restriction2 = restriction(2L, prisonerNumber)
+      val restrictions = listOf(restriction1, restriction2)
+
+      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber))
+        .thenReturn(restrictions)
+
+      // When
+      val result = restrictionsAdminService.resetPrisonerRestrictions(prisonerNumber)
+
+      // Then
+      verify(prisonerRestrictionsRepository).findByPrisonerNumber(prisonerNumber)
+      verify(prisonerRestrictionsRepository).deleteAll(restrictions)
+      assertThat(result.wasDeleted).isTrue()
+      assertThat(result.deletedRestrictions).containsExactlyInAnyOrder(restriction1, restriction2)
+    }
+
+    @Test
+    fun `should return wasDeleted false when no restrictions exist`() {
+      // Given
+      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber))
+        .thenReturn(emptyList())
+
+      // When
+      val result = restrictionsAdminService.resetPrisonerRestrictions(prisonerNumber)
+
+      // Then
+      verify(prisonerRestrictionsRepository).findByPrisonerNumber(prisonerNumber)
+      verify(prisonerRestrictionsRepository, never()).deleteAll(any())
+      assertThat(result.wasDeleted).isFalse()
+      assertThat(result.deletedRestrictions).isEmpty()
+    }
+
+    @Test
+    fun `should handle exception when deleting restrictions`() {
+      // Given
+      val restriction = restriction(1L, prisonerNumber)
+      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber))
+        .thenReturn(listOf(restriction))
+      whenever(prisonerRestrictionsRepository.deleteAll(any<List<PrisonerRestriction>>()))
+        .thenThrow(RuntimeException("DB error"))
+
+      // When/Then
+      assertThrows<RuntimeException> {
+        restrictionsAdminService.resetPrisonerRestrictions(prisonerNumber)
+      }.message isEqualTo "DB error"
+    }
+  }
+
+  private fun restriction(
+    prisonerRestrictionId: Long = 1L,
+    prisonerNumber: String = removingPrisonerNumber,
+  ) = PrisonerRestriction(
+    prisonerRestrictionId,
+    prisonerNumber = prisonerNumber,
+    restrictionType = "NO_VISIT",
+    effectiveDate = LocalDate.of(2024, 1, 1),
+    expiryDate = LocalDate.of(2024, 12, 31),
+    commentText = "No visits allowed",
+    authorisedUsername = "JSMITH",
+    currentTerm = true,
+    createdBy = "user1",
+    createdTime = LocalDateTime.of(2024, 6, 1, 12, 0),
+    updatedBy = "user2",
+    updatedTime = LocalDateTime.of(2024, 6, 1, 12, 0).plusDays(1),
+  )
 }

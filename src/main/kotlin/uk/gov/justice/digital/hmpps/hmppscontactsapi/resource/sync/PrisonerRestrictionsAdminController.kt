@@ -8,17 +8,18 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync.PrisonerRestrictionsMergeFacade
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync.PrisonerRestrictionsAdminFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 
-@Tag(name = "Offender restrictions merge")
+@Tag(name = "Offender restrictions admin")
 @RestController
 @RequestMapping(value = ["/prisoner-restrictions"], produces = [MediaType.APPLICATION_JSON_VALUE])
-class PrisonerRestrictionsMergeController(val prisonerReststrictionsMergeFacade: PrisonerRestrictionsMergeFacade) {
+class PrisonerRestrictionsAdminController(val prisonerRestrictionsAdminFacade: PrisonerRestrictionsAdminFacade) {
 
   @PutMapping(path = ["/keep/{keepingPrisonerNumber}/remove/{removedPrisonerNumber}"], produces = [MediaType.APPLICATION_JSON_VALUE])
   @ResponseBody
@@ -48,6 +49,37 @@ class PrisonerRestrictionsMergeController(val prisonerReststrictionsMergeFacade:
     @PathVariable keepingPrisonerNumber: String,
     @PathVariable removedPrisonerNumber: String,
   ) {
-    prisonerReststrictionsMergeFacade.merge(keepingPrisonerNumber, removedPrisonerNumber)
+    prisonerRestrictionsAdminFacade.merge(keepingPrisonerNumber, removedPrisonerNumber)
+  }
+
+  @PostMapping(path = ["/reset/{prisonerNumber}"], produces = [MediaType.APPLICATION_JSON_VALUE])
+  @ResponseBody
+  @Operation(
+    summary = "Reset a prisoner's restrictions to match what exists in NOMIS",
+    description = """
+      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.
+      Used to reset a prisoner's restrictions to match what exists in NOMIS.
+      This is used for scenarios like booking moves, new bookings, and reinstated bookings.
+      """,
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Successfully reset Prisoner's restrictions records",
+        content = [
+          Content(
+            mediaType = "application/json",
+          ),
+        ],
+      ),
+    ],
+  )
+  @AuthApiResponses
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
+  fun resetPrisonerRestrictions(
+    @PathVariable prisonerNumber: String,
+  ) {
+    prisonerRestrictionsAdminFacade.reset(prisonerNumber)
   }
 }
