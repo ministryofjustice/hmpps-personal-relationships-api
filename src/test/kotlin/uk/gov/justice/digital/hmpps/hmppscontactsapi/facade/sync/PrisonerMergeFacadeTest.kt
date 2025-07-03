@@ -19,7 +19,7 @@ class PrisonerMergeFacadeTest {
   private val facade = PrisonerMergeFacade(mergeService, outboundEventsService)
 
   @Nested
-  inner class MergeNumberOfChildren {
+  inner class Merge {
     @Test
     fun `merge send created event`() {
       val retainingPrisonerNumber = "A1234BC"
@@ -35,6 +35,7 @@ class PrisonerMergeFacadeTest {
       whenever(mergeService.mergeDomesticStatus(retainingPrisonerNumber, removedPrisonerNumber)).thenReturn(
         updatedResponse,
       )
+
       facade.merge(retainingPrisonerNumber, removedPrisonerNumber)
 
       verify(outboundEventsService).send(

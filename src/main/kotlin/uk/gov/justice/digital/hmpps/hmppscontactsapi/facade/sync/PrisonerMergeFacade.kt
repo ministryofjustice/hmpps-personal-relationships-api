@@ -17,6 +17,12 @@ class PrisonerMergeFacade(
     keepingPrisonerNumber: String,
     removedPrisonerNo: String,
   ) {
+    handlePrisonerNumberOfChildren(keepingPrisonerNumber, removedPrisonerNo)
+
+    handlePrisonerDomesticStatus(keepingPrisonerNumber, removedPrisonerNo)
+  }
+
+  private fun handlePrisonerNumberOfChildren(keepingPrisonerNumber: String, removedPrisonerNo: String) {
     prisonerMergeService.mergeNumberOfChildren(keepingPrisonerNumber, removedPrisonerNo)
       .also {
         if (it.wasCreated) {
@@ -29,7 +35,9 @@ class PrisonerMergeFacade(
           )
         }
       }
+  }
 
+  private fun handlePrisonerDomesticStatus(keepingPrisonerNumber: String, removedPrisonerNo: String) {
     prisonerMergeService.mergeDomesticStatus(keepingPrisonerNumber, removedPrisonerNo)
       .also {
         if (it.wasCreated) {
