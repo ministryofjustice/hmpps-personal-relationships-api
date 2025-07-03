@@ -7,13 +7,14 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerRestriction
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.PrisonerRestrictionDetailsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.DeleteRestrictionsResponse
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.MergeRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.PrisonerRestrictionsAdminService
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.PrisonerRestrictionsAdminService.DeleteRestrictionsResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.PrisonerRestrictionsAdminService.MergeRestrictionsResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -68,69 +69,78 @@ class PrisonerRestrictionsAdminFacadeTest {
     private val prisonerNumber = "A1234BC"
 
     @Test
-    fun `should send PRISONER_RESTRICTION_DELETED event for each deleted restriction`() {
+    fun `should send deleted and created event for each deleted and created restrictions`() {
       // Given
-      val restriction1 = createPrisonerRestriction(1L)
-      val restriction2 = createPrisonerRestriction(2L)
       val response = DeleteRestrictionsResponse(
         wasDeleted = true,
-        deletedRestrictions = listOf(restriction1, restriction2),
+        createdRestrictions = listOf(1L),
+        deletedRestrictions = listOf(2L),
       )
+      val request = createRequest()
 
-      whenever(mergeService.resetPrisonerRestrictions(prisonerNumber)).thenReturn(response)
+      whenever(mergeService.resetPrisonerRestrictions(request)).thenReturn(response)
 
       // When
-      facade.reset(prisonerNumber)
+      facade.reset(request)
 
       // Then
-      verify(mergeService).resetPrisonerRestrictions(prisonerNumber)
-      verify(outboundEventsService).send(
-        outboundEvent = OutboundEvent.PRISONER_RESTRICTION_DELETED,
-        identifier = restriction1.prisonerRestrictionId,
-        noms = prisonerNumber,
-        source = Source.NOMIS,
-        user = User.SYS_USER,
-      )
-      verify(outboundEventsService).send(
-        outboundEvent = OutboundEvent.PRISONER_RESTRICTION_DELETED,
-        identifier = restriction2.prisonerRestrictionId,
-        noms = prisonerNumber,
-        source = Source.NOMIS,
-        user = User.SYS_USER,
-      )
+      verify(mergeService).resetPrisonerRestrictions(request)
+      response.deletedRestrictions.forEach {
+        verify(outboundEventsService).send(
+          outboundEvent = OutboundEvent.PRISONER_RESTRICTION_DELETED,
+          identifier = it,
+          noms = prisonerNumber,
+          source = Source.NOMIS,
+          user = User.SYS_USER,
+        )
+      }
+      response.createdRestrictions.forEach {
+        verify(outboundEventsService).send(
+          outboundEvent = OutboundEvent.PRISONER_RESTRICTION_CREATED,
+          identifier = it,
+          noms = prisonerNumber,
+          source = Source.NOMIS,
+          user = User.SYS_USER,
+        )
+      }
     }
 
     @Test
-    fun `should not send events when no restrictions were deleted`() {
+    fun `should not send events when no restrictions were created or deleted`() {
       // Given
       val response = DeleteRestrictionsResponse(
         wasDeleted = false,
+        createdRestrictions = emptyList(),
         deletedRestrictions = emptyList(),
       )
+      val request = createRequest()
 
-      whenever(mergeService.resetPrisonerRestrictions(prisonerNumber)).thenReturn(response)
+      whenever(mergeService.resetPrisonerRestrictions(request)).thenReturn(response)
 
       // When
-      facade.reset(prisonerNumber)
+      facade.reset(request)
 
       // Then
-      verify(mergeService).resetPrisonerRestrictions(prisonerNumber)
+      verify(mergeService).resetPrisonerRestrictions(request)
       verifyNoMoreInteractions(outboundEventsService)
     }
 
-    private fun createPrisonerRestriction(id: Long) = PrisonerRestriction(
-      prisonerRestrictionId = id,
+    private fun createRequest() = ResetPrisonerRestrictionsRequest(
       prisonerNumber = "A1234BC",
-      restrictionType = "NO_VISIT",
-      effectiveDate = LocalDate.of(2024, 1, 1),
-      expiryDate = LocalDate.of(2024, 12, 31),
-      commentText = "Test restriction",
-      authorisedUsername = "AUSER",
-      currentTerm = true,
-      createdBy = "user1",
-      createdTime = LocalDateTime.now(),
-      updatedBy = "user2",
-      updatedTime = LocalDateTime.now(),
+      restrictions = listOf(
+        PrisonerRestrictionDetailsRequest(
+          restrictionType = "NO_VISIT",
+          effectiveDate = LocalDate.now(),
+          expiryDate = LocalDate.now().plusDays(1),
+          commentText = "Test comment",
+          currentTerm = true,
+          authorisedUsername = "user",
+          createdBy = "user",
+          createdTime = LocalDateTime.now(),
+          updatedBy = "user",
+          updatedTime = LocalDateTime.now(),
+        ),
+      ),
     )
   }
 }

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync
 
+import jakarta.persistence.EntityNotFoundException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -14,6 +15,8 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerRestriction
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.isEqualTo
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.PrisonerRestrictionDetailsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -95,69 +98,107 @@ class PrisonerRestrictionsAdminServiceTest {
     private val prisonerNumber = "A1234BC"
 
     @Test
-    fun `should delete all restrictions for prisoner and return deleted restrictions`() {
-      // Given
-      val restriction1 = restriction(1L, prisonerNumber)
-      val restriction2 = restriction(2L, prisonerNumber)
-      val restrictions = listOf(restriction1, restriction2)
+    fun `should delete all existing restrictions and create new ones for prisoner`() {
+      val removingRestrictions = listOf(
+        restriction(1L, prisonerNumber),
+        restriction(2L, prisonerNumber),
+      )
+      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(removingRestrictions)
 
-      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber))
-        .thenReturn(restrictions)
+      val request = createRequest()
+      restrictionsAdminService.resetPrisonerRestrictions(request)
 
-      // When
-      val result = restrictionsAdminService.resetPrisonerRestrictions(prisonerNumber)
-
-      // Then
       verify(prisonerRestrictionsRepository).findByPrisonerNumber(prisonerNumber)
-      verify(prisonerRestrictionsRepository).deleteAll(restrictions)
-      assertThat(result.wasDeleted).isTrue()
-      assertThat(result.deletedRestrictions).containsExactlyInAnyOrder(restriction1, restriction2)
+      verify(prisonerRestrictionsRepository).deleteAll(removingRestrictions)
+
+      val addingRestrictions: List<PrisonerRestriction> = mapPrisonerRestrictionsEntities(request)
+      verify(prisonerRestrictionsRepository).saveAllAndFlush(addingRestrictions)
     }
 
     @Test
-    fun `should return wasDeleted false when no restrictions exist`() {
-      // Given
-      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber))
-        .thenReturn(emptyList())
+    fun `should throw not found exception when no restrictions exist`() {
+      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(emptyList())
 
-      // When
-      val result = restrictionsAdminService.resetPrisonerRestrictions(prisonerNumber)
+      assertThrows<EntityNotFoundException> {
+        restrictionsAdminService.resetPrisonerRestrictions(createRequest())
+      }.message isEqualTo ("No restrictions found for prisoner A1234BC")
 
-      // Then
       verify(prisonerRestrictionsRepository).findByPrisonerNumber(prisonerNumber)
       verify(prisonerRestrictionsRepository, never()).deleteAll(any())
-      assertThat(result.wasDeleted).isFalse()
-      assertThat(result.deletedRestrictions).isEmpty()
+      verify(prisonerRestrictionsRepository, never()).saveAllAndFlush(any<List<PrisonerRestriction>>())
     }
 
     @Test
-    fun `should handle exception when deleting restrictions`() {
-      // Given
-      val restriction = restriction(1L, prisonerNumber)
-      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber))
-        .thenReturn(listOf(restriction))
+    fun `should not publish events when repository throws exception`() {
+      val restrictions = listOf(restriction(1L, prisonerNumber))
+      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(restrictions)
       whenever(prisonerRestrictionsRepository.deleteAll(any<List<PrisonerRestriction>>()))
         .thenThrow(RuntimeException("DB error"))
 
-      // When/Then
       assertThrows<RuntimeException> {
-        restrictionsAdminService.resetPrisonerRestrictions(prisonerNumber)
+        restrictionsAdminService.resetPrisonerRestrictions(createRequest())
       }.message isEqualTo "DB error"
+
+      verify(prisonerRestrictionsRepository).findByPrisonerNumber(prisonerNumber)
+      verify(prisonerRestrictionsRepository).deleteAll(restrictions)
+    }
+
+    private fun createRequest() = ResetPrisonerRestrictionsRequest(
+      prisonerNumber = "A1234BC",
+      restrictions = listOf(
+        prisonerRestrictionDetailsRequest("CCTV"),
+        prisonerRestrictionDetailsRequest("CHILD"),
+      ),
+    )
+
+    private fun prisonerRestrictionDetailsRequest(restrictionType: String = "CCTV") = PrisonerRestrictionDetailsRequest(
+      restrictionType,
+      effectiveDate = LocalDate.now(),
+      expiryDate = LocalDate.now().plusDays(1),
+      commentText = "Test comment",
+      currentTerm = true,
+      authorisedUsername = "user",
+      createdBy = "user",
+      createdTime = LocalDateTime.now(),
+      updatedBy = "user",
+      updatedTime = LocalDateTime.now(),
+    )
+
+    private fun mapPrisonerRestrictionsEntities(request: ResetPrisonerRestrictionsRequest) = request.restrictions.map { restriction ->
+      PrisonerRestriction(
+        prisonerRestrictionId = 0, // Let JPA generate new ID
+        prisonerNumber = request.prisonerNumber,
+        restrictionType = restriction.restrictionType,
+        effectiveDate = restriction.effectiveDate,
+        expiryDate = restriction.expiryDate,
+        commentText = restriction.commentText,
+        currentTerm = restriction.currentTerm,
+        authorisedUsername = restriction.authorisedUsername,
+        createdBy = restriction.createdBy,
+        createdTime = restriction.createdTime,
+        updatedBy = restriction.updatedBy,
+        updatedTime = restriction.updatedTime,
+      )
     }
   }
 
   private fun restriction(
     prisonerRestrictionId: Long = 1L,
     prisonerNumber: String = removingPrisonerNumber,
+    restrictionType: String = "NO_VISIT",
+    effectiveDate: LocalDate = LocalDate.of(2024, 1, 1),
+    expiryDate: LocalDate = LocalDate.of(2024, 12, 31),
+    commentText: String = "No visits allowed",
+    currentTerm: Boolean = true,
   ) = PrisonerRestriction(
     prisonerRestrictionId,
     prisonerNumber = prisonerNumber,
-    restrictionType = "NO_VISIT",
-    effectiveDate = LocalDate.of(2024, 1, 1),
-    expiryDate = LocalDate.of(2024, 12, 31),
-    commentText = "No visits allowed",
+    restrictionType = restrictionType,
+    effectiveDate = effectiveDate,
+    expiryDate = expiryDate,
+    commentText = commentText,
     authorisedUsername = "JSMITH",
-    currentTerm = true,
+    currentTerm = currentTerm,
     createdBy = "user1",
     createdTime = LocalDateTime.of(2024, 6, 1, 12, 0),
     updatedBy = "user2",

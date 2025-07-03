@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync
 
+import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerRestriction
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
 
 @Service
@@ -43,39 +45,56 @@ class PrisonerRestrictionsAdminService(
   }
 
   /**
-   * Resets all restrictions for a given prisoner by removing them.
-   * This is typically called when we want to reset a prisoner's restrictions to match NOMIS.
+   * Resets the restrictions for a specified prisoner by removing all existing restrictions
+   * and adding new ones provided in the request. This function is typically used to align
+   * a prisoner's restrictions with the records in NOMIS.
    *
-   * @param prisonerNumber The prisoner number to reset restrictions for
-   * @return DeleteRestrictionsResponse indicating if any restrictions were removed
+   * @param request The request containing the prisoner number and the new set of restrictions.
+   * @return DeleteRestrictionsResponse indicating whether any restrictions were removed and
+   *         a list of the deleted restrictions if applicable.
    */
-  fun resetPrisonerRestrictions(prisonerNumber: String): DeleteRestrictionsResponse {
-    // Get all restrictions for the prisoner
-    val restrictions = prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber)
+  fun resetPrisonerRestrictions(request: ResetPrisonerRestrictionsRequest): DeleteRestrictionsResponse {
+    val restrictionsForPrisoner = prisonerRestrictionsRepository.findByPrisonerNumber(request.prisonerNumber)
 
-    // If there are no restrictions to remove, return early
-    if (restrictions.isEmpty()) {
-      return DeleteRestrictionsResponse(wasDeleted = false)
+    // If there are no restrictions to remove, throw an exception
+    if (restrictionsForPrisoner.isEmpty()) {
+      throw EntityNotFoundException("No restrictions found for prisoner ${request.prisonerNumber}")
     }
 
-    // Make a copy of the restrictions before deleting them
-    val deletedRestrictions = restrictions.toList()
-
     // Delete all restrictions for the prisoner
-    prisonerRestrictionsRepository.deleteAll(restrictions)
+    prisonerRestrictionsRepository.deleteAll(restrictionsForPrisoner)
 
-    return DeleteRestrictionsResponse(
-      wasDeleted = true,
-      deletedRestrictions = deletedRestrictions,
-    )
+    // Save new restrictions from request
+    val newRestrictions = request.restrictions.map { restriction ->
+      PrisonerRestriction(
+        prisonerRestrictionId = 0, // Let JPA generate new ID
+        prisonerNumber = request.prisonerNumber,
+        restrictionType = restriction.restrictionType,
+        effectiveDate = restriction.effectiveDate,
+        expiryDate = restriction.expiryDate,
+        commentText = restriction.commentText,
+        currentTerm = restriction.currentTerm,
+        authorisedUsername = restriction.authorisedUsername,
+        createdBy = restriction.createdBy,
+        createdTime = restriction.createdTime,
+        updatedBy = restriction.updatedBy,
+        updatedTime = restriction.updatedTime,
+      )
+    }
+    val createdRestrictions =
+      prisonerRestrictionsRepository.saveAllAndFlush(newRestrictions).map { it.prisonerRestrictionId }
+    val deletedRestrictions = restrictionsForPrisoner.map { it.prisonerRestrictionId }
+
+    return DeleteRestrictionsResponse(wasDeleted = true, createdRestrictions, deletedRestrictions)
   }
+
+  data class MergeRestrictionsResponse(
+    val wasUpdated: Boolean,
+  )
+
+  data class DeleteRestrictionsResponse(
+    val wasDeleted: Boolean,
+    val createdRestrictions: List<Long> = emptyList(),
+    val deletedRestrictions: List<Long> = emptyList(),
+  )
 }
-
-data class MergeRestrictionsResponse(
-  val wasUpdated: Boolean,
-)
-
-data class DeleteRestrictionsResponse(
-  val wasDeleted: Boolean,
-  val deletedRestrictions: List<PrisonerRestriction> = emptyList(),
-)

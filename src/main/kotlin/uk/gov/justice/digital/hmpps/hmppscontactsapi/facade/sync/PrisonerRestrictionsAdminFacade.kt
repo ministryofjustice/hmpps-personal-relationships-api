@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -27,16 +28,26 @@ class PrisonerRestrictionsAdminFacade(
       }
   }
 
-  fun reset(prisonerNumber: String) {
-    restrictionsAdminService.resetPrisonerRestrictions(prisonerNumber)
+  fun reset(request: ResetPrisonerRestrictionsRequest) {
+    restrictionsAdminService.resetPrisonerRestrictions(request)
       .also {
         if (it.wasDeleted) {
           // Send PRISONER_RESTRICTION_DELETED event for each deleted restriction
-          it.deletedRestrictions.forEach { restriction ->
+          it.deletedRestrictions.forEach {
             outboundEventsService.send(
               outboundEvent = OutboundEvent.PRISONER_RESTRICTION_DELETED,
-              identifier = restriction.prisonerRestrictionId,
-              noms = prisonerNumber,
+              identifier = it,
+              noms = request.prisonerNumber,
+              source = Source.NOMIS,
+              user = User.SYS_USER,
+            )
+          }
+
+          it.createdRestrictions.forEach {
+            outboundEventsService.send(
+              outboundEvent = OutboundEvent.PRISONER_RESTRICTION_CREATED,
+              identifier = it,
+              noms = request.prisonerNumber,
               source = Source.NOMIS,
               user = User.SYS_USER,
             )
