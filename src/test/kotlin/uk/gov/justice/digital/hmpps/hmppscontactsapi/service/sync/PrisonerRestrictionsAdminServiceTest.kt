@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync
 
-import jakarta.persistence.EntityNotFoundException
+import jakarta.validation.ValidationException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -15,9 +15,12 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerRestriction
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.isEqualTo
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.PrisonerRestrictionDetailsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ReferenceCodeService
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -25,6 +28,9 @@ import java.time.LocalDateTime
 class PrisonerRestrictionsAdminServiceTest {
   @Mock
   private lateinit var prisonerRestrictionsRepository: PrisonerRestrictionsRepository
+
+  @Mock
+  private lateinit var referenceCodeService: ReferenceCodeService
 
   @InjectMocks
   private lateinit var restrictionsAdminService: PrisonerRestrictionsAdminService
@@ -60,7 +66,7 @@ class PrisonerRestrictionsAdminServiceTest {
       verify(prisonerRestrictionsRepository).findByPrisonerNumber(removingPrisonerNumber)
       verify(prisonerRestrictionsRepository).deleteByPrisonerNumber(removingPrisonerNumber)
       verify(prisonerRestrictionsRepository).saveAllAndFlush(any<List<PrisonerRestriction>>())
-      assertThat(result.wasUpdated).isTrue
+      assertThat(result.hasChanged).isTrue
     }
 
     @Test
@@ -76,7 +82,7 @@ class PrisonerRestrictionsAdminServiceTest {
       verify(prisonerRestrictionsRepository).findByPrisonerNumber(removingPrisonerNumber)
       verify(prisonerRestrictionsRepository, never()).saveAllAndFlush(any<List<PrisonerRestriction>>())
       verify(prisonerRestrictionsRepository, never()).deleteByPrisonerNumber(any())
-      assertThat(result.wasUpdated).isFalse
+      assertThat(result.hasChanged).isFalse
     }
 
     @Test
@@ -96,6 +102,14 @@ class PrisonerRestrictionsAdminServiceTest {
   @Nested
   inner class ResetPrisonerRestrictions {
     private val prisonerNumber = "A1234BC"
+    private val referenceCode = ReferenceCode(
+      referenceCodeId = 0,
+      ReferenceCodeGroup.RESTRICTION,
+      "CCTV",
+      "CCTV",
+      99,
+      true,
+    )
 
     @Test
     fun `should delete all existing restrictions and create new ones for prisoner`() {
@@ -104,7 +118,8 @@ class PrisonerRestrictionsAdminServiceTest {
         restriction(2L, prisonerNumber),
       )
       whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(removingRestrictions)
-
+      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.RESTRICTION, "CCTV", true))
+        .thenReturn(referenceCode)
       val request = createRequest()
       restrictionsAdminService.resetPrisonerRestrictions(request)
 
@@ -116,22 +131,11 @@ class PrisonerRestrictionsAdminServiceTest {
     }
 
     @Test
-    fun `should throw not found exception when no restrictions exist`() {
-      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(emptyList())
-
-      assertThrows<EntityNotFoundException> {
-        restrictionsAdminService.resetPrisonerRestrictions(createRequest())
-      }.message isEqualTo ("No restrictions found for prisoner A1234BC")
-
-      verify(prisonerRestrictionsRepository).findByPrisonerNumber(prisonerNumber)
-      verify(prisonerRestrictionsRepository, never()).deleteAll(any())
-      verify(prisonerRestrictionsRepository, never()).saveAllAndFlush(any<List<PrisonerRestriction>>())
-    }
-
-    @Test
     fun `should not publish events when repository throws exception`() {
       val restrictions = listOf(restriction(1L, prisonerNumber))
       whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(restrictions)
+      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.RESTRICTION, "CCTV", true))
+        .thenReturn(referenceCode)
       whenever(prisonerRestrictionsRepository.deleteAll(any<List<PrisonerRestriction>>()))
         .thenThrow(RuntimeException("DB error"))
 
@@ -143,11 +147,34 @@ class PrisonerRestrictionsAdminServiceTest {
       verify(prisonerRestrictionsRepository).deleteAll(restrictions)
     }
 
+    @Test
+    fun `should throw exception when restrictionType is not found`() {
+      val restrictions = listOf(restriction(1L, prisonerNumber))
+      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(restrictions)
+      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.RESTRICTION, "CCTV", true))
+        .thenThrow(ValidationException("Unsupported Restriction (CCTV)"))
+      val request = ResetPrisonerRestrictionsRequest(
+        prisonerNumber = prisonerNumber,
+        restrictions = listOf(
+          prisonerRestrictionDetailsRequest("CCTV"),
+          prisonerRestrictionDetailsRequest("UNKNOWN"), // Empty restriction type
+        ),
+      )
+
+      assertThrows<ValidationException> {
+        restrictionsAdminService.resetPrisonerRestrictions(request)
+      }.message isEqualTo "Unsupported Restriction (CCTV)"
+
+      verify(prisonerRestrictionsRepository).findByPrisonerNumber(prisonerNumber)
+      verify(prisonerRestrictionsRepository, never()).deleteAll(any())
+      verify(prisonerRestrictionsRepository, never()).saveAllAndFlush(any<List<PrisonerRestriction>>())
+    }
+
     private fun createRequest() = ResetPrisonerRestrictionsRequest(
       prisonerNumber = "A1234BC",
       restrictions = listOf(
         prisonerRestrictionDetailsRequest("CCTV"),
-        prisonerRestrictionDetailsRequest("CHILD"),
+        prisonerRestrictionDetailsRequest("CCTV"),
       ),
     )
 
@@ -185,7 +212,7 @@ class PrisonerRestrictionsAdminServiceTest {
   private fun restriction(
     prisonerRestrictionId: Long = 1L,
     prisonerNumber: String = removingPrisonerNumber,
-    restrictionType: String = "NO_VISIT",
+    restrictionType: String = "CCTV",
     effectiveDate: LocalDate = LocalDate.of(2024, 1, 1),
     expiryDate: LocalDate = LocalDate.of(2024, 12, 31),
     commentText: String = "No visits allowed",

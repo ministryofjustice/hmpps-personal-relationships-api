@@ -16,8 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPri
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerRestrictionsMigrationResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerRestrictionInfo
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerRestrictionsChanged
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDate
@@ -170,27 +169,8 @@ class PrisonerRestrictionsResetIntegrationTest : PostgresIntegrationTestBase() {
   }
 
   @Test
-  fun `should return 200 with no events fired when no restrictions exist`() {
-    webTestClient.post()
-      .uri(RESET_URI)
-      .headers(setAuthorisationUsingCurrentUser())
-      .accept(MediaType.APPLICATION_JSON)
-      .bodyValue(aMinimalResetPrisonerRestrictionsRequest())
-      .exchange()
-      .expectStatus().isNotFound
-      .expectBody()
-      .jsonPath("$.userMessage")
-      .isEqualTo(
-        "Entity not found : No restrictions found for prisoner A1234BC",
-      )
-
-    stubEvents.assertHasNoEvents(event = OutboundEvent.PRISONER_RESTRICTION_DELETED)
-    stubEvents.assertHasNoEvents(event = OutboundEvent.PRISONER_RESTRICTION_CREATED)
-  }
-
-  @Test
   fun `should delete all restrictions and add new ones and then fire events`() {
-    val restrictions = migratePrisonerRestrictions()
+    migratePrisonerRestrictions()
 
     val request = aMinimalResetPrisonerRestrictionsRequest()
     webTestClient.post()
@@ -202,28 +182,17 @@ class PrisonerRestrictionsResetIntegrationTest : PostgresIntegrationTestBase() {
       .expectStatus().isOk
       .expectBody()
 
-    restrictions.prisonerRestrictionsIds.forEach(
-      { prisonerRestrictionId ->
-        stubEvents.assertHasEvent(
-          event = OutboundEvent.PRISONER_RESTRICTION_DELETED,
-          additionalInfo = PrisonerRestrictionInfo(
-            prisonerRestrictionId,
-            Source.NOMIS,
-            User.SYS_USER.username,
-            null,
-          ),
-          personReference = PersonReference(nomsNumber = RESETTING_PRISONER_NUMBER),
-        )
-      },
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.PRISONER_RESTRICTIONS_CHANGED,
+      additionalInfo = PrisonerRestrictionsChanged(
+        keepingPrisonerNumber = request.prisonerNumber,
+        removingPrisonerNumber = null,
+        source = Source.NOMIS,
+        username = User.SYS_USER.username,
+        activeCaseLoadId = null,
+      ),
+      personReference = null,
     )
-    val extraIds = (1L..3L).map { restrictions.prisonerRestrictionsIds.last() + it }
-    extraIds.forEach { id ->
-      stubEvents.assertHasEvent(
-        event = OutboundEvent.PRISONER_RESTRICTION_CREATED,
-        additionalInfo = PrisonerRestrictionInfo(id, Source.NOMIS, User.SYS_USER.username, null),
-        personReference = PersonReference(nomsNumber = RESETTING_PRISONER_NUMBER),
-      )
-    }
   }
 
   @ParameterizedTest
@@ -260,6 +229,29 @@ class PrisonerRestrictionsResetIntegrationTest : PostgresIntegrationTestBase() {
       .expectBody()
       .jsonPath("$.userMessage")
       .isEqualTo("Validation failure(s): restrictions must contain at least one record")
+  }
+
+  @Test
+  fun `should return not found when restriction type is not found`() {
+    val invalidRequest = ResetPrisonerRestrictionsRequest(
+      prisonerNumber = RESETTING_PRISONER_NUMBER,
+      restrictions = listOf(
+        prisonerRestrictionDetailsRequest("CCTV"),
+        prisonerRestrictionDetailsRequest("NOT_FOUND"),
+      ),
+    )
+
+    webTestClient.post()
+      .uri(RESET_URI)
+      .headers(setAuthorisationUsingCurrentUser())
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(invalidRequest)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectBody()
+      .jsonPath("$.userMessage")
+      .isEqualTo("Validation failure: Unsupported restriction type (NOT_FOUND)")
   }
 
   private fun migratePrisonerRestrictions(): PrisonerRestrictionsMigrationResponse = webTestClient.post()

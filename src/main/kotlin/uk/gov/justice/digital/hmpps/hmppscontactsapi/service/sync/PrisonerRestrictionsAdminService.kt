@@ -1,16 +1,19 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync
 
-import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerRestriction
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.ChangedRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ReferenceCodeService
 
 @Service
 @Transactional
 class PrisonerRestrictionsAdminService(
   private val prisonerRestrictionsRepository: PrisonerRestrictionsRepository,
+  private val referenceCodeService: ReferenceCodeService,
 ) {
 
   /**
@@ -19,13 +22,13 @@ class PrisonerRestrictionsAdminService(
    * Deletes all restrictions for the removing prisoner after copying.
    * Returns the created restriction's IDs, the removed restriction's IDs and whether any records were created.
    */
-  fun mergePrisonerRestrictions(retainingPrisonerNumber: String, removingPrisonerNumber: String): MergeRestrictionsResponse {
+  fun mergePrisonerRestrictions(retainingPrisonerNumber: String, removingPrisonerNumber: String): ChangedRestrictionsResponse {
     // Get all restrictions for removingPrisonerNumber
     val removingRestrictions = prisonerRestrictionsRepository.findByPrisonerNumber(removingPrisonerNumber)
 
     // If there are no restrictions to move, return default response
     if (removingRestrictions.isEmpty()) {
-      return MergeRestrictionsResponse(wasUpdated = false)
+      return ChangedRestrictionsResponse(hasChanged = false)
     }
 
     // For each removing restriction, create a new restriction for retainingPrisonerNumber with the same details
@@ -41,7 +44,7 @@ class PrisonerRestrictionsAdminService(
     // Delete all restrictions for removingPrisonerNumber
     prisonerRestrictionsRepository.deleteByPrisonerNumber(removingPrisonerNumber)
 
-    return MergeRestrictionsResponse(wasUpdated = true)
+    return ChangedRestrictionsResponse(hasChanged = true)
   }
 
   /**
@@ -53,14 +56,11 @@ class PrisonerRestrictionsAdminService(
    * @return DeleteRestrictionsResponse indicating whether any restrictions were removed and
    *         a list of the deleted restrictions if applicable.
    */
-  fun resetPrisonerRestrictions(request: ResetPrisonerRestrictionsRequest): DeleteRestrictionsResponse {
+  fun resetPrisonerRestrictions(request: ResetPrisonerRestrictionsRequest): ChangedRestrictionsResponse {
     val restrictionsForPrisoner = prisonerRestrictionsRepository.findByPrisonerNumber(request.prisonerNumber)
-
-    // If there are no restrictions to remove, throw an exception
-    if (restrictionsForPrisoner.isEmpty()) {
-      throw EntityNotFoundException("No restrictions found for prisoner ${request.prisonerNumber}")
+    request.restrictions.forEach { restriction ->
+      validateReferenceDataExists(restriction.restrictionType)
     }
-
     // Delete all restrictions for the prisoner
     prisonerRestrictionsRepository.deleteAll(restrictionsForPrisoner)
 
@@ -81,20 +81,11 @@ class PrisonerRestrictionsAdminService(
         updatedTime = restriction.updatedTime,
       )
     }
-    val createdRestrictions =
-      prisonerRestrictionsRepository.saveAllAndFlush(newRestrictions).map { it.prisonerRestrictionId }
-    val deletedRestrictions = restrictionsForPrisoner.map { it.prisonerRestrictionId }
-
-    return DeleteRestrictionsResponse(wasDeleted = true, createdRestrictions, deletedRestrictions)
+    prisonerRestrictionsRepository.saveAllAndFlush(newRestrictions).map { it.prisonerRestrictionId }
+    return ChangedRestrictionsResponse(hasChanged = true)
   }
 
-  data class MergeRestrictionsResponse(
-    val wasUpdated: Boolean,
-  )
-
-  data class DeleteRestrictionsResponse(
-    val wasDeleted: Boolean,
-    val createdRestrictions: List<Long> = emptyList(),
-    val deletedRestrictions: List<Long> = emptyList(),
-  )
+  private fun validateReferenceDataExists(code: String) {
+    referenceCodeService.validateReferenceCode(ReferenceCodeGroup.RESTRICTION, code, allowInactive = true)
+  }
 }

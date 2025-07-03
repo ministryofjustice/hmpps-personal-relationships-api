@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPri
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-@Tag(name = "Offender restrictions admin")
+@Tag(name = "Prisoner restrictions admin")
 @RestController
 @RequestMapping(value = ["/prisoner-restrictions"], produces = [MediaType.APPLICATION_JSON_VALUE])
 class PrisonerRestrictionsAdminController(val prisonerRestrictionsAdminFacade: PrisonerRestrictionsAdminFacade) {
