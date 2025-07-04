@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class PrisonerRestrictionsMergeIntegrationTest : PostgresIntegrationTestBase() {
+class PrisonerRestrictionsAdminIntegrationTest : PostgresIntegrationTestBase() {
   companion object {
     private const val KEEP_PRISONER = "A1234AA"
     private const val REMOVE_PRISONER = "B1234BB"

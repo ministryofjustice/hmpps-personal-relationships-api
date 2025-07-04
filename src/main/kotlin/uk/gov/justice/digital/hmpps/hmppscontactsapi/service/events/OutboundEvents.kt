@@ -370,7 +370,7 @@ data class EmploymentInfo(val employmentId: Long, override val source: Source = 
 data class PrisonerRestrictionInfo(val prisonerRestrictionId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseLoadId: String?) : AdditionalInformation(source, username, activeCaseLoadId)
 data class PrisonerDomesticStatus(val domesticStatusId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseLoadId: String?) : AdditionalInformation(source, username, activeCaseLoadId)
 data class PrisonerNumberOfChildren(val prisonerNumberOfChildrenId: Long, override val source: Source = Source.DPS, override val username: String, override val activeCaseLoadId: String?) : AdditionalInformation(source, username, activeCaseLoadId)
-data class PrisonerRestrictionsChanged(val keepingPrisonerNumber: String, val removingPrisonerNumber: String, override val source: Source = Source.DPS, override val username: String, override val activeCaseLoadId: String?) : AdditionalInformation(source, username, activeCaseLoadId)
+data class PrisonerRestrictionsChanged(val keepingPrisonerNumber: String, val removingPrisonerNumber: String?, override val source: Source = Source.DPS, override val username: String, override val activeCaseLoadId: String?) : AdditionalInformation(source, username, activeCaseLoadId)
 
 /**
  * The event source.
