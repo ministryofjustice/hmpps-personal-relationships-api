@@ -203,7 +203,7 @@ class OutboundEventsService(
 
   fun sendPrisonerRestrictionsChanged(
     keepingPrisonerNumber: String,
-    removingPrisonerNumber: String,
+    removingPrisonerNumber: String?,
     source: Source = Source.DPS,
     user: User,
   ) {
