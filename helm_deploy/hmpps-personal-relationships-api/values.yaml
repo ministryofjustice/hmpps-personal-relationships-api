@@ -64,7 +64,6 @@ generic-service:
     FEATURE_EVENT_PERSONAL_RELATIONSHIPS_API_PRISONER_RESTRICTION_CREATED: true
     FEATURE_EVENT_PERSONAL_RELATIONSHIPS_API_PRISONER_RESTRICTION_UPDATED: true
     FEATURE_EVENT_PERSONAL_RELATIONSHIPS_API_PRISONER_RESTRICTION_DELETED: true
-    FEATURE_EVENT_PERSONAL_RELATIONSHIPS_API_PRISONER_RESTRICTIONS_CHANGED: true
     SENTRY_TRACES_SAMPLE_RATE: "0.05"
     SENTRY_IGNORED_EXCEPTIONS_FOR_TYPE: "org.apache.catalina.connector.ClientAbortException,org.springframework.web.servlet.resource.NoResourceFoundException,org.springframework.web.context.request.async.AsyncRequestNotUsableException,jakarta.persistence.EntityNotFoundException,uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicatePersonException,uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateRelationshipException,uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateEmailException,uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.InvalidReferenceCodeGroupException,uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.RelationshipCannotBeRemovedDueToDependencyException"
 

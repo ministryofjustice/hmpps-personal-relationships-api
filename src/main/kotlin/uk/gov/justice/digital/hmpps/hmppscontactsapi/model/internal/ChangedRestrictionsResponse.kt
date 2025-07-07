@@ -7,4 +7,6 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal
  */
 data class ChangedRestrictionsResponse(
   val hasChanged: Boolean,
+  val createdRestrictions: List<Long>,
+  val deletedRestrictions: List<Long>,
 )
