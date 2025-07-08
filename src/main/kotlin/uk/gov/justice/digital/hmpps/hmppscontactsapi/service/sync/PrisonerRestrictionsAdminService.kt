@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerRestriction
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.ChangedRestrictionsResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.MergedRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ReferenceCodeService
@@ -22,17 +23,19 @@ class PrisonerRestrictionsAdminService(
    * Deletes all restrictions for the removing prisoner after copying.
    * Returns the created restriction's IDs, the removed restriction's IDs and whether any records were created.
    */
-  fun mergePrisonerRestrictions(retainingPrisonerNumber: String, removingPrisonerNumber: String): ChangedRestrictionsResponse {
+  fun mergePrisonerRestrictions(retainingPrisonerNumber: String, removingPrisonerNumber: String): MergedRestrictionsResponse {
     // Get all restrictions for removingPrisonerNumber
     val removingRestrictions = prisonerRestrictionsRepository.findByPrisonerNumber(removingPrisonerNumber)
 
     // If there are no restrictions to move, return default response
     if (removingRestrictions.isEmpty()) {
-      return ChangedRestrictionsResponse(hasChanged = false)
+      return MergedRestrictionsResponse(
+        hasChanged = false,
+      )
     }
 
     // For each removing restriction, create a new restriction for retainingPrisonerNumber with the same details
-    prisonerRestrictionsRepository.saveAllAndFlush(
+    val newRestrictions = prisonerRestrictionsRepository.saveAllAndFlush(
       removingRestrictions.map { restriction ->
         restriction.copy(
           prisonerRestrictionId = 0, // Let JPA generate new ID
@@ -44,7 +47,12 @@ class PrisonerRestrictionsAdminService(
     // Delete all restrictions for removingPrisonerNumber
     prisonerRestrictionsRepository.deleteByPrisonerNumber(removingPrisonerNumber)
 
-    return ChangedRestrictionsResponse(hasChanged = true)
+    // Return the created restriction's IDs, removed restriction IDs and wasCreated=true
+    return MergedRestrictionsResponse(
+      createdRestrictions = newRestrictions.map { it.prisonerRestrictionId },
+      deletedRestrictions = removingRestrictions.map { it.prisonerRestrictionId },
+      hasChanged = true,
+    )
   }
 
   /**
@@ -81,8 +89,11 @@ class PrisonerRestrictionsAdminService(
         updatedTime = restriction.updatedTime,
       )
     }
-    prisonerRestrictionsRepository.saveAllAndFlush(newRestrictions).map { it.prisonerRestrictionId }
-    return ChangedRestrictionsResponse(hasChanged = true)
+    val createdRestrictions =
+      prisonerRestrictionsRepository.saveAllAndFlush(newRestrictions).map { it.prisonerRestrictionId }
+    val deletedRestrictions = restrictionsForPrisoner.map { it.prisonerRestrictionId }
+
+    return ChangedRestrictionsResponse(hasChanged = true, createdRestrictions, deletedRestrictions)
   }
 
   private fun validateReferenceDataExists(code: String) {

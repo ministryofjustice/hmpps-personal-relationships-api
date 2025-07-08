@@ -53,9 +53,7 @@ class PrisonerRestrictionsAdminController(val prisonerRestrictionsAdminFacade: P
   fun merge(
     @PathVariable keepingPrisonerNumber: String,
     @PathVariable removedPrisonerNumber: String,
-  ) {
-    prisonerRestrictionsAdminFacade.merge(keepingPrisonerNumber, removedPrisonerNumber)
-  }
+  ) = prisonerRestrictionsAdminFacade.merge(keepingPrisonerNumber, removedPrisonerNumber)
 
   @PostMapping(path = ["/reset"], consumes = [MediaType.APPLICATION_JSON_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
   @ResponseBody
@@ -94,7 +92,5 @@ class PrisonerRestrictionsAdminController(val prisonerRestrictionsAdminFacade: P
   @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun resetPrisonerRestrictions(
     @Valid @RequestBody request: ResetPrisonerRestrictionsRequest,
-  ) {
-    prisonerRestrictionsAdminFacade.reset(request)
-  }
+  ) = prisonerRestrictionsAdminFacade.reset(request)
 }

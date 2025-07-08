@@ -6,18 +6,21 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.MergedRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.PrisonerRestrictionDetailsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerRestrictionsMigrationResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerRestrictionsChanged
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerRestrictionInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 class PrisonerRestrictionsAdminIntegrationTest : PostgresIntegrationTestBase() {
+
   companion object {
     private const val KEEP_PRISONER = "A1234AA"
     private const val REMOVE_PRISONER = "B1234BB"
@@ -55,37 +58,53 @@ class PrisonerRestrictionsAdminIntegrationTest : PostgresIntegrationTestBase() {
   }
 
   @Test
-  fun `should fire prisoner restrictions domain event when restrictions are merged`() {
+  fun `should fire individual prisoner restriction created and deleted events when restrictions are merged`() {
     migratePrisonerRestrictions(KEEP_PRISONER)
     migratePrisonerRestrictions(REMOVE_PRISONER)
 
-    performMerge()
+    val responseBody = performMerge()
 
     assertPrisonerRestrictionsPresent()
 
-    stubEvents.assertHasEvent(
-      event = OutboundEvent.PRISONER_RESTRICTIONS_CHANGED,
-      additionalInfo = PrisonerRestrictionsChanged(
-        keepingPrisonerNumber = KEEP_PRISONER,
-        removingPrisonerNumber = REMOVE_PRISONER,
-        source = Source.NOMIS,
-        username = "SYS",
-        activeCaseLoadId = null,
-      ),
-      personReference = null,
-    )
+    // Verify that a PRISONER_RESTRICTION_CREATED event was fired for each created restriction
+    responseBody.createdRestrictions.forEach { restrictionId ->
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.PRISONER_RESTRICTION_CREATED,
+        additionalInfo = PrisonerRestrictionInfo(
+          prisonerRestrictionId = restrictionId,
+          source = Source.NOMIS,
+          username = "SYS",
+          activeCaseLoadId = null,
+        ),
+        personReference = PersonReference(KEEP_PRISONER),
+      )
+    }
+    // Verify that a PRISONER_RESTRICTION_DELETED event was fired for the removed prisoner
+    responseBody.deletedRestrictions.forEach { restrictionId ->
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.PRISONER_RESTRICTION_DELETED,
+        additionalInfo = PrisonerRestrictionInfo(
+          prisonerRestrictionId = restrictionId,
+          source = Source.NOMIS,
+          username = "SYS",
+          activeCaseLoadId = null,
+        ),
+        personReference = PersonReference(REMOVE_PRISONER),
+      )
+    }
   }
 
   // --- Helper methods below ---
 
-  private fun performMerge() {
-    webTestClient.put()
-      .uri(MERGE_URI)
-      .headers(setAuthorisationUsingCurrentUser())
-      .accept(MediaType.APPLICATION_JSON)
-      .exchange()
-      .expectStatus().isOk
-  }
+  private fun performMerge() = webTestClient.put()
+    .uri(MERGE_URI)
+    .headers(setAuthorisationUsingCurrentUser())
+    .accept(MediaType.APPLICATION_JSON)
+    .exchange()
+    .expectStatus().isOk
+    .expectHeader().contentType(MediaType.APPLICATION_JSON)
+    .expectBody(MergedRestrictionsResponse::class.java)
+    .returnResult().responseBody!!
 
   private fun assertPrisonerRestrictionsPresent() {
     // to be replaced with get method once the endpoint is available

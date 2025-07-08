@@ -8,15 +8,16 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.ChangedRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.PrisonerRestrictionDetailsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerRestrictionsMigrationResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerRestrictionsChanged
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerRestrictionInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.time.LocalDate
@@ -130,8 +131,7 @@ class PrisonerRestrictionsResetIntegrationTest : PostgresIntegrationTestBase() {
 
     fun aMinimalResetPrisonerRestrictionsRequest(prisonerNumber: String = RESETTING_PRISONER_NUMBER) = ResetPrisonerRestrictionsRequest(
       prisonerNumber = prisonerNumber,
-      restrictions =
-      listOf(
+      restrictions = listOf(
         prisonerRestrictionDetailsRequest(),
         prisonerRestrictionDetailsRequest(),
         prisonerRestrictionDetailsRequest(),
@@ -173,26 +173,43 @@ class PrisonerRestrictionsResetIntegrationTest : PostgresIntegrationTestBase() {
     migratePrisonerRestrictions()
 
     val request = aMinimalResetPrisonerRestrictionsRequest()
-    webTestClient.post()
+    val response = webTestClient.post()
       .uri(RESET_URI)
       .headers(setAuthorisationUsingCurrentUser())
       .accept(MediaType.APPLICATION_JSON)
       .bodyValue(request)
       .exchange()
       .expectStatus().isOk
-      .expectBody()
+      .expectBody(ChangedRestrictionsResponse::class.java)
+      .returnResult()
+      .responseBody!!
 
-    stubEvents.assertHasEvent(
-      event = OutboundEvent.PRISONER_RESTRICTIONS_CHANGED,
-      additionalInfo = PrisonerRestrictionsChanged(
-        keepingPrisonerNumber = request.prisonerNumber,
-        removingPrisonerNumber = null,
-        source = Source.NOMIS,
-        username = User.SYS_USER.username,
-        activeCaseLoadId = null,
-      ),
-      personReference = null,
-    )
+    // Verify the deleted restriction event
+    response.createdRestrictions.forEach { restrictionId ->
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.PRISONER_RESTRICTION_CREATED,
+        additionalInfo = PrisonerRestrictionInfo(
+          prisonerRestrictionId = restrictionId,
+          source = Source.NOMIS,
+          username = "SYS",
+          activeCaseLoadId = null,
+        ),
+        personReference = PersonReference(RESETTING_PRISONER_NUMBER),
+      )
+    }
+// Verify that a PRISONER_RESTRICTION_DELETED event was fired for the removed prisoner
+    response.deletedRestrictions.forEach {
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.PRISONER_RESTRICTION_DELETED,
+        additionalInfo = PrisonerRestrictionInfo(
+          prisonerRestrictionId = it,
+          source = Source.NOMIS,
+          username = "SYS",
+          activeCaseLoadId = null,
+        ),
+        personReference = PersonReference(RESETTING_PRISONER_NUMBER),
+      )
+    }
   }
 
   @ParameterizedTest
