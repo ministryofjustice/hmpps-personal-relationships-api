@@ -40,7 +40,6 @@ class PrisonerRestrictionsController(
       ApiResponse(
         responseCode = "200",
         description = "Found restrictions",
-        content = [Content(mediaType = "application/json", schema = Schema(implementation = PrisonerRestrictionDetails::class))],
       ),
       ApiResponse(
         responseCode = "400",
