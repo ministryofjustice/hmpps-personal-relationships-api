@@ -20,7 +20,7 @@ data class MigratePrisonerRestrictionsRequest(
 
 @Schema(description = "Details of a prisoner restriction record")
 data class PrisonerRestrictionDetailsRequest(
-  @Schema(description = "The restriction type", example = "NO_VISIT")
+  @Schema(description = "The restriction type", example = "NO_VISIT", maxLength = 12)
   @field:Size(max = 12, message = "restrictionType must be less than or equal to 12 characters")
   val restrictionType: String,
 
@@ -30,7 +30,7 @@ data class PrisonerRestrictionDetailsRequest(
   @Schema(description = "Expiry date of the restriction", example = "2024-12-31")
   val expiryDate: LocalDate? = null,
 
-  @Schema(description = "Comment text", example = "No visits allowed")
+  @Schema(description = "Comment text", example = "No visits allowed", maxLength = 240)
   @field:Size(max = 240, message = "commentText must be less than or equal to 240 characters")
   val commentText: String? = null,
 

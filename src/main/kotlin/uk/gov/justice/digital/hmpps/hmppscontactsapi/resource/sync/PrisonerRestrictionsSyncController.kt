@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.SyncPrisonerRestrictionFacade
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync.PrisonerRestrictionSyncFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreatePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerRestriction
@@ -33,7 +33,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 @RequestMapping(value = ["/sync"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @AuthApiResponses
 class PrisonerRestrictionsSyncController(
-  val syncFacade: SyncPrisonerRestrictionFacade,
+  val syncFacade: PrisonerRestrictionSyncFacade,
 ) {
   @GetMapping(
     path = ["/prisoner-restriction/{prisonerRestrictionId}"],

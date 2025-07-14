@@ -7,10 +7,10 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.ChangedRestrictionsResponse
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.MergedRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.PrisonerRestrictionDetailsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ChangedRestrictionsResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.MergedRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source

@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.resource.sync
 
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -18,6 +20,8 @@ import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync.PrisonerRestrictionsAdminFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ChangedRestrictionsResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.MergedRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
@@ -43,6 +47,7 @@ class PrisonerRestrictionsAdminController(val prisonerRestrictionsAdminFacade: P
         content = [
           Content(
             mediaType = "application/json",
+            schema = Schema(implementation = MergedRestrictionsResponse::class),
           ),
         ],
       ),
@@ -51,9 +56,22 @@ class PrisonerRestrictionsAdminController(val prisonerRestrictionsAdminFacade: P
   @AuthApiResponses
   @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun merge(
-    @PathVariable keepingPrisonerNumber: String,
+    @PathVariable
+    @Parameter(
+      `in` = ParameterIn.PATH,
+      name = "keepingPrisonerNumber",
+      description = "Keeping prisoner's number",
+      example = "ABC123D",
+    )
+    keepingPrisonerNumber: String,
+    @Parameter(
+      `in` = ParameterIn.PATH,
+      name = "removedPrisonerNumber",
+      description = "Removed prisoner's number",
+      example = "ABC123F",
+    )
     @PathVariable removedPrisonerNumber: String,
-  ) = prisonerRestrictionsAdminFacade.merge(keepingPrisonerNumber, removedPrisonerNumber)
+  ): MergedRestrictionsResponse = prisonerRestrictionsAdminFacade.merge(keepingPrisonerNumber, removedPrisonerNumber)
 
   @PostMapping(path = ["/reset"], consumes = [MediaType.APPLICATION_JSON_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
   @ResponseBody
@@ -73,6 +91,7 @@ class PrisonerRestrictionsAdminController(val prisonerRestrictionsAdminFacade: P
         content = [
           Content(
             mediaType = "application/json",
+            schema = Schema(implementation = ChangedRestrictionsResponse::class),
           ),
         ],
       ),
@@ -81,16 +100,11 @@ class PrisonerRestrictionsAdminController(val prisonerRestrictionsAdminFacade: P
         description = "The request failed validation with invalid or missing data supplied",
         content = [Content(schema = Schema(implementation = ErrorResponse::class))],
       ),
-      ApiResponse(
-        responseCode = "404",
-        description = "Could not find reference data for the supplied restriction type",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
     ],
   )
   @AuthApiResponses
   @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
   fun resetPrisonerRestrictions(
     @Valid @RequestBody request: ResetPrisonerRestrictionsRequest,
-  ) = prisonerRestrictionsAdminFacade.reset(request)
+  ): ChangedRestrictionsResponse = prisonerRestrictionsAdminFacade.reset(request)
 }
