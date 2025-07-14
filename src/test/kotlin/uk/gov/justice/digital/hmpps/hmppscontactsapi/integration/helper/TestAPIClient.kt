@@ -49,6 +49,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerCont
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactSummary
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.MigrateContactResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContact
@@ -589,6 +590,16 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(LinkedPrisonerResponse::class.java)
     .returnResult().responseBody!!
 
+  fun getPrisonerRestrictions(prisonerNumber: String, currentTermOnly: Boolean? = false, page: Int? = null, size: Int? = null): PrisonerRestrictionsResponse = webTestClient.get()
+    .uri("/prisoner-restrictions/$prisonerNumber?${currentTermOnly?.let { "page=$currentTermOnly&"} }${page?.let { "page=$page&"} }${size?.let { "size=$size"} }")
+    .headers(setAuthorisationUsingCurrentUser())
+    .exchange()
+    .expectStatus()
+    .isOk
+    .expectHeader().contentType(MediaType.APPLICATION_JSON)
+    .expectBody(PrisonerRestrictionsResponse::class.java)
+    .returnResult().responseBody!!
+
   fun patchEmployments(contactId: Long, request: PatchEmploymentsRequest): List<EmploymentDetails> = webTestClient.patch()
     .uri("/contact/$contactId/employment")
     .accept(MediaType.APPLICATION_JSON)
@@ -675,6 +686,11 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
 
   data class ContactIdsResponse(
     val content: List<SyncContactId>,
+    val page: PagedModel.PageMetadata,
+  )
+
+  data class PrisonerRestrictionsResponse(
+    val content: List<PrisonerRestrictionDetails>,
     val page: PagedModel.PageMetadata,
   )
 

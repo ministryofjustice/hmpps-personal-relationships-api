@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
+package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -10,24 +10,24 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreatePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerRestriction
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.PrisonerRestrictionsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncPrisonerRestrictionsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.UserUtil
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class SyncPrisonerRestrictionFacadeTest {
+class PrisonerRestrictionSyncFacadeTest {
 
-  private val prisonerRestrictionsService: PrisonerRestrictionsService = mock()
+  private val prisonerRestrictionsService: SyncPrisonerRestrictionsService = mock()
   private val outboundEventsService: OutboundEventsService = mock()
   private val userUtil: UserUtil = mock()
-  private lateinit var facade: SyncPrisonerRestrictionFacade
+  private lateinit var facade: PrisonerRestrictionSyncFacade
 
   @BeforeEach
   fun setUp() {
-    facade = SyncPrisonerRestrictionFacade(prisonerRestrictionsService, outboundEventsService, userUtil)
+    facade = PrisonerRestrictionSyncFacade(prisonerRestrictionsService, outboundEventsService, userUtil)
   }
 
   @Test

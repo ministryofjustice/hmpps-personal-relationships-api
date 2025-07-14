@@ -1,18 +1,18 @@
-package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
+package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreatePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerRestrictionRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.PrisonerRestrictionsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync.SyncPrisonerRestrictionsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.UserUtil
 
 @Component
-class SyncPrisonerRestrictionFacade(
-  private val prisonerRestrictionService: PrisonerRestrictionsService,
+class PrisonerRestrictionSyncFacade(
+  private val prisonerRestrictionService: SyncPrisonerRestrictionsService,
   private val outboundEventsService: OutboundEventsService,
   private val userUtil: UserUtil,
 ) {
