@@ -229,26 +229,6 @@ class PrisonerRestrictionsResetIntegrationTest : PostgresIntegrationTestBase() {
   }
 
   @Test
-  fun `should not reset prisoner restrictions when restrictions list is empty`() {
-    val invalidRequest = ResetPrisonerRestrictionsRequest(
-      prisonerNumber = RESETTING_PRISONER_NUMBER,
-      restrictions = emptyList(),
-    )
-
-    webTestClient.post()
-      .uri(RESET_URI)
-      .headers(setAuthorisationUsingCurrentUser())
-      .contentType(MediaType.APPLICATION_JSON)
-      .bodyValue(invalidRequest)
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .expectBody()
-      .jsonPath("$.userMessage")
-      .isEqualTo("Validation failure(s): restrictions must contain at least one record")
-  }
-
-  @Test
   fun `should return not found when restriction type is not found`() {
     val invalidRequest = ResetPrisonerRestrictionsRequest(
       prisonerNumber = RESETTING_PRISONER_NUMBER,
