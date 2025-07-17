@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.Priso
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.MergedRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerRestrictionsMigrationResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.PrisonerRestrictionIdsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
@@ -100,6 +101,25 @@ class PrisonerRestrictionsAdminIntegrationTest : PostgresIntegrationTestBase() {
         personReference = PersonReference(REMOVE_PRISONER),
       )
     }
+  }
+
+  @Test
+  fun `should return restriction IDs for a prisoner using reconcile endpoint`() {
+    val prisonerNumber = KEEP_PRISONER
+    val migrationResponse = migratePrisonerRestrictions(prisonerNumber)
+
+    val response = webTestClient.get()
+      .uri("/prisoner-restrictions/$prisonerNumber/reconcile")
+      .headers(setAuthorisationUsingCurrentUser())
+      .accept(MediaType.APPLICATION_JSON)
+      .exchange()
+      .expectStatus().isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(PrisonerRestrictionIdsResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(response.prisonerNumber).isEqualTo(prisonerNumber)
+    assertThat(response.restrictionIds).containsExactlyElementsOf(migrationResponse.prisonerRestrictionsIds)
   }
 
   // --- Helper methods below ---

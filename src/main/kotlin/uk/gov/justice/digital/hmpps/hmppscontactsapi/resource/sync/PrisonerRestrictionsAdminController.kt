@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -18,6 +20,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync.PrisonerRestric
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ChangedRestrictionsResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.PrisonerRestrictionIdsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
@@ -95,4 +98,33 @@ class PrisonerRestrictionsAdminController(val prisonerRestrictionsAdminFacade: P
   fun resetPrisonerRestrictions(
     @Valid @RequestBody request: ResetPrisonerRestrictionsRequest,
   ): ChangedRestrictionsResponse = prisonerRestrictionsAdminFacade.reset(request)
+
+  @GetMapping(path = ["/{prisonerNumber}/reconcile"], produces = [MediaType.APPLICATION_JSON_VALUE])
+  @Operation(
+    summary = "Reconciliation endpoint for a single prisoner by prisoner number (restriction IDs only)",
+    description = "Get a list of restriction IDs for a given prisoner number",
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "List of restriction IDs for the prisoner",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = PrisonerRestrictionIdsResponse::class),
+          ),
+        ],
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "No restrictions found for that prisoner number",
+      ),
+    ],
+  )
+  @AuthApiResponses
+  @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
+  fun reconcilePrisonerRestrictionIds(
+    @PathVariable prisonerNumber: String,
+  ): PrisonerRestrictionIdsResponse = prisonerRestrictionsAdminFacade.getRestrictionIdsForPrisoner(prisonerNumber)
 }

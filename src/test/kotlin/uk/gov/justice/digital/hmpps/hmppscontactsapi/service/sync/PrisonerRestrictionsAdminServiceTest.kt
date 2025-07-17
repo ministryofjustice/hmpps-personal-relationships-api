@@ -230,4 +230,20 @@ class PrisonerRestrictionsAdminServiceTest {
     updatedBy = "user2",
     updatedTime = LocalDateTime.of(2024, 6, 1, 12, 0).plusDays(1),
   )
+
+  @Test
+  fun `getRestrictionIdsForPrisoner returns correct PrisonerRestrictionIdsResponse`() {
+    val prisonerNumber = "A1234BC"
+    val restrictions = listOf(
+      restriction(10L, prisonerNumber),
+      restriction(20L, prisonerNumber),
+      restriction(30L, prisonerNumber),
+    )
+    whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(restrictions)
+
+    val result = restrictionsAdminService.getRestrictionIdsForPrisoner(prisonerNumber)
+
+    assertThat(result.prisonerNumber).isEqualTo(prisonerNumber)
+    assertThat(result.restrictionIds).containsExactly(10L, 20L, 30L)
+  }
 }
