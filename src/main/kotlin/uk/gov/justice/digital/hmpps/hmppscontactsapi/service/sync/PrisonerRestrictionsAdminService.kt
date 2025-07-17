@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ChangedRestrictionsResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.PrisonerRestrictionIdsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ReferenceCodeService
 
@@ -106,5 +107,10 @@ class PrisonerRestrictionsAdminService(
 
   private fun validateReferenceDataExists(code: String) {
     referenceCodeService.validateReferenceCode(ReferenceCodeGroup.RESTRICTION, code, allowInactive = true)
+  }
+
+  fun getRestrictionIdsForPrisoner(prisonerNumber: String): PrisonerRestrictionIdsResponse {
+    val ids = prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber).map { it.prisonerRestrictionId }
+    return PrisonerRestrictionIdsResponse(prisonerNumber = prisonerNumber, restrictionIds = ids)
   }
 }

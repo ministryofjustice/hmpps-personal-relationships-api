@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.Priso
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ChangedRestrictionsResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.PrisonerRestrictionIdsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -188,5 +189,18 @@ class PrisonerRestrictionsAdminFacadeTest {
         ),
       ),
     )
+  }
+
+  @Test
+  fun `getRestrictionIdsForPrisoner delegates to service and returns correct response`() {
+    val prisonerNumber = "A1234BC"
+    val expectedIds = listOf(10L, 20L, 30L)
+    val expectedResponse = PrisonerRestrictionIdsResponse(prisonerNumber, expectedIds)
+    whenever(mergeService.getRestrictionIdsForPrisoner(prisonerNumber)).thenReturn(expectedResponse)
+
+    val result = facade.getRestrictionIdsForPrisoner(prisonerNumber)
+
+    assert(result == expectedResponse)
+    verify(mergeService).getRestrictionIdsForPrisoner(prisonerNumber)
   }
 }
