@@ -8,6 +8,7 @@ import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.MigratePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.PrisonerRestrictionDetailsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.MergedRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.PrisonerRestrictionsMigrationResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
@@ -24,7 +25,7 @@ class PrisonerRestrictionsAdminIntegrationTest : PostgresIntegrationTestBase() {
   companion object {
     private const val KEEP_PRISONER = "A1234AA"
     private const val REMOVE_PRISONER = "B1234BB"
-    private const val MERGE_URI = "/prisoner-restrictions/keep/$KEEP_PRISONER/remove/$REMOVE_PRISONER"
+    private const val MERGE_URI = "/prisoner-restrictions/merge"
   }
 
   @Autowired
@@ -39,7 +40,7 @@ class PrisonerRestrictionsAdminIntegrationTest : PostgresIntegrationTestBase() {
 
   @Test
   fun `should return unauthorized when no token provided for merge`() {
-    webTestClient.put()
+    webTestClient.post()
       .uri(MERGE_URI)
       .accept(MediaType.APPLICATION_JSON)
       .exchange()
@@ -49,9 +50,16 @@ class PrisonerRestrictionsAdminIntegrationTest : PostgresIntegrationTestBase() {
   @Test
   fun `should return forbidden when user lacks authorised role for merge`() {
     setCurrentUser(StubUser.USER_WITH_NO_ROLES)
-    webTestClient.put()
+    webTestClient.post()
       .uri(MERGE_URI)
       .headers(setAuthorisationUsingCurrentUser())
+      .bodyValue(
+        MergePrisonerRestrictionsRequest(
+          keepingPrisonerNumber = KEEP_PRISONER,
+          removingPrisonerNumber = REMOVE_PRISONER,
+          restrictions = listOf(prisonerRestrictionDetailsRequest(), prisonerRestrictionDetailsRequest()),
+        ),
+      )
       .accept(MediaType.APPLICATION_JSON)
       .exchange()
       .expectStatus().isForbidden
@@ -96,10 +104,17 @@ class PrisonerRestrictionsAdminIntegrationTest : PostgresIntegrationTestBase() {
 
   // --- Helper methods below ---
 
-  private fun performMerge() = webTestClient.put()
+  private fun performMerge() = webTestClient.post()
     .uri(MERGE_URI)
     .headers(setAuthorisationUsingCurrentUser())
-    .accept(MediaType.APPLICATION_JSON)
+    .contentType(MediaType.APPLICATION_JSON)
+    .bodyValue(
+      MergePrisonerRestrictionsRequest(
+        keepingPrisonerNumber = KEEP_PRISONER,
+        removingPrisonerNumber = REMOVE_PRISONER,
+        restrictions = listOf(prisonerRestrictionDetailsRequest(), prisonerRestrictionDetailsRequest()),
+      ),
+    )
     .exchange()
     .expectStatus().isOk
     .expectHeader().contentType(MediaType.APPLICATION_JSON)

@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerRestriction
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.isEqualTo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.PrisonerRestrictionDetailsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
@@ -35,67 +36,65 @@ class PrisonerRestrictionsAdminServiceTest {
   @InjectMocks
   private lateinit var restrictionsAdminService: PrisonerRestrictionsAdminService
 
-  private val retainingPrisonerNumber = "A1234BC"
-  private val removingPrisonerNumber = "B2345CD"
-
   @Nested
   inner class PrisonerMergeRestrictions {
-
     @Test
-    fun `should move restrictions from removing to retaining prisoner and delete old restrictions`() {
-      // Given
-      val prisonerRestrictionId0 = 0L
-      val prisonerRestrictionId1 = 1L
-      val databaseNextIndex = 5L
-      val removingRestriction1 = restriction(prisonerRestrictionId0)
-      val removingRestriction2 = restriction(prisonerRestrictionId1)
-      val removingRestrictions = listOf(removingRestriction1, removingRestriction2)
-
-      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(removingPrisonerNumber))
-        .thenReturn(removingRestrictions)
-      whenever(prisonerRestrictionsRepository.saveAllAndFlush(any<List<PrisonerRestriction>>()))
-        .thenAnswer { invocation ->
-          val restrictions = invocation.getArgument<List<PrisonerRestriction>>(0)
-          // Simulate saving by assigning new IDs based on the next index
-          restrictions.mapIndexed { idx, restriction -> restriction.copy(prisonerRestrictionId = (idx + databaseNextIndex)) }
-        }
-      // When
-      val result = restrictionsAdminService.mergePrisonerRestrictions(retainingPrisonerNumber, removingPrisonerNumber)
-
-      // Then
+    fun `should delete all restrictions for both prisoners and create new ones for keeping prisoner`() {
+      val keepingPrisonerNumber = "A1234BC"
+      val removingPrisonerNumber = "B2345CD"
+      val keepingRestrictions = listOf(restriction(1L, keepingPrisonerNumber))
+      val removingRestrictions = listOf(restriction(2L, removingPrisonerNumber))
+      val request = MergePrisonerRestrictionsRequest(
+        keepingPrisonerNumber = keepingPrisonerNumber,
+        removingPrisonerNumber = removingPrisonerNumber,
+        restrictions = listOf(
+          PrisonerRestrictionDetailsRequest(
+            restrictionType = "CCTV",
+            effectiveDate = LocalDate.now(),
+            expiryDate = LocalDate.now().plusDays(1),
+            commentText = "Test comment",
+            currentTerm = true,
+            authorisedUsername = "user",
+            createdBy = "user",
+            createdTime = LocalDateTime.now(),
+            updatedBy = "user",
+            updatedTime = LocalDateTime.now(),
+          ),
+        ),
+      )
+      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(removingPrisonerNumber)).thenReturn(removingRestrictions)
+      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(keepingPrisonerNumber)).thenReturn(keepingRestrictions)
+      whenever(prisonerRestrictionsRepository.saveAllAndFlush(any<List<PrisonerRestriction>>())).thenAnswer { invocation ->
+        val restrictions = invocation.getArgument<List<PrisonerRestriction>>(0)
+        restrictions.mapIndexed { idx, restriction -> restriction.copy(prisonerRestrictionId = (idx + 10L)) }
+      }
+      val result = restrictionsAdminService.mergePrisonerRestrictions(request)
       verify(prisonerRestrictionsRepository).findByPrisonerNumber(removingPrisonerNumber)
-      verify(prisonerRestrictionsRepository).deleteByPrisonerNumber(removingPrisonerNumber)
+      verify(prisonerRestrictionsRepository).deleteAll(removingRestrictions)
+      verify(prisonerRestrictionsRepository).findByPrisonerNumber(keepingPrisonerNumber)
+      verify(prisonerRestrictionsRepository).deleteAll(keepingRestrictions)
       verify(prisonerRestrictionsRepository).saveAllAndFlush(any<List<PrisonerRestriction>>())
       assertThat(result.hasChanged).isTrue
+      assertThat(result.createdRestrictions).containsExactly(10L)
+      assertThat(result.deletedRestrictions).containsExactly(2L, 1L)
     }
 
     @Test
-    fun `should return default response when no restrictions to move`() {
-      // Given
-      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(removingPrisonerNumber))
-        .thenReturn(emptyList())
-
-      // When
-      val result = restrictionsAdminService.mergePrisonerRestrictions(retainingPrisonerNumber, removingPrisonerNumber)
-
-      // Then
-      verify(prisonerRestrictionsRepository).findByPrisonerNumber(removingPrisonerNumber)
-      verify(prisonerRestrictionsRepository, never()).saveAllAndFlush(any<List<PrisonerRestriction>>())
-      verify(prisonerRestrictionsRepository, never()).deleteByPrisonerNumber(any())
+    fun `should return empty response if no restrictions to delete or create`() {
+      val keepingPrisonerNumber = "A1234BC"
+      val removingPrisonerNumber = "B2345CD"
+      val request = MergePrisonerRestrictionsRequest(
+        keepingPrisonerNumber = keepingPrisonerNumber,
+        removingPrisonerNumber = removingPrisonerNumber,
+        restrictions = emptyList(),
+      )
+      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(removingPrisonerNumber)).thenReturn(emptyList())
+      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(keepingPrisonerNumber)).thenReturn(emptyList())
+      whenever(prisonerRestrictionsRepository.saveAllAndFlush(any<List<PrisonerRestriction>>())).thenReturn(emptyList())
+      val result = restrictionsAdminService.mergePrisonerRestrictions(request)
       assertThat(result.hasChanged).isFalse
-    }
-
-    @Test
-    fun `should handle exception thrown by saveAllAndFlush and return default response`() {
-      val removingRestriction = restriction(1L)
-      whenever(prisonerRestrictionsRepository.findByPrisonerNumber(removingPrisonerNumber))
-        .thenReturn(listOf(removingRestriction))
-      whenever(prisonerRestrictionsRepository.saveAllAndFlush(any<List<PrisonerRestriction>>()))
-        .thenThrow(RuntimeException("DB error"))
-
-      assertThrows<RuntimeException> {
-        restrictionsAdminService.mergePrisonerRestrictions(retainingPrisonerNumber, removingPrisonerNumber)
-      }.message isEqualTo "DB error"
+      assertThat(result.createdRestrictions).isEmpty()
+      assertThat(result.deletedRestrictions).isEmpty()
     }
   }
 
@@ -211,7 +210,7 @@ class PrisonerRestrictionsAdminServiceTest {
 
   private fun restriction(
     prisonerRestrictionId: Long = 1L,
-    prisonerNumber: String = removingPrisonerNumber,
+    prisonerNumber: String = "B2345CD",
     restrictionType: String = "CCTV",
     effectiveDate: LocalDate = LocalDate.of(2024, 1, 1),
     expiryDate: LocalDate = LocalDate.of(2024, 12, 31),

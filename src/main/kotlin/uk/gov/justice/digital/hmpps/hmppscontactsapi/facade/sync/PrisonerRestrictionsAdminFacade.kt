@@ -2,9 +2,9 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ChangedRestrictionsResponse
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.MergedRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -16,8 +16,8 @@ class PrisonerRestrictionsAdminFacade(
   private val outboundEventsService: OutboundEventsService,
 ) {
 
-  fun merge(keepingPrisonerNumber: String, removingPrisonerNumber: String): MergedRestrictionsResponse {
-    val response = restrictionsAdminService.mergePrisonerRestrictions(keepingPrisonerNumber, removingPrisonerNumber)
+  fun merge(request: MergePrisonerRestrictionsRequest): ChangedRestrictionsResponse {
+    val response = restrictionsAdminService.mergePrisonerRestrictions(request)
 
     if (response.hasChanged) {
       // Send CREATED events for new restrictions
@@ -26,7 +26,7 @@ class PrisonerRestrictionsAdminFacade(
           outboundEvent = OutboundEvent.PRISONER_RESTRICTION_CREATED,
           identifier = restrictionId,
           source = Source.NOMIS,
-          noms = keepingPrisonerNumber,
+          noms = request.keepingPrisonerNumber,
           user = User.SYS_USER,
         )
       }
@@ -37,7 +37,7 @@ class PrisonerRestrictionsAdminFacade(
           outboundEvent = OutboundEvent.PRISONER_RESTRICTION_DELETED,
           identifier = restrictionId,
           source = Source.NOMIS,
-          noms = removingPrisonerNumber,
+          noms = request.removingPrisonerNumber,
           user = User.SYS_USER,
         )
       }

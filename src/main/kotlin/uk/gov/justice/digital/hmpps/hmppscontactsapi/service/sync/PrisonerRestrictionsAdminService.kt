@@ -4,9 +4,9 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerRestriction
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ChangedRestrictionsResponse
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.MergedRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ReferenceCodeService
 
@@ -19,39 +19,47 @@ class PrisonerRestrictionsAdminService(
 
   /**
    * Merges prisoner restriction records from the removing prisoner to the retaining prisoner.
-   * Copies all restrictions from the removing prisoner to the retaining prisoner, generating new IDs.
-   * Deletes all restrictions for the removing prisoner after copying.
+   * Deletes all restrictions for the removing prisoner and resets the restrictions for the retaining prisoner to those in the request.
    * Returns the created restriction's IDs, the removed restriction's IDs and whether any records were created.
    */
-  fun mergePrisonerRestrictions(retainingPrisonerNumber: String, removingPrisonerNumber: String): MergedRestrictionsResponse {
-    // Get all restrictions for removingPrisonerNumber
-    val removingRestrictions = prisonerRestrictionsRepository.findByPrisonerNumber(removingPrisonerNumber)
+  fun mergePrisonerRestrictions(request: MergePrisonerRestrictionsRequest): ChangedRestrictionsResponse {
+    // Delete all restrictions for removingPrisonerNumber
+    val removingRestrictions = prisonerRestrictionsRepository.findByPrisonerNumber(request.removingPrisonerNumber)
+    prisonerRestrictionsRepository.deleteAll(removingRestrictions)
 
-    // If there are no restrictions to move, return default response
-    if (removingRestrictions.isEmpty()) {
-      return MergedRestrictionsResponse(
-        hasChanged = false,
-      )
+    // Delete all restrictions for keepingPrisonerNumber
+    val keepingRestrictions = prisonerRestrictionsRepository.findByPrisonerNumber(request.keepingPrisonerNumber)
+    prisonerRestrictionsRepository.deleteAll(keepingRestrictions)
+
+    // Validate reference data for each restriction
+    request.restrictions.forEach { restriction ->
+      validateReferenceDataExists(restriction.restrictionType)
     }
 
-    // For each removing restriction, create a new restriction for retainingPrisonerNumber with the same details
-    val newRestrictions = prisonerRestrictionsRepository.saveAllAndFlush(
-      removingRestrictions.map { restriction ->
-        restriction.copy(
-          prisonerRestrictionId = 0, // Let JPA generate new ID
-          prisonerNumber = retainingPrisonerNumber,
-        )
-      },
-    )
+    // Save new restrictions for keepingPrisonerNumber
+    val newRestrictions = request.restrictions.map { restriction ->
+      PrisonerRestriction(
+        prisonerRestrictionId = 0, // Let JPA generate new ID
+        prisonerNumber = request.keepingPrisonerNumber,
+        restrictionType = restriction.restrictionType,
+        effectiveDate = restriction.effectiveDate,
+        expiryDate = restriction.expiryDate,
+        commentText = restriction.commentText,
+        currentTerm = restriction.currentTerm,
+        authorisedUsername = restriction.authorisedUsername,
+        createdBy = restriction.createdBy,
+        createdTime = restriction.createdTime,
+        updatedBy = restriction.updatedBy,
+        updatedTime = restriction.updatedTime,
+      )
+    }
+    val createdRestrictions = prisonerRestrictionsRepository.saveAllAndFlush(newRestrictions).map { it.prisonerRestrictionId }
+    val deletedRestrictions = (removingRestrictions + keepingRestrictions).map { it.prisonerRestrictionId }
 
-    // Delete all restrictions for removingPrisonerNumber
-    prisonerRestrictionsRepository.deleteByPrisonerNumber(removingPrisonerNumber)
-
-    // Return the created restriction's IDs, removed restriction IDs and wasCreated=true
-    return MergedRestrictionsResponse(
-      createdRestrictions = newRestrictions.map { it.prisonerRestrictionId },
-      deletedRestrictions = removingRestrictions.map { it.prisonerRestrictionId },
-      hasChanged = true,
+    return ChangedRestrictionsResponse(
+      createdRestrictions = createdRestrictions,
+      deletedRestrictions = deletedRestrictions,
+      hasChanged = createdRestrictions.isNotEmpty() || deletedRestrictions.isNotEmpty(),
     )
   }
 

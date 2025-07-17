@@ -8,9 +8,9 @@ import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.PrisonerRestrictionDetailsRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ChangedRestrictionsResponse
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.MergedRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -33,18 +33,23 @@ class PrisonerRestrictionsAdminFacadeTest {
     fun `merge sends correct events`() {
       val keepingPrisonerNumber = "A1234BC"
       val removingPrisonerNumber = "A4567BC"
-
-      val mergePrisonerRestrictionsResponse = MergedRestrictionsResponse(
+      val mergeRequest = MergePrisonerRestrictionsRequest(
+        keepingPrisonerNumber = keepingPrisonerNumber,
+        removingPrisonerNumber = removingPrisonerNumber,
+        restrictions = listOf(
+          prisonerRestrictionDetailsRequest(),
+        ),
+      )
+      val mergePrisonerRestrictionsResponse = ChangedRestrictionsResponse(
         hasChanged = true,
         createdRestrictions = createdRestrictions,
         deletedRestrictions = deletedRestrictions,
       )
-
       whenever(
-        mergeService.mergePrisonerRestrictions(keepingPrisonerNumber, removingPrisonerNumber),
+        mergeService.mergePrisonerRestrictions(mergeRequest),
       ).thenReturn(mergePrisonerRestrictionsResponse)
 
-      facade.merge(keepingPrisonerNumber, removingPrisonerNumber)
+      facade.merge(mergeRequest)
 
       // Verify individual CREATED and DELETED events are sent
       createdRestrictions.forEach { id ->
@@ -56,7 +61,6 @@ class PrisonerRestrictionsAdminFacadeTest {
           user = User.SYS_USER,
         )
       }
-
       deletedRestrictions.forEach { id ->
         verify(outboundEventsService).send(
           outboundEvent = OutboundEvent.PRISONER_RESTRICTION_DELETED,
@@ -70,21 +74,38 @@ class PrisonerRestrictionsAdminFacadeTest {
 
     @Test
     fun `should not send event`() {
-      val retainingPrisonerNumber = "A1234BC"
-      val removedPrisonerNumber = "A4567BC"
-
-      whenever(mergeService.mergePrisonerRestrictions(retainingPrisonerNumber, removedPrisonerNumber)).thenReturn(
-        MergedRestrictionsResponse(
+      val keepingPrisonerNumber = "A1234BC"
+      val removingPrisonerNumber = "A4567BC"
+      val mergeRequest = MergePrisonerRestrictionsRequest(
+        keepingPrisonerNumber = keepingPrisonerNumber,
+        removingPrisonerNumber = removingPrisonerNumber,
+        restrictions = listOf(
+          prisonerRestrictionDetailsRequest(),
+        ),
+      )
+      whenever(mergeService.mergePrisonerRestrictions(mergeRequest)).thenReturn(
+        ChangedRestrictionsResponse(
           hasChanged = false,
           createdRestrictions = createdRestrictions,
           deletedRestrictions = deletedRestrictions,
         ),
       )
-
-      facade.merge(retainingPrisonerNumber, removedPrisonerNumber)
-
+      facade.merge(mergeRequest)
       verifyNoMoreInteractions(outboundEventsService)
     }
+
+    private fun prisonerRestrictionDetailsRequest() = PrisonerRestrictionDetailsRequest(
+      restrictionType = "NO_VISIT",
+      effectiveDate = LocalDate.now(),
+      expiryDate = LocalDate.now().plusDays(1),
+      commentText = "Test comment",
+      currentTerm = true,
+      authorisedUsername = "user",
+      createdBy = "user",
+      createdTime = LocalDateTime.now(),
+      updatedBy = "user",
+      updatedTime = LocalDateTime.now(),
+    )
   }
 
   @Nested
