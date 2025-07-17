@@ -42,7 +42,7 @@ dependencies {
   // OpenAPI
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
 
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.17.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.17.1")
 
   // Test dependencies
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
@@ -58,7 +58,7 @@ dependencies {
   testImplementation("org.testcontainers:localstack:1.21.3")
   testImplementation("org.wiremock:wiremock-standalone:3.13.1")
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.8")
-  testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.51.0")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.52.0")
 }
 
 tasks {
