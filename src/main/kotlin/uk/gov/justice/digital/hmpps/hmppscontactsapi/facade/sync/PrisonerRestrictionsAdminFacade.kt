@@ -1,11 +1,12 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync
 
+import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PagedModel
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ChangedRestrictionsResponse
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.PrisonerRestrictionIdsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -77,5 +78,5 @@ class PrisonerRestrictionsAdminFacade(
     return response
   }
 
-  fun getRestrictionIdsForPrisoner(prisonerNumber: String): PrisonerRestrictionIdsResponse = restrictionsAdminService.getRestrictionIdsForPrisoner(prisonerNumber)
+  fun getAllRestrictionIds(pageable: Pageable) = PagedModel(restrictionsAdminService.getAllRestrictionIds(pageable))
 }

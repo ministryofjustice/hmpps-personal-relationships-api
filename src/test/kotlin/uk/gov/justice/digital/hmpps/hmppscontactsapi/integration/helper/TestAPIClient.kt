@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.helper
 
+import PrisonerRestrictionId
 import org.springframework.data.web.PagedModel
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -686,6 +687,11 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
 
   data class ContactIdsResponse(
     val content: List<SyncContactId>,
+    val page: PagedModel.PageMetadata,
+  )
+
+  data class PrisonerRestrictionIdResponse(
+    val content: List<PrisonerRestrictionId>,
     val page: PagedModel.PageMetadata,
   )
 

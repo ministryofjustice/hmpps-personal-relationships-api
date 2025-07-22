@@ -1,17 +1,21 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync
 
+import PrisonerRestrictionId
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.web.PagedModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.migrate.PrisonerRestrictionDetailsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ChangedRestrictionsResponse
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.PrisonerRestrictionIdsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
@@ -191,16 +195,18 @@ class PrisonerRestrictionsAdminFacadeTest {
     )
   }
 
-  @Test
-  fun `getRestrictionIdsForPrisoner delegates to service and returns correct response`() {
-    val prisonerNumber = "A1234BC"
-    val expectedIds = listOf(10L, 20L, 30L)
-    val expectedResponse = PrisonerRestrictionIdsResponse(prisonerNumber, expectedIds)
-    whenever(mergeService.getRestrictionIdsForPrisoner(prisonerNumber)).thenReturn(expectedResponse)
-
-    val result = facade.getRestrictionIdsForPrisoner(prisonerNumber)
-
-    assert(result == expectedResponse)
-    verify(mergeService).getRestrictionIdsForPrisoner(prisonerNumber)
+  @Nested
+  inner class GetAllRestrictionIds {
+    @Test
+    fun `should delegate to service and return paged restriction IDs`() {
+      val pageable = PageRequest.of(0, 10)
+      val expected = PageImpl(listOf(PrisonerRestrictionId(1L), PrisonerRestrictionId(2L)), pageable, 2)
+      whenever(mergeService.getAllRestrictionIds(pageable)).thenReturn(expected)
+      val result = facade.getAllRestrictionIds(pageable)
+      assertThat(result).isEqualTo(
+        PagedModel(expected),
+      )
+      verify(mergeService).getAllRestrictionIds(pageable)
+    }
   }
 }
