@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.resource
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.ArraySchema
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
@@ -30,6 +31,16 @@ class ReferenceCodeController(private val referenceCodeService: ReferenceCodeSer
   @Operation(
     summary = "Endpoint to return reference data for a provided group key. " +
       "Sorted by display order then description by default.",
+    parameters = [
+      Parameter(
+        name = "sort",
+        `in` = ParameterIn.QUERY,
+        description = "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+        required = false,
+        example = "displayOrder,asc",
+        array = io.swagger.v3.oas.annotations.media.ArraySchema(schema = Schema(type = "string")),
+      ),
+    ],
   )
   @ApiResponses(
     value = [
@@ -71,7 +82,7 @@ class ReferenceCodeController(private val referenceCodeService: ReferenceCodeSer
     @Parameter(description = "The group code of the reference codes to load", required = true, example = "PHONE_TYPE")
     @PathVariable("groupCode", required = true)
     groupCode: ReferenceCodeGroup,
-    @Parameter(description = "Sort configuration - default displayOrder, description", required = false)
+    @Parameter(hidden = true, required = false) // Hide from OpenAPI
     @SortDefault("displayOrder", "description")
     sort: Sort,
     @Parameter(description = "Whether to only return active codes or not, defaults to true", required = false)
