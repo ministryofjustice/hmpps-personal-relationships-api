@@ -2,9 +2,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.1"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.3"
   id("org.openapi.generator") version "7.14.0"
-  id("io.gatling.gradle") version "3.14.3.2"
+  id("io.gatling.gradle") version "3.14.3.3"
   kotlin("plugin.spring") version "2.2.0"
   kotlin("plugin.jpa") version "2.2.0"
 }
@@ -25,15 +25,15 @@ dependencies {
   // Spring boot dependencies
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.8")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.10")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.7")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.9")
   implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.17.0")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.openapitools:jackson-databind-nullable:0.2.6")
 
   // CSV dependencies
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.19.1")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.19.2")
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
@@ -42,7 +42,7 @@ dependencies {
   // OpenAPI
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
 
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.17.1")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.18.0")
 
   // Test dependencies
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
@@ -57,7 +57,7 @@ dependencies {
   testImplementation("org.testcontainers:postgresql:1.21.3")
   testImplementation("org.testcontainers:localstack:1.21.3")
   testImplementation("org.wiremock:wiremock-standalone:3.13.1")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.8")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.10")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.52.0")
 }
 
