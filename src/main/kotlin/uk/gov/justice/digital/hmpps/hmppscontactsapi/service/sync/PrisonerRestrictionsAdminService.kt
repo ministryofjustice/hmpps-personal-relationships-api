@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync
 
+import PrisonerRestrictionId
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerRestriction
@@ -7,7 +10,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ChangedRestrictionsResponse
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.PrisonerRestrictionIdsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ReferenceCodeService
 
@@ -109,8 +111,5 @@ class PrisonerRestrictionsAdminService(
     referenceCodeService.validateReferenceCode(ReferenceCodeGroup.RESTRICTION, code, allowInactive = true)
   }
 
-  fun getRestrictionIdsForPrisoner(prisonerNumber: String): PrisonerRestrictionIdsResponse {
-    val ids = prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber).map { it.prisonerRestrictionId }
-    return PrisonerRestrictionIdsResponse(prisonerNumber = prisonerNumber, restrictionIds = ids)
-  }
+  fun getAllRestrictionIds(pageable: Pageable): Page<PrisonerRestrictionId> = prisonerRestrictionsRepository.findAllBy(pageable).map { PrisonerRestrictionId(it.prisonerRestrictionId) }
 }

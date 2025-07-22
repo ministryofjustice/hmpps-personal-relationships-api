@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync
 
+import PrisonerRestrictionId
 import jakarta.validation.ValidationException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
@@ -13,6 +14,8 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerRestriction
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.isEqualTo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
@@ -208,6 +211,24 @@ class PrisonerRestrictionsAdminServiceTest {
     }
   }
 
+  @Nested
+  inner class GetAllRestrictionIds {
+    @Test
+    fun `should return paged restriction IDs`() {
+      val restrictions = listOf(
+        restriction(1L, "A1234BC"),
+        restriction(2L, "B2345CD"),
+      )
+      val pageable = PageRequest.of(0, 10)
+      whenever(prisonerRestrictionsRepository.findAllBy(pageable)).thenReturn(PageImpl(restrictions, pageable, restrictions.size.toLong()))
+      val result = restrictionsAdminService.getAllRestrictionIds(pageable)
+      assertThat(result.content).containsExactly(
+        PrisonerRestrictionId(1L),
+        PrisonerRestrictionId(2L),
+      )
+    }
+  }
+
   private fun restriction(
     prisonerRestrictionId: Long = 1L,
     prisonerNumber: String = "B2345CD",
@@ -230,20 +251,4 @@ class PrisonerRestrictionsAdminServiceTest {
     updatedBy = "user2",
     updatedTime = LocalDateTime.of(2024, 6, 1, 12, 0).plusDays(1),
   )
-
-  @Test
-  fun `getRestrictionIdsForPrisoner returns correct PrisonerRestrictionIdsResponse`() {
-    val prisonerNumber = "A1234BC"
-    val restrictions = listOf(
-      restriction(10L, prisonerNumber),
-      restriction(20L, prisonerNumber),
-      restriction(30L, prisonerNumber),
-    )
-    whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(restrictions)
-
-    val result = restrictionsAdminService.getRestrictionIdsForPrisoner(prisonerNumber)
-
-    assertThat(result.prisonerNumber).isEqualTo(prisonerNumber)
-    assertThat(result.restrictionIds).containsExactly(10L, 20L, 30L)
-  }
 }

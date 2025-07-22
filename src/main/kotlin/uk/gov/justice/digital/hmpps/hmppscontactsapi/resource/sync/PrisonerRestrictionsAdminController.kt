@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.resource.sync
 
+import PrisonerRestrictionId
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
@@ -7,10 +8,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.springdoc.core.converters.models.PageableAsQueryParam
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort.Direction
+import org.springframework.data.web.PageableDefault
+import org.springframework.data.web.PagedModel
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -20,7 +25,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.sync.PrisonerRestric
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.MergePrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.ResetPrisonerRestrictionsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ChangedRestrictionsResponse
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.PrisonerRestrictionIdsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
@@ -99,32 +103,29 @@ class PrisonerRestrictionsAdminController(val prisonerRestrictionsAdminFacade: P
     @Valid @RequestBody request: ResetPrisonerRestrictionsRequest,
   ): ChangedRestrictionsResponse = prisonerRestrictionsAdminFacade.reset(request)
 
-  @GetMapping(path = ["/{prisonerNumber}/reconcile"], produces = [MediaType.APPLICATION_JSON_VALUE])
+  @GetMapping(path = ["/reconcile"], produces = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
-    summary = "Reconciliation endpoint for a single prisoner by prisoner number (restriction IDs only)",
-    description = "Get a list of restriction IDs for a given prisoner number",
+    summary = "Reconciliation endpoint for all prisoner restrictions (paged restriction IDs only)",
+    description = "Get a paged list of all prisoner restriction IDs for reconciliation purposes",
   )
   @ApiResponses(
     value = [
       ApiResponse(
         responseCode = "200",
-        description = "List of restriction IDs for the prisoner",
+        description = "Page of restriction IDs",
         content = [
           Content(
             mediaType = "application/json",
-            schema = Schema(implementation = PrisonerRestrictionIdsResponse::class),
+            schema = Schema(implementation = PrisonerRestrictionId::class),
           ),
         ],
-      ),
-      ApiResponse(
-        responseCode = "404",
-        description = "No restrictions found for that prisoner number",
       ),
     ],
   )
   @AuthApiResponses
   @PreAuthorize("hasAnyRole('PERSONAL_RELATIONSHIPS_MIGRATION')")
-  fun reconcilePrisonerRestrictionIds(
-    @PathVariable prisonerNumber: String,
-  ): PrisonerRestrictionIdsResponse = prisonerRestrictionsAdminFacade.getRestrictionIdsForPrisoner(prisonerNumber)
+  @PageableAsQueryParam
+  fun reconcileAllPrisonerRestrictionIds(
+    @PageableDefault(size = 100, sort = ["prisonerRestrictionId"], direction = Direction.ASC) pageable: Pageable,
+  ): PagedModel<PrisonerRestrictionId> = prisonerRestrictionsAdminFacade.getAllRestrictionIds(pageable)
 }
