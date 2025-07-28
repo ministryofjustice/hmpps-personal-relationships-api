@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchServic
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 
 @Service
 class ContactFacade(
@@ -160,5 +161,17 @@ class ContactFacade(
           user = user,
         )
       }
+  }
+
+  fun removePomDateOfBirth(): List<Long> = contactService.removePomContactsDateOfBirth().also { sendEventsForContactsUpdated(it) }
+
+  private fun sendEventsForContactsUpdated(listOfContactIds: List<Long>) = listOfContactIds.map { updated ->
+    outboundEventsService.send(
+      outboundEvent = OutboundEvent.CONTACT_UPDATED,
+      identifier = updated,
+      contactId = updated,
+      source = Source.DPS,
+      user = User.SYS_USER,
+    )
   }
 }

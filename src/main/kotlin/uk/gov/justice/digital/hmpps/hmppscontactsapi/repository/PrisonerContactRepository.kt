@@ -29,4 +29,30 @@ interface PrisonerContactRepository : JpaRepository<PrisonerContactEntity, Long>
     AND pc.currentTerm = true""",
   )
   fun findDuplicateRelationships(prisonerNumber: String, contactId: Long, relationshipToPrisoner: String): List<PrisonerContactEntity>
+
+  data class RelationshipTypeCountProjection(
+    val contactId: Long,
+    val relationshipType: String,
+    val count: Long,
+  )
+
+  @Query(
+    """
+    SELECT c.contactId, pc.relationshipType, count(*) as count
+    FROM ContactEntity c, PrisonerContactEntity pc
+    WHERE c.dateOfBirth is not null
+    AND pc.contactId = c.contactId
+    AND c.contactId IN (
+      SELECT DISTINCT ac.contactId
+      FROM ContactEntity ac, PrisonerContactEntity apc
+      WHERE ac.dateOfBirth is not null
+      AND apc.contactId = ac.contactId
+      AND apc.relationshipType = 'O'
+      AND apc.relationshipToPrisoner = 'POM'
+    )
+    group by c.contactId, pc.relationshipType
+    order by c.contactId, pc.relationshipType
+    """,
+  )
+  fun findAllPomContactsWithADateOfBirth(): List<RelationshipTypeCountProjection>
 }

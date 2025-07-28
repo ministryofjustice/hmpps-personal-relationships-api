@@ -18,6 +18,7 @@ class ResourceSecurityTest : PostgresIntegrationTestBase() {
     "GET /swagger-ui.html",
     "GET /v3/api-docs",
     "GET /v3/api-docs/swagger-config",
+    "PUT /utility/remove-pom-dob",
     " /error",
   )
 
