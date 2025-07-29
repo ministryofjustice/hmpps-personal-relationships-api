@@ -538,4 +538,32 @@ class ContactService(
     isApprovedVisitor = relationship.approvedVisitor,
     comments = relationship.comments,
   )
+
+  @Transactional
+  fun removePomContactsDateOfBirth(): List<Long> {
+    val contactRelationshipCounts = prisonerContactRepository.findAllPomContactsWithADateOfBirth()
+    val allContactIds = contactRelationshipCounts.map { it.contactId }.toSet().toList()
+
+    // Find the contact ids which have any social relationships present
+    val socialContactIds = contactRelationshipCounts.mapNotNull { entry ->
+      if (entry.relationshipType == "S") {
+        entry.contactId
+      } else {
+        null
+      }
+    }
+      .toSet()
+      .toList()
+
+    // Remove the contact ids from the full list if there are any social relationships present
+    val contactIdsToUpdate = allContactIds.filterNot { it in socialContactIds }
+
+    // We are left with just those contacts to update their DOB to null
+    contactIdsToUpdate.forEach { contactId ->
+      val contact = contactRepository.findById(contactId).orElseThrow { EntityNotFoundException("Contact ($contactId) not found to unset DOB") }
+      contactRepository.saveAndFlush(contact.copy(dateOfBirth = null))
+    }
+
+    return contactIdsToUpdate
+  }
 }

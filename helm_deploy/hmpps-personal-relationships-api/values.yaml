@@ -13,7 +13,15 @@ generic-service:
     enabled: true
     host: app-hostname.local # override per environment
     tlsSecretName: hmpps-personal-relationships-api-cert
-
+    path: /
+    annotations:
+      # Secure the endpoints related to k8s jobs from outside the Kubernetes ingress
+      nginx.ingress.kubernetes.io/server-snippet: |
+        server_tokens off;
+        location /utility/ {
+          deny all;
+          return 401;
+        }
 
   # Used to access resources like SQS queues and SNS topics
   serviceAccountName: hmpps-personal-relationships-api
