@@ -30,7 +30,7 @@ data class PatchContactAddressRequest(
   val flat: JsonNullable<String?> = JsonNullable.undefined(),
 
   @Schema(description = "Building or house number or name", example = "Mansion House", nullable = true, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-  @field:Size(max = 50, message = "property must be <= 50 characters")
+  @field:Size(max = 130, message = "property must be <= 130 characters")
   val property: JsonNullable<String?> = JsonNullable.undefined(),
 
   @Schema(description = "Street or road name", example = "Acacia Avenue", nullable = true, type = "string", requiredMode = Schema.RequiredMode.NOT_REQUIRED)

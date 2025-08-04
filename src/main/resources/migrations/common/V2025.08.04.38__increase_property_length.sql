@@ -1,0 +1,1 @@
+ALTER TABLE contact_address ALTER COLUMN property TYPE VARCHAR(130);
