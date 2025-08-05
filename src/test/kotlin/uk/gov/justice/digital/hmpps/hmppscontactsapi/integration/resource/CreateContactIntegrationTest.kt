@@ -744,8 +744,8 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
           aMinimalCreateContactRequest().copy(addresses = listOf(minimalAddress.copy(flat = "".padStart(31, 'X')))),
         ),
         Arguments.of(
-          "addresses[0].property must be <= 50 characters",
-          aMinimalCreateContactRequest().copy(addresses = listOf(minimalAddress.copy(property = "".padStart(51, 'X')))),
+          "addresses[0].property must be <= 130 characters",
+          aMinimalCreateContactRequest().copy(addresses = listOf(minimalAddress.copy(property = "".padStart(131, 'X')))),
         ),
         Arguments.of(
           "addresses[0].street must be <= 160 characters",

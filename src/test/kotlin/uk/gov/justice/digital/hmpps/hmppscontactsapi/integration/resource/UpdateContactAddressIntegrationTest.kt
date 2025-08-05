@@ -439,8 +439,8 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
       Arguments.of("flat must be <= 30 characters", aMinimalUpdateAddressRequest().copy(flat = "".padStart(31, 'X'))),
       Arguments.of(
-        "property must be <= 50 characters",
-        aMinimalUpdateAddressRequest().copy(property = "".padStart(51, 'X')),
+        "property must be <= 130 characters",
+        aMinimalUpdateAddressRequest().copy(property = "".padStart(131, 'X')),
       ),
       Arguments.of(
         "street must be <= 160 characters",

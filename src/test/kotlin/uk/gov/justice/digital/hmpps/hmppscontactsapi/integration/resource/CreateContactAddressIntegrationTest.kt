@@ -416,7 +416,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> = listOf(
       Arguments.of("flat must be <= 30 characters", aMinimalAddressRequest().copy(flat = "".padStart(31, 'X'))),
-      Arguments.of("property must be <= 50 characters", aMinimalAddressRequest().copy(property = "".padStart(51, 'X'))),
+      Arguments.of("property must be <= 130 characters", aMinimalAddressRequest().copy(property = "".padStart(131, 'X'))),
       Arguments.of("street must be <= 160 characters", aMinimalAddressRequest().copy(street = "".padStart(161, 'X'))),
       Arguments.of("area must be <= 70 characters", aMinimalAddressRequest().copy(area = "".padStart(71, 'X'))),
       Arguments.of("postcode must be <= 12 characters", aMinimalAddressRequest().copy(postcode = "".padStart(13, 'X'))),
