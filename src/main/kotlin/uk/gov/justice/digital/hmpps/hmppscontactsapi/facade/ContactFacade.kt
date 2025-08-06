@@ -163,7 +163,7 @@ class ContactFacade(
       }
   }
 
-  fun removePomDateOfBirth(): List<Long> = contactService.removePomContactsDateOfBirth().also { sendEventsForContactsUpdated(it) }
+  fun removeInternalOfficialDateOfBirth(): List<Long> = contactService.removeInternalOfficialContactsDateOfBirth().also { sendEventsForContactsUpdated(it) }
 
   private fun sendEventsForContactsUpdated(listOfContactIds: List<Long>) = listOfContactIds.map { updated ->
     outboundEventsService.send(

@@ -33,12 +33,13 @@ interface PrisonerContactRepository : JpaRepository<PrisonerContactEntity, Long>
   data class RelationshipTypeCountProjection(
     val contactId: Long,
     val relationshipType: String,
+    val relationshipToPrisoner: String,
     val count: Long,
   )
 
   @Query(
     """
-    SELECT c.contactId, pc.relationshipType, count(*) as count
+    SELECT c.contactId, pc.relationshipType, pc.relationshipToPrisoner, count(*) as count
     FROM ContactEntity c, PrisonerContactEntity pc
     WHERE c.dateOfBirth is not null
     AND pc.contactId = c.contactId
@@ -48,11 +49,11 @@ interface PrisonerContactRepository : JpaRepository<PrisonerContactEntity, Long>
       WHERE ac.dateOfBirth is not null
       AND apc.contactId = ac.contactId
       AND apc.relationshipType = 'O'
-      AND apc.relationshipToPrisoner = 'POM'
+      AND apc.relationshipToPrisoner in :relationshipTypes
     )
-    group by c.contactId, pc.relationshipType
-    order by c.contactId, pc.relationshipType
+    group by c.contactId, pc.relationshipType, pc.relationshipToPrisoner
+    order by c.contactId, pc.relationshipType, pc.relationshipToPrisoner
     """,
   )
-  fun findAllPomContactsWithADateOfBirth(): List<RelationshipTypeCountProjection>
+  fun findAllContactsWithADobInRelationships(relationshipTypes: List<String>): List<RelationshipTypeCountProjection>
 }

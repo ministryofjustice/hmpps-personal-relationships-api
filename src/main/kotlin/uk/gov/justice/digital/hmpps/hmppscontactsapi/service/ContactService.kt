@@ -540,30 +540,34 @@ class ContactService(
   )
 
   @Transactional
-  fun removePomContactsDateOfBirth(): List<Long> {
-    val contactRelationshipCounts = prisonerContactRepository.findAllPomContactsWithADateOfBirth()
-    val allContactIds = contactRelationshipCounts.map { it.contactId }.toSet().toList()
+  fun removeInternalOfficialContactsDateOfBirth(): List<Long> {
+    val internalOfficialTypes = listOf("POM", "COM", "CA", "RO", "CUSPO", "CUSPO2", "OFS", "PPA", "PROB")
+    val relationships = prisonerContactRepository.findAllContactsWithADobInRelationships(internalOfficialTypes)
+    val allContactIds = relationships.map { it.contactId }.toSet().toList()
 
-    // Find the contact ids which have any social relationships present
-    val socialContactIds = contactRelationshipCounts.mapNotNull { entry ->
-      if (entry.relationshipType == "S") {
-        entry.contactId
-      } else {
-        null
+    // Ignore contacts which have social or non-internal official relationships
+    val ignoreContactIds = relationships.mapNotNull { entry ->
+      when (entry.relationshipType) {
+        "S" -> entry.contactId
+        "O" -> {
+          if (entry.relationshipToPrisoner !in internalOfficialTypes) {
+            entry.contactId
+          } else {
+            null
+          }
+        }
+        else -> null
       }
     }
       .toSet()
       .toList()
 
-    // Remove the contact ids from the full list if there are any social relationships present
-    val contactIdsToUpdate = allContactIds.filterNot { it in socialContactIds }
+    val contactIdsToUpdate = allContactIds.filterNot { it in ignoreContactIds }
 
-    // We are left with just those contacts to update their DOB to null
     contactIdsToUpdate.forEach { contactId ->
       val contact = contactRepository.findById(contactId).orElseThrow { EntityNotFoundException("Contact ($contactId) not found to unset DOB") }
       contactRepository.saveAndFlush(contact.copy(dateOfBirth = null))
     }
-
     return contactIdsToUpdate
   }
 }
