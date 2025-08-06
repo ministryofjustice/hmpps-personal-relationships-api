@@ -27,7 +27,7 @@ data class UpdateContactAddressRequest(
   override val flat: String? = null,
 
   @Schema(description = "Building or house number or name", example = "Mansion House", nullable = true)
-  @field:Size(max = 50, message = "property must be <= 50 characters")
+  @field:Size(max = 130, message = "property must be <= 130 characters")
   override val property: String? = null,
 
   @Schema(description = "Street or road name", example = "Acacia Avenue", nullable = true)

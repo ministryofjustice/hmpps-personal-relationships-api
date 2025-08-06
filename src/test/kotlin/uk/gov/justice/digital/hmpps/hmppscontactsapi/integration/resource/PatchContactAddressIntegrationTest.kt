@@ -460,8 +460,8 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
         aMinimalPatchAddressRequest().copy(flat = JsonNullable.of("".padStart(31, 'X'))),
       ),
       Arguments.of(
-        "property must be <= 50 characters",
-        aMinimalPatchAddressRequest().copy(property = JsonNullable.of("".padStart(51, 'X'))),
+        "property must be <= 130 characters",
+        aMinimalPatchAddressRequest().copy(property = JsonNullable.of("".padStart(131, 'X'))),
       ),
       Arguments.of(
         "street must be <= 160 characters",
