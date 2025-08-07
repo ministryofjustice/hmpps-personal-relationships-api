@@ -65,6 +65,8 @@ class ContactService(
     private val logger = LoggerFactory.getLogger(this::class.java)
   }
 
+  private val internalOfficialTypes = listOf("POM", "COM", "CA", "RO", "CUSPO", "CUSPO2", "OFS", "PPA", "PROB")
+
   @Transactional
   fun createContact(request: CreateContactRequest, user: User): ContactCreationResult {
     if (request.relationship != null) {
@@ -349,6 +351,17 @@ class ContactService(
       throw RelationshipCannotBeRemovedDueToDependencyException(prisonerContactId)
     }
     prisonerContactRepository.delete(relationship)
+
+    val nonInternalContactRelationship = prisonerContactRepository.findAllByContactIdAndRelationshipToPrisonerNotIn(
+      relationship.contactId,
+      internalOfficialTypes,
+    )
+    if (nonInternalContactRelationship.isEmpty()) {
+      contactRepository.findById(relationship.contactId).ifPresent {
+        contactRepository.saveAndFlush(it.deleteDateOfBirth(user))
+      }
+    }
+
     deletedPrisonerContactRepository.saveAndFlush(
       DeletedPrisonerContactEntity(
         deletedPrisonerContactId = 0,
@@ -541,7 +554,6 @@ class ContactService(
 
   @Transactional
   fun removeInternalOfficialContactsDateOfBirth(): List<Long> {
-    val internalOfficialTypes = listOf("POM", "COM", "CA", "RO", "CUSPO", "CUSPO2", "OFS", "PPA", "PROB")
     val relationships = prisonerContactRepository.findAllContactsWithADobInRelationships(internalOfficialTypes)
     val allContactIds = relationships.map { it.contactId }.distinct()
 
@@ -568,5 +580,17 @@ class ContactService(
     }
 
     return contactIdsToUpdate
+  }
+
+  private fun ContactEntity.deleteDateOfBirth(
+    user: User,
+  ): ContactEntity {
+    val changedContact = this.copy(
+      dateOfBirth = null,
+      updatedBy = user.username,
+      updatedTime = LocalDateTime.now(),
+    )
+
+    return changedContact
   }
 }

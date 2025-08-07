@@ -7,11 +7,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.isEqualTo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreateContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.DeletedPrisonerContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
@@ -23,6 +26,7 @@ import java.time.LocalDate
 
 class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
   private val prisonerNumber = "A9876GH"
+  private val anotherPrisonerNumber = "B1234GH"
   private var savedContactId = 0L
   private var savedPrisonerContactId = 0L
 
@@ -31,14 +35,19 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
   @Autowired
   private lateinit var deletedPrisonerContactRepository: DeletedPrisonerContactRepository
 
+  @Autowired
+  private lateinit var contactRepository: ContactRepository
+
   @BeforeEach
   fun initialiseData() {
     setCurrentUser(StubUser.CREATING_USER)
     stubPrisonSearchWithResponse(prisonerNumber)
+    stubPrisonSearchWithResponse(anotherPrisonerNumber)
     val result = testAPIClient.createAContactWithARelationship(
       CreateContactRequest(
         lastName = "identity",
         firstName = "has",
+        dateOfBirth = LocalDate.of(2000, 1, 1),
         relationship = ContactRelationship(
           prisonerNumber = prisonerNumber,
           relationshipTypeCode = "S",
@@ -87,6 +96,48 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
       additionalInfo = PrisonerContactInfo(savedPrisonerContactId, Source.DPS, "deleted", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumber),
     )
+  }
+
+  @Test
+  fun `should delete the contact's date of birth if they do not have a non-internal role relationship left`() {
+    testAPIClient.addAContactRelationship(
+      AddContactRelationshipRequest(
+        savedContactId,
+        ContactRelationship(
+          prisonerNumber = anotherPrisonerNumber,
+          relationshipTypeCode = "O",
+          relationshipToPrisonerCode = "POM",
+          isEmergencyContact = false,
+          isNextOfKin = false,
+          isApprovedVisitor = false,
+        ),
+      ),
+    )
+
+    testAPIClient.deletePrisonerContact(savedPrisonerContactId)
+    val contact = contactRepository.findById(savedContactId).get()
+    assertThat(contact.dateOfBirth).isNull()
+  }
+
+  @Test
+  fun `should retain the contact's date of birth if they have a non-internal role relationship left`() {
+    testAPIClient.addAContactRelationship(
+      AddContactRelationshipRequest(
+        savedContactId,
+        ContactRelationship(
+          prisonerNumber = anotherPrisonerNumber,
+          relationshipTypeCode = "S",
+          relationshipToPrisonerCode = "FRI",
+          isEmergencyContact = false,
+          isNextOfKin = false,
+          isApprovedVisitor = false,
+        ),
+      ),
+    )
+
+    testAPIClient.deletePrisonerContact(savedPrisonerContactId)
+    val contact = contactRepository.findById(savedContactId).get()
+    assertThat(contact.dateOfBirth).isEqualTo(LocalDate.of(2000, 1, 1))
   }
 
   @Test
