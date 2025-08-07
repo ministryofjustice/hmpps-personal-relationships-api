@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.UpdatePomDobResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.UpdateInternalOfficialDobResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.ProtectedByIngress
 
 /**
@@ -27,13 +27,13 @@ class UtilityController(val contactFacade: ContactFacade) {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
-  @Operation(summary = "Endpoint to remove the date of birth from contacts in a POM relationship with no other social relationships")
-  @PutMapping(path = ["/remove-pom-dob"])
+  @Operation(summary = "Endpoint to remove the date of birth from contacts in solely internal official relationships")
+  @PutMapping(path = ["/remove-internal-official-dob"])
   @ResponseStatus(HttpStatus.OK)
-  fun removePomDateOfBirth(): UpdatePomDobResponse = run {
-    log.info("UTILITY: Remove POM dates of birth started")
-    val result = contactFacade.removePomDateOfBirth()
-    log.info("UTILITY: Remove POM dates of birth completed - updated ${result.size} contacts")
-    return UpdatePomDobResponse(contactsUpdated = result)
+  fun removeDateOfBirth(): UpdateInternalOfficialDobResponse = run {
+    log.info("UTILITY: Remove internal official contacts dates of birth started")
+    val result = contactFacade.removeInternalOfficialDateOfBirth()
+    log.info("UTILITY: Remove internal official dates of birth completed - updated ${result.size} contacts")
+    return UpdateInternalOfficialDobResponse(contactsUpdated = result)
   }
 }
