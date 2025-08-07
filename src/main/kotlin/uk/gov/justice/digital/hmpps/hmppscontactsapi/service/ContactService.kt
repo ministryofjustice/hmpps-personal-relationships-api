@@ -65,6 +65,8 @@ class ContactService(
     private val logger = LoggerFactory.getLogger(this::class.java)
   }
 
+  private val internalOfficialTypes = listOf("POM", "COM", "CA", "RO", "CUSPO", "CUSPO2", "OFS", "PPA", "PROB")
+
   @Transactional
   fun createContact(request: CreateContactRequest, user: User): ContactCreationResult {
     if (request.relationship != null) {
@@ -352,7 +354,7 @@ class ContactService(
 
     val nonInternalContactRelationship = prisonerContactRepository.findAllByContactIdAndRelationshipToPrisonerNotIn(
       relationship.contactId,
-      setOf("RO", "CUSPO", "CUSPO2", "COM", "PROB", "POM", "PPA", "OFS", "CA"),
+      internalOfficialTypes,
     )
     if (nonInternalContactRelationship.isEmpty()) {
       contactRepository.findById(relationship.contactId).ifPresent {
@@ -552,7 +554,6 @@ class ContactService(
 
   @Transactional
   fun removeInternalOfficialContactsDateOfBirth(): List<Long> {
-    val internalOfficialTypes = listOf("POM", "COM", "CA", "RO", "CUSPO", "CUSPO2", "OFS", "PPA", "PROB")
     val relationships = prisonerContactRepository.findAllContactsWithADobInRelationships(internalOfficialTypes)
     val allContactIds = relationships.map { it.contactId }.distinct()
 

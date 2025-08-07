@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntit
 interface PrisonerContactRepository : JpaRepository<PrisonerContactEntity, Long> {
   fun findAllByContactId(contactId: Long): List<PrisonerContactEntity>
 
-  fun findAllByContactIdAndRelationshipToPrisonerNotIn(contactId: Long, relationshipToPrisoner: Set<String>): List<PrisonerContactEntity>
+  fun findAllByContactIdAndRelationshipToPrisonerNotIn(contactId: Long, relationshipToPrisoner: List<String>): List<PrisonerContactEntity>
 
   @Modifying
   @Query("delete from PrisonerContactEntity pc where pc.contactId = :contactId")
