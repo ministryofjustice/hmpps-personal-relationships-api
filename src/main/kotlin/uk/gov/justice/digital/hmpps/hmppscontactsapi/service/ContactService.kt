@@ -349,6 +349,17 @@ class ContactService(
       throw RelationshipCannotBeRemovedDueToDependencyException(prisonerContactId)
     }
     prisonerContactRepository.delete(relationship)
+
+    val nonInternalContactRelationship = prisonerContactRepository.findAllByContactIdAndRelationshipToPrisonerNotIn(
+      relationship.contactId,
+      setOf("RO", "CUSPO", "CUSPO2", "COM", "PROB", "POM", "PPA", "OFS", "CA"),
+    )
+    if (nonInternalContactRelationship.isEmpty()) {
+      contactRepository.findById(relationship.contactId).ifPresent {
+        contactRepository.saveAndFlush(it.deleteDateOfBirth(user))
+      }
+    }
+
     deletedPrisonerContactRepository.saveAndFlush(
       DeletedPrisonerContactEntity(
         deletedPrisonerContactId = 0,
@@ -568,5 +579,17 @@ class ContactService(
     }
 
     return contactIdsToUpdate
+  }
+
+  private fun ContactEntity.deleteDateOfBirth(
+    user: User,
+  ): ContactEntity {
+    val changedContact = this.copy(
+      dateOfBirth = null,
+      updatedBy = user.username,
+      updatedTime = LocalDateTime.now(),
+    )
+
+    return changedContact
   }
 }
