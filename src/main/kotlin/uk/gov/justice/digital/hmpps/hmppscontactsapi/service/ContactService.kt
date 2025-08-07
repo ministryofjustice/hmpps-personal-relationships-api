@@ -543,9 +543,9 @@ class ContactService(
   fun removeInternalOfficialContactsDateOfBirth(): List<Long> {
     val internalOfficialTypes = listOf("POM", "COM", "CA", "RO", "CUSPO", "CUSPO2", "OFS", "PPA", "PROB")
     val relationships = prisonerContactRepository.findAllContactsWithADobInRelationships(internalOfficialTypes)
-    val allContactIds = relationships.map { it.contactId }.toSet().toList()
+    val allContactIds = relationships.map { it.contactId }.distinct()
 
-    // Ignore contacts which have social or non-internal official relationships
+    // Ignore contacts which also have social or official relationship that is not in the above list
     val ignoreContactIds = relationships.mapNotNull { entry ->
       when (entry.relationshipType) {
         "S" -> entry.contactId
@@ -558,9 +558,7 @@ class ContactService(
         }
         else -> null
       }
-    }
-      .toSet()
-      .toList()
+    }.distinct()
 
     val contactIdsToUpdate = allContactIds.filterNot { it in ignoreContactIds }
 
@@ -568,6 +566,7 @@ class ContactService(
       val contact = contactRepository.findById(contactId).orElseThrow { EntityNotFoundException("Contact ($contactId) not found to unset DOB") }
       contactRepository.saveAndFlush(contact.copy(dateOfBirth = null))
     }
+
     return contactIdsToUpdate
   }
 }
