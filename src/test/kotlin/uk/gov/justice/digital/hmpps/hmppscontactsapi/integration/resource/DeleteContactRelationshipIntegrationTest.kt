@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelati
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreateContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RelationshipDeletePlan
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.DeletedPrisonerContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
@@ -114,6 +115,14 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
       ),
     )
 
+    val plan = testAPIClient.planDeletePrisonerContact(savedPrisonerContactId)
+    assertThat(plan).isEqualTo(
+      RelationshipDeletePlan(
+        willAlsoDeleteContactDob = true,
+        hasRestrictions = false,
+      ),
+    )
+
     testAPIClient.deletePrisonerContact(savedPrisonerContactId)
     val contact = contactRepository.findById(savedContactId).get()
     assertThat(contact.dateOfBirth).isNull()
@@ -135,6 +144,14 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
       ),
     )
 
+    val plan = testAPIClient.planDeletePrisonerContact(savedPrisonerContactId)
+    assertThat(plan).isEqualTo(
+      RelationshipDeletePlan(
+        willAlsoDeleteContactDob = false,
+        hasRestrictions = false,
+      ),
+    )
+
     testAPIClient.deletePrisonerContact(savedPrisonerContactId)
     val contact = contactRepository.findById(savedContactId).get()
     assertThat(contact.dateOfBirth).isEqualTo(LocalDate.of(2000, 1, 1))
@@ -151,6 +168,15 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         comments = null,
       ),
     )
+
+    val plan = testAPIClient.planDeletePrisonerContact(savedPrisonerContactId)
+    assertThat(plan).isEqualTo(
+      RelationshipDeletePlan(
+        willAlsoDeleteContactDob = true,
+        hasRestrictions = false,
+      ),
+    )
+
     testAPIClient.deletePrisonerContact(savedPrisonerContactId)
     val contacts = testAPIClient.getPrisonerContacts(prisonerNumber).content
     assertThat(contacts.find { it.prisonerContactId == savedPrisonerContactId }).isNull()
@@ -172,6 +198,14 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         startDate = LocalDate.now(),
         expiryDate = null,
         comments = null,
+      ),
+    )
+
+    val plan = testAPIClient.planDeletePrisonerContact(savedPrisonerContactId)
+    assertThat(plan).isEqualTo(
+      RelationshipDeletePlan(
+        willAlsoDeleteContactDob = true,
+        hasRestrictions = true,
       ),
     )
 

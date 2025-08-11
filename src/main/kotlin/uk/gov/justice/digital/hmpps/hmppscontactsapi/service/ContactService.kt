@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameD
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RelationshipDeletePlan
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPhoneRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactEmailRepository
@@ -389,6 +390,25 @@ class ContactService(
       ),
     )
     return DeletedRelationshipIds(relationship.contactId, relationship.prisonerNumber, relationship.prisonerContactId)
+  }
+
+  fun planDeleteContactRelationship(prisonerContactId: Long, user: User): RelationshipDeletePlan {
+    val relationship = requirePrisonerContactEntity(prisonerContactId)
+    val hasRestrictions = prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId).isNotEmpty()
+
+    val contact = contactRepository.findById(relationship.contactId).get()
+
+    val willAlsoDeleteContactDob = if (contact.dateOfBirth == null) {
+      false
+    } else {
+      val nonInternalContactRelationship = prisonerContactRepository.findAllByContactIdAndRelationshipToPrisonerNotIn(
+        relationship.contactId,
+        internalOfficialTypes,
+      )
+      nonInternalContactRelationship.none { it.prisonerContactId != prisonerContactId }
+    }
+
+    return RelationshipDeletePlan(willAlsoDeleteContactDob, hasRestrictions)
   }
 
   private fun validateRequest(request: PatchRelationshipRequest) {

@@ -52,6 +52,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerCont
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RelationshipDeletePlan
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.migrate.MigrateContactResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContact
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContactId
@@ -661,6 +662,16 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
       .expectStatus()
       .isNoContent
   }
+
+  fun planDeletePrisonerContact(prisonerContactId: Long) = webTestClient.get()
+    .uri("/prisoner-contact/$prisonerContactId/plan-delete")
+    .headers(setAuthorisationUsingCurrentUser())
+    .exchange()
+    .expectStatus()
+    .isOk
+    .expectHeader().contentType(MediaType.APPLICATION_JSON)
+    .expectBody(RelationshipDeletePlan::class.java)
+    .returnResult().responseBody!!
 
   fun deletePrisonerContact(prisonerContactId: Long) {
     webTestClient.delete()

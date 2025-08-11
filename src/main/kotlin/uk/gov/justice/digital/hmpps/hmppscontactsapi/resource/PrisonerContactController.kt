@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionsResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RelationshipDeletePlan
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.PrisonerContactRelationshipService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
@@ -341,4 +342,40 @@ class PrisonerContactController(
   ) {
     contactFacade.deleteContactRelationship(prisonerContactId, user)
   }
+
+  @GetMapping("{prisonerContactId}/plan-delete")
+  @Operation(
+    summary = "Plan to delete prisoner contact relationship",
+    description = "Plan to delete the relationship between the contact and a prisoner. Returns side effects of the deletion.",
+  )
+  @Tag(name = "Prisoner relationships")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Planned the deletion of the prisoner contact relationship",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = RelationshipDeletePlan::class),
+          ),
+        ],
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Could not find the prisoner contact that this relationship relates to",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__RW')")
+  @ResponseStatus(HttpStatus.OK)
+  fun planDeleteContactRelationship(
+    @PathVariable("prisonerContactId") @Parameter(
+      name = "prisonerContactId",
+      description = "The id of the prisoner contact",
+      example = "123456",
+    ) prisonerContactId: Long,
+    @RequestAttribute user: User,
+  ): RelationshipDeletePlan = contactFacade.planDeleteContactRelationship(prisonerContactId, user)
 }
