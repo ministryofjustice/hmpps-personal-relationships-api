@@ -163,6 +163,8 @@ class ContactFacade(
       }
   }
 
+  fun planDeleteContactRelationship(prisonerContactId: Long, user: User) = contactService.planDeleteContactRelationship(prisonerContactId, user)
+
   fun removeInternalOfficialDateOfBirth(): List<Long> = contactService.removeInternalOfficialContactsDateOfBirth().also { sendEventsForContactsUpdated(it) }
 
   private fun sendEventsForContactsUpdated(listOfContactIds: List<Long>) = listOfContactIds.map { updated ->
