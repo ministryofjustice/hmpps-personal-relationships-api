@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpda
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContactRestriction
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRestrictionRepository
-import java.time.LocalDate
 
 @Service
 @Transactional
@@ -35,7 +34,6 @@ class SyncContactRestrictionService(
   fun createContactRestriction(request: SyncCreateContactRestrictionRequest): SyncContactRestriction {
     contactRepository.findById(request.contactId)
       .orElseThrow { EntityNotFoundException("Contact with ID ${request.contactId} not found") }
-    validateExpiryDateBeforeStartDate(request.startDate, request.expiryDate)
     return contactRestrictionRepository.saveAndFlush(request.toEntity()).toModel()
   }
 
@@ -53,7 +51,6 @@ class SyncContactRestrictionService(
       logger.error("Contact restriction update specified for a contact not linked to this restriction")
       throw ValidationException("Contact ID ${contact.contactId} is not linked to the restriction ${restrictionEntity.contactRestrictionId}")
     }
-    validateExpiryDateBeforeStartDate(request.startDate, request.expiryDate)
 
     val changedContactRestriction = restrictionEntity.copy(
       contactId = request.contactId,
@@ -73,13 +70,5 @@ class SyncContactRestrictionService(
       .orElseThrow { EntityNotFoundException("Contact restriction with ID $contactRestrictionId not found") }
     contactRestrictionRepository.deleteById(contactRestrictionId)
     return rowToDelete.toModel()
-  }
-
-  private fun validateExpiryDateBeforeStartDate(startDate: LocalDate?, expiryDate: LocalDate?) {
-    if (startDate != null && expiryDate != null) {
-      if (startDate.isAfter(expiryDate)) {
-        throw ValidationException("Restriction start date should be before the restriction end date")
-      }
-    }
   }
 }

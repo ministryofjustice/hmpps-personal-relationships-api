@@ -153,7 +153,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
       assertThat(contactId).isEqualTo(savedContactId)
       assertThat(restrictionType).isEqualTo("NEW")
       assertThat(startDate).isEqualTo(LocalDate.of(1982, 6, 15))
-      assertThat(expiryDate).isEqualTo(LocalDate.of(2025, 6, 15))
+      assertThat(expiryDate).isEqualTo(LocalDate.of(1928, 6, 15))
       assertThat(createdBy).isEqualTo("CREATE")
       assertThat(createdTime).isAfter(LocalDateTime.now().minusMinutes(5))
     }
@@ -182,7 +182,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     with(contactRestriction) {
       assertThat(restrictionType).isEqualTo("NEW")
       assertThat(startDate).isEqualTo(LocalDate.of(1982, 6, 15))
-      assertThat(expiryDate).isEqualTo(LocalDate.of(2025, 6, 15))
+      assertThat(expiryDate).isEqualTo(LocalDate.of(1928, 6, 15))
       assertThat(createdBy).isEqualTo("CREATE")
       assertThat(createdTime).isAfter(LocalDateTime.now().minusMinutes(5))
     }
@@ -206,7 +206,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
       assertThat(contactId).isEqualTo(savedContactId)
       assertThat(restrictionType).isEqualTo("RESTRICTION")
       assertThat(startDate).isEqualTo(LocalDate.of(1982, 6, 15))
-      assertThat(expiryDate).isEqualTo(LocalDate.of(1988, 6, 15))
+      assertThat(expiryDate).isEqualTo(LocalDate.of(1928, 6, 15))
       assertThat(comments).isEqualTo("N/A")
       assertThat(updatedBy).isEqualTo("UPDATE")
       assertThat(updatedTime).isAfter(LocalDateTime.now().minusMinutes(5))
@@ -250,7 +250,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     contactId = contactId,
     restrictionType = "RESTRICTION",
     startDate = LocalDate.of(1982, 6, 15),
-    expiryDate = LocalDate.of(1988, 6, 15),
+    expiryDate = LocalDate.of(1928, 6, 15),
     comments = "N/A",
     updatedBy = "UPDATE",
     updatedTime = LocalDateTime.now(),
@@ -260,7 +260,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     contactId = contactId,
     restrictionType = "NEW",
     startDate = LocalDate.of(1982, 6, 15),
-    expiryDate = LocalDate.of(2025, 6, 15),
+    expiryDate = LocalDate.of(1928, 6, 15),
     comments = "N/A",
     createdBy = "CREATE",
   )
