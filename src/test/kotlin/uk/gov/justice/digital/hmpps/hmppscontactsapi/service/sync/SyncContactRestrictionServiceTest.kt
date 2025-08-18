@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync
 
 import jakarta.persistence.EntityNotFoundException
-import jakarta.validation.ValidationException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -14,7 +13,6 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactRestrictionEntity
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.isEqualTo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync.toEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdateContactRestrictionRequest
@@ -86,16 +84,36 @@ class SyncContactRestrictionServiceTest {
     }
 
     @Test
-    fun `should error when creating a contact restriction with expiry date is before start date`() {
+    fun `should not error when creating a contact restriction with expiry date is before start date`() {
       val request = createContactRestrictionRequest(
         startDate = LocalDate.of(2025, 2, 1),
         expiryDate = LocalDate.of(1980, 2, 1),
       )
       whenever(contactRepository.findById(1L)).thenReturn(Optional.of(contactEntity()))
-      val error = assertThrows<ValidationException> {
-        syncService.createContactRestriction(request)
+      whenever(contactRestrictionRepository.saveAndFlush(request.toEntity())).thenReturn(request.toEntity())
+
+      val contactRestriction = syncService.createContactRestriction(request)
+      val restrictionCaptor = argumentCaptor<ContactRestrictionEntity>()
+
+      verify(contactRestrictionRepository).saveAndFlush(restrictionCaptor.capture())
+
+      // Checks the entity saved
+      with(restrictionCaptor.firstValue) {
+        assertThat(restrictionType).isEqualTo(request.restrictionType)
+        assertThat(startDate).isEqualTo(request.startDate)
+        assertThat(expiryDate).isEqualTo(request.expiryDate)
+        assertThat(createdBy).isEqualTo(request.createdBy)
       }
-      error.message isEqualTo "Restriction start date should be before the restriction end date"
+
+      // Checks the model response
+      with(contactRestriction) {
+        assertThat(contactRestrictionId).isEqualTo(0L)
+        assertThat(restrictionType).isEqualTo(request.restrictionType)
+        assertThat(startDate).isEqualTo(request.startDate)
+        assertThat(expiryDate).isEqualTo(request.expiryDate)
+        assertThat(comments).isEqualTo(request.comments)
+        assertThat(createdBy).isEqualTo(request.createdBy)
+      }
     }
 
     @Test
@@ -159,7 +177,7 @@ class SyncContactRestrictionServiceTest {
     }
 
     @Test
-    fun `should error when updating a contact restriction with expiry date is before start date`() {
+    fun `should not error when updating a contact restriction with expiry date is before start date`() {
       val updateRequest = updateContactRestrictionRequest(
         startDate = LocalDate.of(2025, 2, 1),
         expiryDate = LocalDate.of(1980, 2, 1),
@@ -167,10 +185,32 @@ class SyncContactRestrictionServiceTest {
       whenever(contactRepository.findById(1L)).thenReturn(Optional.of(contactEntity()))
       whenever(contactRestrictionRepository.findById(1L)).thenReturn(Optional.of(updateRequest.toEntity()))
       whenever(contactRestrictionRepository.saveAndFlush(any())).thenReturn(updateRequest.toEntity())
-      val error = assertThrows<ValidationException> {
-        syncService.updateContactRestriction(1L, updateRequest)
+
+      val updated = syncService.updateContactRestriction(1L, updateRequest)
+
+      val restrictionCaptor = argumentCaptor<ContactRestrictionEntity>()
+
+      verify(contactRestrictionRepository).saveAndFlush(restrictionCaptor.capture())
+
+      // Checks the entity saved
+      with(restrictionCaptor.firstValue) {
+        assertThat(restrictionType).isEqualTo(updateRequest.restrictionType)
+        assertThat(startDate).isEqualTo(updateRequest.startDate)
+        assertThat(expiryDate).isEqualTo(updateRequest.expiryDate)
+        assertThat(comments).isEqualTo(updateRequest.comments)
+        assertThat(updatedBy).isEqualTo(updateRequest.updatedBy)
+        assertThat(updatedTime).isEqualTo(updateRequest.updatedTime)
       }
-      error.message isEqualTo "Restriction start date should be before the restriction end date"
+
+      // Checks the model returned
+      with(updated) {
+        assertThat(restrictionType).isEqualTo(updateRequest.restrictionType)
+        assertThat(startDate).isEqualTo(updateRequest.startDate)
+        assertThat(expiryDate).isEqualTo(updateRequest.expiryDate)
+        assertThat(comments).isEqualTo(updateRequest.comments)
+        assertThat(updatedBy).isEqualTo(updateRequest.updatedBy)
+        assertThat(updatedTime).isEqualTo(updateRequest.updatedTime)
+      }
     }
 
     @Test
