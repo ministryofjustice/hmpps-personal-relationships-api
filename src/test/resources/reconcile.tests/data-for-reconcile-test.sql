@@ -14,7 +14,8 @@ values (40001, 30001, 'A3333AA', 'S', true, true, 'BRO', 'MDI', 'TIM', current_t
        (40003, 30001, 'A4444AA', 'S', true, true, 'MOT', 'MDI', 'TIM', current_timestamp),
        (40004, 30001, 'A4444AA', 'S', true, true, 'SIS', 'MDI', 'TIM', current_timestamp),
        (40005, 30002, 'A4444AA', 'O', true, true, 'POL', 'MDI', 'TIM', current_timestamp),
-       (40006, 30002, 'A4444AA', 'S', true, false, 'BRO', 'MDI', 'TIM', current_timestamp);
+       (40006, 30002, 'A4444AA', 'S', true, false, 'BRO', 'MDI', 'TIM', current_timestamp),
+       (40007, 30002, 'A4444AA', 'O', false, true, 'SIS', 'MDI', 'TIM', current_timestamp);
 
 insert into prisoner_contact_restriction (prisoner_contact_id, restriction_type, start_date, expiry_date, comments, created_by, created_time)
 values (40001, 'BAN', '2025-01-01', '2025-05-02', 'Restriction A', 'TIM', current_timestamp),

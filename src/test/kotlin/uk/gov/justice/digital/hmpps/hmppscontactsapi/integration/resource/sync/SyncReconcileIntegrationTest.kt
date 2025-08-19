@@ -134,6 +134,32 @@ class SyncReconcileIntegrationTest : PostgresIntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `reconcile should not filter for current term only and return contacts with both current and not current records`() {
+      val reconcileResponse = webTestClient.get()
+        .uri("/sync/contact/30002/reconcile?currentTermOnly=false")
+        .accept(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody(SyncContactReconcile::class.java)
+        .returnResult().responseBody!!
+
+      with(reconcileResponse) {
+        assertThat(relationships).hasSize(3)
+        assertThat(relationships).extracting("prisonerNumber", "contactType", "relationshipType")
+          .containsAll(
+            listOf(
+              Tuple("A4444AA", "O", "POL"),
+              Tuple("A4444AA", "S", "BRO"),
+              Tuple("A4444AA", "O", "SIS"),
+            ),
+          )
+      }
+    }
   }
 
   @Nested
@@ -233,7 +259,7 @@ class SyncReconcileIntegrationTest : PostgresIntegrationTestBase() {
         .returnResult().responseBody!!
 
       with(reconcileResponse) {
-        assertThat(relationships).hasSize(3)
+        assertThat(relationships).hasSize(4)
         assertThat(relationships)
           .extracting(
             "contactId",
@@ -253,6 +279,7 @@ class SyncReconcileIntegrationTest : PostgresIntegrationTestBase() {
               Tuple(30001L, 40003L, "John", "Ma", "A4444AA", "S", "MOT", false, false, false, true),
               Tuple(30001L, 40004L, "John", "Ma", "A4444AA", "S", "SIS", false, false, false, true),
               Tuple(30002L, 40005L, "Jack", "Mb", "A4444AA", "O", "POL", false, false, false, true),
+              Tuple(30002L, 40007L, "Jack", "Mb", "A4444AA", "O", "SIS", false, false, false, false),
             ),
           )
 

@@ -42,7 +42,7 @@ class SyncContactReconciliationService(
   private val prisonerContactRepository: PrisonerContactRepository,
   private val prisonerContactRestrictionRepository: PrisonerContactRestrictionRepository,
 ) {
-  fun getContactDetailsById(contactId: Long): SyncContactReconcile {
+  fun getContactDetailsById(contactId: Long, currentTermOnly: Boolean): SyncContactReconcile {
     val contactEntity = contactRepository.findById(contactId)
       .orElseThrow { EntityNotFoundException("Contact with ID $contactId not found") }
 
@@ -111,7 +111,7 @@ class SyncContactReconciliationService(
         )
       },
       relationships = prisonerContactRepository.findAllByContactId(contactId)
-        .filter { it.currentTerm }
+        .filter { !currentTermOnly || it.currentTerm }
         .map { relationship ->
           ReconcileRelationship(
             prisonerContactId = relationship.prisonerContactId,
