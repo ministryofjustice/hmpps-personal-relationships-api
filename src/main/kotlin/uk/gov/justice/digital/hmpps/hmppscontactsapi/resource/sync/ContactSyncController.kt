@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.resource.sync
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.SyncFacade
@@ -219,7 +221,10 @@ class ContactSyncController(
   fun reconcileSingleContact(
     @Parameter(description = "The internal ID for the contact.", required = true)
     @PathVariable contactId: Long,
-  ) = syncFacade.reconcileSingleContact(contactId)
+    @RequestParam(name = "currentTermOnly", required = false, defaultValue = "true")
+    @Parameter(`in` = ParameterIn.QUERY, description = "filter results by current terms", example = "true", required = false)
+    currentTermOnly: Boolean = true,
+  ) = syncFacade.reconcileSingleContact(contactId, currentTermOnly)
 
   @GetMapping("/prisoner/{prisonerNumber}/reconcile")
   @Operation(

@@ -484,7 +484,7 @@ class SyncFacade(
    * Reconcile a single contact by ID - returns a very basic summary of data for
    * one contact and its sub-entities to reconcile against.
    */
-  fun reconcileSingleContact(contactId: Long) = syncContactReconciliationService.getContactDetailsById(contactId)
+  fun reconcileSingleContact(contactId: Long, currentTermOnly: Boolean) = syncContactReconciliationService.getContactDetailsById(contactId, currentTermOnly)
 
   /**
    * Reconcile a single prisoner by prisonerNumber - returns a summary of the prisoner's relationships
