@@ -11,17 +11,23 @@ import java.util.*
 @Profile("dev", "preprod") // Only active in dev or preprod
 class HikariPoolLogger(private val dataSource: HikariDataSource) {
 
-    @PostConstruct
-    fun startLogging() {
-        val poolProxy: HikariPoolMXBean = dataSource.hikariPoolMXBean
-        val timer = Timer(true)
-        timer.scheduleAtFixedRate(object : TimerTask() {
-            override fun run() {
-                println("HikariCP Pool Stats - Total: ${poolProxy.totalConnections}, " +
-                        "Active: ${poolProxy.activeConnections}, " +
-                        "Idle: ${poolProxy.idleConnections}, " +
-                        "Waiting: ${poolProxy.threadsAwaitingConnection}")
-            }
-        }, 0, 5000) // every 5 seconds
-    }
+  @PostConstruct
+  fun startLogging() {
+    val poolProxy: HikariPoolMXBean = dataSource.hikariPoolMXBean
+    val timer = Timer(true)
+    timer.scheduleAtFixedRate(
+      object : TimerTask() {
+        override fun run() {
+          println(
+            "HikariCP Pool Stats - Total: ${poolProxy.totalConnections}, " +
+              "Active: ${poolProxy.activeConnections}, " +
+              "Idle: ${poolProxy.idleConnections}, " +
+              "Waiting: ${poolProxy.threadsAwaitingConnection}",
+          )
+        }
+      },
+      0,
+      5000,
+    ) // every 5 seconds
+  }
 }
