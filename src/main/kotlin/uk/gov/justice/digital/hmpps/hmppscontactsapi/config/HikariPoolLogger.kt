@@ -27,7 +27,7 @@ class HikariPoolLogger(private val dataSource: HikariDataSource) {
         }
       },
       0,
-      5000,
-    ) // every 5 seconds
+      1800000,
+    ) // every 30 minutes
   }
 }
