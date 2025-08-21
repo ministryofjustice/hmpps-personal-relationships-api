@@ -45,8 +45,8 @@ dependencies {
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.19.0")
 
   // Test dependencies
-  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.7")
-  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.7")
+  testImplementation("io.jsonwebtoken:jjwt-impl:0.13.0")
+  testImplementation("io.jsonwebtoken:jjwt-jackson:0.13.0")
   testImplementation("net.javacrumbs.json-unit:json-unit:4.1.1")
   testImplementation("net.javacrumbs.json-unit:json-unit-assertj:4.1.1")
   testImplementation("net.javacrumbs.json-unit:json-unit-json-path:4.1.1")
