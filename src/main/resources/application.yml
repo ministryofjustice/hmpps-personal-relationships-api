@@ -5,8 +5,6 @@ info.app:
 spring:
   application:
     name: hmpps-personal-relationships-api
-    profiles:
-      active: ${SPRING_PROFILES_ACTIVE}
   data:
     web:
       pageable:
