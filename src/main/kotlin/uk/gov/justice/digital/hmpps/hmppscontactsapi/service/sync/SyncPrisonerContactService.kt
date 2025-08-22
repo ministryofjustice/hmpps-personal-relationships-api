@@ -49,7 +49,7 @@ class SyncPrisonerContactService(
       active = request.active,
       approvedVisitor = request.approvedVisitor.also {
         if (contact.approvedVisitor != request.approvedVisitor) {
-          logger.info("Approval status has been changed from NOMIS from ${contact.approvedVisitor} ,to ${request.approvedVisitor}, updated By ${request.updatedBy}")
+          logger.info("Approval status has been changed from NOMIS for contactId=${contact.contactId}, prisonerNumber=${contact.prisonerNumber}: from ${contact.approvedVisitor} to ${request.approvedVisitor}, updated By ${request.updatedBy}")
         }
       },
       currentTerm = request.currentTerm,
