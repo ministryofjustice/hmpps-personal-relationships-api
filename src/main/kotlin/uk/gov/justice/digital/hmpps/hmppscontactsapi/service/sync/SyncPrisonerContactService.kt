@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service.sync
 
 import jakarta.persistence.EntityNotFoundException
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateRelationshipException
@@ -16,6 +17,9 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactR
 class SyncPrisonerContactService(
   val prisonerContactRepository: PrisonerContactRepository,
 ) {
+  companion object {
+    private val logger = LoggerFactory.getLogger(this::class.java)
+  }
 
   @Transactional(readOnly = true)
   fun getPrisonerContactById(prisonerContactId: Long): SyncPrisonerContact {
@@ -43,7 +47,11 @@ class SyncPrisonerContactService(
       nextOfKin = request.nextOfKin,
       emergencyContact = request.emergencyContact,
       active = request.active,
-      approvedVisitor = request.approvedVisitor,
+      approvedVisitor = request.approvedVisitor.also {
+        if (contact.approvedVisitor != request.approvedVisitor) {
+          logger.info("Approval status has been changed from NOMIS from ${contact.approvedVisitor} ,to ${request.approvedVisitor}, updated By ${request.updatedBy}")
+        }
+      },
       currentTerm = request.currentTerm,
       comments = request.comments,
     ).also {
