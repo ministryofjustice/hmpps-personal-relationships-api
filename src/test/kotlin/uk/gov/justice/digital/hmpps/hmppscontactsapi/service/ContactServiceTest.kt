@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.prisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.DeletedRelationshipIds
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.DeletedResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
@@ -1807,7 +1808,55 @@ class ContactServiceTest {
 
       val result = service.deleteContactRelationship(prisonerContactId, user)
 
-      assertThat(result).isEqualTo(DeletedRelationshipIds(1, "A1234BC", prisonerContactId))
+      assertThat(result).isEqualTo(DeletedResponse(ids = DeletedRelationshipIds(1, "A1234BC", prisonerContactId), wasUpdated = false))
+      val deletedCaptor = argumentCaptor<DeletedPrisonerContactEntity>()
+      verify(deletedPrisonerContactRepository).saveAndFlush(deletedCaptor.capture())
+      assertThat(deletedCaptor.firstValue).usingRecursiveComparison().ignoringFields("deletedTime").isEqualTo(
+        DeletedPrisonerContactEntity(
+          deletedPrisonerContactId = 0,
+          prisonerContactId = prisonerContactId,
+          contactId = 1L,
+          prisonerNumber = "A1234BC",
+          relationshipType = "S",
+          relationshipToPrisoner = "BRO",
+          nextOfKin = true,
+          emergencyContact = true,
+          approvedVisitor = true,
+          active = true,
+          currentTerm = true,
+          comments = "Updated relationship type to Brother",
+          createdBy = "TEST",
+          createdTime = prisonerContactEntity.createdTime,
+          approvedBy = "APP",
+          approvedTime = LocalDateTime.of(2025, 1, 2, 10, 30),
+          expiryDate = LocalDate.of(2025, 2, 3),
+          updatedBy = "UPD",
+          updatedTime = LocalDateTime.of(2025, 3, 4, 11, 45),
+          createdAtPrison = "FOO",
+          deletedBy = "deleted",
+          deletedTime = LocalDateTime.now(),
+        ),
+      )
+    }
+
+    @Test
+    fun `should delete of the last non internal relationship remove date of birth`() {
+      whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContactEntity))
+      whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId)).thenReturn(emptyList())
+      whenever(deletedPrisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as DeletedPrisonerContactEntity) }
+      whenever(prisonerContactRepository.findAllByContactIdAndRelationshipToPrisonerNotIn(any(), any())).thenReturn(emptyList())
+      val aContact = createContactEntity().copy(dateOfBirth = LocalDate.of(1990, 1, 1))
+      whenever(contactRepository.findById(prisonerContactEntity.contactId)).thenReturn(Optional.of(aContact))
+
+      val result = service.deleteContactRelationship(prisonerContactId, user)
+
+      assertThat(result).isEqualTo(DeletedResponse(ids = DeletedRelationshipIds(1, "A1234BC", prisonerContactId), wasUpdated = true))
+      val deletedDobCaptor = argumentCaptor<ContactEntity>()
+      verify(contactRepository).saveAndFlush(deletedDobCaptor.capture())
+      assertThat(deletedDobCaptor.firstValue).usingRecursiveComparison().ignoringFields("createdTime", "updatedTime").isEqualTo(
+        aContact.copy(dateOfBirth = null, updatedBy = user.username),
+      )
+
       val deletedCaptor = argumentCaptor<DeletedPrisonerContactEntity>()
       verify(deletedPrisonerContactRepository).saveAndFlush(deletedCaptor.capture())
       assertThat(deletedCaptor.firstValue).usingRecursiveComparison().ignoringFields("deletedTime").isEqualTo(

@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactPhoneN
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createEmploymentDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createPrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.DeletedRelationshipIds
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.DeletedResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
@@ -37,6 +38,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchServic
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
 import java.time.LocalDateTime
 
 class ContactFacadeTest {
@@ -379,7 +381,10 @@ class ContactFacadeTest {
       val user = aUser("deleted")
 
       whenever(contactService.deleteContactRelationship(prisonerContactId, user)).thenReturn(
-        DeletedRelationshipIds(contactId, prisonerNumber, prisonerContactId),
+        DeletedResponse(
+          ids = DeletedRelationshipIds(contactId, prisonerNumber, prisonerContactId),
+          wasUpdated = true,
+        ),
       )
 
       contactFacade.deleteContactRelationship(prisonerContactId, user)
@@ -390,6 +395,14 @@ class ContactFacadeTest {
         prisonerContactId,
         contactId,
         prisonerNumber,
+        user = user,
+      )
+      // Also sends contact updated event as wasUpdated = true
+      verify(outboundEventsService).send(
+        OutboundEvent.CONTACT_UPDATED,
+        identifier = contactId,
+        contactId = contactId,
+        source = Source.DPS,
         user = user,
       )
     }
@@ -415,6 +428,48 @@ class ContactFacadeTest {
         prisonerContactId,
         contactId,
         prisonerNumber,
+        user = user,
+      )
+
+      verify(outboundEventsService, never()).send(
+        OutboundEvent.CONTACT_UPDATED,
+        identifier = contactId,
+        contactId = contactId,
+        source = Source.DPS,
+        user = user,
+      )
+    }
+
+    @Test
+    fun `delete contact relationship does not send update contact event if was update is false`() {
+      val contactId = 321L
+      val prisonerContactId = 123L
+      val prisonerNumber = "A1234BC"
+      val user = aUser("deleted")
+
+      whenever(contactService.deleteContactRelationship(prisonerContactId, user)).thenReturn(
+        DeletedResponse(
+          ids = DeletedRelationshipIds(contactId, prisonerNumber, prisonerContactId),
+          wasUpdated = false, // wasUpdated is false
+        ),
+      )
+
+      contactFacade.deleteContactRelationship(prisonerContactId, user)
+
+      verify(contactService).deleteContactRelationship(prisonerContactId, user)
+      verify(outboundEventsService).send(
+        OutboundEvent.PRISONER_CONTACT_DELETED,
+        prisonerContactId,
+        contactId,
+        prisonerNumber,
+        user = user,
+      )
+      // Also sends contact updated event as wasUpdated = true
+      verify(outboundEventsService, never()).send(
+        OutboundEvent.CONTACT_UPDATED,
+        identifier = contactId,
+        contactId = contactId,
+        source = Source.DPS,
         user = user,
       )
     }

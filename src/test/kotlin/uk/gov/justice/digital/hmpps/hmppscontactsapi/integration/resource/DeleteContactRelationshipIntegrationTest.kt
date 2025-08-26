@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.isEqualTo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
@@ -17,6 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RelationshipDeletePlan
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.DeletedPrisonerContactRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.ContactInfo
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerContactInfo
@@ -126,6 +126,17 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     testAPIClient.deletePrisonerContact(savedPrisonerContactId)
     val contact = contactRepository.findById(savedContactId).get()
     assertThat(contact.dateOfBirth).isNull()
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.PRISONER_CONTACT_DELETED,
+      additionalInfo = PrisonerContactInfo(savedPrisonerContactId, Source.DPS, "deleted", "BXI"),
+      personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumber),
+    )
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.CONTACT_UPDATED,
+      additionalInfo = ContactInfo(contactId = savedContactId, Source.DPS, "deleted", "BXI"),
+      personReference = PersonReference(dpsContactId = savedContactId),
+    )
   }
 
   @Test

@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.DeletedRelationshipIds
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.internal.DeletedResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
@@ -345,7 +346,7 @@ class ContactService(
   }
 
   @Transactional
-  fun deleteContactRelationship(prisonerContactId: Long, user: User): DeletedRelationshipIds {
+  fun deleteContactRelationship(prisonerContactId: Long, user: User): DeletedResponse {
     val relationship = requirePrisonerContactEntity(prisonerContactId)
     val relationshipRestrictions = prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId)
     if (relationshipRestrictions.isNotEmpty()) {
@@ -357,9 +358,11 @@ class ContactService(
       relationship.contactId,
       internalOfficialTypes,
     )
+    var wasUpdated = false
     if (nonInternalContactRelationship.isEmpty()) {
       contactRepository.findById(relationship.contactId).ifPresent {
         contactRepository.saveAndFlush(it.deleteDateOfBirth(user))
+        wasUpdated = true
       }
     }
 
@@ -389,7 +392,10 @@ class ContactService(
         deletedTime = LocalDateTime.now(),
       ),
     )
-    return DeletedRelationshipIds(relationship.contactId, relationship.prisonerNumber, relationship.prisonerContactId)
+    return DeletedResponse(
+      ids = DeletedRelationshipIds(relationship.contactId, relationship.prisonerNumber, relationship.prisonerContactId),
+      wasUpdated = wasUpdated,
+    )
   }
 
   fun planDeleteContactRelationship(prisonerContactId: Long, user: User): RelationshipDeletePlan {
