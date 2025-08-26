@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.6"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.7"
   id("org.openapi.generator") version "7.14.0"
   id("io.gatling.gradle") version "3.14.3.5"
   kotlin("plugin.spring") version "2.2.10"
@@ -28,7 +28,7 @@ dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.5.0")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.10")
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.19.1")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.20.0")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.openapitools:jackson-databind-nullable:0.2.7")
 
@@ -40,13 +40,13 @@ dependencies {
   runtimeOnly("org.postgresql:postgresql:42.7.7")
 
   // OpenAPI
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.10")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.11")
 
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.19.0")
 
   // Test dependencies
-  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.7")
-  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.7")
+  testImplementation("io.jsonwebtoken:jjwt-impl:0.13.0")
+  testImplementation("io.jsonwebtoken:jjwt-jackson:0.13.0")
   testImplementation("net.javacrumbs.json-unit:json-unit:4.1.1")
   testImplementation("net.javacrumbs.json-unit:json-unit-assertj:4.1.1")
   testImplementation("net.javacrumbs.json-unit:json-unit-json-path:4.1.1")
