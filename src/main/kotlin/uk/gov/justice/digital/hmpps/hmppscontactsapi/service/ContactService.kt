@@ -430,7 +430,11 @@ class ContactService(
     contactId = this.contactId,
     prisonerNumber = this.prisonerNumber,
     relationshipType = request.relationshipTypeCode.orElse(this.relationshipType),
-    approvedVisitor = request.isApprovedVisitor.orElse(this.approvedVisitor),
+    approvedVisitor = request.isApprovedVisitor.orElse(this.approvedVisitor).also {
+      if (request.isApprovedVisitor.isPresent && request.isApprovedVisitor.get() != this.approvedVisitor) {
+        logger.info("Approval status has been changed from DPS: for contactId=${this.contactId}, prisonerNumber=${this.prisonerNumber}: from ${this.approvedVisitor} to ${request.isApprovedVisitor.get()}, updated By ${user.username}")
+      }
+    },
     currentTerm = this.currentTerm,
     nextOfKin = request.isNextOfKin.orElse(this.nextOfKin),
     emergencyContact = request.isEmergencyContact.orElse(this.emergencyContact),
