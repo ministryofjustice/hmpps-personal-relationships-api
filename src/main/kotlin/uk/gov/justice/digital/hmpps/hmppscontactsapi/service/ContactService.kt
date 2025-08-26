@@ -354,15 +354,19 @@ class ContactService(
     }
     prisonerContactRepository.delete(relationship)
 
-    val nonInternalContactRelationship = prisonerContactRepository.findAllByContactIdAndRelationshipToPrisonerNotIn(
-      relationship.contactId,
-      internalOfficialTypes,
-    )
+    // Find all remaining relationships for this contact (excluding the one just deleted)
+    val remainingRelationships = prisonerContactRepository.findAllByContactId(relationship.contactId)
+      .filter { it.prisonerContactId != prisonerContactId }
+
     var wasUpdated = false
-    if (nonInternalContactRelationship.isEmpty()) {
-      contactRepository.findById(relationship.contactId).ifPresent {
-        contactRepository.saveAndFlush(it.deleteDateOfBirth(user))
-        wasUpdated = true
+    if (remainingRelationships.isNotEmpty()) {
+      // If all remaining relationships are internal staff types, remove DOB
+      val allInternal = remainingRelationships.all { it.relationshipToPrisoner in internalOfficialTypes }
+      if (allInternal) {
+        contactRepository.findById(relationship.contactId).ifPresent {
+          contactRepository.saveAndFlush(it.deleteDateOfBirth(user))
+          wasUpdated = true
+        }
       }
     }
 
@@ -407,14 +411,19 @@ class ContactService(
     val willAlsoDeleteContactDob = if (contact.dateOfBirth == null) {
       false
     } else {
-      val nonInternalContactRelationship = prisonerContactRepository.findAllByContactIdAndRelationshipToPrisonerNotIn(
-        relationship.contactId,
-        internalOfficialTypes,
-      )
+      val nonInternalContactRelationship = findNoNInternalRelationshipsToContact(relationship.contactId)
       nonInternalContactRelationship.none { it.prisonerContactId != prisonerContactId }
     }
 
     return RelationshipDeletePlan(willAlsoDeleteContactDob, hasRestrictions)
+  }
+
+  private fun findNoNInternalRelationshipsToContact(contactId: Long): List<PrisonerContactEntity> {
+    val nonInternalContactRelationship = prisonerContactRepository.findAllByContactIdAndRelationshipToPrisonerNotIn(
+      contactId,
+      internalOfficialTypes,
+    )
+    return nonInternalContactRelationship
   }
 
   private fun validateRequest(request: PatchRelationshipRequest) {

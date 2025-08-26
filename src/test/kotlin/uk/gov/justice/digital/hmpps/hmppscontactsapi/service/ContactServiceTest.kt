@@ -1844,7 +1844,7 @@ class ContactServiceTest {
       whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContactEntity))
       whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId)).thenReturn(emptyList())
       whenever(deletedPrisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as DeletedPrisonerContactEntity) }
-      whenever(prisonerContactRepository.findAllByContactIdAndRelationshipToPrisonerNotIn(any(), any())).thenReturn(emptyList())
+      whenever(prisonerContactRepository.findAllByContactId(prisonerContactEntity.contactId)).thenReturn(listOf(prisonerContactEntity.copy(prisonerContactId = 2L, relationshipToPrisoner = "POM")))
       val aContact = createContactEntity().copy(dateOfBirth = LocalDate.of(1990, 1, 1))
       whenever(contactRepository.findById(prisonerContactEntity.contactId)).thenReturn(Optional.of(aContact))
 
