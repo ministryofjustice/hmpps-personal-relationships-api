@@ -151,16 +151,25 @@ class ContactFacade(
   }
 
   fun deleteContactRelationship(prisonerContactId: Long, user: User) {
-    contactService.deleteContactRelationship(prisonerContactId, user)
-      .also {
-        outboundEventsService.send(
-          outboundEvent = OutboundEvent.PRISONER_CONTACT_DELETED,
-          identifier = it.prisonerContactId,
-          contactId = it.contactId,
-          noms = it.prisonerNumber,
-          user = user,
-        )
-      }
+    val deletedResponse = contactService.deleteContactRelationship(prisonerContactId, user)
+    deletedResponse.ids.let {
+      outboundEventsService.send(
+        outboundEvent = OutboundEvent.PRISONER_CONTACT_DELETED,
+        identifier = it.prisonerContactId,
+        contactId = it.contactId,
+        noms = it.prisonerNumber,
+        user = user,
+      )
+    }
+    if (deletedResponse.wasUpdated) {
+      outboundEventsService.send(
+        outboundEvent = OutboundEvent.CONTACT_UPDATED,
+        identifier = deletedResponse.ids.contactId,
+        contactId = deletedResponse.ids.contactId,
+        source = Source.DPS,
+        user = user,
+      )
+    }
   }
 
   fun planDeleteContactRelationship(prisonerContactId: Long, user: User) = contactService.planDeleteContactRelationship(prisonerContactId, user)
