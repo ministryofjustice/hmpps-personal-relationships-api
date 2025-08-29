@@ -100,20 +100,8 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
   }
 
   @Test
-  fun `should delete the contact's date of birth if they do not have a non-internal role relationship left`() {
-    testAPIClient.addAContactRelationship(
-      AddContactRelationshipRequest(
-        savedContactId,
-        ContactRelationship(
-          prisonerNumber = anotherPrisonerNumber,
-          relationshipTypeCode = "O",
-          relationshipToPrisonerCode = "POM",
-          isEmergencyContact = false,
-          isNextOfKin = false,
-          isApprovedVisitor = false,
-        ),
-      ),
-    )
+  fun `should delete the contact's date of birth if they only have internal relationship left`() {
+    createInternalOfficialRelationship()
 
     val plan = testAPIClient.planDeletePrisonerContact(savedPrisonerContactId)
     assertThat(plan).isEqualTo(
@@ -140,7 +128,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
   }
 
   @Test
-  fun `should retain the contact's date of birth if they have a non-internal role relationship left`() {
+  fun `should retain the contact's date of birth if they have a non-internal relationship left`() {
     testAPIClient.addAContactRelationship(
       AddContactRelationshipRequest(
         savedContactId,
@@ -180,6 +168,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
       ),
     )
 
+    createInternalOfficialRelationship()
     val plan = testAPIClient.planDeletePrisonerContact(savedPrisonerContactId)
     assertThat(plan).isEqualTo(
       RelationshipDeletePlan(
@@ -211,6 +200,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         comments = null,
       ),
     )
+    createInternalOfficialRelationship()
 
     val plan = testAPIClient.planDeletePrisonerContact(savedPrisonerContactId)
     assertThat(plan).isEqualTo(
@@ -230,5 +220,21 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     val contacts = testAPIClient.getPrisonerContacts(prisonerNumber).content
     assertThat(contacts.find { it.prisonerContactId == savedPrisonerContactId }).isNotNull
     stubEvents.assertHasNoEvents(event = OutboundEvent.PRISONER_CONTACT_DELETED)
+  }
+
+  private fun createInternalOfficialRelationship() {
+    testAPIClient.addAContactRelationship(
+      AddContactRelationshipRequest(
+        savedContactId,
+        ContactRelationship(
+          prisonerNumber = anotherPrisonerNumber,
+          relationshipTypeCode = "O",
+          relationshipToPrisonerCode = "POM",
+          isEmergencyContact = false,
+          isNextOfKin = false,
+          isApprovedVisitor = false,
+        ),
+      ),
+    )
   }
 }
