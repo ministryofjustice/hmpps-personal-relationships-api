@@ -345,15 +345,15 @@ class PrisonerContactController(
 
   @GetMapping("{prisonerContactId}/plan-delete")
   @Operation(
-    summary = "Plan to delete prisoner contact relationship",
-    description = "Plan to delete the relationship between the contact and a prisoner. Returns side effects of the deletion.",
+    summary = "Assess if a prisoner contact relationship can be deleted",
+    description = "Assess if a prisoner contact relationship can be deleted, considering any attached restrictions or if deletion will also remove the contact's date of birth.",
   )
   @Tag(name = "Prisoner relationships")
   @ApiResponses(
     value = [
       ApiResponse(
         responseCode = "200",
-        description = "Planned the deletion of the prisoner contact relationship",
+        description = "Assess if a prisoner contact relationship can be deleted",
         content = [
           Content(
             mediaType = "application/json",
@@ -370,12 +370,12 @@ class PrisonerContactController(
   )
   @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__RW')")
   @ResponseStatus(HttpStatus.OK)
-  fun planDeleteContactRelationship(
+  fun assessIfRelationshipCanBeDeleted(
     @PathVariable("prisonerContactId") @Parameter(
       name = "prisonerContactId",
       description = "The id of the prisoner contact",
       example = "123456",
     ) prisonerContactId: Long,
     @RequestAttribute user: User,
-  ): RelationshipDeletePlan = contactFacade.planDeleteContactRelationship(prisonerContactId, user)
+  ): RelationshipDeletePlan = contactFacade.assessIfRelationshipCanBeDeleted(prisonerContactId, user)
 }

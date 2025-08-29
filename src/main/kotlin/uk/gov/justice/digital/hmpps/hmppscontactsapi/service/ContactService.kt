@@ -348,20 +348,18 @@ class ContactService(
   @Transactional
   fun deleteContactRelationship(prisonerContactId: Long, user: User): DeletedResponse {
     val relationship = requirePrisonerContactEntity(prisonerContactId)
-    val relationshipRestrictions = prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId)
-    if (relationshipRestrictions.isNotEmpty()) {
+    if (hasPrisonerContactRestrictions(prisonerContactId)) {
       throw RelationshipCannotBeRemovedDueToDependencyException(prisonerContactId)
     }
     prisonerContactRepository.delete(relationship)
 
     // Find all remaining relationships for this contact (excluding the one just deleted)
-    val remainingRelationships = prisonerContactRepository.findAllByContactId(relationship.contactId)
-      .filter { it.prisonerContactId != prisonerContactId }
+    val remainingRelationships = getRemainingRelationships(relationship, prisonerContactId)
 
     var wasUpdated = false
     if (remainingRelationships.isNotEmpty()) {
       // If all remaining relationships are internal staff types, remove DOB
-      val allInternal = remainingRelationships.all { it.relationshipToPrisoner in internalOfficialTypes }
+      val allInternal = getAllInternal(remainingRelationships)
       if (allInternal) {
         contactRepository.findById(relationship.contactId).ifPresent {
           contactRepository.saveAndFlush(it.deleteDateOfBirth(user))
@@ -402,29 +400,36 @@ class ContactService(
     )
   }
 
-  fun planDeleteContactRelationship(prisonerContactId: Long, user: User): RelationshipDeletePlan {
+  fun assessIfRelationshipCanBeDeleted(prisonerContactId: Long, user: User): RelationshipDeletePlan {
     val relationship = requirePrisonerContactEntity(prisonerContactId)
-    val hasRestrictions = prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId).isNotEmpty()
+    val hasRestrictions = hasPrisonerContactRestrictions(prisonerContactId)
+    val remainingRelationships = getRemainingRelationships(relationship, prisonerContactId)
 
-    val contact = contactRepository.findById(relationship.contactId).get()
-
-    val willAlsoDeleteContactDob = if (contact.dateOfBirth == null) {
-      false
-    } else {
-      val nonInternalContactRelationship = findNoNInternalRelationshipsToContact(relationship.contactId)
-      nonInternalContactRelationship.none { it.prisonerContactId != prisonerContactId }
+    var shouldRemoveDob = false
+    if (remainingRelationships.isNotEmpty()) {
+      if (isDobExists(relationship.contactId)) {
+        // If all remaining relationships are internal staff types,  DOB can be removed
+        shouldRemoveDob = getAllInternal(remainingRelationships)
+      }
     }
 
-    return RelationshipDeletePlan(willAlsoDeleteContactDob, hasRestrictions)
+    return RelationshipDeletePlan(shouldRemoveDob, hasRestrictions)
   }
 
-  private fun findNoNInternalRelationshipsToContact(contactId: Long): List<PrisonerContactEntity> {
-    val nonInternalContactRelationship = prisonerContactRepository.findAllByContactIdAndRelationshipToPrisonerNotIn(
-      contactId,
-      internalOfficialTypes,
-    )
-    return nonInternalContactRelationship
+  private fun hasPrisonerContactRestrictions(prisonerContactId: Long) = prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId).isNotEmpty()
+
+  private fun isDobExists(contactId: Long): Boolean {
+    val contact = contactRepository.findById(contactId).get()
+    return contact.dateOfBirth != null
   }
+
+  private fun getAllInternal(remainingRelationships: List<PrisonerContactEntity>) = remainingRelationships.all { it.relationshipToPrisoner in internalOfficialTypes }
+
+  private fun getRemainingRelationships(
+    relationship: PrisonerContactEntity,
+    prisonerContactId: Long,
+  ) = prisonerContactRepository.findAllByContactId(relationship.contactId)
+    .filter { it.prisonerContactId != prisonerContactId }
 
   private fun validateRequest(request: PatchRelationshipRequest) {
     unsupportedRelationshipType(request)
