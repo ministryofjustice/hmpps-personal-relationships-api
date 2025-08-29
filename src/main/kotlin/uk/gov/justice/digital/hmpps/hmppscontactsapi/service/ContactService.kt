@@ -400,7 +400,7 @@ class ContactService(
     )
   }
 
-  fun planDeleteContactRelationship(prisonerContactId: Long, user: User): RelationshipDeletePlan {
+  fun assessIfRelationshipCanBeDeleted(prisonerContactId: Long, user: User): RelationshipDeletePlan {
     val relationship = requirePrisonerContactEntity(prisonerContactId)
     val hasRestrictions = hasPrisonerContactRestrictions(prisonerContactId)
     val remainingRelationships = getRemainingRelationships(relationship, prisonerContactId)

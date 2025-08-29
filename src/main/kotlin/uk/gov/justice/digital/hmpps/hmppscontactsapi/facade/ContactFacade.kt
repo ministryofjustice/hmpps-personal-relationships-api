@@ -172,7 +172,7 @@ class ContactFacade(
     }
   }
 
-  fun planDeleteContactRelationship(prisonerContactId: Long, user: User) = contactService.planDeleteContactRelationship(prisonerContactId, user)
+  fun assessIfRelationshipCanBeDeleted(prisonerContactId: Long, user: User) = contactService.assessIfRelationshipCanBeDeleted(prisonerContactId, user)
 
   fun removeInternalOfficialDateOfBirth(): List<Long> = contactService.removeInternalOfficialContactsDateOfBirth().also { sendEventsForContactsUpdated(it) }
 
