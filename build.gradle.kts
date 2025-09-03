@@ -2,9 +2,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.7"
-  id("org.openapi.generator") version "7.14.0"
-  id("io.gatling.gradle") version "3.14.3.5"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.0.0"
+  id("org.openapi.generator") version "7.15.0"
+  id("io.gatling.gradle") version "3.14.3.7"
   kotlin("plugin.spring") version "2.2.10"
   kotlin("plugin.jpa") version "2.2.10"
 }
@@ -33,14 +33,14 @@ dependencies {
   implementation("org.openapitools:jackson-databind-nullable:0.2.7")
 
   // CSV dependencies
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.19.2")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.20.0")
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql:42.7.7")
 
   // OpenAPI
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.11")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.12")
 
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.19.0")
 
