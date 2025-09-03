@@ -160,44 +160,45 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `should get the contacts when searched by first name and last name with partial match`() {
+  @ParameterizedTest
+  @CsvSource(
+    "Smith,John,Jon|Smith|1980-01-01;John|Smithe|1980-01-01",
+    "Brown,Stephen,Stephen|Brown|1985-05-15;Steven|Browne|1983-09-10",
+    "Lewis,Catherine,Catherine|Lewis|1990-07-22",
+    "Macdonald,Bryan,Bryan|Macdonald|1977-03-12;Brian|McDonald|1976-08-05",
+    "Green,Geoffrey,Geoffrey|Green|1988-04-18",
+    "Khan,Mohammed,Mohammed|Khan|1993-12-01;Muhammad|Kahn|1994-01-15",
+    "Johnson,Sara,Sara|Johnson|1995-05-25;Sarah|Johnsen|1995-06-01",
+    "Taylor,Nicolas,Nicolas|Taylor|1982-03-03;Nicholas|Tailor|1982-04-04",
+    "King,Isabel,Isabel|King|2000-01-01;Isabelle|King|2000-01-01;Isobel|King|2000-01-01",
+    "Black,Marc,Marc|Black|1981-09-09;Mark|Blake|1981-10-10",
+  )
+  fun `should get the contacts when searched by first name and last name with similar match`(
+    lastName: String,
+    firstName: String,
+    expected: String,
+  ) {
     val uri = UriComponentsBuilder.fromPath("contact/search")
-      .queryParam("lastName", "Las")
-      .queryParam("firstName", "ck")
+      .queryParam("lastName", lastName)
+      .queryParam("firstName", firstName)
       .build()
       .toUri()
 
-    val body = testAPIClient.getSearchContactResults(uri)
+    val body = testAPIClient.getSearchContactResults(uri)!!
 
-    with(body!!) {
+    val expectedTriples = expected.split(";").map {
+      val parts = it.split("|")
+      Triple(parts[0], parts[1], parts.getOrNull(2)?.takeIf { s -> s.isNotBlank() }?.let(LocalDate::parse))
+    }
+
+    with(body) {
       assertThat(content).isNotEmpty()
-      assertThat(content.size).isEqualTo(1)
-      assertThat(page.totalElements).isEqualTo(1)
-      assertThat(page.totalPages).isEqualTo(1)
+      assertThat(content.size).isEqualTo(expectedTriples.size)
+      assertThat(page.totalElements).isEqualTo(expectedTriples.size.toLong())
+      assertThat(page.totalPages).isEqualTo(1L)
 
-      val contact = content.first()
-      assertThat(contact.id).isEqualTo(1)
-      assertThat(contact.firstName).isEqualTo("Jack")
-      assertThat(contact.lastName).isEqualTo("Last")
-      assertThat(contact.middleNames).isEqualTo("Middle")
-      assertThat(contact.dateOfBirth).isEqualTo("2000-11-21")
-      assertThat(contact.createdBy).isEqualTo("TIM")
-      assertThat(contact.createdTime).isInThePast()
-      assertThat(contact.property).isEqualTo("24")
-      assertThat(contact.street).isEqualTo("Acacia Avenue")
-      assertThat(contact.area).isEqualTo("Bunting")
-      assertThat(contact.cityCode).isEqualTo("25343")
-      assertThat(contact.cityDescription).isEqualTo("Sheffield")
-      assertThat(contact.countyCode).isEqualTo("S.YORKSHIRE")
-      assertThat(contact.countyDescription).isEqualTo("South Yorkshire")
-      assertThat(contact.postcode).isEqualTo("S2 3LK")
-      assertThat(contact.countryCode).isEqualTo("ENG")
-      assertThat(contact.countryDescription).isEqualTo("England")
-      assertThat(contact.mailAddress).isFalse()
-      assertThat(contact.noFixedAddress).isFalse()
-      assertThat(contact.startDate).isNull()
-      assertThat(contact.startDate).isNull()
+      val actualTriples = content.map { Triple(it.firstName, it.lastName, it.dateOfBirth) }
+      assertThat(actualTriples).containsExactlyInAnyOrderElementsOf(expectedTriples)
     }
   }
 
@@ -376,10 +377,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     val expectedOrder = listOf(
       "AA, B C",
       "AA, B",
-      "AB, A",
-      "AB, B",
-      "AC, C A",
-      "AC, C B",
     )
 
     val ascendingName = testAPIClient.getSearchContactResults(

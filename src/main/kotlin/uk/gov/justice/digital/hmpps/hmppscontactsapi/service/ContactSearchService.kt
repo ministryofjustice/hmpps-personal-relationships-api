@@ -18,7 +18,7 @@ class ContactSearchService(
 
   fun searchContacts(pageable: Pageable, request: ContactSearchRequest): Page<ContactSearchResultItem> {
     val checkForExistingRelationships = request.includeAnyExistingRelationshipsToPrisoner != null
-    val matchingContactsPage = contactSearchRepository.searchContacts(request, pageable)
+    val matchingContactsPage = contactSearchRepository.searchContactsBySoundex(request, pageable)
     val contactExistingRelationships: Map<Long, List<ExistingRelationshipToPrisoner>> =
       if (checkForExistingRelationships) {
         val contactIds = matchingContactsPage.content.map { it.contactId }
