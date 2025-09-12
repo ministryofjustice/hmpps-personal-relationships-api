@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactSummaryEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ExistingRelationshipToPrisoner
@@ -27,6 +28,8 @@ class ContactSearchServiceTest {
   private val contactSearchRepository: ContactSearchRepository = mock()
   private val prisonerContactSummaryRepository: PrisonerContactSummaryRepository = mock()
   private val service = ContactSearchService(contactSearchRepository, prisonerContactSummaryRepository)
+
+  private val aContactAddressDetailsEntity = createContactAddressDetailsEntity()
 
   @Nested
   inner class SearchContact {
@@ -43,7 +46,7 @@ class ContactSearchServiceTest {
 
       // When
       val request = ContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1), null)
-      whenever(contactSearchRepository.searchContactsBySoundex(request, pageable)).thenReturn(pageContacts)
+      whenever(contactSearchRepository.searchContacts(request, pageable)).thenReturn(pageContacts)
 
       // Act
       val result: Page<ContactSearchResultItem> = service.searchContacts(pageable, request)
@@ -69,7 +72,7 @@ class ContactSearchServiceTest {
 
       // When
       val request = ContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1), "A1234BC")
-      whenever(contactSearchRepository.searchContactsBySoundex(request, pageable)).thenReturn(pageContacts)
+      whenever(contactSearchRepository.searchContacts(request, pageable)).thenReturn(pageContacts)
       whenever(
         prisonerContactSummaryRepository.findByPrisonerNumberAndContactIdIn(
           "A1234BC",
