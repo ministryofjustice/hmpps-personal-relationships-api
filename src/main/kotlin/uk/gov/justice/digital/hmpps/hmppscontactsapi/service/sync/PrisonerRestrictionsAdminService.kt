@@ -45,9 +45,9 @@ class PrisonerRestrictionsAdminService(
         prisonerRestrictionId = 0, // Let JPA generate new ID
         prisonerNumber = request.keepingPrisonerNumber,
         restrictionType = restriction.restrictionType,
-        effectiveDate = restriction.effectiveDate,
+        startDate = restriction.effectiveDate,
         expiryDate = restriction.expiryDate,
-        commentText = restriction.commentText,
+        comments = restriction.commentText,
         currentTerm = restriction.currentTerm,
         authorisedUsername = restriction.authorisedUsername,
         createdBy = restriction.createdBy,
@@ -89,9 +89,9 @@ class PrisonerRestrictionsAdminService(
         prisonerRestrictionId = 0, // Let JPA generate new ID
         prisonerNumber = request.prisonerNumber,
         restrictionType = restriction.restrictionType,
-        effectiveDate = restriction.effectiveDate,
+        startDate = restriction.effectiveDate,
         expiryDate = restriction.expiryDate,
-        commentText = restriction.commentText,
+        comments = restriction.commentText,
         currentTerm = restriction.currentTerm,
         authorisedUsername = restriction.authorisedUsername,
         createdBy = restriction.createdBy,

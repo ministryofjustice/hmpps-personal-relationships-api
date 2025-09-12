@@ -55,9 +55,9 @@ class SyncPrisonerRestrictionsService(
 
     val changed = entity.copy(
       restrictionType = request.restrictionType,
-      effectiveDate = request.effectiveDate,
+      startDate = request.effectiveDate,
       expiryDate = request.expiryDate,
-      commentText = request.commentText,
+      comments = request.commentText,
       authorisedUsername = request.authorisedUsername,
       updatedBy = request.updatedBy,
       updatedTime = request.updatedTime,

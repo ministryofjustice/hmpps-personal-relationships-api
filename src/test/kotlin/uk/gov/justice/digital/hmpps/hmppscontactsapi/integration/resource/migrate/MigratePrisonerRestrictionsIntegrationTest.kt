@@ -98,13 +98,13 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
       val restrictions = prisonerRestrictionsRepository.findByPrisonerNumber("A1234ZZ")
       assertThat(restrictions).hasSize(3)
       assertThat(restrictions[0].restrictionType).isEqualTo("CCTV")
-      assertThat(restrictions[0].commentText).isEqualTo("No visits allowed")
+      assertThat(restrictions[0].comments).isEqualTo("No visits allowed")
 
       assertThat(restrictions[1].restrictionType).isEqualTo("DIHCON")
-      assertThat(restrictions[1].commentText).isEqualTo("No visits allowed")
+      assertThat(restrictions[1].comments).isEqualTo("No visits allowed")
 
       assertThat(restrictions[2].restrictionType).isEqualTo("NONCON")
-      assertThat(restrictions[2].commentText).isEqualTo("No visits allowed")
+      assertThat(restrictions[2].comments).isEqualTo("No visits allowed")
     }
 
     @Test

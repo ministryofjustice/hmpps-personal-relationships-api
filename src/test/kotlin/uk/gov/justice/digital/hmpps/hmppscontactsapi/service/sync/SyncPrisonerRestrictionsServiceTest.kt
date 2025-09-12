@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ReferenceCodeEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreatePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdatePrisonerRestrictionRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerRestriction
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ReferenceCodeRepository
 import java.time.LocalDate
@@ -37,7 +38,7 @@ class SyncPrisonerRestrictionsServiceTest {
 
     val result = service.getPrisonerRestrictionById(1L)
 
-    assertThat(result).usingRecursiveComparison().isEqualTo(entity)
+    assertThat(result).usingRecursiveComparison().isEqualTo(mockPrisonerRestrictionResponse())
   }
 
   @Test
@@ -58,7 +59,7 @@ class SyncPrisonerRestrictionsServiceTest {
     val response = service.deletePrisonerRestriction(1L)
 
     verify(prisonerRestrictionsRepository).deleteById(1L)
-    assertThat(response).usingRecursiveComparison().isEqualTo(entity)
+    assertThat(response).usingRecursiveComparison().isEqualTo(mockPrisonerRestrictionResponse())
   }
 
   @Test
@@ -85,7 +86,7 @@ class SyncPrisonerRestrictionsServiceTest {
     val result = service.createPrisonerRestriction(request)
 
     assertThat(captor.value).usingRecursiveComparison().ignoringFields("prisonerRestrictionId").isEqualTo(entity)
-    assertThat(result).usingRecursiveComparison().isEqualTo(entity)
+    assertThat(result).usingRecursiveComparison().isEqualTo(mockPrisonerRestrictionResponse())
   }
 
   @Test
@@ -104,7 +105,7 @@ class SyncPrisonerRestrictionsServiceTest {
   fun `should update prisoner restriction`() {
     val entity = createPrisonerRestrictionEntity()
     val request = syncUpdatePrisonerRestrictionRequest().copy(commentText = "Updated comment")
-    val updatedEntity = entity.copy(commentText = "Updated comment")
+    val updatedEntity = entity.copy(comments = "Updated comment")
     whenever(referenceCodeRepository.findByGroupCodeAndCode(ReferenceCodeGroup.RESTRICTION, "CCTV")).thenReturn(
       referenceCode,
     )
@@ -113,7 +114,7 @@ class SyncPrisonerRestrictionsServiceTest {
 
     val result = service.updatePrisonerRestriction(1L, request)
 
-    assertThat(result).usingRecursiveComparison().ignoringFields("commentText").isEqualTo(entity)
+    assertThat(result).usingRecursiveComparison().ignoringFields("commentText").isEqualTo(mockPrisonerRestrictionResponse())
     assertThat(result.commentText).isEqualTo("Updated comment")
   }
 
@@ -169,6 +170,21 @@ class SyncPrisonerRestrictionsServiceTest {
   )
 
   private fun createPrisonerRestrictionEntity() = PrisonerRestriction(
+    prisonerRestrictionId = 1L,
+    prisonerNumber = "A1234BC",
+    restrictionType = "CCTV",
+    startDate = LocalDate.of(2024, 6, 11),
+    expiryDate = LocalDate.of(2024, 12, 31),
+    comments = "No visits allowed",
+    authorisedUsername = "JSMITH",
+    createdBy = "JSMITH_ADM",
+    createdTime = LocalDateTime.of(2024, 6, 11, 10, 0),
+    currentTerm = true,
+    updatedBy = null,
+    updatedTime = null,
+  )
+
+  private fun mockPrisonerRestrictionResponse() = SyncPrisonerRestriction(
     prisonerRestrictionId = 1L,
     prisonerNumber = "A1234BC",
     restrictionType = "CCTV",

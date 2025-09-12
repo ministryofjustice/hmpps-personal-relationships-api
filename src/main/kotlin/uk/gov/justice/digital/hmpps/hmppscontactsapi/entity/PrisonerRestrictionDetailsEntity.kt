@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.entity
 
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -9,31 +10,35 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "prisoner_restrictions")
-data class PrisonerRestriction(
+@Table(name = "v_prisoner_restriction_details")
+data class PrisonerRestrictionDetailsEntity(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  val prisonerRestrictionId: Long = 0,
+  val prisonerRestrictionId: Long,
 
   val prisonerNumber: String,
 
   val restrictionType: String,
 
+  val restrictionTypeDescription: String,
+
   val startDate: LocalDate,
 
-  val expiryDate: LocalDate? = null,
+  val expiryDate: LocalDate?,
 
-  val comments: String? = null,
-
-  val authorisedUsername: String,
+  val comments: String?,
 
   val currentTerm: Boolean,
 
+  val authorisedUsername: String,
+
+  @Column(updatable = false)
   val createdBy: String,
 
+  @Column(updatable = false)
   val createdTime: LocalDateTime,
 
-  val updatedBy: String? = null,
+  val updatedBy: String?,
 
-  val updatedTime: LocalDateTime? = null,
+  val updatedTime: LocalDateTime?,
 )

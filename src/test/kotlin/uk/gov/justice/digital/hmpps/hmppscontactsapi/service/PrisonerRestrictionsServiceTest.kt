@@ -5,15 +5,16 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerRestriction
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerRestrictionDetailsEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionDetailsRepository
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 class PrisonerRestrictionsServiceTest {
 
-  private var prisonerRestrictionsRepository: PrisonerRestrictionsRepository = mock()
-  private var service: PrisonerRestrictionsService = PrisonerRestrictionsService(prisonerRestrictionsRepository)
+  private var prisonerRestrictionDetailsRepository: PrisonerRestrictionDetailsRepository = mock()
+  private var manageUsersService: ManageUsersService = mock()
+  private var service: PrisonerRestrictionsService = PrisonerRestrictionsService(prisonerRestrictionDetailsRepository, manageUsersService)
 
   @Test
   fun `getPrisonerRestrictions returns all restrictions paged when currentTermOnly is false`() {
@@ -23,7 +24,7 @@ class PrisonerRestrictionsServiceTest {
       createPrisonerRestrictionEntity().copy(prisonerRestrictionId = 2L, currentTerm = false),
       createPrisonerRestrictionEntity().copy(prisonerRestrictionId = 3L, currentTerm = true),
     )
-    whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(restrictions)
+    whenever(prisonerRestrictionDetailsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(restrictions)
 
     val pageable = PageRequest.of(0, 2)
     val result = service.getPrisonerRestrictions(prisonerNumber, currentTermOnly = false, pageable)
@@ -41,7 +42,7 @@ class PrisonerRestrictionsServiceTest {
       createPrisonerRestrictionEntity().copy(prisonerRestrictionId = 2L, currentTerm = false),
       createPrisonerRestrictionEntity().copy(prisonerRestrictionId = 3L, currentTerm = true),
     )
-    whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(restrictions)
+    whenever(prisonerRestrictionDetailsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(restrictions)
 
     val pageable = PageRequest.of(0, 10)
     val result = service.getPrisonerRestrictions(prisonerNumber, currentTermOnly = true, pageable)
@@ -54,7 +55,7 @@ class PrisonerRestrictionsServiceTest {
   @Test
   fun `getPrisonerRestrictions returns empty when no restrictions exist`() {
     val prisonerNumber = "A1234BC"
-    whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(emptyList())
+    whenever(prisonerRestrictionDetailsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(emptyList())
 
     val pageable = PageRequest.of(0, 10)
     val result = service.getPrisonerRestrictions(prisonerNumber, currentTermOnly = false, pageable)
@@ -63,13 +64,14 @@ class PrisonerRestrictionsServiceTest {
     assertThat(result.metadata.totalElements).isEqualTo(0)
   }
 
-  private fun createPrisonerRestrictionEntity() = PrisonerRestriction(
+  private fun createPrisonerRestrictionEntity() = PrisonerRestrictionDetailsEntity(
     prisonerRestrictionId = 1L,
     prisonerNumber = "A1234BC",
     restrictionType = "CCTV",
-    effectiveDate = LocalDate.of(2024, 6, 11),
+    restrictionTypeDescription = "No Visits",
+    startDate = LocalDate.of(2024, 6, 11),
     expiryDate = LocalDate.of(2024, 12, 31),
-    commentText = "No visits allowed",
+    comments = "No visits allowed",
     authorisedUsername = "JSMITH",
     createdBy = "JSMITH_ADM",
     createdTime = LocalDateTime.of(2024, 6, 11, 10, 0),
