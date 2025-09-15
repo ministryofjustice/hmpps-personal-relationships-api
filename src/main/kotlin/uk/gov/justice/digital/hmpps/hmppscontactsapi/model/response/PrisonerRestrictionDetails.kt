@@ -12,8 +12,19 @@ data class PrisonerRestrictionDetails(
   @Schema(description = "The prisoner number", example = "A1234BC", required = false)
   val prisonerNumber: String,
 
-  @Schema(description = "The restriction type", example = "NO_VISIT", required = false)
+  @Schema(
+    description =
+    """
+    The coded type of restriction that applies to this contact.
+    This is a coded value from the group RESTRICTION in reference codes.
+    Example values include ACC, BAN, CHILD, CLOSED, RESTRICTED, DIHCON, NONCON.
+    """,
+    example = "BAN",
+  )
   val restrictionType: String,
+
+  @Schema(description = "The description of restrictionType", example = "Banned")
+  val restrictionTypeDescription: String,
 
   @Schema(description = "Effective date of the restriction", example = "2024-06-11", required = false)
   val effectiveDate: LocalDate,
@@ -26,6 +37,9 @@ data class PrisonerRestrictionDetails(
 
   @Schema(description = "Authorised staff user name", example = "JSMITH", required = false)
   val authorisedUsername: String,
+
+  @Schema(description = "The display name of either the person who authorised the restriction.", example = "John Smith")
+  val authorisedByDisplayName: String,
 
   @Schema(description = "True if this restriction applies to the latest or current term in prison, false if a previous term", example = "true", required = false)
   val currentTerm: Boolean,

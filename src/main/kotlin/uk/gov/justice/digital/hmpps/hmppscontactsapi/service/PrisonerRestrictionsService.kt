@@ -5,29 +5,52 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PagedModel
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync.mapEntityToResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerRestrictionDetailsEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync.mapRestrictionsWithEnteredBy
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerRestrictionDetails
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionsRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerRestrictionDetailsRepository
 
 @Service
 @Transactional
 class PrisonerRestrictionsService(
-  private val prisonerRestrictionsRepository: PrisonerRestrictionsRepository,
+  private val prisonerRestrictionDetailsRepository: PrisonerRestrictionDetailsRepository,
+  private val manageUsersService: ManageUsersService,
 ) {
 
   fun getPrisonerRestrictions(
     prisonerNumber: String,
     currentTermOnly: Boolean,
     pageable: Pageable,
+    paged: Boolean,
   ): PagedModel<PrisonerRestrictionDetails> {
-    val allRestrictions = prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber)
+    val allRestrictions = getPrisonerRestrictions(prisonerNumber)
       .filter { !currentTermOnly || it.currentTerm }
-      .map { it.mapEntityToResponse() }
+
+    if (!paged) {
+      val unpaged = PageImpl(
+        allRestrictions,
+        Pageable.unpaged(),
+        allRestrictions.size.toLong(),
+      )
+      return PagedModel(unpaged)
+    }
+
     val page = PageImpl(
       allRestrictions.drop(pageable.offset.toInt()).take(pageable.pageSize),
       pageable,
       allRestrictions.size.toLong(),
     )
     return PagedModel(page)
+  }
+
+  fun getPrisonerRestrictions(prisonerNumber: String): List<PrisonerRestrictionDetails> {
+    val restrictionsWithEnteredBy: Iterable<Pair<PrisonerRestrictionDetailsEntity, String>> = prisonerRestrictionDetailsRepository.findByPrisonerNumber(prisonerNumber)
+      .map { entity -> entity to (entity.updatedBy ?: entity.createdBy) }
+    val enteredByMap = restrictionsWithEnteredBy
+      .map { (_, authorisedUsername) -> authorisedUsername }
+      .toSet().associateWith { authorisedUsername ->
+        manageUsersService.getUserByUsername(authorisedUsername)?.name ?: authorisedUsername
+      }
+    return restrictionsWithEnteredBy.mapRestrictionsWithEnteredBy(prisonerNumber, enteredByMap)
   }
 }
