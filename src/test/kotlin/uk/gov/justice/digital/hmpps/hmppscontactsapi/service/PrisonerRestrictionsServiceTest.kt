@@ -27,7 +27,7 @@ class PrisonerRestrictionsServiceTest {
     whenever(prisonerRestrictionDetailsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(restrictions)
 
     val pageable = PageRequest.of(0, 2)
-    val result = service.getPrisonerRestrictions(prisonerNumber, currentTermOnly = false, pageable)
+    val result = service.getPrisonerRestrictions(prisonerNumber, currentTermOnly = false, pageable, paged = true)
 
     assertThat(result.content).hasSize(2)
     assertThat(result.metadata.totalElements).isEqualTo(3)
@@ -45,7 +45,7 @@ class PrisonerRestrictionsServiceTest {
     whenever(prisonerRestrictionDetailsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(restrictions)
 
     val pageable = PageRequest.of(0, 10)
-    val result = service.getPrisonerRestrictions(prisonerNumber, currentTermOnly = true, pageable)
+    val result = service.getPrisonerRestrictions(prisonerNumber, currentTermOnly = true, pageable, paged = true)
 
     assertThat(result.content).hasSize(2)
     assertThat(result.metadata.totalElements).isEqualTo(2)
@@ -58,10 +58,27 @@ class PrisonerRestrictionsServiceTest {
     whenever(prisonerRestrictionDetailsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(emptyList())
 
     val pageable = PageRequest.of(0, 10)
-    val result = service.getPrisonerRestrictions(prisonerNumber, currentTermOnly = false, pageable)
+    val result = service.getPrisonerRestrictions(prisonerNumber, currentTermOnly = false, pageable, paged = true)
 
     assertThat(result.content).isEmpty()
     assertThat(result.metadata.totalElements).isEqualTo(0)
+  }
+
+  @Test
+  fun `getPrisonerRestrictions returns all when paged is false`() {
+    val prisonerNumber = "A1234BC"
+    val restrictions = listOf(
+      createPrisonerRestrictionEntity().copy(prisonerRestrictionId = 1L, currentTerm = true),
+      createPrisonerRestrictionEntity().copy(prisonerRestrictionId = 2L, currentTerm = false),
+      createPrisonerRestrictionEntity().copy(prisonerRestrictionId = 3L, currentTerm = true),
+    )
+    whenever(prisonerRestrictionDetailsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(restrictions)
+
+    val pageable = PageRequest.of(0, 1)
+    val result = service.getPrisonerRestrictions(prisonerNumber, currentTermOnly = false, pageable, paged = false)
+
+    assertThat(result.content).hasSize(3)
+    assertThat(result.metadata.totalElements).isEqualTo(3)
   }
 
   private fun createPrisonerRestrictionEntity() = PrisonerRestrictionDetailsEntity(
@@ -69,9 +86,9 @@ class PrisonerRestrictionsServiceTest {
     prisonerNumber = "A1234BC",
     restrictionType = "CCTV",
     restrictionTypeDescription = "No Visits",
-    startDate = LocalDate.of(2024, 6, 11),
+    effectiveDate = LocalDate.of(2024, 6, 11),
     expiryDate = LocalDate.of(2024, 12, 31),
-    comments = "No visits allowed",
+    commentText = "No visits allowed",
     authorisedUsername = "JSMITH",
     createdBy = "JSMITH_ADM",
     createdTime = LocalDateTime.of(2024, 6, 11, 10, 0),

@@ -105,7 +105,7 @@ class SyncPrisonerRestrictionsServiceTest {
   fun `should update prisoner restriction`() {
     val entity = createPrisonerRestrictionEntity()
     val request = syncUpdatePrisonerRestrictionRequest().copy(commentText = "Updated comment")
-    val updatedEntity = entity.copy(comments = "Updated comment")
+    val updatedEntity = entity.copy(commentText = "Updated comment")
     whenever(referenceCodeRepository.findByGroupCodeAndCode(ReferenceCodeGroup.RESTRICTION, "CCTV")).thenReturn(
       referenceCode,
     )
@@ -173,9 +173,9 @@ class SyncPrisonerRestrictionsServiceTest {
     prisonerRestrictionId = 1L,
     prisonerNumber = "A1234BC",
     restrictionType = "CCTV",
-    startDate = LocalDate.of(2024, 6, 11),
+    effectiveDate = LocalDate.of(2024, 6, 11),
     expiryDate = LocalDate.of(2024, 12, 31),
-    comments = "No visits allowed",
+    commentText = "No visits allowed",
     authorisedUsername = "JSMITH",
     createdBy = "JSMITH_ADM",
     createdTime = LocalDateTime.of(2024, 6, 11, 10, 0),

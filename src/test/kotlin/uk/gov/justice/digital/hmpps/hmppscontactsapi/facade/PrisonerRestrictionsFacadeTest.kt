@@ -22,15 +22,16 @@ class PrisonerRestrictionsFacadeTest {
     val prisonerNumber = "A1234BC"
     val currentTermOnly = true
     val pageable = PageRequest.of(0, 10)
+    val paged = true
     val prisonerRestrictionDetails = PrisonerRestrictionDetails(
       prisonerRestrictionId = 1L,
       prisonerNumber = prisonerNumber,
       restrictionType = "NO_VISIT",
       restrictionTypeDescription = "No Visits",
       authorisedByDisplayName = "JAMES SMITH",
-      startDate = LocalDate.now(),
+      effectiveDate = LocalDate.now(),
       expiryDate = null,
-      comments = "No visits allowed",
+      commentText = "No visits allowed",
       authorisedUsername = "JSMITH",
       currentTerm = true,
       createdBy = "JSMITH_ADM",
@@ -40,11 +41,11 @@ class PrisonerRestrictionsFacadeTest {
     )
     val expected = PagedModel(PageImpl(listOf(prisonerRestrictionDetails)))
 
-    whenever(prisonerRestrictionsService.getPrisonerRestrictions(prisonerNumber, currentTermOnly, pageable)).thenReturn(expected)
+    whenever(prisonerRestrictionsService.getPrisonerRestrictions(prisonerNumber, currentTermOnly, pageable, paged)).thenReturn(expected)
 
-    val result = facade.getPrisonerRestrictions(prisonerNumber, currentTermOnly, pageable)
+    val result = facade.getPrisonerRestrictions(prisonerNumber, currentTermOnly, pageable, paged)
 
     assertThat(result).isEqualTo(expected)
-    verify(prisonerRestrictionsService).getPrisonerRestrictions(prisonerNumber, currentTermOnly, pageable)
+    verify(prisonerRestrictionsService).getPrisonerRestrictions(prisonerNumber, currentTermOnly, pageable, paged)
   }
 }

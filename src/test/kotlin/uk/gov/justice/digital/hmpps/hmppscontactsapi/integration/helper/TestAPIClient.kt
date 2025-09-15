@@ -592,8 +592,8 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBody(LinkedPrisonerResponse::class.java)
     .returnResult().responseBody!!
 
-  fun getPrisonerRestrictions(prisonerNumber: String, currentTermOnly: Boolean? = false, page: Int? = null, size: Int? = null): PrisonerRestrictionsResponse = webTestClient.get()
-    .uri("/prisoner-restrictions/$prisonerNumber?${currentTermOnly?.let { "page=$currentTermOnly&"} }${page?.let { "page=$page&"} }${size?.let { "size=$size"} }")
+  fun getPrisonerRestrictions(prisonerNumber: String, currentTermOnly: Boolean? = false, paged: Boolean? = true, page: Int? = null, size: Int? = null): PrisonerRestrictionsResponse = webTestClient.get()
+    .uri("/prisoner-restrictions/$prisonerNumber?${currentTermOnly?.let { "currentTermOnly=$currentTermOnly&"} }${paged?.let { "paged=$paged&"} }${page?.let { "page=$page&"} }${size?.let { "size=$size"} }")
     .headers(setAuthorisationUsingCurrentUser())
     .exchange()
     .expectStatus()

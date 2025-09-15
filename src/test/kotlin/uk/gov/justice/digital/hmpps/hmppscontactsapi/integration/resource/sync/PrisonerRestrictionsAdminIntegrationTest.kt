@@ -190,25 +190,25 @@ class PrisonerRestrictionsAdminIntegrationTest : PostgresIntegrationTestBase() {
     val prisonerRestrictions = prisonerRestrictionRepository.findAll()
     assertThat(prisonerRestrictions).hasSize(2)
     assertThat(prisonerRestrictions[0].restrictionType).isEqualTo("CCTV")
-    assertThat(prisonerRestrictions[0].comments).isEqualTo("No visits allowed")
+    assertThat(prisonerRestrictions[0].commentText).isEqualTo("No visits allowed")
     assertThat(prisonerRestrictions[0].authorisedUsername).isEqualTo("JSMITH")
     assertThat(prisonerRestrictions[0].createdBy).isEqualTo("user1")
     assertThat(prisonerRestrictions[0].createdTime).isNotNull
     assertThat(prisonerRestrictions[0].updatedBy).isEqualTo("user2")
     assertThat(prisonerRestrictions[0].updatedTime).isNotNull
     assertThat(prisonerRestrictions[0].currentTerm).isTrue
-    assertThat(prisonerRestrictions[0].startDate).isEqualTo(LocalDate.of(2024, 1, 1))
+    assertThat(prisonerRestrictions[0].effectiveDate).isEqualTo(LocalDate.of(2024, 1, 1))
     assertThat(prisonerRestrictions[0].expiryDate).isEqualTo(LocalDate.of(2024, 12, 31))
 
     assertThat(prisonerRestrictions[1].restrictionType).isEqualTo("CCTV")
-    assertThat(prisonerRestrictions[0].comments).isEqualTo("No visits allowed")
+    assertThat(prisonerRestrictions[0].commentText).isEqualTo("No visits allowed")
     assertThat(prisonerRestrictions[1].createdBy).isEqualTo("user1")
     assertThat(prisonerRestrictions[1].authorisedUsername).isEqualTo("JSMITH")
     assertThat(prisonerRestrictions[1].createdTime).isNotNull
     assertThat(prisonerRestrictions[1].updatedBy).isEqualTo("user2")
     assertThat(prisonerRestrictions[1].updatedTime).isNotNull
     assertThat(prisonerRestrictions[1].currentTerm).isTrue
-    assertThat(prisonerRestrictions[1].startDate).isEqualTo(LocalDate.of(2024, 1, 1))
+    assertThat(prisonerRestrictions[1].effectiveDate).isEqualTo(LocalDate.of(2024, 1, 1))
     assertThat(prisonerRestrictions[1].expiryDate).isEqualTo(LocalDate.of(2024, 12, 31))
   }
 
