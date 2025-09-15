@@ -24,13 +24,12 @@ class ContactSearchRepository(
   @PersistenceContext
   private var entityManager: EntityManager,
 ) {
-
-  fun searchContactsBySoundex(request: ContactSearchRequest, pageable: Pageable): Page<ContactWithAddressEntity> {
+  fun searchContacts(request: ContactSearchRequest, pageable: Pageable): Page<ContactWithAddressEntity> {
     val cb = entityManager.criteriaBuilder
     val cq = cb.createQuery(ContactWithAddressEntity::class.java)
     val contact = cq.from(ContactWithAddressEntity::class.java)
 
-    val predicates: List<Predicate> = buildSoundexPredicates(request, cb, contact)
+    val predicates: List<Predicate> = buildPredicates(request, cb, contact)
 
     cq.where(*predicates.toTypedArray())
 
@@ -41,21 +40,21 @@ class ContactSearchRepository(
       .setMaxResults(pageable.pageSize)
       .resultList
 
-    val total = getTotalCountBySoundex(request)
+    val total = getTotalCount(request)
 
     return PageImpl(resultList, pageable, total)
   }
 
-  private fun getTotalCountBySoundex(
+  private fun getTotalCount(
     request: ContactSearchRequest,
   ): Long {
     val cb = entityManager.criteriaBuilder
     val countQuery = cb.createQuery(Long::class.java)
     val contact = countQuery.from(ContactWithAddressEntity::class.java)
 
-    val predicates: List<Predicate> = buildSoundexPredicates(request, cb, contact)
+    val predicates: List<Predicate> = buildPredicates(request, cb, contact)
 
-    countQuery.select(cb.count(contact)).where(*predicates.toTypedArray())
+    countQuery.select(cb.count(contact)).where(*predicates.toTypedArray<Predicate>())
     return entityManager.createQuery(countQuery).singleResult
   }
 
@@ -87,7 +86,7 @@ class ContactSearchRepository(
     }
   }
 
-  private fun buildSoundexPredicates(
+  private fun buildPredicates(
     request: ContactSearchRequest,
     cb: CriteriaBuilder,
     contact: Root<ContactWithAddressEntity>,
@@ -96,19 +95,12 @@ class ContactSearchRepository(
     if (cb !is HibernateCriteriaBuilder) {
       throw RuntimeException("Configuration issue. Cannot do ilike unless using hibernate.")
     }
-    val lastNameSoundex = cb.function("soundex", String::class.java, contact.get<String>("lastName"))
-    val lastNameInputSoundex = cb.function("soundex", String::class.java, cb.literal(request.lastName))
-    predicates.add(cb.equal(lastNameSoundex, lastNameInputSoundex))
-
+    predicates.add(cb.ilike(contact.get("lastName"), "%${request.lastName}%", '#'))
     request.firstName?.let {
-      val fnSoundex = cb.function("soundex", String::class.java, contact.get<String>("firstName"))
-      val fnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
-      predicates.add(cb.equal(fnSoundex, fnInputSoundex))
+      predicates.add(cb.ilike(contact.get("firstName"), "%$it%", '#'))
     }
     request.middleNames?.let {
-      val mnSoundex = cb.function("soundex", String::class.java, contact.get<String>("middleNames"))
-      val mnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
-      predicates.add(cb.equal(mnSoundex, mnInputSoundex))
+      predicates.add(cb.ilike(contact.get("middleNames"), "%$it%", '#'))
     }
     request.dateOfBirth?.let {
       predicates.add(
