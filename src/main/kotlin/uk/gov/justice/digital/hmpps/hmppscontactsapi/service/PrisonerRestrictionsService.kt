@@ -21,9 +21,20 @@ class PrisonerRestrictionsService(
     prisonerNumber: String,
     currentTermOnly: Boolean,
     pageable: Pageable,
+    paged: Boolean,
   ): PagedModel<PrisonerRestrictionDetails> {
     val allRestrictions = getPrisonerRestrictions(prisonerNumber)
       .filter { !currentTermOnly || it.currentTerm }
+
+    if (!paged) {
+      val unpaged = PageImpl(
+        allRestrictions,
+        Pageable.unpaged(),
+        allRestrictions.size.toLong(),
+      )
+      return PagedModel(unpaged)
+    }
+
     val page = PageImpl(
       allRestrictions.drop(pageable.offset.toInt()).take(pageable.pageSize),
       pageable,

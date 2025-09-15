@@ -27,13 +27,13 @@ data class PrisonerRestrictionDetails(
   val restrictionTypeDescription: String,
 
   @Schema(description = "Effective date of the restriction", example = "2024-06-11", required = false)
-  val startDate: LocalDate,
+  val effectiveDate: LocalDate,
 
   @Schema(description = "Expiry date of the restriction", example = "2024-12-31", nullable = true, required = false)
   val expiryDate: LocalDate? = null,
 
   @Schema(description = "Comment text", example = "No visits allowed", required = false)
-  val comments: String? = null,
+  val commentText: String? = null,
 
   @Schema(description = "Authorised staff user name", example = "JSMITH", required = false)
   val authorisedUsername: String,

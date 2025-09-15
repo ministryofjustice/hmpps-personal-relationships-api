@@ -19,11 +19,11 @@ data class PrisonerRestriction(
 
   val restrictionType: String,
 
-  val startDate: LocalDate,
+  val effectiveDate: LocalDate,
 
   val expiryDate: LocalDate? = null,
 
-  val comments: String? = null,
+  val commentText: String? = null,
 
   val authorisedUsername: String,
 

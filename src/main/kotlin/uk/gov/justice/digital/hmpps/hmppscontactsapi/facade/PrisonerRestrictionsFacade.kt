@@ -14,5 +14,6 @@ class PrisonerRestrictionsFacade(
     prisonerNumber: String,
     currentTermOnly: Boolean,
     pageable: Pageable,
-  ): PagedModel<PrisonerRestrictionDetails> = prisonerRestrictionsService.getPrisonerRestrictions(prisonerNumber, currentTermOnly, pageable)
+    paged: Boolean,
+  ): PagedModel<PrisonerRestrictionDetails> = prisonerRestrictionsService.getPrisonerRestrictions(prisonerNumber, currentTermOnly, pageable, paged)
 }

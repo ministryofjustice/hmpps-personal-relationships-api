@@ -61,7 +61,10 @@ class PrisonerRestrictionsController(
     @RequestParam(name = "currentTermOnly", required = false, defaultValue = "false")
     @Parameter(`in` = ParameterIn.QUERY, description = "filter results by current terms", example = "true", required = false)
     currentTermOnly: Boolean = false,
+    @RequestParam(name = "paged", required = false, defaultValue = "true")
+    @Parameter(`in` = ParameterIn.QUERY, description = "return paged results (default true); if false returns all records", example = "true", required = false)
+    paged: Boolean = true,
     @Parameter(hidden = true)
     pageable: Pageable,
-  ): PagedModel<PrisonerRestrictionDetails> = prisonerRestrictionsFacade.getPrisonerRestrictions(prisonerNumber, currentTermOnly, pageable)
+  ): PagedModel<PrisonerRestrictionDetails> = prisonerRestrictionsFacade.getPrisonerRestrictions(prisonerNumber, currentTermOnly, pageable, paged)
 }

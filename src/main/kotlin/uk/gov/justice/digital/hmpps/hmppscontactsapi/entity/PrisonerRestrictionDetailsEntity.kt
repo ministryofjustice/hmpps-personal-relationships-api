@@ -22,11 +22,11 @@ data class PrisonerRestrictionDetailsEntity(
 
   val restrictionTypeDescription: String,
 
-  val startDate: LocalDate,
+  val effectiveDate: LocalDate,
 
   val expiryDate: LocalDate?,
 
-  val comments: String?,
+  val commentText: String?,
 
   val currentTerm: Boolean,
 
