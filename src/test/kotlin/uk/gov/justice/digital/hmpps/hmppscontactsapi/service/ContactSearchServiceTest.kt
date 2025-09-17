@@ -45,7 +45,7 @@ class ContactSearchServiceTest {
       val pageContacts = PageImpl(results, pageable, results.size.toLong())
 
       // When
-      val request = ContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1), null)
+      val request = ContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1), false, null)
       whenever(contactSearchRepository.searchContacts(request, pageable)).thenReturn(pageContacts)
 
       // Act
@@ -71,7 +71,7 @@ class ContactSearchServiceTest {
       val pageContacts = PageImpl(results, pageable, results.size.toLong())
 
       // When
-      val request = ContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1), "A1234BC")
+      val request = ContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1), false, "A1234BC")
       whenever(contactSearchRepository.searchContacts(request, pageable)).thenReturn(pageContacts)
       whenever(
         prisonerContactSummaryRepository.findByPrisonerNumberAndContactIdIn(

@@ -7,5 +7,6 @@ data class ContactSearchRequest(
   val firstName: String?,
   val middleNames: String?,
   val dateOfBirth: LocalDate?,
+  val soundsLike: Boolean = false,
   val includeAnyExistingRelationshipsToPrisoner: String?,
 )
