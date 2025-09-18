@@ -201,6 +201,49 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     }
   }
 
+  @ParameterizedTest
+  @CsvSource(
+    "Smith,John,Jon|Smith|1980-01-01;John|Smithe|1980-01-01",
+    "Brown,Stephen,Stephen|Brown|1985-05-15;Steven|Browne|1983-09-10",
+    "Lewis,Catherine,Catherine|Lewis|1990-07-22",
+    "Macdonald,Bryan,Bryan|Macdonald|1977-03-12;Brian|McDonald|1976-08-05",
+    "Green,Geoffrey,Geoffrey|Green|1988-04-18",
+    "Khan,Mohammed,Mohammed|Khan|1993-12-01;Muhammad|Kahn|1994-01-15",
+    "Johnson,Sara,Sara|Johnson|1995-05-25;Sarah|Johnsen|1995-06-01",
+    "Taylor,Nicolas,Nicolas|Taylor|1982-03-03;Nicholas|Tailor|1982-04-04",
+    "King,Isabel,Isabel|King|2000-01-01;Isabelle|King|2000-01-01;Isobel|King|2000-01-01",
+    "Black,Marc,Marc|Black|1981-09-09;Mark|Blake|1981-10-10",
+  )
+  fun `should get the contacts when searched by first name and last name with similar match`(
+    lastName: String,
+    firstName: String,
+    expected: String,
+  ) {
+    val uri = UriComponentsBuilder.fromPath("contact/search")
+      .queryParam("lastName", lastName)
+      .queryParam("firstName", firstName)
+      .queryParam("soundsLike", true)
+      .build()
+      .toUri()
+
+    val body = testAPIClient.getSearchContactResults(uri)!!
+
+    val expectedTriples = expected.split(";").map {
+      val parts = it.split("|")
+      Triple(parts[0], parts[1], parts.getOrNull(2)?.takeIf { s -> s.isNotBlank() }?.let(LocalDate::parse))
+    }
+
+    with(body) {
+      assertThat(content).isNotEmpty()
+      assertThat(content.size).isEqualTo(expectedTriples.size)
+      assertThat(page.totalElements).isEqualTo(expectedTriples.size.toLong())
+      assertThat(page.totalPages).isEqualTo(1L)
+
+      val actualTriples = content.map { Triple(it.firstName, it.lastName, it.dateOfBirth) }
+      assertThat(actualTriples).containsExactlyInAnyOrderElementsOf(expectedTriples)
+    }
+  }
+
   @Test
   fun `should get the contacts with no addresses associated with them when searched by last name `() {
     val uri = UriComponentsBuilder.fromPath("contact/search")

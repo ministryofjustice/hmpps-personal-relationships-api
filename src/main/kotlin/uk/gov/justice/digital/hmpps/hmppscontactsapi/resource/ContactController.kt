@@ -232,6 +232,13 @@ class ContactController(
     dateOfBirth: LocalDate?,
     @Parameter(
       `in` = ParameterIn.QUERY,
+      description = "If true, use sounds-like search (trigram similarity)",
+      example = "false",
+      required = false,
+    )
+    soundsLike: Boolean = false,
+    @Parameter(
+      `in` = ParameterIn.QUERY,
       description = "If a prisoner number is specified, check all matching contacts for any existing relationships to the prisoner. " +
         "All matching contacts are returned regardless of whether they have an existing relationship to the prisoner or not.",
       example = "A1234BC",
@@ -246,6 +253,7 @@ class ContactController(
       firstName = firstName,
       middleNames = middleNames,
       dateOfBirth = dateOfBirth,
+      soundsLike = soundsLike,
       includeAnyExistingRelationshipsToPrisoner = includeAnyExistingRelationshipsToPrisoner,
     ),
   )
