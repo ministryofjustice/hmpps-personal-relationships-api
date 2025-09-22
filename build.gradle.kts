@@ -2,11 +2,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.0.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.0.2"
   id("org.openapi.generator") version "7.15.0"
-  id("io.gatling.gradle") version "3.14.3.7"
-  kotlin("plugin.spring") version "2.2.10"
-  kotlin("plugin.jpa") version "2.2.10"
+  id("io.gatling.gradle") version "3.14.4"
+  kotlin("plugin.spring") version "2.2.20"
+  kotlin("plugin.jpa") version "2.2.20"
 }
 
 allOpen {
@@ -25,10 +25,10 @@ dependencies {
   // Spring boot dependencies
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.5.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.7.0")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.10")
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.20.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.11")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.21.1")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.openapitools:jackson-databind-nullable:0.2.7")
 
@@ -37,12 +37,12 @@ dependencies {
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
-  runtimeOnly("org.postgresql:postgresql:42.7.7")
+  runtimeOnly("org.postgresql:postgresql:42.7.8")
 
   // OpenAPI
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.12")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
 
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.19.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.20.0")
 
   // Test dependencies
   testImplementation("io.jsonwebtoken:jjwt-impl:0.13.0")
@@ -57,8 +57,8 @@ dependencies {
   testImplementation("org.testcontainers:postgresql:1.21.3")
   testImplementation("org.testcontainers:localstack:1.21.3")
   testImplementation("org.wiremock:wiremock-standalone:3.13.1")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.5.0")
-  testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.53.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.7.0")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.54.1")
 }
 
 tasks {
