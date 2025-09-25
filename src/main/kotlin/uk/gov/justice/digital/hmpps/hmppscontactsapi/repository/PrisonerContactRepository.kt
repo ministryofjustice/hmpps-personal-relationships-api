@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
+import java.time.LocalDateTime
 
 @Repository
 interface PrisonerContactRepository : JpaRepository<PrisonerContactEntity, Long> {
@@ -56,4 +57,23 @@ interface PrisonerContactRepository : JpaRepository<PrisonerContactEntity, Long>
     """,
   )
   fun findAllContactsWithADobInRelationships(relationshipTypes: List<String>): List<RelationshipTypeCountProjection>
+
+  data class ContactProjection(
+    val prisonerNumber: String,
+    val prisonerContactId: Long,
+    val contactId: Long,
+  )
+
+  @Query(
+    """
+        select pc.prisonerNumber, pc.prisonerContactId, c.contactId
+        from PrisonerContactEntity pc, ContactEntity c
+        where pc.contactId = c.contactId
+          and pc.currentTerm = true
+          and pc.approvedVisitor = false
+          and pc.createdBy in :createdByList
+          and pc.createdTime > :createdAfter
+    """,
+  )
+  fun getContactList(createdAfter: LocalDateTime, createdByList: List<String>): List<ContactProjection>
 }

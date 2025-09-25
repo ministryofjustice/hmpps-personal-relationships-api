@@ -127,6 +127,13 @@ class PrisonerContactController(
     return ResponseEntity.noContent().build()
   }
 
+  @GetMapping("support/trigger")
+  @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__RW')")
+  fun applyApprovalsForLowdhamGrange(): ResponseEntity<Void> {
+    contactFacade.patchGiveRelationship()
+    return ResponseEntity.noContent().build()
+  }
+
   @PostMapping(consumes = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
     summary = "Add a new prisoner contact relationship",

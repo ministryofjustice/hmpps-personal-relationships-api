@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.facade
 
+import org.openapitools.jackson.nullable.JsonNullable
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PagedModel
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import java.time.LocalDateTime
 
 @Service
 class ContactFacade(
@@ -136,6 +138,16 @@ class ContactFacade(
   fun getContactName(id: Long): ContactNameDetails? = contactService.getContactName(id)
 
   fun searchContacts(pageable: Pageable, request: ContactSearchRequest): PagedModel<ContactSearchResultItem> = PagedModel(contactSearchService.searchContacts(pageable, request))
+
+  fun patchGiveRelationship() {
+    val createdAfter = LocalDateTime.now().minusDays(120)
+    val createdByList = listOf("CQW84B", "EQP53X")
+    contactService.getContactList(createdAfter, createdByList).forEach {
+      it
+        .also { logger.info("Patching contact relationship to give approved visitor for prisonerContactId: ${it.prisonerContactId}") }
+      patchRelationship(it.prisonerContactId, PatchRelationshipRequest(isApprovedVisitor = JsonNullable.of(true)), User("SYSTEM SUPPORT"))
+    }
+  }
 
   fun patchRelationship(prisonerContactId: Long, request: PatchRelationshipRequest, user: User) {
     contactService.updateContactRelationship(prisonerContactId, request, user)

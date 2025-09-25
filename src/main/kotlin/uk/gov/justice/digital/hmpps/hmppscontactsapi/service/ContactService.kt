@@ -626,6 +626,11 @@ class ContactService(
     return contactIdsToUpdate
   }
 
+  fun getContactList(createdAfter: LocalDateTime, createdByList: List<String>) = prisonerContactRepository.getContactList(
+    createdAfter,
+    createdByList,
+  )
+
   private fun ContactEntity.deleteDateOfBirth(
     user: User,
   ): ContactEntity {
