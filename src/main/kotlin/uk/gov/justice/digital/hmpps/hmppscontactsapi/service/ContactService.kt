@@ -640,8 +640,8 @@ class ContactService(
   }
 
   @Transactional
-  fun approveRelationships(createdByList: List<String>): List<RelationshipsApproved> {
-    val createdAfter = LocalDateTime.now().minusDays(120)
+  fun approveRelationships(createdByList: List<String>, daysAgo: Long): List<RelationshipsApproved> {
+    val createdAfter = LocalDateTime.now().minusDays(daysAgo)
 
     val relationshipsSaved = prisonerContactRepository.getRelationshipsToApprove(createdAfter, createdByList).map { r ->
       prisonerContactRepository.saveAndFlush(r.copy(approvedVisitor = true))

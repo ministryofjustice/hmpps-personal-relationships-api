@@ -187,7 +187,7 @@ class ContactFacade(
     )
   }
 
-  fun approveRelationships(createdByList: List<String>) = contactService.approveRelationships(createdByList).also {
+  fun approveRelationships(createdByList: List<String>, daysAgo: Long) = contactService.approveRelationships(createdByList, daysAgo).also {
     sendEventsForRelationshipsUpdated(it)
   }
 

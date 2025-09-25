@@ -46,9 +46,11 @@ class UtilityController(val contactFacade: ContactFacade) {
   fun approveContacts(
     @Parameter(`in` = ParameterIn.QUERY, description = "Provides usernames of people who created relationships (multiple values treated as a list)", example = "XYZ", required = true)
     createdBy: List<String> = emptyList(),
+    @Parameter(`in` = ParameterIn.QUERY, description = "Provides how many days to look back from today", example = "4", required = true)
+    daysAgo: Long = 1,
   ): RelationshipsApprovedResponse = run {
     log.info("UTILITY: Approve relationships to visit")
-    val result = contactFacade.approveRelationships(createdBy)
+    val result = contactFacade.approveRelationships(createdBy, daysAgo)
     log.info("UTILITY: Approved relationships to visit - approved count ${result.size}")
     return RelationshipsApprovedResponse(relationships = result)
   }
