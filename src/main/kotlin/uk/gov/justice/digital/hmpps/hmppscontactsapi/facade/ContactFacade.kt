@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameD
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PatchContactResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RelationshipsApproved
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactPatchService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactService
@@ -174,13 +175,28 @@ class ContactFacade(
 
   fun assessIfRelationshipCanBeDeleted(prisonerContactId: Long, user: User) = contactService.assessIfRelationshipCanBeDeleted(prisonerContactId, user)
 
-  fun removeInternalOfficialDateOfBirth(): List<Long> = contactService.removeInternalOfficialContactsDateOfBirth().also { sendEventsForContactsUpdated(it) }
+  fun removeInternalOfficialDateOfBirth() = contactService.removeInternalOfficialContactsDateOfBirth().also { sendEventsForContactsUpdated(it) }
 
   private fun sendEventsForContactsUpdated(listOfContactIds: List<Long>) = listOfContactIds.map { updated ->
     outboundEventsService.send(
       outboundEvent = OutboundEvent.CONTACT_UPDATED,
       identifier = updated,
       contactId = updated,
+      source = Source.DPS,
+      user = User.SYS_USER,
+    )
+  }
+
+  fun approveRelationships(createdByList: List<String>) = contactService.approveRelationships(createdByList).also {
+    sendEventsForRelationshipsUpdated(it)
+  }
+
+  private fun sendEventsForRelationshipsUpdated(approved: List<RelationshipsApproved>) = approved.map { rel ->
+    outboundEventsService.send(
+      outboundEvent = OutboundEvent.PRISONER_CONTACT_UPDATED,
+      identifier = rel.prisonerContactId,
+      contactId = rel.contactId,
+      noms = rel.prisonerNumber,
       source = Source.DPS,
       user = User.SYS_USER,
     )

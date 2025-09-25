@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.resource
 
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RelationshipsApprovedResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.UpdateInternalOfficialDobResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.ProtectedByIngress
 
@@ -35,5 +38,18 @@ class UtilityController(val contactFacade: ContactFacade) {
     val result = contactFacade.removeInternalOfficialDateOfBirth()
     log.info("UTILITY: Remove internal official dates of birth completed - updated ${result.size} contacts")
     return UpdateInternalOfficialDobResponse(contactsUpdated = result)
+  }
+
+  @Operation(summary = "Endpoint to trigger the approval of a specific set of contact relationships")
+  @PutMapping(path = ["/approve-contacts"])
+  @ResponseStatus(HttpStatus.OK)
+  fun approveContacts(
+    @Parameter(`in` = ParameterIn.QUERY, description = "Provides usernames of people who created relationships (multiple values treated as a list)", example = "XYZ", required = true)
+    createdBy: List<String> = emptyList(),
+  ): RelationshipsApprovedResponse = run {
+    log.info("UTILITY: Approve relationships to visit")
+    val result = contactFacade.approveRelationships(createdBy)
+    log.info("UTILITY: Approved relationships to visit - approved count ${result.size}")
+    return RelationshipsApprovedResponse(relationships = result)
   }
 }

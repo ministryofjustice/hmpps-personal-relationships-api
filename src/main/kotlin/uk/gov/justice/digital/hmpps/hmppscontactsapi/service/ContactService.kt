@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactPhone
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RelationshipDeletePlan
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RelationshipsApproved
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPhoneRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactEmailRepository
@@ -636,5 +637,23 @@ class ContactService(
     )
 
     return changedContact
+  }
+
+  @Transactional
+  fun approveRelationships(createdByList: List<String>): List<RelationshipsApproved> {
+    val createdAfter = LocalDateTime.now().minusDays(120)
+
+    val relationshipsSaved = prisonerContactRepository.getRelationshipsToApprove(createdAfter, createdByList).map { r ->
+      prisonerContactRepository.saveAndFlush(r.copy(approvedVisitor = true))
+    }
+
+    return relationshipsSaved.map { r ->
+      RelationshipsApproved(
+        contactId = r.contactId,
+        prisonerContactId = r.prisonerContactId,
+        prisonerNumber = r.prisonerNumber,
+        approvedToVisit = r.approvedVisitor,
+      )
+    }
   }
 }
