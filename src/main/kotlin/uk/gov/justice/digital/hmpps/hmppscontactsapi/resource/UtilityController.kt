@@ -2,17 +2,17 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.resource
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ApproveRelationshipsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RelationshipsApprovedResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.UpdateInternalOfficialDobResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.ProtectedByIngress
@@ -45,16 +45,13 @@ class UtilityController(val contactFacade: ContactFacade) {
   @PutMapping(path = ["/approve-contacts"])
   @ResponseStatus(HttpStatus.OK)
   fun approveContacts(
-    @Parameter(`in` = ParameterIn.QUERY, description = "The username who created the relationships to find (multiple treated as a list)", example = "XYZ, ABC", required = true)
-    @RequestParam(required = true, name = "createdBy")
-    createdBy: List<String>,
-    @Parameter(`in` = ParameterIn.QUERY, description = "How many days to look back from today", example = "4", required = true)
-    @RequestParam(required = true, name = "daysAgo")
-    daysAgo: Long,
+    @Parameter(description = "Request containing the usernames who created relationships", required = true)
+    @RequestBody
+    request: ApproveRelationshipsRequest,
   ): RelationshipsApprovedResponse = run {
-    log.info("UTILITY: Approve relationships to visit")
-    val result = contactFacade.approveRelationships(createdBy, daysAgo)
-    log.info("UTILITY: Approved relationships to visit - approved count ${result.size}")
+    log.info("UTILITY: Approving relationships to visit - created by ${request.createdBy}, days ago ${request.daysAgo }")
+    val result = contactFacade.approveRelationships(request.createdBy, request.daysAgo)
+    log.info("UTILITY: Approved relationships - count was ${result.size}")
     return RelationshipsApprovedResponse(relationships = result)
   }
 }

@@ -11,7 +11,7 @@
 # Provide the DB connection details to local container-hosted Postgresql DB already running
 export DB_SERVER=localhost
 export DB_NAME=personal-relationships-db
-export DB_USER=personal-relationships
+export DB_USER=contacts
 export DB_PASS=contacts
 export DB_SSL_MODE=prefer
 export DPR_USER=dpr_user
