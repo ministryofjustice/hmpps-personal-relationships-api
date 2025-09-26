@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
@@ -44,10 +45,12 @@ class UtilityController(val contactFacade: ContactFacade) {
   @PutMapping(path = ["/approve-contacts"])
   @ResponseStatus(HttpStatus.OK)
   fun approveContacts(
-    @Parameter(`in` = ParameterIn.QUERY, description = "Provides usernames of people who created relationships (multiple values treated as a list)", example = "XYZ", required = true)
-    createdBy: List<String> = emptyList(),
-    @Parameter(`in` = ParameterIn.QUERY, description = "Provides how many days to look back from today", example = "4", required = true)
-    daysAgo: Long = 1,
+    @Parameter(`in` = ParameterIn.QUERY, description = "The username who created the relationships to find (multiple treated as a list)", example = "XYZ, ABC", required = true)
+    @RequestParam(required = true, name = "createdBy")
+    createdBy: List<String>,
+    @Parameter(`in` = ParameterIn.QUERY, description = "How many days to look back from today", example = "4", required = true)
+    @RequestParam(required = true, name = "daysAgo")
+    daysAgo: Long,
   ): RelationshipsApprovedResponse = run {
     log.info("UTILITY: Approve relationships to visit")
     val result = contactFacade.approveRelationships(createdBy, daysAgo)
