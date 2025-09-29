@@ -2,8 +2,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.0"
-  id("org.openapi.generator") version "7.15.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.1"
+  id("org.openapi.generator") version "7.16.0"
   id("io.gatling.gradle") version "3.14.5"
   kotlin("plugin.spring") version "2.2.20"
   kotlin("plugin.jpa") version "2.2.20"
