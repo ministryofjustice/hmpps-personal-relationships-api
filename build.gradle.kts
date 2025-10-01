@@ -2,8 +2,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.0"
-  id("org.openapi.generator") version "7.15.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.1"
+  id("org.openapi.generator") version "7.16.0"
   id("io.gatling.gradle") version "3.14.5"
   kotlin("plugin.spring") version "2.2.20"
   kotlin("plugin.jpa") version "2.2.20"
@@ -28,7 +28,7 @@ dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.7.0")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.11")
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.22.0")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.23.0")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.openapitools:jackson-databind-nullable:0.2.7")
 
