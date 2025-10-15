@@ -592,9 +592,10 @@ class ContactService(
     )?.description ?: relationship.relationshipToPrisoner,
     isEmergencyContact = relationship.emergencyContact,
     isNextOfKin = relationship.nextOfKin,
-    isRelationshipActive = relationship.active,
     isApprovedVisitor = relationship.approvedVisitor,
+    isRelationshipActive = relationship.active,
     comments = relationship.comments,
+    approvedBy = relationship.approvedBy,
   )
 
   @Transactional

@@ -291,6 +291,7 @@ class PrisonerContactServiceTest {
     relationshipType = "S",
     relationshipTypeDescription = "Social",
     staffFlag = false,
+    approvedBy = "A_USER",
   )
 
   @Test

@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
@@ -41,6 +42,7 @@ class GetPrisonerContactsRelationshipIntegrationTest : SecureAPIIntegrationTestB
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `should return OK`(role: String) {
+    stubGetUserByUsername(UserDetails("A_USER", "Created User", "BXI"))
     setCurrentUser(StubUser.READ_ONLY_USER.copy(roles = listOf(role)))
     val expectedPrisonerContactRelationship = PrisonerContactRelationshipDetails(
       prisonerContactId = 1,
@@ -55,6 +57,7 @@ class GetPrisonerContactsRelationshipIntegrationTest : SecureAPIIntegrationTestB
       isRelationshipActive = true,
       isApprovedVisitor = false,
       comments = "Comment",
+      approvedBy = "Created User",
     )
 
     val actualPrisonerContactSummary = webTestClient.get()
