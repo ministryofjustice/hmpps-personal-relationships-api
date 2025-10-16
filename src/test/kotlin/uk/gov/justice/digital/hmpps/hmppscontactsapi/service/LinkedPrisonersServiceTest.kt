@@ -323,5 +323,6 @@ class LinkedPrisonersServiceTest {
     relationshipType = contactType,
     relationshipTypeDescription = contactTypeDescription,
     staffFlag = false,
+    approvedBy = "A_USER",
   )
 }

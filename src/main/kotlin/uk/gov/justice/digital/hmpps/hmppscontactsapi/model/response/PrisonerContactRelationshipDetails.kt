@@ -24,10 +24,16 @@ data class PrisonerContactRelationshipDetails(
   )
   val relationshipTypeCode: String,
 
-  @Schema(description = "The description of the contact relationship type. Description from reference data Official or Social", example = "Official")
+  @Schema(
+    description = "The description of the contact relationship type. Description from reference data Official or Social",
+    example = "Official",
+  )
   val relationshipTypeDescription: String,
 
-  @Schema(description = "The relationship to the prisoner. A code from SOCIAL_RELATIONSHIP or OFFICIAL_RELATIONSHIP reference data groups depending on the relationship type.", example = "FRI")
+  @Schema(
+    description = "The relationship to the prisoner. A code from SOCIAL_RELATIONSHIP or OFFICIAL_RELATIONSHIP reference data groups depending on the relationship type.",
+    example = "FRI",
+  )
   val relationshipToPrisonerCode: String,
 
   @Schema(description = "The description of the relationship", example = "Friend")
@@ -47,4 +53,11 @@ data class PrisonerContactRelationshipDetails(
 
   @Schema(description = "Any additional comments", example = "Close family friend", nullable = true)
   val comments: String?,
+
+  @Schema(
+    description = "The username of the person who approved this contact as a visitor",
+    example = "Michel Smith",
+    nullable = true,
+  )
+  val approvedBy: String?,
 )

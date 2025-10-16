@@ -3,7 +3,7 @@
 -- to return a list of active or inactive contacts, and their primary addresses,
 -- for a prisoner, where the current_term is true (latest booking only).
 -- Note: the view is only dropped if the checksum of this migration changes
--- Internal version to bump if you need to force recreation: 4
+-- Internal version to bump if you need to force recreation: 5
 --
 DROP VIEW IF EXISTS v_prisoner_contacts;
 CREATE VIEW v_prisoner_contacts
@@ -51,6 +51,7 @@ AS
       end as relationship_to_prisoner_description,
       pc.active,
       pc.approved_visitor,
+      pc.approved_by,
       pc.current_term,
       pc.next_of_kin,
       pc.emergency_contact,

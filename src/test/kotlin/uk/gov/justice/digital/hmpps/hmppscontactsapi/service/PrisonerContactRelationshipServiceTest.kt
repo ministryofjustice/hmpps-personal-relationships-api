@@ -11,6 +11,7 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactSummaryEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.prisoner
@@ -24,6 +25,9 @@ class PrisonerContactRelationshipServiceTest {
 
   @Mock
   private lateinit var prisonerContactSummaryRepository: PrisonerContactSummaryRepository
+
+  @Mock
+  private lateinit var manageUsersService: ManageUsersService
 
   @InjectMocks
   private lateinit var prisonerContactRelationshipService: PrisonerContactRelationshipService
@@ -39,6 +43,8 @@ class PrisonerContactRelationshipServiceTest {
 
   @Test
   fun `should return when prisoner contact relationship exists`() {
+    val user = UserDetails("A_USER", "Foo User")
+    whenever(manageUsersService.getUserByUsername("A_USER")).thenReturn(user)
     val prisonerContactId = 1L
     val expectedPrisonerContactRelationship = PrisonerContactRelationshipDetails(
       prisonerContactId = prisonerContactId,
@@ -48,11 +54,12 @@ class PrisonerContactRelationshipServiceTest {
       relationshipTypeDescription = "Social",
       relationshipToPrisonerCode = "FRIEND",
       relationshipToPrisonerDescription = "Friend",
-      isNextOfKin = false,
       isEmergencyContact = false,
-      isRelationshipActive = true,
+      isNextOfKin = false,
       isApprovedVisitor = true,
+      isRelationshipActive = true,
       comments = "No comments",
+      approvedBy = "Foo User",
     )
 
     val prisonerContactSummaryEntity = makePrisonerContact(
@@ -135,5 +142,6 @@ class PrisonerContactRelationshipServiceTest {
     relationshipType = "S",
     relationshipTypeDescription = "Social",
     staffFlag = false,
+    approvedBy = "A_USER",
   )
 }

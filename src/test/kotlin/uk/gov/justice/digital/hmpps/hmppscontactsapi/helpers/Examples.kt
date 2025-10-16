@@ -350,6 +350,7 @@ fun createPrisonerContactRelationshipDetails(
   isRelationshipActive: Boolean = true,
   isApprovedVisitor: Boolean = true,
   comments: String? = null,
+  approvedBy: String? = null,
 ) = PrisonerContactRelationshipDetails(
   id,
   contactId,
@@ -363,6 +364,7 @@ fun createPrisonerContactRelationshipDetails(
   isRelationshipActive,
   isApprovedVisitor,
   comments,
+  approvedBy,
 )
 
 fun createContactRestrictionDetailsEntity(

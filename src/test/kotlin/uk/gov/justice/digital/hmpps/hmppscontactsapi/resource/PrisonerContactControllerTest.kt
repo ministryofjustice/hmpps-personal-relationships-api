@@ -69,11 +69,12 @@ class PrisonerContactControllerTest {
       relationshipTypeDescription = "Social",
       relationshipToPrisonerCode = "FRI",
       relationshipToPrisonerDescription = "Friend",
-      isNextOfKin = false,
       isEmergencyContact = true,
-      isRelationshipActive = true,
+      isNextOfKin = false,
       isApprovedVisitor = true,
+      isRelationshipActive = true,
       comments = "Close family friend",
+      approvedBy = "A_USER",
     )
   }
 

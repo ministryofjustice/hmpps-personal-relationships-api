@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactS
 @Service
 class PrisonerContactRelationshipService(
   private val prisonerContactSummaryRepository: PrisonerContactSummaryRepository,
+  private val manageUsersService: ManageUsersService,
 ) {
 
   fun getById(prisonerContactId: Long): PrisonerContactRelationshipDetails = prisonerContactSummaryRepository.findById(prisonerContactId)
@@ -26,6 +27,9 @@ class PrisonerContactRelationshipService(
     isEmergencyContact = this.emergencyContact,
     isRelationshipActive = this.active,
     isApprovedVisitor = this.approvedVisitor,
+    approvedBy = getApprovedByUserName(this.approvedBy),
     comments = this.comments,
   )
+
+  fun getApprovedByUserName(approvedBy: String?): String? = approvedBy?.let { manageUsersService.getUserByUsername(it)?.name ?: it }
 }

@@ -83,6 +83,8 @@ data class PrisonerContactSummaryEntity(
 
   val approvedVisitor: Boolean,
 
+  val approvedBy: String?,
+
   val nextOfKin: Boolean,
 
   val emergencyContact: Boolean,
