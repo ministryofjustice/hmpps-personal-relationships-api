@@ -2,9 +2,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.0"
-  id("org.openapi.generator") version "7.15.0"
-  id("io.gatling.gradle") version "3.14.5"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.3"
+  id("org.openapi.generator") version "7.16.0"
+  id("io.gatling.gradle") version "3.14.6"
   kotlin("plugin.spring") version "2.2.20"
   kotlin("plugin.jpa") version "2.2.20"
 }
@@ -27,8 +27,8 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.7.0")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.11")
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.22.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.5.0")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.23.0")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.openapitools:jackson-databind-nullable:0.2.7")
 
@@ -47,9 +47,9 @@ dependencies {
   // Test dependencies
   testImplementation("io.jsonwebtoken:jjwt-impl:0.13.0")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.13.0")
-  testImplementation("net.javacrumbs.json-unit:json-unit:4.1.1")
-  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:4.1.1")
-  testImplementation("net.javacrumbs.json-unit:json-unit-json-path:4.1.1")
+  testImplementation("net.javacrumbs.json-unit:json-unit:5.0.0")
+  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:5.0.0")
+  testImplementation("net.javacrumbs.json-unit:json-unit-json-path:5.0.0")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("org.mockito:mockito-inline:5.2.0")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -58,7 +58,7 @@ dependencies {
   testImplementation("org.testcontainers:localstack:1.21.3")
   testImplementation("org.wiremock:wiremock-standalone:3.13.1")
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.7.0")
-  testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.54.1")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.55.0")
 }
 
 tasks {
