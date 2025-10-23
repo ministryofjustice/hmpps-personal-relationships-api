@@ -160,6 +160,9 @@ class SyncAdminService(
           createdBy = relationship.createUsername ?: "SYSTEM",
           createdTime = relationship.createDateTime ?: LocalDateTime.now(),
         ).also {
+          // when recreating relationship during merge records and reset records scenarios , approved by and approved time set with value from the request
+          it.approvedBy = relationship.createUsername ?: "SYSTEM"
+          it.approvedTime = relationship.createDateTime ?: LocalDateTime.now()
           it.updatedBy = relationship.modifyUsername
           it.updatedTime = relationship.modifyDateTime
           it.expiryDate = relationship.expiryDate

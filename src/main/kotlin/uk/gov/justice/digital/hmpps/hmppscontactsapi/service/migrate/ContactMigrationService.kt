@@ -363,6 +363,9 @@ class ContactMigrationService(
           createdBy = relationship.createUsername ?: "MIGRATION",
           createdTime = relationship.createDateTime ?: LocalDateTime.now(),
         ).also {
+          // with creating a contact via migration, always set approvedBy and approvedTime
+          it.approvedBy = relationship.createUsername ?: "MIGRATION"
+          it.approvedTime = relationship.createDateTime ?: LocalDateTime.now()
           it.updatedBy = relationship.modifyUsername
           it.updatedTime = relationship.modifyDateTime
           it.expiryDate = relationship.expiryDate

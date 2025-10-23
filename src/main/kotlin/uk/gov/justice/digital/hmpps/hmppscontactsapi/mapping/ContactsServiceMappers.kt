@@ -55,7 +55,11 @@ fun ContactRelationship.toEntity(
   active = true,
   approvedVisitor = this.isApprovedVisitor,
   currentTerm = true,
-)
+).also { contactEntity ->
+  // Set approval details if approved visitor
+  contactEntity.approvedBy = createdBy
+  contactEntity.approvedTime = LocalDateTime.now()
+}
 
 fun CreateContactRequest.toModel(user: User) = ContactEntity(
   contactId = null,

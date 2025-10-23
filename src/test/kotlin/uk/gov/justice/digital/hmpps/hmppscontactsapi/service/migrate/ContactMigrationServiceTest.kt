@@ -621,13 +621,12 @@ class ContactMigrationServiceTest {
 
       verify(prisonerContactRepository, times(2)).save(prisonerContactCaptor.capture())
 
-      for (x in 0..1) {
-        with(prisonerContactCaptor.allValues[x]) {
-          assertThat(this)
-            .extracting("contactId", "prisonerContactId", "createdBy", "createdTime")
-            .contains(responses[x].contactId, 0L, aUsername, aDateTime)
-        }
-      }
+      assertThat(prisonerContactCaptor.allValues[0])
+        .extracting("contactId", "prisonerContactId", "createdBy", "createdTime", "approvedBy", "approvedTime")
+        .contains(responses[0].contactId, 0L, aUsername, aDateTime, aUsername, aDateTime)
+      assertThat(prisonerContactCaptor.allValues[1])
+        .extracting("contactId", "prisonerContactId", "createdBy", "createdTime", "approvedBy", "approvedTime")
+        .contains(responses[0].contactId, 0L, aUsername, aDateTime, aUsername, aDateTime)
     }
 
     @Test

@@ -404,6 +404,64 @@ class ContactServiceTest {
     }
 
     @ParameterizedTest
+    @CsvSource(value = ["true", "false"])
+    fun `should create a contact with a relationship successfully with approved visitor details`(
+      updatingApprovedVisitor: Boolean,
+    ) {
+      val relationshipRequest = ContactRelationship(
+        prisonerNumber = "A1234BC",
+        relationshipTypeCode = "S",
+        relationshipToPrisonerCode = "FRI",
+        isNextOfKin = true,
+        isEmergencyContact = true,
+        isApprovedVisitor = updatingApprovedVisitor,
+        comments = "some comments",
+      )
+      val request = CreateContactRequest(
+        lastName = "last",
+        firstName = "first",
+        relationship = relationshipRequest,
+      )
+      whenever(prisonerService.getPrisoner(any())).thenReturn(
+        prisoner(
+          relationshipRequest.prisonerNumber,
+          prisonId = "MDI",
+        ),
+      )
+      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
+      whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+      val referenceCode = ReferenceCode(1, ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "FRI", "Friend", 1, true)
+      whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "FRI")).thenReturn(
+        referenceCode,
+      )
+      whenever(
+        referenceCodeService.validateReferenceCode(
+          ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
+          "FRI",
+          allowInactive = false,
+        ),
+      ).thenReturn(referenceCode)
+
+      service.createContact(request, user)
+
+      verify(contactRepository).saveAndFlush(any())
+
+      val prisonerContactCaptor = argumentCaptor<PrisonerContactEntity>()
+      verify(prisonerContactRepository).saveAndFlush(prisonerContactCaptor.capture())
+
+      with(prisonerContactCaptor.firstValue) {
+        assertThat(prisonerNumber).isEqualTo("A1234BC")
+        assertThat(relationshipToPrisoner).isEqualTo("FRI")
+        assertThat(nextOfKin).isEqualTo(true)
+        assertThat(emergencyContact).isEqualTo(true)
+        assertThat(approvedVisitor).isEqualTo(updatingApprovedVisitor)
+        assertThat(comments).isEqualTo("some comments")
+        assertThat(approvedBy).isEqualTo(user.username)
+        assertThat(approvedTime).isInThePast()
+      }
+    }
+
+    @ParameterizedTest
     @CsvSource(
       value = [
         "S,SOCIAL_RELATIONSHIP",
@@ -904,8 +962,12 @@ class ContactServiceTest {
       createdTime = LocalDateTime.now(),
     )
 
-    @Test
-    fun `should save the contact relationship`() {
+    @ParameterizedTest
+    @CsvSource(value = ["true", "false"])
+    fun `should save the contact relationship with correct approved visitor details`(updatingApprovedVisitor: Boolean) {
+      val relationship = relationship.copy(isApprovedVisitor = updatingApprovedVisitor)
+      val request = AddContactRelationshipRequest(contactId, relationship)
+
       whenever(prisonerService.getPrisoner(any())).thenReturn(
         prisoner(
           request.relationship.prisonerNumber,
@@ -940,6 +1002,9 @@ class ContactServiceTest {
         assertThat(emergencyContact).isEqualTo(false)
         assertThat(comments).isEqualTo("Foo")
         assertThat(createdBy).isEqualTo("RELATIONSHIP_USER")
+        assertThat(approvedVisitor).isEqualTo(updatingApprovedVisitor)
+        assertThat(approvedBy).isEqualTo("RELATIONSHIP_USER")
+        assertThat(approvedTime).isInThePast()
       }
       verify(referenceCodeService).validateReferenceCode(
         ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
@@ -1330,13 +1395,24 @@ class ContactServiceTest {
     inner class ApprovedVisitor {
       private val user = aUser("Admin")
 
-      @Test
-      fun `should update the approved visitor`() {
+      @ParameterizedTest
+      @CsvSource(
+        "true,true,officer456",
+        "true,false, Admin",
+        "false,true, Admin",
+        "false,false,officer456",
+
+      )
+      fun `should update the approved visitor , approved by user and approved time`(updatingApprovedVisitor: Boolean, savedApprovedVisitorValue: Boolean, expectedApprovedBy: String) {
         val request = PatchRelationshipRequest(
-          isApprovedVisitor = JsonNullable.of(false),
+          isApprovedVisitor = JsonNullable.of(updatingApprovedVisitor),
         )
         mockBrotherRelationshipReferenceCode()
-        whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
+        val contactEntity = prisonerContact.copy(approvedVisitor = savedApprovedVisitorValue).also {
+          it.approvedBy = "officer456" // default approved by user
+          it.approvedTime = LocalDateTime.now().minusDays(1)
+        }
+        whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(contactEntity))
         whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
         service.updateContactRelationship(prisonerContactId, request, user)
@@ -1345,7 +1421,9 @@ class ContactServiceTest {
         verify(prisonerContactRepository).saveAndFlush(prisonerContactCaptor.capture())
         with(prisonerContactCaptor.firstValue) {
           // assert changed
-          assertThat(approvedVisitor).isFalse()
+          assertThat(this.approvedVisitor).isEqualTo(updatingApprovedVisitor)
+          assertThat(approvedBy).isEqualTo(expectedApprovedBy)
+          assertThat(approvedTime).isInThePast()
           assertThat(updatedBy).isEqualTo("Admin")
           assertThat(updatedTime).isInThePast()
         }

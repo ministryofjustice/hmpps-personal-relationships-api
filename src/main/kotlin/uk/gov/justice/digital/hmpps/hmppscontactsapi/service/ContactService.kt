@@ -463,8 +463,14 @@ class ContactService(
     relationshipToPrisoner = request.relationshipToPrisonerCode.orElse(this.relationshipToPrisoner),
     comments = request.comments.orElse(this.comments),
   ).also {
-    it.approvedBy = this.approvedBy
-    it.approvedTime = this.approvedTime
+    // when updating a relationship only update approvedBy/approvedTime if the approvedVisitor flag is being changed
+    if (request.isApprovedVisitor.isPresent && this.approvedVisitor != request.isApprovedVisitor.get()) {
+      it.approvedBy = user.username
+      it.approvedTime = LocalDateTime.now()
+    } else {
+      it.approvedBy = this.approvedBy
+      it.approvedTime = this.approvedTime
+    }
     it.expiryDate = this.expiryDate
     it.createdAtPrison = this.createdAtPrison
     it.updatedBy = user.username
@@ -645,7 +651,12 @@ class ContactService(
     val createdAfter = LocalDateTime.now().minusDays(daysAgo)
 
     val relationshipsSaved = prisonerContactRepository.getRelationshipsToApprove(createdAfter, createdByList).map { r ->
-      prisonerContactRepository.saveAndFlush(r.copy(approvedVisitor = true))
+      val copy = r.copy(approvedVisitor = true).also {
+        // this is utility function only used by system user to approve relationships in the event of reconciliation jobs
+        it.approvedBy = User.SYS_USER.username
+        it.approvedTime = LocalDateTime.now()
+      }
+      prisonerContactRepository.saveAndFlush(copy)
     }
 
     return relationshipsSaved.map { r ->
