@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.Mockito.mock
@@ -91,13 +92,9 @@ class SyncPrisonerContactServiceTest {
         assertThat(active).isTrue
         // If approvedVisitor is null in the request, it should be set to false in the entity
         assertThat(this.approvedVisitor).isEqualTo(approvedVisitorValue ?: false)
-        if (approvedVisitorValue == true) {
-          assertThat(approvedBy).isEqualTo("adminUser")
-          assertThat(approvedTime).isInThePast()
-        } else {
-          assertThat(approvedBy).isNull()
-          assertThat(approvedTime).isNull()
-        }
+        // Approved by and time should be set from createdBy and createdTime in the request
+        assertThat(approvedBy).isEqualTo("adminUser")
+        assertThat(approvedTime).isInThePast()
         assertThat(currentTerm).isTrue
         assertThat(expiryDate).isEqualTo(LocalDate.of(2025, 12, 31))
         assertThat(createdAtPrison).isEqualTo("LONDN")
@@ -145,11 +142,21 @@ class SyncPrisonerContactServiceTest {
       verify(prisonerContactRepository).findById(1L)
     }
 
-    @Test
-    fun `should update a prisoner contact by ID`() {
-      val request: SyncUpdatePrisonerContactRequest = updatePrisonerContactRequest()
+    @ParameterizedTest
+    @CsvSource(
+      "true,true,officer456",
+      "true,false,adminUser",
+      "false,true,adminUser",
+      "false,false,officer456",
+
+    )
+    fun `should update a prisoner contact by ID`(updatingApprovedVisitor: Boolean, savedApprovedVisitorValue: Boolean, expectedApprovedBy: String) {
+      val request: SyncUpdatePrisonerContactRequest = updatePrisonerContactRequest().copy(approvedVisitor = updatingApprovedVisitor)
       val prisonerContactID = 1L
-      val contactEntity = contactEntity()
+      val contactEntity = contactEntity().copy(approvedVisitor = savedApprovedVisitorValue).also {
+        it.approvedBy = "officer456" // default approved by user
+        it.approvedTime = LocalDateTime.now().minusDays(1)
+      }
       whenever(prisonerContactRepository.findById(prisonerContactID)).thenReturn(Optional.of(contactEntity))
       whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
 
@@ -170,7 +177,9 @@ class SyncPrisonerContactServiceTest {
         assertThat(emergencyContact).isFalse
         assertThat(comments).isEqualTo("Updated prison location")
         assertThat(active).isTrue
-        assertThat(approvedVisitor).isTrue
+        assertThat(this.approvedVisitor).isEqualTo(updatingApprovedVisitor)
+        assertThat(approvedBy).isEqualTo(expectedApprovedBy)
+        assertThat(approvedTime).isInThePast()
         assertThat(currentTerm).isTrue
         assertThat(expiryDate).isEqualTo(LocalDate.of(2025, 12, 31))
         assertThat(createdAtPrison).isEqualTo("HMP Wales")
@@ -189,8 +198,8 @@ class SyncPrisonerContactServiceTest {
         assertThat(nextOfKin).isTrue
         assertThat(emergencyContact).isFalse
         assertThat(comments).isEqualTo("Updated prison location")
-        assertThat(active).isTrue()
-        assertThat(approvedVisitor).isTrue()
+        assertThat(active).isTrue
+        assertThat(this.approvedVisitor).isEqualTo(updatingApprovedVisitor)
         assertThat(currentTerm).isTrue
         assertThat(expiryDate).isEqualTo(LocalDate.of(2025, 12, 31))
         assertThat(createdAtPrison).isEqualTo("HMP Wales")

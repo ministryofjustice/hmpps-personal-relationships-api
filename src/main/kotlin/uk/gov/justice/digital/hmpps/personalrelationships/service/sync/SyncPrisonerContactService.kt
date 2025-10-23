@@ -57,7 +57,17 @@ class SyncPrisonerContactService(
       currentTerm = request.currentTerm,
       comments = request.comments,
     ).also {
-      setApprovedVisitor(relationship, request, it)
+      // NOMIS do not store approvedBy and approvedTime explicitly
+      // When updating a contact via sync,
+      // If the approvedVisitor status has changed, set approvedBy and approvedTime with the values from the request
+
+      if (contact.approvedVisitor != request.approvedVisitor) {
+        it.approvedBy = request.updatedBy
+        it.approvedTime = LocalDateTime.now()
+      } else {
+        it.approvedBy = contact.approvedBy
+        it.approvedTime = contact.approvedTime
+      }
 
       it.expiryDate = request.expiryDate
       it.createdAtPrison = request.createdAtPrison
