@@ -20,10 +20,14 @@ fun SyncCreatePrisonerContactRequest.toEntity(): PrisonerContactEntity = Prisone
   createdBy = this.createdBy,
   createdTime = this.createdTime,
 ).also {
-  // When creating a prisoner contact via sync, approved by and approved time are set directly from the request
-  // as NOMIS do not store these separately
-  it.approvedBy = this.createdBy
-  it.approvedTime = this.createdTime
+  if (this.approvedVisitor == true) {
+    // Set approved fields if approvedVisitor is true
+    it.approvedBy = this.createdBy
+    it.approvedTime = LocalDateTime.now()
+  } else {
+    it.approvedBy = null
+    it.approvedTime = null
+  }
   it.expiryDate = this.expiryDate
   it.createdAtPrison = this.createdAtPrison
 }

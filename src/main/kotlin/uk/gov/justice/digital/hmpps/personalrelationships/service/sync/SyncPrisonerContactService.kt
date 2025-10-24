@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicateRelationshipException
 import uk.gov.justice.digital.hmpps.personalrelationships.mapping.sync.toEntity
@@ -57,17 +58,7 @@ class SyncPrisonerContactService(
       currentTerm = request.currentTerm,
       comments = request.comments,
     ).also {
-      // NOMIS do not store approvedBy and approvedTime explicitly
-      // When updating a contact via sync,
-      // If the approvedVisitor status has changed, set approvedBy and approvedTime with the values from the request
-
-      if (contact.approvedVisitor != request.approvedVisitor) {
-        it.approvedBy = request.updatedBy
-        it.approvedTime = LocalDateTime.now()
-      } else {
-        it.approvedBy = contact.approvedBy
-        it.approvedTime = contact.approvedTime
-      }
+      setApprovedVisitor(contact, request, it)
 
       it.expiryDate = request.expiryDate
       it.createdAtPrison = request.createdAtPrison
@@ -79,36 +70,19 @@ class SyncPrisonerContactService(
   }
 
   private fun setApprovedVisitor(
-    relationship: PrisonerContactEntity,
+    contact: PrisonerContactEntity,
     request: SyncUpdatePrisonerContactRequest,
     it: PrisonerContactEntity,
   ) {
-    when {
-      relationship.approvedVisitor && request.approvedVisitor -> {
-        // do nothing keep as is
-        it.approvedBy = relationship.approvedBy
-        it.approvedTime = relationship.approvedTime
-      }
-
-      // should update a prisoner contact and do nothing to approved visitor details when both unapproved
-      !relationship.approvedVisitor && !request.approvedVisitor -> {
-        // do nothing keep as is
-        it.approvedBy = relationship.approvedBy
-        it.approvedTime = relationship.approvedTime
-      }
-
-      // should update a prisoner contact and clear approved visitor details when unapproving
-      relationship.approvedVisitor && !request.approvedVisitor -> {
-        // clear approved visitor details
+    if (contact.approvedVisitor != true and request.approvedVisitor) {
+      // Contact has been approved to visit - set approvedBy and approvedTime
+      it.approvedBy = request.updatedBy
+      it.approvedTime = LocalDateTime.now()
+    } else {
+      // Contact is not approved to visit - clear approvedBy and approvedTime
+      if (!(contact.approvedVisitor == true and request.approvedVisitor)) {
         it.approvedBy = null
         it.approvedTime = null
-      }
-
-      // should update a prisoner contact and set approved visitor details when approving
-      !relationship.approvedVisitor && request.approvedVisitor -> {
-        // set approved visitor details
-        it.approvedBy = request.updatedBy
-        it.approvedTime = LocalDateTime.now()
       }
     }
   }

@@ -55,10 +55,16 @@ fun ContactRelationship.toEntity(
   active = true,
   approvedVisitor = this.isApprovedVisitor,
   currentTerm = true,
-).also { contactEntity ->
-  // Set approval details if approved visitor
-  contactEntity.approvedBy = createdBy
-  contactEntity.approvedTime = LocalDateTime.now()
+).also { prisonerContactEntity ->
+  if (this.isApprovedVisitor) {
+    // Set approvedBy and approvedTime when approvedVisitor is true
+    prisonerContactEntity.approvedBy = createdBy
+    prisonerContactEntity.approvedTime = LocalDateTime.now()
+  } else {
+    // Clear approvedBy and approvedTime when approvedVisitor is false
+    prisonerContactEntity.approvedBy = null
+    prisonerContactEntity.approvedTime = null
+  }
 }
 
 fun CreateContactRequest.toModel(user: User) = ContactEntity(

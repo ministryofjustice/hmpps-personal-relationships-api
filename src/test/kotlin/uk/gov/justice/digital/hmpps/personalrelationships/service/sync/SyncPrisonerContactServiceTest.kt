@@ -92,9 +92,13 @@ class SyncPrisonerContactServiceTest {
         assertThat(active).isTrue
         // If approvedVisitor is null in the request, it should be set to false in the entity
         assertThat(this.approvedVisitor).isEqualTo(approvedVisitorValue ?: false)
-        // Approved by and time should be set from createdBy and createdTime in the request
-        assertThat(approvedBy).isEqualTo("adminUser")
-        assertThat(approvedTime).isInThePast()
+        if (approvedVisitorValue == true) {
+          assertThat(approvedBy).isEqualTo("adminUser")
+          assertThat(approvedTime).isInThePast()
+        } else {
+          assertThat(approvedBy).isNull()
+          assertThat(approvedTime).isNull()
+        }
         assertThat(currentTerm).isTrue
         assertThat(expiryDate).isEqualTo(LocalDate.of(2025, 12, 31))
         assertThat(createdAtPrison).isEqualTo("LONDN")
@@ -144,10 +148,10 @@ class SyncPrisonerContactServiceTest {
 
     @ParameterizedTest
     @CsvSource(
-      "true,true,officer456",
+      "true,true,null",
       "true,false,adminUser",
       "false,true,adminUser",
-      "false,false,officer456",
+      "false,false,null",
 
     )
     fun `should update a prisoner contact by ID`(updatingApprovedVisitor: Boolean, savedApprovedVisitorValue: Boolean, expectedApprovedBy: String) {
@@ -178,8 +182,13 @@ class SyncPrisonerContactServiceTest {
         assertThat(comments).isEqualTo("Updated prison location")
         assertThat(active).isTrue
         assertThat(this.approvedVisitor).isEqualTo(updatingApprovedVisitor)
-        assertThat(approvedBy).isEqualTo(expectedApprovedBy)
-        assertThat(approvedTime).isInThePast()
+        if (expectedApprovedBy != "null") {
+          assertThat(approvedBy).isEqualTo(expectedApprovedBy)
+          assertThat(approvedTime).isInThePast()
+        } else {
+          assertThat(approvedBy).isNull()
+          assertThat(approvedTime).isNull()
+        }
         assertThat(currentTerm).isTrue
         assertThat(expiryDate).isEqualTo(LocalDate.of(2025, 12, 31))
         assertThat(createdAtPrison).isEqualTo("HMP Wales")

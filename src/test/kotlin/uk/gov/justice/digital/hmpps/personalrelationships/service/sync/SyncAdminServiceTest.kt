@@ -171,7 +171,7 @@ class SyncAdminServiceTest {
     }
 
     @Test
-    fun `should preserve latest approved visitor details during merge when approved visitor is true`() {
+    fun `should preserve approved visitor details during merge when approved visitor is true`() {
       val fixedTime = LocalDateTime.now()
       val request = createMergePrisonerContactRequest(
         listOf(createSyncPrisonerRelationship(approvedVisitor = true)),
@@ -191,7 +191,7 @@ class SyncAdminServiceTest {
           100L,
           approvedVisitor = true,
           approvedBy = "APPROVER_RETAINED",
-          approvedTime = fixedTime.minusDays(1), // latest approved time
+          approvedTime = fixedTime.minusDays(1),
         ),
       )
 
@@ -402,7 +402,7 @@ class SyncAdminServiceTest {
 
     @Test
     fun `should handle reset with empty prisoner contacts list`() {
-      val request = createResetPrisonerContactRequest(prisonerContacts = emptyList())
+      val request = createResetPrisonerContactRequest(emptyList())
 
       whenever(prisonerContactRepository.findAllByPrisonerNumber("A1234AA")).thenReturn(emptyList())
 
@@ -476,12 +476,7 @@ class SyncAdminServiceTest {
   )
 
   private fun createResetPrisonerContactRequest(
-    prisonerContacts: List<SyncPrisonerRelationship> = listOf(
-      createSyncPrisonerRelationship(
-        prisonerNumber = "A1234AA",
-        approvedVisitor = true,
-      ),
-    ),
+    prisonerContacts: List<SyncPrisonerRelationship> = listOf(createSyncPrisonerRelationship(prisonerNumber = "A1234AA")),
   ) = ResetPrisonerContactRequest(
     prisonerNumber = "A1234AA",
     prisonerContacts = prisonerContacts,
