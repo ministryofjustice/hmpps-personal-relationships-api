@@ -455,9 +455,14 @@ class ContactServiceTest {
         assertThat(nextOfKin).isEqualTo(true)
         assertThat(emergencyContact).isEqualTo(true)
         assertThat(approvedVisitor).isEqualTo(updatingApprovedVisitor)
+        if (updatingApprovedVisitor) {
+          assertThat(approvedBy).isEqualTo(user.username)
+          assertThat(approvedTime).isInThePast()
+        } else {
+          assertThat(approvedBy).isNull()
+          assertThat(approvedTime).isNull()
+        }
         assertThat(comments).isEqualTo("some comments")
-        assertThat(approvedBy).isEqualTo(user.username)
-        assertThat(approvedTime).isInThePast()
       }
     }
 
@@ -1003,8 +1008,13 @@ class ContactServiceTest {
         assertThat(comments).isEqualTo("Foo")
         assertThat(createdBy).isEqualTo("RELATIONSHIP_USER")
         assertThat(approvedVisitor).isEqualTo(updatingApprovedVisitor)
-        assertThat(approvedBy).isEqualTo("RELATIONSHIP_USER")
-        assertThat(approvedTime).isInThePast()
+        if (updatingApprovedVisitor) {
+          assertThat(approvedBy).isEqualTo("RELATIONSHIP_USER")
+          assertThat(approvedTime).isInThePast()
+        } else {
+          assertThat(approvedBy).isNull()
+          assertThat(approvedTime).isNull()
+        }
       }
       verify(referenceCodeService).validateReferenceCode(
         ReferenceCodeGroup.SOCIAL_RELATIONSHIP,

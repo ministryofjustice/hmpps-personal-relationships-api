@@ -626,7 +626,7 @@ class ContactMigrationServiceTest {
         .contains(responses[0].contactId, 0L, aUsername, aDateTime, aUsername, aDateTime)
       assertThat(prisonerContactCaptor.allValues[1])
         .extracting("contactId", "prisonerContactId", "createdBy", "createdTime", "approvedBy", "approvedTime")
-        .contains(responses[0].contactId, 0L, aUsername, aDateTime, aUsername, aDateTime)
+        .contains(responses[1].contactId, 0L, aUsername, aDateTime, null, null)
     }
 
     @Test

@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicateRelationshipException
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync.toEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync.toResponse
@@ -56,17 +57,7 @@ class SyncPrisonerContactService(
       currentTerm = request.currentTerm,
       comments = request.comments,
     ).also {
-      // NOMIS do not store approvedBy and approvedTime explicitly
-      // When updating a contact via sync,
-      // If the approvedVisitor status has changed, set approvedBy and approvedTime with the values from the request
-
-      if (contact.approvedVisitor != request.approvedVisitor) {
-        it.approvedBy = request.updatedBy
-        it.approvedTime = LocalDateTime.now()
-      } else {
-        it.approvedBy = contact.approvedBy
-        it.approvedTime = contact.approvedTime
-      }
+      setApprovedVisitor(contact, request, it)
 
       it.expiryDate = request.expiryDate
       it.createdAtPrison = request.createdAtPrison
@@ -75,6 +66,24 @@ class SyncPrisonerContactService(
     }
 
     return prisonerContactRepository.saveAndFlush(changedPrisonerContact).toResponse()
+  }
+
+  private fun setApprovedVisitor(
+    contact: PrisonerContactEntity,
+    request: SyncUpdatePrisonerContactRequest,
+    it: PrisonerContactEntity,
+  ) {
+    if (contact.approvedVisitor != true and request.approvedVisitor) {
+      // Contact has been approved to visit - set approvedBy and approvedTime
+      it.approvedBy = request.updatedBy
+      it.approvedTime = LocalDateTime.now()
+    } else {
+      // Contact is not approved to visit - clear approvedBy and approvedTime
+      if (!(contact.approvedVisitor == true and request.approvedVisitor)) {
+        it.approvedBy = null
+        it.approvedTime = null
+      }
+    }
   }
 
   fun deletePrisonerContact(prisonerContactId: Long): SyncPrisonerContact {
