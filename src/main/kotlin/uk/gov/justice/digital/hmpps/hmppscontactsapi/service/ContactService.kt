@@ -464,12 +464,12 @@ class ContactService(
     comments = request.comments.orElse(this.comments),
   ).also {
     // when updating a relationship only update approvedBy/approvedTime if the approvedVisitor flag is being changed
-    if (request.isApprovedVisitor.isPresent && this.approvedVisitor != request.isApprovedVisitor.get()) {
+    if (request.isApprovedVisitor.isPresent && request.isApprovedVisitor.get() == true) {
       it.approvedBy = user.username
       it.approvedTime = LocalDateTime.now()
     } else {
-      it.approvedBy = this.approvedBy
-      it.approvedTime = this.approvedTime
+      it.approvedBy = null
+      it.approvedTime = null
     }
     it.expiryDate = this.expiryDate
     it.createdAtPrison = this.createdAtPrison
