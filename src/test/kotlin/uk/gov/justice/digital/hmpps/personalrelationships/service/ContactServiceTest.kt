@@ -1473,10 +1473,10 @@ class ContactServiceTest {
 
       @ParameterizedTest
       @CsvSource(
-        "true,true,officer456",
+        "true,true,Admin",
         "true,false, Admin",
-        "false,true, Admin",
-        "false,false,officer456",
+        "false,true, null",
+        "false,false,null",
 
       )
       fun `should update the approved visitor , approved by user and approved time`(updatingApprovedVisitor: Boolean, savedApprovedVisitorValue: Boolean, expectedApprovedBy: String) {
@@ -1498,8 +1498,13 @@ class ContactServiceTest {
         with(prisonerContactCaptor.firstValue) {
           // assert changed
           assertThat(this.approvedVisitor).isEqualTo(updatingApprovedVisitor)
-          assertThat(approvedBy).isEqualTo(expectedApprovedBy)
-          assertThat(approvedTime).isInThePast()
+          if (expectedApprovedBy.equals("null")) {
+            assertThat(approvedBy).isNull()
+            assertThat(approvedTime).isNull()
+          } else {
+            assertThat(approvedBy).isEqualTo(expectedApprovedBy)
+            assertThat(approvedTime).isInThePast()
+          }
           assertThat(updatedBy).isEqualTo("Admin")
           assertThat(updatedTime).isInThePast()
         }
@@ -1910,8 +1915,8 @@ class ContactServiceTest {
       assertThat(approvedVisitor).isTrue()
       assertThat(createdBy).isEqualTo("TEST")
       assertThat(createdTime).isInThePast()
-      assertThat(approvedBy).isEqualTo("officer456")
-      assertThat(approvedTime).isInThePast()
+      assertThat(approvedBy).isNull()
+      assertThat(approvedTime).isNull()
       assertThat(expiryDate).isEqualTo(LocalDate.of(2025, 12, 31))
       assertThat(createdAtPrison).isEqualTo("LONDON")
     }
