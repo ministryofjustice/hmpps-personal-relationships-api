@@ -651,12 +651,12 @@ class ContactService(
     val createdAfter = LocalDateTime.now().minusDays(daysAgo)
 
     val relationshipsSaved = prisonerContactRepository.getRelationshipsToApprove(createdAfter, createdByList).map { r ->
-      val copy = r.copy(approvedVisitor = true).also {
+      val updatedRelationship = r.copy(approvedVisitor = true).also {
         // this is utility function only used by system user to approve relationships in the event of reconciliation jobs
         it.approvedBy = User.SYS_USER.username
         it.approvedTime = LocalDateTime.now()
       }
-      prisonerContactRepository.saveAndFlush(copy)
+      prisonerContactRepository.saveAndFlush(updatedRelationship)
     }
 
     return relationshipsSaved.map { r ->

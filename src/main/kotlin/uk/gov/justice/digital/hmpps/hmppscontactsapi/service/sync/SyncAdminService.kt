@@ -154,7 +154,7 @@ class SyncAdminService(
         ?.let { findApprovedByDetailsFromExistingRecords(relationshipsForRemovedPrisoner, relationshipsForRetainedPrisoner, it) }
         ?.takeIf { it.approvedVisitor }
 
-      ResetPrisonerContactRequestUpdated(
+      EnrichedPrisonerContactRequestUpdated(
         prisonerContact = relationship,
         approvedBy = approvedByDetails?.approvedBy,
         approvedTime = approvedByDetails?.approvedTime,
@@ -193,7 +193,7 @@ class SyncAdminService(
         ?.let { findApprovedByDetailsFromExistingRecord(existingPrisonerContacts, it) }
         ?.takeIf { it.approvedVisitor }
 
-      ResetPrisonerContactRequestUpdated(
+      EnrichedPrisonerContactRequestUpdated(
         prisonerContact = relationship,
         approvedBy = approvedByDetails?.approvedBy,
         approvedTime = approvedByDetails?.approvedTime,
@@ -203,7 +203,7 @@ class SyncAdminService(
     return getUpdatedRelationships(resettingPrisonerContacts)
   }
 
-  private fun getUpdatedRelationships(resettingPrisonerContacts: List<ResetPrisonerContactRequestUpdated>) = resettingPrisonerContacts.map { relationshipUpdate ->
+  private fun getUpdatedRelationships(resettingPrisonerContacts: List<EnrichedPrisonerContactRequestUpdated>) = resettingPrisonerContacts.map { relationshipUpdate ->
     val prisonerContact = relationshipUpdate.prisonerContact
     Pair(
       prisonerContact.id,
@@ -279,7 +279,7 @@ class SyncAdminService(
   }
 }
 
-data class ResetPrisonerContactRequestUpdated(
+data class EnrichedPrisonerContactRequestUpdated(
 
   val prisonerContact: SyncPrisonerRelationship,
 

@@ -402,7 +402,7 @@ class SyncAdminServiceTest {
 
     @Test
     fun `should handle reset with empty prisoner contacts list`() {
-      val request = createResetPrisonerContactRequest(emptyList())
+      val request = createResetPrisonerContactRequest(prisonerContacts = emptyList())
 
       whenever(prisonerContactRepository.findAllByPrisonerNumber("A1234AA")).thenReturn(emptyList())
 
@@ -441,6 +441,30 @@ class SyncAdminServiceTest {
 
       assertThat(response.relationshipsCreated).hasSize(1)
     }
+
+    @Test
+    fun `should not preserve approved visitor details during reset when approved visitor is false`() {
+      val request = createResetPrisonerContactRequest(listOf(createSyncPrisonerRelationship(prisonerNumber = "A1234AA", approvedVisitor = false)))
+      val existingRelationships = listOf(
+        createPrisonerContactEntity("A1234AA", 100L, approvedVisitor = true, approvedBy = "APPROVER", approvedTime = LocalDateTime.now().minusDays(1)),
+      )
+
+      whenever(prisonerContactRepository.findAllByPrisonerNumber("A1234AA")).thenReturn(existingRelationships)
+      whenever(prisonerContactRepository.save(any())).thenReturn(createPrisonerContactEntity("A1234AA", 2L))
+      whenever(prisonerContactRestrictionRepository.save(any())).thenReturn(createPrisonerContactRestrictionEntity(2L))
+
+      val response = syncAdminService.resetPrisonerContacts(request)
+
+      val contactCaptor = argumentCaptor<PrisonerContactEntity>()
+      verify(prisonerContactRepository).save(contactCaptor.capture())
+
+      with(contactCaptor.firstValue) {
+        assertThat(approvedBy).isNull()
+        assertThat(approvedTime).isNull()
+      }
+
+      assertThat(response.relationshipsCreated).hasSize(1)
+    }
   }
 
   private fun createMergePrisonerContactRequest(
@@ -452,7 +476,12 @@ class SyncAdminServiceTest {
   )
 
   private fun createResetPrisonerContactRequest(
-    prisonerContacts: List<SyncPrisonerRelationship> = listOf(createSyncPrisonerRelationship(prisonerNumber = "A1234AA")),
+    prisonerContacts: List<SyncPrisonerRelationship> = listOf(
+      createSyncPrisonerRelationship(
+        prisonerNumber = "A1234AA",
+        approvedVisitor = true,
+      ),
+    ),
   ) = ResetPrisonerContactRequest(
     prisonerNumber = "A1234AA",
     prisonerContacts = prisonerContacts,

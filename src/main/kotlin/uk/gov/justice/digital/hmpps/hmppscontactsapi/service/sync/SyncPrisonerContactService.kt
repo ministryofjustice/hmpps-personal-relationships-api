@@ -38,10 +38,10 @@ class SyncPrisonerContactService(
   }
 
   fun updatePrisonerContact(prisonerContactId: Long, request: SyncUpdatePrisonerContactRequest): SyncPrisonerContact {
-    val contact = prisonerContactRepository.findById(prisonerContactId)
+    val relationship = prisonerContactRepository.findById(prisonerContactId)
       .orElseThrow { EntityNotFoundException("Prisoner contact with ID $prisonerContactId not found") }
 
-    val changedPrisonerContact = contact.copy(
+    val changedPrisonerContact = relationship.copy(
       contactId = request.contactId,
       prisonerNumber = request.prisonerNumber,
       relationshipType = request.contactType,
@@ -50,14 +50,14 @@ class SyncPrisonerContactService(
       emergencyContact = request.emergencyContact,
       active = request.active,
       approvedVisitor = request.approvedVisitor.also {
-        if (contact.approvedVisitor != request.approvedVisitor) {
-          logger.info("Approval status has been changed from NOMIS for contactId=${contact.contactId}, prisonerNumber=${contact.prisonerNumber}: from ${contact.approvedVisitor} to ${request.approvedVisitor}, updated By ${request.updatedBy}")
+        if (relationship.approvedVisitor != request.approvedVisitor) {
+          logger.info("Approval status has been changed from NOMIS for contactId=${relationship.contactId}, prisonerNumber=${relationship.prisonerNumber}: from ${relationship.approvedVisitor} to ${request.approvedVisitor}, updated By ${request.updatedBy}")
         }
       },
       currentTerm = request.currentTerm,
       comments = request.comments,
     ).also {
-      setApprovedVisitor(contact, request, it)
+      setApprovedVisitor(relationship, request, it)
 
       it.expiryDate = request.expiryDate
       it.createdAtPrison = request.createdAtPrison
@@ -69,19 +69,36 @@ class SyncPrisonerContactService(
   }
 
   private fun setApprovedVisitor(
-    contact: PrisonerContactEntity,
+    relationship: PrisonerContactEntity,
     request: SyncUpdatePrisonerContactRequest,
     it: PrisonerContactEntity,
   ) {
-    if (contact.approvedVisitor != true and request.approvedVisitor) {
-      // Contact has been approved to visit - set approvedBy and approvedTime
-      it.approvedBy = request.updatedBy
-      it.approvedTime = LocalDateTime.now()
-    } else {
-      // Contact is not approved to visit - clear approvedBy and approvedTime
-      if (!(contact.approvedVisitor == true and request.approvedVisitor)) {
+    when {
+      relationship.approvedVisitor && request.approvedVisitor -> {
+        // do nothing keep as is
+        it.approvedBy = relationship.approvedBy
+        it.approvedTime = relationship.approvedTime
+      }
+
+      // should update a prisoner contact and do nothing to approved visitor details when both unapproved
+      !relationship.approvedVisitor && !request.approvedVisitor -> {
+        // do nothing keep as is
+        it.approvedBy = relationship.approvedBy
+        it.approvedTime = relationship.approvedTime
+      }
+
+      // should update a prisoner contact and clear approved visitor details when unapproving
+      relationship.approvedVisitor && !request.approvedVisitor -> {
+        // clear approved visitor details
         it.approvedBy = null
         it.approvedTime = null
+      }
+
+      // should update a prisoner contact and set approved visitor details when approving
+      !relationship.approvedVisitor && request.approvedVisitor -> {
+        // set approved visitor details
+        it.approvedBy = request.updatedBy
+        it.approvedTime = LocalDateTime.now()
       }
     }
   }
