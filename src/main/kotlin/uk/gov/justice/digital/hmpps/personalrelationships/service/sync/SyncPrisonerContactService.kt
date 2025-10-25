@@ -58,7 +58,7 @@ class SyncPrisonerContactService(
       currentTerm = request.currentTerm,
       comments = request.comments,
     ).also {
-      setApprovedVisitor(contact, request, it)
+      setApprovedVisitor(relationship, request, it)
 
       it.expiryDate = request.expiryDate
       it.createdAtPrison = request.createdAtPrison
@@ -70,19 +70,36 @@ class SyncPrisonerContactService(
   }
 
   private fun setApprovedVisitor(
-    contact: PrisonerContactEntity,
+    relationship: PrisonerContactEntity,
     request: SyncUpdatePrisonerContactRequest,
     it: PrisonerContactEntity,
   ) {
-    if (contact.approvedVisitor != true and request.approvedVisitor) {
-      // Contact has been approved to visit - set approvedBy and approvedTime
-      it.approvedBy = request.updatedBy
-      it.approvedTime = LocalDateTime.now()
-    } else {
-      // Contact is not approved to visit - clear approvedBy and approvedTime
-      if (!(contact.approvedVisitor == true and request.approvedVisitor)) {
+    when {
+      relationship.approvedVisitor && request.approvedVisitor -> {
+        // do nothing keep as is
+        it.approvedBy = relationship.approvedBy
+        it.approvedTime = relationship.approvedTime
+      }
+
+      // should update a prisoner contact and do nothing to approved visitor details when both unapproved
+      !relationship.approvedVisitor && !request.approvedVisitor -> {
+        // do nothing keep as is
+        it.approvedBy = relationship.approvedBy
+        it.approvedTime = relationship.approvedTime
+      }
+
+      // should update a prisoner contact and clear approved visitor details when unapproving
+      relationship.approvedVisitor && !request.approvedVisitor -> {
+        // clear approved visitor details
         it.approvedBy = null
         it.approvedTime = null
+      }
+
+      // should update a prisoner contact and set approved visitor details when approving
+      !relationship.approvedVisitor && request.approvedVisitor -> {
+        // set approved visitor details
+        it.approvedBy = request.updatedBy
+        it.approvedTime = LocalDateTime.now()
       }
     }
   }

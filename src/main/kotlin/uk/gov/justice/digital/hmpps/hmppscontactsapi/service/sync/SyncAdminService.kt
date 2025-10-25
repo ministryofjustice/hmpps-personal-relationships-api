@@ -1,5 +1,5 @@
 
-data class ResetPrisonerContactRequestUpdated(
+data class EnrichedPrisonerContactRequestUpdated(
 
   val prisonerContact: SyncPrisonerRelationship,
 

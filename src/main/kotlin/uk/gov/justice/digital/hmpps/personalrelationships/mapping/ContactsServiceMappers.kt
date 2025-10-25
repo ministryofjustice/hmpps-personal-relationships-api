@@ -55,15 +55,15 @@ fun ContactRelationship.toEntity(
   active = true,
   approvedVisitor = this.isApprovedVisitor,
   currentTerm = true,
-).also { prisonerContactEntity ->
+).also { relationship ->
   if (this.isApprovedVisitor) {
     // Set approvedBy and approvedTime when approvedVisitor is true
-    prisonerContactEntity.approvedBy = createdBy
-    prisonerContactEntity.approvedTime = LocalDateTime.now()
+    relationship.approvedBy = createdBy
+    relationship.approvedTime = LocalDateTime.now()
   } else {
     // Clear approvedBy and approvedTime when approvedVisitor is false
-    prisonerContactEntity.approvedBy = null
-    prisonerContactEntity.approvedTime = null
+    relationship.approvedBy = null
+    relationship.approvedTime = null
   }
 }
 

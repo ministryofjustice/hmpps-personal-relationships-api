@@ -402,7 +402,7 @@ class SyncAdminServiceTest {
 
     @Test
     fun `should handle reset with empty prisoner contacts list`() {
-      val request = createResetPrisonerContactRequest(emptyList())
+      val request = createResetPrisonerContactRequest(prisonerContacts = emptyList())
 
       whenever(prisonerContactRepository.findAllByPrisonerNumber("A1234AA")).thenReturn(emptyList())
 
@@ -476,7 +476,12 @@ class SyncAdminServiceTest {
   )
 
   private fun createResetPrisonerContactRequest(
-    prisonerContacts: List<SyncPrisonerRelationship> = listOf(createSyncPrisonerRelationship(prisonerNumber = "A1234AA")),
+    prisonerContacts: List<SyncPrisonerRelationship> = listOf(
+      createSyncPrisonerRelationship(
+        prisonerNumber = "A1234AA",
+        approvedVisitor = true,
+      ),
+    ),
   ) = ResetPrisonerContactRequest(
     prisonerNumber = "A1234AA",
     prisonerContacts = prisonerContacts,
