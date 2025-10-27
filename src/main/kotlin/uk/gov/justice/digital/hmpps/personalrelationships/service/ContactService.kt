@@ -466,13 +466,19 @@ class ContactService(
     relationshipToPrisoner = request.relationshipToPrisonerCode.orElse(this.relationshipToPrisoner),
     comments = request.comments.orElse(this.comments),
   ).also {
-    // when updating a relationship only update approvedBy/approvedTime if the approvedVisitor flag is being changed
-    if (request.isApprovedVisitor.isPresent && request.isApprovedVisitor.get() == true) {
-      it.approvedBy = user.username
-      it.approvedTime = LocalDateTime.now()
+    val approvedVisitor = request.isApprovedVisitor
+
+    if (approvedVisitor.isPresent) {
+      if (approvedVisitor.get() == true) {
+        it.approvedBy = user.username
+        it.approvedTime = LocalDateTime.now()
+      } else {
+        it.approvedBy = null
+        it.approvedTime = null
+      }
     } else {
-      it.approvedBy = null
-      it.approvedTime = null
+      it.approvedBy = this.approvedBy
+      it.approvedTime = this.approvedTime
     }
     it.expiryDate = this.expiryDate
     it.createdAtPrison = this.createdAtPrison

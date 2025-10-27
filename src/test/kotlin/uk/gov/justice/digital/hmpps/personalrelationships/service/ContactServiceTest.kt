@@ -1915,8 +1915,8 @@ class ContactServiceTest {
       assertThat(approvedVisitor).isTrue()
       assertThat(createdBy).isEqualTo("TEST")
       assertThat(createdTime).isInThePast()
-      assertThat(approvedBy).isNull()
-      assertThat(approvedTime).isNull()
+      assertThat(approvedBy).isEqualTo("officer456")
+      assertThat(approvedTime).isInThePast()
       assertThat(expiryDate).isEqualTo(LocalDate.of(2025, 12, 31))
       assertThat(createdAtPrison).isEqualTo("LONDON")
     }
