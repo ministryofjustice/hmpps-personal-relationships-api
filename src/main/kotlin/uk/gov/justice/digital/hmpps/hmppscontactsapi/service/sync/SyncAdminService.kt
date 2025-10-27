@@ -146,13 +146,20 @@ class SyncAdminService(
     relationshipsForRemovedPrisoner: List<PrisonerContactEntity>,
     relationshipsForRetainedPrisoner: List<PrisonerContactEntity>,
   ): List<Pair<Long, PrisonerContactEntity>> {
-    // Find the approved by and approved time from the relationshipsForRemovedPrisoner for the
+    fun findApprovedByDetails(relationship: SyncPrisonerRelationship): PrisonerContactEntity? = relationship
+      // check if the approved visitor flag is set to true in the request
+      .takeIf { it.approvedVisitor }
+      // Try to find corresponding approved details from previous records
+      ?.let {
+        findApprovedByDetailsFromExistingRecords(
+          relationshipsForRemovedPrisoner,
+          relationshipsForRetainedPrisoner,
+          it,
+        )
+      }
 
     val resettingPrisonerContacts = prisonerContacts.map { relationship ->
-      val approvedByDetails = relationship
-        .takeIf { it.approvedVisitor }
-        ?.let { findApprovedByDetailsFromExistingRecords(relationshipsForRemovedPrisoner, relationshipsForRetainedPrisoner, it) }
-        ?.takeIf { it.approvedVisitor }
+      val approvedByDetails = findApprovedByDetails(relationship)
 
       EnrichedPrisonerContactRequestUpdated(
         prisonerContact = relationship,

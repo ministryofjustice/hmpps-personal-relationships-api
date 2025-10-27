@@ -1445,6 +1445,27 @@ class ContactServiceTest {
       }
 
       @Test
+      fun `should not update approved by and approved time when apprved to visit is not being updated`() {
+        val request = PatchRelationshipRequest(
+          relationshipToPrisonerCode = JsonNullable.of("BRO"),
+        )
+
+        whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
+        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        mockBrotherRelationshipReferenceCode()
+
+        service.updateContactRelationship(prisonerContactId, request, user)
+
+        val prisonerContactCaptor = argumentCaptor<PrisonerContactEntity>()
+        verify(prisonerContactRepository).saveAndFlush(prisonerContactCaptor.capture())
+        with(prisonerContactCaptor.firstValue) {
+          // assert un changed
+          assertThat(approvedBy).isEqualTo("officer456")
+          assertThat(approvedTime).isInThePast()
+        }
+      }
+
+      @Test
       fun `should not update approved visitor with null`() {
         val request = PatchRelationshipRequest(
           isApprovedVisitor = JsonNullable.of(null),
@@ -1828,8 +1849,8 @@ class ContactServiceTest {
       assertThat(approvedVisitor).isTrue()
       assertThat(createdBy).isEqualTo("TEST")
       assertThat(createdTime).isInThePast()
-      assertThat(approvedBy).isNull()
-      assertThat(approvedTime).isNull()
+      assertThat(approvedBy).isEqualTo("officer456")
+      assertThat(approvedTime).isInThePast()
       assertThat(expiryDate).isEqualTo(LocalDate.of(2025, 12, 31))
       assertThat(createdAtPrison).isEqualTo("LONDON")
     }
