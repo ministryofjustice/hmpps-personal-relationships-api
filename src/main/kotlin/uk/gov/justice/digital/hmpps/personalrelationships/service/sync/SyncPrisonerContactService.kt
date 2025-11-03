@@ -31,6 +31,7 @@ class SyncPrisonerContactService(
     return contactEntity.toResponse()
   }
 
+  // When you create a new prisoner contact in NOMIS , the approved to visit flag is set to false by default.
   fun createPrisonerContact(request: SyncCreatePrisonerContactRequest): SyncPrisonerContact {
     if (request.currentTerm == true && prisonerContactRepository.findDuplicateRelationships(request.prisonerNumber, request.contactId, request.relationshipType).isNotEmpty()) {
       throw DuplicateRelationshipException(request.prisonerNumber, request.contactId, request.relationshipType)
@@ -38,6 +39,7 @@ class SyncPrisonerContactService(
     return prisonerContactRepository.saveAndFlush(request.toEntity()).toResponse()
   }
 
+  // When you approve a visit for a prisoner contact in NOMIS , then we need to set the approvedBy and approvedTime fields.
   fun updatePrisonerContact(prisonerContactId: Long, request: SyncUpdatePrisonerContactRequest): SyncPrisonerContact {
     val relationship = prisonerContactRepository.findById(prisonerContactId)
       .orElseThrow { EntityNotFoundException("Prisoner contact with ID $prisonerContactId not found") }
@@ -74,6 +76,8 @@ class SyncPrisonerContactService(
     request: SyncUpdatePrisonerContactRequest,
     it: PrisonerContactEntity,
   ) {
+    // there are only two scenarios , one approve, one unapprove
+    // when approving or unapproving a visitor in NOMIS, we need to set or clear the approvedBy and approvedTime fields accordingly
     when {
       relationship.approvedVisitor && request.approvedVisitor -> {
         // do nothing keep as is

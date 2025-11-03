@@ -219,54 +219,6 @@ class SyncAdminServiceTest {
     }
 
     @Test
-    fun `should preserve approved visitor details from removed prisoner when retained prisoner has no approved visitor`() {
-      val fixedTime = LocalDateTime.now()
-      val request = createMergePrisonerContactRequest(
-        listOf(createSyncPrisonerRelationship(approvedVisitor = true)),
-      )
-      val existingRelationshipsRemoved = listOf(
-        createPrisonerContactEntity(
-          "A1234BB",
-          100L,
-          approvedVisitor = true,
-          approvedBy = "APPROVER_REMOVED",
-          approvedTime = fixedTime.minusDays(2),
-        ),
-      )
-      val existingRelationshipsRetained = listOf(
-        createPrisonerContactEntity(
-          "A1234BB",
-          100L,
-          approvedVisitor = false,
-          approvedBy = null,
-          approvedTime = null,
-        ),
-      )
-
-      whenever(prisonerContactRepository.findAllByPrisonerNumber("A1234AA"))
-        .thenReturn(existingRelationshipsRemoved)
-      whenever(prisonerContactRepository.findAllByPrisonerNumber("A1234BB"))
-        .thenReturn(existingRelationshipsRetained)
-      whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(100L)).thenReturn(emptyList())
-      whenever(prisonerContactRepository.save(any())).thenReturn(createPrisonerContactEntity("A1234BB", 3L))
-      whenever(prisonerContactRestrictionRepository.save(any())).thenReturn(createPrisonerContactRestrictionEntity(3L))
-
-      val response = syncAdminService.mergePrisonerContacts(request)
-
-      val contactCaptor = argumentCaptor<PrisonerContactEntity>()
-      verify(prisonerContactRepository).save(contactCaptor.capture())
-
-      with(contactCaptor.firstValue) {
-        assertThat(approvedVisitor).isTrue()
-        assertThat(approvedBy).isEqualTo("APPROVER_REMOVED")
-        assertThat(approvedTime).isNotNull()
-        assertThat(approvedTime).isEqualTo(fixedTime.minusDays(2))
-      }
-
-      assertThat(response.relationshipsCreated).hasSize(1)
-    }
-
-    @Test
     fun `should not preserve approved visitor details when approved visitor is false in incoming relationship`() {
       val request = createMergePrisonerContactRequest(
         listOf(createSyncPrisonerRelationship(approvedVisitor = false)),

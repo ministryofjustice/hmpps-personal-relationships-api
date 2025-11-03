@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.personalrelationships.mapping.sync
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncCreatePrisonerContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerContact
-import java.time.LocalDateTime
+
+// NO Change is required - create prisoner contact mapping
+// - approved by and approved time will be set to null as by default when you create a new prisoner contact in NOMIS , the approved to visit flag is set to false.
 
 fun SyncCreatePrisonerContactRequest.toEntity(): PrisonerContactEntity = PrisonerContactEntity(
   prisonerContactId = 0L,
@@ -20,14 +22,6 @@ fun SyncCreatePrisonerContactRequest.toEntity(): PrisonerContactEntity = Prisone
   createdBy = this.createdBy,
   createdTime = this.createdTime,
 ).also {
-  if (this.approvedVisitor == true) {
-    // Set approved fields if approvedVisitor is true
-    it.approvedBy = this.createdBy
-    it.approvedTime = LocalDateTime.now()
-  } else {
-    it.approvedBy = null
-    it.approvedTime = null
-  }
   it.expiryDate = this.expiryDate
   it.createdAtPrison = this.createdAtPrison
 }

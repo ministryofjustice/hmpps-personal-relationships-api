@@ -56,6 +56,9 @@ fun ContactRelationship.toEntity(
   approvedVisitor = this.isApprovedVisitor,
   currentTerm = true,
 ).also { relationship ->
+
+  // This is used in both create and update mapping from DPS- so we need to set approvedBy and approvedTime based on isApprovedVisitor flag
+  // - tested both in create and update scenarios from DPS and working ok.
   if (this.isApprovedVisitor) {
     // Set approvedBy and approvedTime when approvedVisitor is true
     relationship.approvedBy = createdBy
