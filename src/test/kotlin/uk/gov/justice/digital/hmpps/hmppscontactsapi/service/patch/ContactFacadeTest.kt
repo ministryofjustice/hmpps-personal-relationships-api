@@ -326,7 +326,7 @@ class ContactFacadeTest {
   @Test
   fun `search should send no domain event`() {
     val pageable = Pageable.unpaged()
-    val request = ContactSearchRequest(lastName = "foo", firstName = null, middleNames = null, dateOfBirth = null, includeAnyExistingRelationshipsToPrisoner = null)
+    val request = ContactSearchRequest(lastName = "foo", firstName = null, middleNames = null, "123456", dateOfBirth = null, includeAnyExistingRelationshipsToPrisoner = null)
     val result = PageImpl<ContactSearchResultItem>(listOf())
 
     whenever(contactSearchService.searchContacts(any(), any())).thenReturn(result)
