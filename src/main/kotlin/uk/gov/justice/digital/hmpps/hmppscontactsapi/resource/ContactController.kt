@@ -191,7 +191,7 @@ class ContactController(
   @GetMapping("/search")
   @Operation(
     summary = "Search contacts",
-    description = "Search all contacts by their last name or first name or middle name or date of birth",
+    description = "Search all contacts by their last name or first name or middle name or date of birth or contact id",
   )
   @ApiResponses(
     value = [
@@ -227,6 +227,14 @@ class ContactController(
       example = "30/12/2010",
       required = false,
     )
+    @Parameter(`in` = ParameterIn.QUERY, description = "The contact ID", example = "123456", required = false)
+    contactId: String?,
+    @Parameter(
+      `in` = ParameterIn.QUERY,
+      description = "The contact id",
+      example = "123456",
+      required = false,
+    )
     @Past(message = "The date of birth must be in the past")
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     dateOfBirth: LocalDate?,
@@ -254,6 +262,7 @@ class ContactController(
       middleNames = middleNames,
       dateOfBirth = dateOfBirth,
       soundsLike = soundsLike,
+      contactId = contactId,
       includeAnyExistingRelationshipsToPrisoner = includeAnyExistingRelationshipsToPrisoner,
     ),
   )

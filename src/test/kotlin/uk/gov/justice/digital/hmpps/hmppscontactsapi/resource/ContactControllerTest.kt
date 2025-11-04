@@ -159,12 +159,12 @@ class ContactControllerTest {
       val pageContacts = PageImpl(contactEntities, pageable, contactEntities.size.toLong())
 
       // When
-      val expectedRequest = ContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1), false, null)
+      val expectedRequest = ContactSearchRequest("last", "first", "middle", "123456", LocalDate.of(1980, 1, 1), false, null)
       whenever(contactFacade.searchContacts(pageable, expectedRequest)).thenReturn(PagedModel(pageContacts))
 
       // Act
       val result: PagedModel<ContactSearchResultItem> =
-        controller.searchContacts(pageable, "last", "first", "middle", LocalDate.of(1980, 1, 1), false, null)
+        controller.searchContacts(pageable, "last", "first", "middle", "123456", LocalDate.of(1980, 1, 1), false, null)
 
       // Then
       assertNotNull(result)
@@ -172,6 +172,7 @@ class ContactControllerTest {
       assertThat(result.content[0].lastName).isEqualTo("last")
       assertThat(result.content[0].firstName).isEqualTo("first")
       assertThat(result.content[0].mailAddress).isEqualTo(true)
+      assertThat(result.content[0].id).isEqualTo(1L)
       assertThat(result.content[0].noFixedAddress).isEqualTo(true)
       verify(contactFacade).searchContacts(pageable, expectedRequest)
     }
