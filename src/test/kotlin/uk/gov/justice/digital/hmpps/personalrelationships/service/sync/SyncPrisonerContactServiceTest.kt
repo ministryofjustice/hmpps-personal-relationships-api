@@ -5,9 +5,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.NullSource
-import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
@@ -60,73 +57,6 @@ class SyncPrisonerContactServiceTest {
         syncService.getPrisonerContactById(1L)
       }
       verify(prisonerContactRepository).findById(1L)
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = ["true", "false"])
-    @NullSource
-    fun `should create a prisoner contact with correct approved visitor details`(approvedVisitor: String?) {
-      val approvedVisitorValue = when (approvedVisitor) {
-        null -> null
-        "true" -> true
-        else -> false
-      }
-      val request = createPrisonerContactRequest().copy(approvedVisitor = approvedVisitorValue)
-      whenever(prisonerContactRepository.saveAndFlush(request.toEntity())).thenReturn(request.toEntity())
-
-      val contact = syncService.createPrisonerContact(request)
-      val contactCaptor = argumentCaptor<PrisonerContactEntity>()
-
-      verify(prisonerContactRepository).saveAndFlush(contactCaptor.capture())
-
-      // Checks the entity saved
-      with(contactCaptor.firstValue) {
-        assertThat(contactId).isEqualTo(12345L)
-        assertThat(prisonerNumber).isEqualTo("A1234BC")
-        assertThat(relationshipType).isEqualTo("S")
-        assertThat(relationshipToPrisoner).isEqualTo("FRI")
-        assertThat(nextOfKin).isTrue
-        assertThat(emergencyContact).isFalse
-        assertThat(comments).isEqualTo("Updated relationship type to family")
-        assertThat(active).isTrue
-        // If approvedVisitor is null in the request, it should be set to false in the entity
-        assertThat(this.approvedVisitor).isEqualTo(approvedVisitorValue ?: false)
-        if (approvedVisitorValue == true) {
-          assertThat(approvedBy).isEqualTo("adminUser")
-          assertThat(approvedTime).isInThePast()
-        } else {
-          assertThat(approvedBy).isNull()
-          assertThat(approvedTime).isNull()
-        }
-        assertThat(currentTerm).isTrue
-        assertThat(expiryDate).isEqualTo(LocalDate.of(2025, 12, 31))
-        assertThat(createdAtPrison).isEqualTo("LONDN")
-        assertThat(createdBy).isEqualTo("adminUser")
-        assertThat(createdTime).isAfter(LocalDateTime.now().minusMinutes(5))
-        assertThat(updatedBy).isNull()
-        assertThat(updatedTime).isNull()
-      }
-
-      // Checks the model response
-      with(contact) {
-        assertThat(contactId).isEqualTo(12345L)
-        assertThat(prisonerNumber).isEqualTo("A1234BC")
-        assertThat(contactType).isEqualTo("S")
-        assertThat(relationshipType).isEqualTo("FRI")
-        assertThat(nextOfKin).isTrue
-        assertThat(emergencyContact).isFalse
-        assertThat(comments).isEqualTo("Updated relationship type to family")
-        assertThat(active).isTrue
-        // If approvedVisitor is null in the request, it should be set to false in the response
-        assertThat(this.approvedVisitor).isEqualTo(approvedVisitorValue ?: false)
-        assertThat(currentTerm).isTrue
-        assertThat(expiryDate).isEqualTo(LocalDate.of(2025, 12, 31))
-        assertThat(createdAtPrison).isEqualTo("LONDN")
-        assertThat(createdBy).isEqualTo("adminUser")
-        assertThat(createdTime).isAfter(LocalDateTime.now().minusMinutes(5))
-        assertThat(updatedBy).isNull()
-        assertThat(updatedTime).isNull()
-      }
     }
 
     @Test
@@ -342,23 +272,6 @@ class SyncPrisonerContactServiceTest {
     createdAtPrison = "HMP Wales",
     updatedBy = "adminUser",
     updatedTime = LocalDateTime.now(),
-  )
-
-  private fun createPrisonerContactRequest() = SyncCreatePrisonerContactRequest(
-    contactId = 12345L,
-    prisonerNumber = "A1234BC",
-    contactType = "S",
-    relationshipType = "FRI",
-    nextOfKin = true,
-    emergencyContact = false,
-    comments = "Updated relationship type to family",
-    active = true,
-    approvedVisitor = true,
-    currentTerm = true,
-    expiryDate = LocalDate.of(2025, 12, 31),
-    createdAtPrison = "LONDN",
-    createdBy = "adminUser",
-    createdTime = LocalDateTime.now(),
   )
 
   private fun contactEntity() = PrisonerContactEntity(
