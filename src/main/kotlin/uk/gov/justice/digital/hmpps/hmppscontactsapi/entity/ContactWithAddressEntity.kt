@@ -22,6 +22,12 @@ data class ContactWithAddressEntity(
 
   val middleNames: String?,
 
+  val lastNameSoundex: String? = null,
+
+  val firstNameSoundex: String? = null,
+
+  val middleNamesSoundex: String? = null,
+
   val dateOfBirth: LocalDate?,
 
   val deceasedDate: LocalDate?,

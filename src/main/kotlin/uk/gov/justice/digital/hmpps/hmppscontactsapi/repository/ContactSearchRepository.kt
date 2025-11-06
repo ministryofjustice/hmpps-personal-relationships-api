@@ -96,19 +96,17 @@ class ContactSearchRepository(
       throw RuntimeException("Configuration issue. Cannot do ilike unless using hibernate.")
     }
     if (request.soundsLike) {
-      val lastNameSoundex = cb.function("soundex", String::class.java, contact.get<String>("lastName"))
+      // Use pre-computed soundex columns for better performance with indexes
       val lastNameInputSoundex = cb.function("soundex", String::class.java, cb.literal(request.lastName))
-      predicates.add(cb.equal(lastNameSoundex, lastNameInputSoundex))
+      predicates.add(cb.equal(contact.get<String>("lastNameSoundex"), lastNameInputSoundex))
 
       request.firstName?.let {
-        val fnSoundex = cb.function("soundex", String::class.java, contact.get<String>("firstName"))
         val fnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
-        predicates.add(cb.equal(fnSoundex, fnInputSoundex))
+        predicates.add(cb.equal(contact.get<String>("firstNameSoundex"), fnInputSoundex))
       }
       request.middleNames?.let {
-        val mnSoundex = cb.function("soundex", String::class.java, contact.get<String>("middleNames"))
         val mnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
-        predicates.add(cb.equal(mnSoundex, mnInputSoundex))
+        predicates.add(cb.equal(contact.get<String>("middleNamesSoundex"), mnInputSoundex))
       }
     } else {
       predicates.add(cb.ilike(contact.get("lastName"), "%${request.lastName}%", '#'))
