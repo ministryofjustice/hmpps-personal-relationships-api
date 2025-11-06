@@ -275,6 +275,29 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
+  fun `should get the contacts when searched by last name and contact id with similar match`() {
+    val uri = UriComponentsBuilder.fromPath("contact/search")
+      .queryParam("lastName", "Smith")
+      .queryParam("contactId", "23")
+      .queryParam("soundsLike", true)
+      .build()
+      .toUri()
+
+    val body = testAPIClient.getSearchContactResults(uri)!!
+
+    with(body) {
+      assertThat(content).isNotEmpty()
+      assertThat(page.totalPages).isEqualTo(1L)
+      assertThat(page.totalElements).isEqualTo(1)
+
+      val contact = content.first()
+      assertThat(contact.id).isEqualTo(23)
+      assertThat(contact.lastName).isEqualTo("Smithe")
+      assertThat(contact.firstName).isEqualTo("John")
+    }
+  }
+
+  @Test
   fun `should get the contacts with no addresses associated with them when searched by last name `() {
     val uri = UriComponentsBuilder.fromPath("contact/search")
       .queryParam("lastName", "NoAddress")
@@ -650,7 +673,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           ),
           contactMultiple.createdContact.id to listOf(
             ExistingRelationshipToPrisoner(
-              prisonerContactId = contactMultiple.createdRelationship!!.prisonerContactId,
+              prisonerContactId = contactMultiple.createdRelationship.prisonerContactId,
               relationshipTypeCode = "S",
               relationshipTypeDescription = "Social",
               relationshipToPrisonerCode = "MOT",
