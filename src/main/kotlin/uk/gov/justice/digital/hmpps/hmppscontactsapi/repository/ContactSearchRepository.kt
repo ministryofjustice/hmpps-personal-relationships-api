@@ -18,12 +18,17 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEn
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.mapSortPropertiesOfContactSearch
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import java.time.LocalDate
+import kotlin.system.measureTimeMillis
 
 @Repository
 class ContactSearchRepository(
   @PersistenceContext
   private var entityManager: EntityManager,
 ) {
+  companion object {
+    private val logger = org.slf4j.LoggerFactory.getLogger(this::class.java)
+  }
+
   fun searchContacts(request: ContactSearchRequest, pageable: Pageable): Page<ContactWithAddressEntity> {
     val cb = entityManager.criteriaBuilder
     val cq = cb.createQuery(ContactWithAddressEntity::class.java)
@@ -34,14 +39,20 @@ class ContactSearchRepository(
     cq.where(*predicates.toTypedArray())
 
     applySorting(pageable, cq, cb, contact)
-
-    val resultList = entityManager.createQuery(cq)
-      .setFirstResult(pageable.offset.toInt())
-      .setMaxResults(pageable.pageSize)
-      .resultList
-
-    val total = getTotalCount(request)
-
+    val resultList: List<ContactWithAddressEntity>
+    val total: Long
+    val queryTime = measureTimeMillis {
+      resultList = entityManager.createQuery(cq)
+        .setFirstResult(pageable.offset.toInt())
+        .setMaxResults(pageable.pageSize)
+        .resultList
+    }
+    val countTime = measureTimeMillis {
+      total = getTotalCount(request)
+    }
+    logger.info(
+      "Performance stats -> query: ${queryTime}ms, count: ${countTime}ms, total: ${queryTime + countTime}ms",
+    )
     return PageImpl(resultList, pageable, total)
   }
 
