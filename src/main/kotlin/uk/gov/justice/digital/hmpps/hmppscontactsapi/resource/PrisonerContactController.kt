@@ -376,5 +376,6 @@ class PrisonerContactController(
       description = "The id of the prisoner contact",
       example = "123456",
     ) prisonerContactId: Long,
-  ): RelationshipDeletePlan = contactFacade.assessIfRelationshipCanBeDeleted(prisonerContactId)
+    @RequestAttribute user: User,
+  ): RelationshipDeletePlan = contactFacade.assessIfRelationshipCanBeDeleted(prisonerContactId, user)
 }

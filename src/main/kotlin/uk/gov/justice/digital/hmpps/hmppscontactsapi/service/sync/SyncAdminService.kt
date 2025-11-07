@@ -56,7 +56,7 @@ class SyncAdminService(
     prisonerContactRepository.deleteAllByPrisonerNumber(request.retainedPrisonerNumber)
 
     // Recreate the relationships and restrictions provided for the retained prisoner number only
-    val relationshipPairs = extractAndSavePrisonerContacts(request.prisonerContacts, relationshipsForRemovedPrisoner, relationshipsForRetainedPrisoner)
+    val relationshipPairs = extractAndSavePrisonerContacts(request.prisonerContacts)
     val restrictionPairs = extractAndSavePrisonerContactRestrictions(request.prisonerContacts, relationshipPairs)
 
     // Build the response objects for relationships and restrictions that were removed
@@ -97,7 +97,7 @@ class SyncAdminService(
     prisonerContactRepository.deleteAllByPrisonerNumber(request.prisonerNumber)
 
     // Recreate the relationships and restrictions provided for this prisoner
-    val relationshipPairs = extractResetAndSavePrisonerContacts(request.prisonerContacts, relationshipsForPrisoner)
+    val relationshipPairs = extractAndSavePrisonerContacts(request.prisonerContacts)
     val restrictionPairs = extractAndSavePrisonerContactRestrictions(request.prisonerContacts, relationshipPairs)
 
     // Build a list of the IDs for relationships that were removed
@@ -141,117 +141,31 @@ class SyncAdminService(
     }
   }.flatten()
 
-  private fun extractAndSavePrisonerContacts(
-    prisonerContacts: List<SyncPrisonerRelationship>,
-    relationshipsForRemovedPrisoner: List<PrisonerContactEntity>,
-    relationshipsForRetainedPrisoner: List<PrisonerContactEntity>,
-  ): List<Pair<Long, PrisonerContactEntity>> {
-    fun findApprovedByDetails(relationship: SyncPrisonerRelationship): PrisonerContactEntity? = relationship
-      // check if the approved visitor flag is set to true in the request
-      .takeIf { it.approvedVisitor }
-      // Try to find corresponding approved details from previous records
-      ?.let {
-        findApprovedByDetailsFromExistingRecords(
-          relationshipsForRemovedPrisoner,
-          relationshipsForRetainedPrisoner,
-          it,
-        )
-      }
-
-    val resettingPrisonerContacts = prisonerContacts.map { relationship ->
-      val approvedByDetails = findApprovedByDetails(relationship)
-
-      EnrichedPrisonerContactRequestUpdated(
-        prisonerContact = relationship,
-        approvedBy = approvedByDetails?.approvedBy,
-        approvedTime = approvedByDetails?.approvedTime,
-      )
-    }
-
-    return getUpdatedRelationships(resettingPrisonerContacts)
-  }
-
-  // Find the approved by and approved time from the existing records when approved visitor is set to true in both incoming and existing records
-  // this is to ensure that the approved by and approved time is not lost during merge process
-  private fun findApprovedByDetailsFromExistingRecords(
-    removingPrisonerContacts: List<PrisonerContactEntity>,
-    keepingPrisonerContacts: List<PrisonerContactEntity>,
-    incomingRelationship: SyncPrisonerRelationship,
-  ): PrisonerContactEntity? {
-    val allContacts = keepingPrisonerContacts + removingPrisonerContacts
-
-    return allContacts.firstOrNull { contact ->
-      contact.contactId == incomingRelationship.contactId &&
-        contact.prisonerNumber == incomingRelationship.prisonerNumber &&
-        contact.relationshipType == incomingRelationship.contactType.code &&
-        contact.relationshipToPrisoner == incomingRelationship.relationshipType.code &&
-        contact.approvedVisitor
-    }
-  }
-
-  private fun extractResetAndSavePrisonerContacts(
-    prisonerContacts: List<SyncPrisonerRelationship>,
-    existingPrisonerContacts: List<PrisonerContactEntity>,
-  ): List<Pair<Long, PrisonerContactEntity>> {
-    // iterate through the incoming relationships to see if any have approved visitor true if it is true, then get the approved by and approved time from the resettingPrisonerContacts
-    val resettingPrisonerContacts = prisonerContacts.map { relationship ->
-      val approvedByDetails = relationship
-        .takeIf { it.approvedVisitor }
-        ?.let { findApprovedByDetailsFromExistingRecord(existingPrisonerContacts, it) }
-        ?.takeIf { it.approvedVisitor }
-
-      EnrichedPrisonerContactRequestUpdated(
-        prisonerContact = relationship,
-        approvedBy = approvedByDetails?.approvedBy,
-        approvedTime = approvedByDetails?.approvedTime,
-      )
-    }
-
-    return getUpdatedRelationships(resettingPrisonerContacts)
-  }
-
-  private fun getUpdatedRelationships(resettingPrisonerContacts: List<EnrichedPrisonerContactRequestUpdated>) = resettingPrisonerContacts.map { relationshipUpdate ->
-    val prisonerContact = relationshipUpdate.prisonerContact
+  private fun extractAndSavePrisonerContacts(prisonerContacts: List<SyncPrisonerRelationship>) = prisonerContacts.map { relationship ->
     Pair(
-      prisonerContact.id,
+      relationship.id,
       prisonerContactRepository.save(
         PrisonerContactEntity(
           prisonerContactId = 0L,
-          contactId = prisonerContact.contactId,
-          prisonerNumber = prisonerContact.prisonerNumber,
-          relationshipType = prisonerContact.contactType.code,
-          relationshipToPrisoner = prisonerContact.relationshipType.code,
-          nextOfKin = prisonerContact.nextOfKin,
-          emergencyContact = prisonerContact.emergencyContact,
-          comments = prisonerContact.comment,
-          active = prisonerContact.active,
-          approvedVisitor = prisonerContact.approvedVisitor,
-          currentTerm = prisonerContact.currentTerm,
-          createdBy = prisonerContact.createUsername ?: "SYSTEM",
-          createdTime = prisonerContact.createDateTime ?: LocalDateTime.now(),
+          contactId = relationship.contactId,
+          prisonerNumber = relationship.prisonerNumber,
+          relationshipType = relationship.contactType.code,
+          relationshipToPrisoner = relationship.relationshipType.code,
+          nextOfKin = relationship.nextOfKin,
+          emergencyContact = relationship.emergencyContact,
+          comments = relationship.comment,
+          active = relationship.active,
+          approvedVisitor = relationship.approvedVisitor,
+          currentTerm = relationship.currentTerm,
+          createdBy = relationship.createUsername ?: "SYSTEM",
+          createdTime = relationship.createDateTime ?: LocalDateTime.now(),
         ).also {
-          // when recreating relationship during reset records scenarios , approved by and approved time set with value from the resettingPrisonerContacts
-          it.approvedBy = relationshipUpdate.approvedBy
-          it.approvedTime = relationshipUpdate.approvedTime
-          it.updatedBy = prisonerContact.modifyUsername
-          it.updatedTime = prisonerContact.modifyDateTime
-          it.expiryDate = prisonerContact.expiryDate
+          it.updatedBy = relationship.modifyUsername
+          it.updatedTime = relationship.modifyDateTime
+          it.expiryDate = relationship.expiryDate
         },
       ),
     )
-  }
-
-  // Find the approved by and approved time from the resettingPrisonerContacts when approved visitor is set to true in both incoming and resetting records
-  // this is to ensure that the approved by and approved time is not lost during reset process
-  private fun findApprovedByDetailsFromExistingRecord(
-    resettingPrisonerContacts: List<PrisonerContactEntity>,
-    incomingRelationship: SyncPrisonerRelationship,
-  ) = resettingPrisonerContacts.find {
-    it.contactId == incomingRelationship.contactId &&
-      it.prisonerNumber == incomingRelationship.prisonerNumber &&
-      it.relationshipType == incomingRelationship.contactType.code &&
-      it.relationshipToPrisoner == incomingRelationship.relationshipType.code &&
-      it.approvedVisitor
   }
 
   private fun extractAndSavePrisonerContactRestrictions(
@@ -285,13 +199,3 @@ class SyncAdminService(
     )
   }
 }
-
-data class EnrichedPrisonerContactRequestUpdated(
-
-  val prisonerContact: SyncPrisonerRelationship,
-
-  val approvedBy: String? = null,
-
-  val approvedTime: LocalDateTime? = null,
-
-)
