@@ -4,7 +4,7 @@ import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.4"
   id("org.openapi.generator") version "7.17.0"
-  id("io.gatling.gradle") version "3.14.7"
+  id("io.gatling.gradle") version "3.14.9"
   kotlin("plugin.spring") version "2.2.21"
   kotlin("plugin.jpa") version "2.2.21"
 }
@@ -58,7 +58,7 @@ dependencies {
   testImplementation("org.testcontainers:localstack:1.21.3")
   testImplementation("org.wiremock:wiremock-standalone:3.13.1")
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.8.1")
-  testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.55.0")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.56.0")
 }
 
 tasks {
