@@ -4,7 +4,7 @@ spring:
     show-sql: true
 
   flyway:
-    locations: classpath:/migrations/common,classpath:/migrations/test
+    locations: classpath:/migrations/common,classpath:/migrations/dev,classpath:/migrations/test
     placeholders:
       dpr_user: dpr_user
       dpr_password: dpr_password
