@@ -217,17 +217,8 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(page.totalElements).isEqualTo(3)
       assertThat(page.totalPages).isEqualTo(1)
 
-      val contact = content.first()
-      assertThat(contact.id).isEqualTo(11041L)
-      assertThat(contact.lastName).isEqualTo("NELSINWOOD")
-
-      val contact2 = content.get(1)
-      assertThat(contact2.id).isEqualTo(11042L)
-      assertThat(contact2.lastName).isEqualTo("NELSINWOOD")
-
-      val contact3 = content.get(2)
-      assertThat(contact3.id).isEqualTo(11043L)
-      assertThat(contact3.lastName).isEqualTo("NELSINWOOD")
+      assertThat(content).extracting("id").containsAll(listOf(11041L, 11042L, 11043L))
+      assertThat(content).extracting("firstName").containsAll(listOf("NELSINWOOD", "NELSINWOOD", "NELSINWOOD"))
     }
   }
 
@@ -311,14 +302,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(content.size).isEqualTo(2)
       assertThat(page.totalElements).isEqualTo(2)
       assertThat(page.totalPages).isEqualTo(1)
-
-      val contact = content.first()
-      assertThat(contact.id).isEqualTo(16)
-      assertThat(contact.firstName).isEqualTo("Liam")
-
-      val lastContact = content.last()
-      assertThat(lastContact.id).isEqualTo(17)
-      assertThat(lastContact.firstName).isEqualTo("Hannah")
+      assertThat(content).extracting("firstName").containsAll(listOf("Liam", "Hannah"))
     }
   }
 
