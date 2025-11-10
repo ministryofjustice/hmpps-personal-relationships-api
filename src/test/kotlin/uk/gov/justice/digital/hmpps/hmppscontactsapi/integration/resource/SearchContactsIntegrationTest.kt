@@ -218,7 +218,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(page.totalPages).isEqualTo(1)
 
       assertThat(content).extracting("id").containsAll(listOf(11041L, 11042L, 11043L))
-      assertThat(content).extracting("firstName").containsAll(listOf("NELSINWOOD", "NELSINWOOD", "NELSINWOOD"))
+      assertThat(content).extracting("lastName").containsAll(listOf("NELSINWOOD", "NELSINWOOD", "NELSINWOOD"))
     }
   }
 
