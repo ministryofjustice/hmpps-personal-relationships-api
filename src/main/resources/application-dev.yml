@@ -1,3 +1,0 @@
-spring:
-  flyway:
-    locations: classpath:/migrations/common,classpath:/migrations/prod,classpath:/migrations/dev
