@@ -5,7 +5,3 @@ create index if not exists idx_contact_address_end_date on contact_address(end_d
 create index if not exists idx_contact_address_start_date on contact_address(start_date);
 -- improve the performance of joins on contact_id
 create index idx_contact_id_as_text on contact(cast(contact_id as text));
-
-drop index if exists idx_contact_first_name_gin;
-drop index if exists idx_contact_last_name_gin;
-drop index if exists idx_contact_middle_names_gin;
