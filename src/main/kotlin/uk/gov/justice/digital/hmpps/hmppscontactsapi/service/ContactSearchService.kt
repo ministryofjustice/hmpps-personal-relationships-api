@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
@@ -16,6 +17,7 @@ class ContactSearchService(
   private val prisonerContactSummaryRepository: PrisonerContactSummaryRepository,
 ) {
 
+  @Transactional(readOnly = true)
   fun searchContacts(pageable: Pageable, request: ContactSearchRequest): Page<ContactSearchResultItem> {
     val checkForExistingRelationships = request.includeAnyExistingRelationshipsToPrisoner != null
     val matchingContactsPage = contactSearchRepository.searchContacts(request, pageable)
@@ -23,7 +25,7 @@ class ContactSearchService(
       if (checkForExistingRelationships) {
         val contactIds = matchingContactsPage.content.map { it.contactId }
         prisonerContactSummaryRepository
-          .findByPrisonerNumberAndContactIdIn(request.includeAnyExistingRelationshipsToPrisoner!!, contactIds)
+          .findByPrisonerNumberAndContactIdIn(request.includeAnyExistingRelationshipsToPrisoner, contactIds)
           .groupBy { it.contactId }
           .mapValues {
             it.value.map { summary ->

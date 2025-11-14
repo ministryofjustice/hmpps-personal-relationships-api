@@ -121,8 +121,10 @@ class ContactSearchRepository(
     }
     // partial match on contactId by converting to string
     request.contactId?.let {
-      val contactIdAsString = cb.function("str", String::class.java, contact.get<Long>("contactId"))
-      predicates.add(cb.like(contactIdAsString, "%$it%"))
+      if (request.contactId.isNotEmpty()) {
+        val contactIdAsString = cb.function("str", String::class.java, contact.get<Long>("contactId"))
+        predicates.add(cb.like(contactIdAsString, "%$it%"))
+      }
     }
     request.dateOfBirth?.let {
       predicates.add(
