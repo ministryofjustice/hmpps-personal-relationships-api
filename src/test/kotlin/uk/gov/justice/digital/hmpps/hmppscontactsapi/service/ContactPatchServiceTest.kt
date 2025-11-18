@@ -549,6 +549,63 @@ class ContactPatchServiceTest {
     }
   }
 
+  @Nested
+  inner class Names {
+    @Test
+    fun `should patch first and last names`() {
+      val patchRequest = PatchContactRequest(
+        firstName = JsonNullable.of("Jane"),
+        lastName = JsonNullable.of("Smith"),
+      )
+
+      whenContactExists()
+      whenUpdateIsSuccessful()
+
+      val response = service.patch(contactId, patchRequest, user)
+
+      val contactCaptor = argumentCaptor<ContactEntity>()
+
+      verify(contactRepository).saveAndFlush(contactCaptor.capture())
+
+      val updatingEntity = contactCaptor.firstValue
+
+      assertThat(updatingEntity.firstName).isEqualTo("Jane")
+      assertThat(updatingEntity.lastName).isEqualTo("Smith")
+      assertThat(response.firstName).isEqualTo("Jane")
+      assertThat(response.lastName).isEqualTo("Smith")
+    }
+
+    @Test
+    fun `should reject null first name`() {
+      val patchRequest = PatchContactRequest(
+        firstName = JsonNullable.of(null),
+      )
+
+      whenContactExists()
+
+      val exception = assertThrows<ValidationException> {
+        service.patch(contactId, patchRequest, user)
+      }
+      assertThat(exception.message).isEqualTo("Unsupported first name value null.")
+      verify(contactRepository, never()).saveAndFlush(any())
+    }
+
+    @Test
+    fun `should reject null last name`() {
+      val patchRequest = PatchContactRequest(
+        lastName = JsonNullable.of(null),
+      )
+
+      whenContactExists()
+
+      val exception = assertThrows<ValidationException> {
+        service.patch(contactId, patchRequest, user)
+      }
+      assertThat(exception.message).isEqualTo("Unsupported last name value null.")
+      verify(contactRepository, never()).saveAndFlush(any())
+    }
+  }
+
   private fun whenUpdateIsSuccessful() {
     whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
   }
