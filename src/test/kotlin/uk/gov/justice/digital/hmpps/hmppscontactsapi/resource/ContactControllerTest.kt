@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createPrisonerConta
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAuditEntry
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
@@ -236,6 +237,66 @@ class ContactControllerTest {
       updatedBy = "UPDATE",
       updatedTime = LocalDateTime.now(),
     )
+  }
+
+  @Nested
+  inner class GetContactHistory {
+    private val id = 123456L
+
+    @Test
+    fun `should get contact history successfully`() {
+      val entries = listOf(
+        ContactAuditEntry(
+          revisionId = 1,
+          revisionType = "ADD",
+          revisionTimestamp = LocalDateTime.now().minusDays(1),
+          username = "user1",
+          id = id,
+          titleCode = "MR",
+          lastName = "Doe",
+          firstName = "John",
+          middleNames = null,
+          dateOfBirth = null,
+          deceasedDate = null,
+          isStaff = false,
+          isRemitter = false,
+          genderCode = null,
+          domesticStatusCode = null,
+          languageCode = null,
+          interpreterRequired = false,
+          createdBy = "user1",
+          createdTime = LocalDateTime.now().minusDays(1),
+          updatedBy = null,
+          updatedTime = null,
+        ),
+      )
+      whenever(contactFacade.getContactHistory(id)).thenReturn(entries)
+
+      val response = controller.getContactHistory(id)
+
+      assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+      assertThat(response.body).isEqualTo(entries)
+      verify(contactFacade).getContactHistory(id)
+    }
+
+    @Test
+    fun `should return 404 when contact not found`() {
+      whenever(contactFacade.getContactHistory(id)).thenReturn(null)
+
+      val response = controller.getContactHistory(id)
+
+      assertThat(response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+      verify(contactFacade).getContactHistory(id)
+    }
+
+    @Test
+    fun `should propagate exceptions getting contact history`() {
+      whenever(contactFacade.getContactHistory(id)).thenThrow(RuntimeException("Error!"))
+
+      assertThrows<RuntimeException>("Error!") {
+        controller.getContactHistory(id)
+      }
+    }
   }
 
   private fun getContact() = ContactSearchResultItem(

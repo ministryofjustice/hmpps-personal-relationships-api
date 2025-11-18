@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.Addre
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.address.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.identity.CreateMultipleIdentitiesRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAuditEntry
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameDetails
@@ -36,6 +37,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.Relationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPhoneRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactEmailRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAuditHistoryRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactIdentityDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
@@ -63,6 +65,7 @@ class ContactService(
   private val contactEmailService: ContactEmailService,
   private val prisonerContactRestrictionRepository: PrisonerContactRestrictionRepository,
   private val deletedPrisonerContactRepository: DeletedPrisonerContactRepository,
+  private val contactAuditHistoryRepository: ContactAuditHistoryRepository,
 ) {
   companion object {
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -656,5 +659,11 @@ class ContactService(
         approvedToVisit = r.approvedVisitor,
       )
     }
+  }
+
+  @Transactional
+  fun getContactHistory(id: Long): List<ContactAuditEntry>? {
+    if (!contactRepository.existsById(id)) return null
+    return contactAuditHistoryRepository.getContactHistory(id)
   }
 }

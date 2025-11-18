@@ -59,6 +59,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCod
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAddressPhoneRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactEmailRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAuditHistoryRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactIdentityDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactPhoneDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
@@ -87,6 +88,7 @@ class ContactServiceTest {
   private val contactEmailService: ContactEmailService = mock()
   private val prisonerContactRestrictionRepository: PrisonerContactRestrictionRepository = mock()
   private val deletedPrisonerContactRepository: DeletedPrisonerContactRepository = mock()
+  private val contactHistoryRepository: ContactAuditHistoryRepository = mock()
   private val service = ContactService(
     contactRepository,
     prisonerContactRepository,
@@ -104,6 +106,7 @@ class ContactServiceTest {
     contactEmailService,
     prisonerContactRestrictionRepository,
     deletedPrisonerContactRepository,
+    contactHistoryRepository,
   )
 
   private val aContactAddressDetailsEntity = createContactAddressDetailsEntity()
