@@ -38,6 +38,8 @@ dependencies {
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql:42.7.8")
+  implementation("org.hibernate.orm:hibernate-envers")
+  implementation("org.springframework.data:spring-data-envers")
 
   // OpenAPI
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14")

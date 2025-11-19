@@ -471,7 +471,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     }
 
     @Test
-    fun `should not patch first or last names`() {
+    fun `should patch first and last names`() {
       val res = webTestClient.patch()
         .uri("/contact/$contactThatHasAllNameFields")
         .accept(MediaType.APPLICATION_JSON)
@@ -489,8 +489,8 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         .expectBody(PatchContactResponse::class.java)
         .returnResult().responseBody!!
 
-      assertThat(res.firstName).isEqualTo("First")
-      assertThat(res.lastName).isEqualTo("Last")
+      assertThat(res.firstName).isEqualTo("update first")
+      assertThat(res.lastName).isEqualTo("update last")
       assertThat(res.middleNames).isEqualTo("update middle")
       assertThat(res.titleCode).isEqualTo("MRS")
       assertThat(res.updatedBy).isEqualTo(updatedByUser)

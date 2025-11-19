@@ -30,6 +30,8 @@ class ContactPatchService(
     validateStaffFlag(request)
     validateTitle(request)
     validateGender(request)
+    validateFirstName(request)
+    validateLastName(request)
 
     val changedContact = contact.patchRequest(request, user)
 
@@ -51,6 +53,8 @@ class ContactPatchService(
       middleNames = request.middleNames.orElse(this.middleNames),
       gender = request.genderCode.orElse(this.gender),
       deceasedDate = request.deceasedDate.orElse(this.deceasedDate),
+      firstName = request.firstName.orElse(this.firstName),
+      lastName = request.lastName.orElse(this.lastName),
       updatedBy = user.username,
       updatedTime = LocalDateTime.now(),
     )
@@ -95,6 +99,18 @@ class ContactPatchService(
     if (request.genderCode.isPresent && request.genderCode.get() != null) {
       val code = request.genderCode.get()!!
       referenceCodeService.validateReferenceCode(ReferenceCodeGroup.GENDER, code, allowInactive = true)
+    }
+  }
+
+  private fun validateFirstName(request: PatchContactRequest) {
+    if (request.firstName.isPresent && request.firstName.get() == null) {
+      throw ValidationException("Unsupported first name value null.")
+    }
+  }
+
+  private fun validateLastName(request: PatchContactRequest) {
+    if (request.lastName.isPresent && request.lastName.get() == null) {
+      throw ValidationException("Unsupported last name value null.")
     }
   }
 }

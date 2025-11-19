@@ -7,8 +7,7 @@ import org.openapitools.jackson.nullable.JsonNullable
 import java.time.LocalDate
 
 @Schema(
-  description = "Request to patch a new contact. " +
-    "firstName and lastName are not updatable so are intentionally missing from this request.",
+  description = "Request to patch a contact.",
 )
 data class PatchContactRequest(
 
@@ -53,5 +52,13 @@ data class PatchContactRequest(
 
   @Schema(description = "The date the contact deceased, if known", example = "1980-01-01", type = "string", nullable = true, requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   var deceasedDate: JsonNullable<LocalDate?> = JsonNullable.undefined(),
+
+  @Schema(description = "The first name of the contact", type = "string", example = "John", nullable = false, maxLength = 35, requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @field:Size(max = 35, message = "firstName must be <= 35 characters")
+  var firstName: JsonNullable<String> = JsonNullable.undefined(),
+
+  @Schema(description = "The last name of the contact", type = "string", example = "Doe", nullable = false, maxLength = 35, requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @field:Size(max = 35, message = "lastName must be <= 35 characters")
+  var lastName: JsonNullable<String> = JsonNullable.undefined(),
 
 )
