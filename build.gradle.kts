@@ -21,6 +21,11 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
+// Local suppressions
+dependencyCheck {
+  suppressionFiles.add("dependency-check-suppress-json.xml")
+}
+
 dependencies {
   // Spring boot dependencies
   implementation("org.springframework.boot:spring-boot-starter-security")
