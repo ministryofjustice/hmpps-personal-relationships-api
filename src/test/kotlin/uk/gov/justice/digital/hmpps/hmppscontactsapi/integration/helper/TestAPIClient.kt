@@ -683,8 +683,8 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
       .isNoContent
   }
 
-  fun getContactHistory(id: Long): List<ContactAuditEntry> = webTestClient.get()
-    .uri("/contact/$id/history")
+  fun getContactHistory(contactId: Long): List<ContactAuditEntry> = webTestClient.get()
+    .uri("/contact/$contactId/history")
     .accept(MediaType.APPLICATION_JSON)
     .headers(setAuthorisationUsingCurrentUser())
     .exchange()

@@ -662,8 +662,8 @@ class ContactService(
   }
 
   @Transactional
-  fun getContactHistory(id: Long): List<ContactAuditEntry>? {
-    if (!contactRepository.existsById(id)) return null
-    return contactAuditHistoryRepository.getContactHistory(id)
+  fun getContactHistory(contactId: Long): List<ContactAuditEntry>? {
+    if (!contactRepository.existsById(contactId)) return null
+    return contactAuditHistoryRepository.getContactHistory(contactId)
   }
 }

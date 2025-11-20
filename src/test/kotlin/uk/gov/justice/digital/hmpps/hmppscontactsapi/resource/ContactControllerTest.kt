@@ -241,7 +241,7 @@ class ContactControllerTest {
 
   @Nested
   inner class GetContactHistory {
-    private val id = 123456L
+    private val contactId = 123456L
 
     @Test
     fun `should get contact history successfully`() {
@@ -251,7 +251,7 @@ class ContactControllerTest {
           revisionType = "ADD",
           revisionTimestamp = LocalDateTime.now().minusDays(1),
           username = "user1",
-          id = id,
+          id = contactId,
           titleCode = "MR",
           lastName = "Doe",
           firstName = "John",
@@ -270,31 +270,31 @@ class ContactControllerTest {
           updatedTime = null,
         ),
       )
-      whenever(contactFacade.getContactHistory(id)).thenReturn(entries)
+      whenever(contactFacade.getContactHistory(contactId)).thenReturn(entries)
 
-      val response = controller.getContactHistory(id)
+      val response = controller.getContactHistory(contactId)
 
       assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
       assertThat(response.body).isEqualTo(entries)
-      verify(contactFacade).getContactHistory(id)
+      verify(contactFacade).getContactHistory(contactId)
     }
 
     @Test
     fun `should return 404 when contact not found`() {
-      whenever(contactFacade.getContactHistory(id)).thenReturn(null)
+      whenever(contactFacade.getContactHistory(contactId)).thenReturn(null)
 
-      val response = controller.getContactHistory(id)
+      val response = controller.getContactHistory(contactId)
 
       assertThat(response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
-      verify(contactFacade).getContactHistory(id)
+      verify(contactFacade).getContactHistory(contactId)
     }
 
     @Test
     fun `should propagate exceptions getting contact history`() {
-      whenever(contactFacade.getContactHistory(id)).thenThrow(RuntimeException("Error!"))
+      whenever(contactFacade.getContactHistory(contactId)).thenThrow(RuntimeException("Error!"))
 
       assertThrows<RuntimeException>("Error!") {
-        controller.getContactHistory(id)
+        controller.getContactHistory(contactId)
       }
     }
   }

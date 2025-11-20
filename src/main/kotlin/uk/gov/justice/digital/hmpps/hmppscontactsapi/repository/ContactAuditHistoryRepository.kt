@@ -15,12 +15,12 @@ class ContactAuditHistoryRepository(
   @PersistenceContext
   private var entityManager: EntityManager,
 ) {
-  fun getContactHistory(id: Long): List<ContactAuditEntry>? {
+  fun getContactHistory(contactId: Long): List<ContactAuditEntry>? {
     val reader = AuditReaderFactory.get(entityManager)
 
     @Suppress("UNCHECKED_CAST")
     val results = reader.createQuery().forRevisionsOfEntity(ContactEntity::class.java, false, true)
-      .add(AuditEntity.id().eq(id))
+      .add(AuditEntity.id().eq(contactId))
       .addOrder(AuditEntity.revisionNumber().asc())
       .resultList as List<Array<Any>>
 

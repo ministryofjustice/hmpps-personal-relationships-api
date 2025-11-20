@@ -137,7 +137,7 @@ class ContactFacade(
 
   fun getContactName(id: Long): ContactNameDetails? = contactService.getContactName(id)
 
-  fun getContactHistory(id: Long): List<ContactAuditEntry>? = contactService.getContactHistory(id)
+  fun getContactHistory(contactId: Long): List<ContactAuditEntry>? = contactService.getContactHistory(contactId)
 
   fun searchContacts(pageable: Pageable, request: ContactSearchRequest): PagedModel<ContactSearchResultItem> = PagedModel(contactSearchService.searchContacts(pageable, request))
 
