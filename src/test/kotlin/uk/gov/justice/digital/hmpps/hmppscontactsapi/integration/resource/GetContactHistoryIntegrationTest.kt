@@ -1,0 +1,67 @@
+package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.resource
+
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.openapitools.jackson.nullable.JsonNullable
+import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.integration.SecureAPIIntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAuditEntry
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
+
+class GetContactHistoryIntegrationTest : SecureAPIIntegrationTestBase() {
+  override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.READ_ONLY_USER)
+  }
+
+  override fun baseRequestBuilder() = webTestClient.get()
+    .uri("/contact/1/history")
+    .accept(MediaType.APPLICATION_JSON)
+
+  @Test
+  fun `should return 404 if contact does not exist`() {
+    webTestClient.get()
+      .uri("/contact/999999/history")
+      .accept(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisationUsingCurrentUser())
+      .exchange()
+      .expectStatus().isNotFound
+  }
+
+  @Test
+  fun `should not return initial creation audit for seeded contact`() {
+    val history: List<ContactAuditEntry> = testAPIClient.getContactHistory(1)
+    assertThat(history).isEmpty()
+  }
+
+  @Test
+  fun `should include modified revision after patching first and last name`() {
+    // Create a fresh contact so history is isolated
+    val created = doWithTemporaryWritePermission { testAPIClient.createAContact(CreateContactRequest(lastName = "History", firstName = "Original")) }
+
+    // Patch names
+    doWithTemporaryWritePermission {
+      testAPIClient.patchAContact(
+        PatchContactRequest(
+          firstName = JsonNullable.of("UpdatedFirst"),
+          lastName = JsonNullable.of("UpdatedLast"),
+        ),
+        "/contact/${created.id}",
+      )
+    }
+
+    val history: List<ContactAuditEntry> = testAPIClient.getContactHistory(created.id)
+
+    assertThat(history.map(ContactAuditEntry::revisionType)).containsExactly("ADD", "MOD")
+    val modEntry = history.last()
+    assertThat(modEntry.firstName).isEqualTo("UpdatedFirst")
+    assertThat(modEntry.lastName).isEqualTo("UpdatedLast")
+    assertThat(modEntry.updatedBy).isNotNull()
+    assertThat(modEntry.updatedTime).isNotNull()
+  }
+}

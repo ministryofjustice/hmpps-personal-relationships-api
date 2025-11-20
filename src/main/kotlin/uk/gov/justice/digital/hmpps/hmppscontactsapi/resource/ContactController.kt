@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAuditEntry
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameDetails
@@ -308,4 +309,45 @@ class ContactController(
     @Valid @RequestBody patchContactRequest: PatchContactRequest,
     @RequestAttribute user: User,
   ) = contactFacade.patch(contactId, patchContactRequest, user)
+
+  @GetMapping("/{contactId}/history")
+  @Operation(
+    summary = "Get contact change history",
+    description = "Gets the full change history for a contact by id. Returns Envers snapshot per revision with metadata.",
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Found the contact history",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = ContactAuditEntry::class),
+          ),
+        ],
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "No contact with that id could be found",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__R', 'ROLE_CONTACTS__RW')")
+  fun getContactHistory(
+    @PathVariable("contactId") @Parameter(
+      name = "contactId",
+      description = "The id of the contact",
+      example = "123456",
+    ) contactId: Long,
+  ): ResponseEntity<Any> {
+    val history = contactFacade.getContactHistory(contactId)
+    return if (history != null) {
+      ResponseEntity.ok(history)
+    } else {
+      logger.info("Couldn't find contact with id '{}' to get history", contactId)
+      ResponseEntity.notFound().build()
+    }
+  }
 }

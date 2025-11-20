@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAuditEntry
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactEmailDetails
@@ -681,6 +682,18 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
       .expectStatus()
       .isNoContent
   }
+
+  fun getContactHistory(contactId: Long): List<ContactAuditEntry> = webTestClient.get()
+    .uri("/contact/$contactId/history")
+    .accept(MediaType.APPLICATION_JSON)
+    .headers(setAuthorisationUsingCurrentUser())
+    .exchange()
+    .expectStatus()
+    .isOk
+    .expectHeader().contentType(MediaType.APPLICATION_JSON)
+    .expectBodyList(ContactAuditEntry::class.java)
+    .returnResult().responseBody!!
+
   data class ContactSearchResponse(
     val content: List<ContactSearchResultItem>,
     val page: PagedModel.PageMetadata,
