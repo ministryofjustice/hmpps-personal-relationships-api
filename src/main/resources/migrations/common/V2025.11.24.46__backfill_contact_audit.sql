@@ -17,7 +17,6 @@ ALTER TABLE public.contact
 -- 2. Indexes
 --    Drop any previous non-partial index and create optimized partial index
 ------------------------------------------------------------
-DROP INDEX IF EXISTS idx_contact_initial_audit_done; -- old design (non-partial)
 CREATE INDEX IF NOT EXISTS idx_contact_initial_audit_pending
     ON public.contact(contact_id)
     WHERE initial_audit_done = FALSE;
