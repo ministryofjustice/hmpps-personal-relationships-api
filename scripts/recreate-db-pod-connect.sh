@@ -1,7 +1,9 @@
 #!/bin/bash
 
 #!/bin/bash
-# Use this script after running the gatling tests, to clean up the test data created by perf_test_user
+# Use this script to recreate the port-forward pod for connecting to the RDS database
+# and start port-forwarding to your local machine on port 5433.
+# Make sure you have kubectl and jq installed and configured to access the cluster.
 
 # Usage: ./recreate-db-pod-connect.sh [1|2|3]
 # 1 = dev, 2 = preprod, 3 = prod
@@ -17,8 +19,6 @@
     echo "Invalid selection. Usage: 1=dev, 2=preprod, 3=prod"
     exit 1
   fi
-
-  # Use this script after running the gatling tests, to clean up the test data created by perf_test_user
 
   # Get the database credentials and RDS instance address from the Kubernetes secret
   read -r database_name database_password database_username rds_instance_address < <(echo $(kubectl -n $NAMESPACE get secrets rds-postgresql-instance-output -o json | jq '.data[] |= @base64d' | jq -r '.data.database_name, .data.database_password, .data.database_username, .data.rds_instance_address'))
