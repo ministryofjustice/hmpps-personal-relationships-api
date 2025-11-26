@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionsResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactsRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.RestrictionsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
@@ -15,8 +16,9 @@ class PrisonerContactRestrictionsFacade(
   private val restrictionsService: RestrictionsService,
   private val outboundEventsService: OutboundEventsService,
 ) {
-
   fun getPrisonerContactRestrictions(prisonerContactId: Long): PrisonerContactRestrictionsResponse = restrictionsService.getPrisonerContactRestrictions(prisonerContactId)
+
+  fun getPrisonerContactRestrictions(prisonerContactIds: Set<Long>): PrisonerContactsRestrictionsResponse = restrictionsService.getPrisonerContactRestrictions(prisonerContactIds)
 
   fun createPrisonerContactRestriction(
     prisonerContactId: Long,
