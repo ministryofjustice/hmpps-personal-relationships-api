@@ -12,32 +12,36 @@ set -euo pipefail
 #1. Confirm migration applied. In DB console:
 #           select proname from pg_proc where proname = 'backfill_contact_audit';
 #2. Estimate remaining work:
-#           select count(*) from public.contact where initial_audit_done = false;
-#3. Choose batch size (e.g. 10000). Larger batches create fewer rev\_info rows but hold locks longer.
+#           select count(*) from public.contact_audit_backfill_progress;
+#           select count(*) from public.contact c inner join public.prisoner_contact pc on c.contact_id = pc.contact_id where pc.current_term = true;
+#3. Choose batch size (e.g. 10000-20000). Larger batches create fewer rev_info rows but hold locks longer.
 #4. Out of hours, open terminal on macOS and connect:
 #   Open port-forward connection to database pod (see recreate-db-pod-connect.sh):
 #     ./scripts/recreate-db-pod-connect.sh [1|2|3]
-#   Run this script in a separate thread to start the backfill:  Run looping block until function returns 0:
+#   Run this script in a separate thread to start the backfill.
 
 #   Other optional configurations
 #5. (Optional) Set a statement timeout to avoid runaway session:
 #   set statement_timeout = '15min';
 
 # Monitoring steps:
-#6. Monitor progress between loops (in a separate session if desired):
-#            select count(*) remaining from public.contact where initial_audit_done = false;
-#7. If you want manual control instead of DO loop:
+#6. Monitor progress - use the check-backfill-progress.sh script or manual queries:
+#     ./scripts/check-backfill-progress.sh [environment]
+#   Or manually:
+#     select count(*) processed from public.contact_audit_backfill_progress;
+#     select count(*) total from public.contact c inner join public.prisoner_contact pc on c.contact_id = pc.contact_id where pc.current_term = true;
+#7. If you want manual control instead of the script:
 #            select backfill_contact_audit(10000);  -- repeat until result = 0
 #8. Concurrency: You may run 2–3 sessions in parallel; the FOR UPDATE SKIP LOCKED prevents double work. Monitor load (CPU, I/O) before adding more.
-#9. Validate completion: remaining count = 0 and no contacts lacking an initial audit row:
-#             select count(*) from public.contact c where not exists (select 1 from public.contact_audit ca where ca.contact_id = c.contact_id and ca.rev_type = 0);
+#9. Validate completion: all contacts have audit entries:
+#     select count(*) from public.contact c inner join public.prisoner_contact pc on c.contact_id = pc.contact_id
+#       where pc.current_term = true and not exists (select 1 from public.contact_audit ca where ca.contact_id = c.contact_id and ca.rev_type = 0);
 #10. Record revision count for audit:
-#             select count(*) from public.contact_audit where rev_type = 0;
+#     select count(*) from public.contact_audit where rev_type = 0;
 
-# Cleanup (optional):
-# 11. remove helper functions below
-#  drop COLUMN initial_audit_done
-#  drop INDEX idx_contact_initial_audit_pending
+# Cleanup (after completion):
+# 11. Run the cleanup migration V2025.11.24.47__cleanup_contact_audit_backfill.sql(Will be done as part of the next PR)
+#     This will drop the tracking table, temporary function, and temporary index.
 #12. Disconnect: \q
 
 
