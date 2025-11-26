@@ -9,11 +9,13 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.audit.RevisionMetadata
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAuditEntry
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ManageUsersService
 
 @Repository
 class ContactAuditHistoryRepository(
   @PersistenceContext
   private var entityManager: EntityManager,
+  private val manageUsersService: ManageUsersService,
 ) {
   fun getContactHistory(contactId: Long): List<ContactAuditEntry>? {
     val reader = AuditReaderFactory.get(entityManager)
@@ -50,11 +52,15 @@ class ContactAuditHistoryRepository(
         domesticStatusCode = entity.domesticStatus,
         languageCode = entity.languageCode,
         interpreterRequired = entity.interpreterRequired,
-        createdBy = entity.createdBy,
+        createdBy = getUserFullName(entity.createdBy),
         createdTime = entity.createdTime,
-        updatedBy = entity.updatedBy,
+        updatedBy = getUserFullName(entity.updatedBy),
         updatedTime = entity.updatedTime,
       )
     }
   }
+
+  fun getUserFullName(userId: String?): String = userId?.let {
+    manageUsersService.getUserByUsername(it)?.name ?: it
+  } ?: ""
 }

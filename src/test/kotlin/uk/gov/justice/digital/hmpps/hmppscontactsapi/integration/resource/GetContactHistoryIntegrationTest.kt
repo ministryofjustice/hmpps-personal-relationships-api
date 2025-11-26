@@ -61,7 +61,8 @@ class GetContactHistoryIntegrationTest : SecureAPIIntegrationTestBase() {
     val modEntry = history.last()
     assertThat(modEntry.firstName).isEqualTo("UpdatedFirst")
     assertThat(modEntry.lastName).isEqualTo("UpdatedLast")
-    assertThat(modEntry.updatedBy).isNotNull()
+    assertThat(modEntry.updatedBy).isEqualTo("Read Write")
+    assertThat(modEntry.createdBy).isEqualTo("Read Write")
     assertThat(modEntry.updatedTime).isNotNull()
   }
 }
