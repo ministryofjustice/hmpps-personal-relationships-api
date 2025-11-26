@@ -28,11 +28,13 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.PrisonerContactRestrictionsFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PrisonerContactIdsRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.CreatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionsResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactsRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RelationshipDeletePlan
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.PrisonerContactRelationshipService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.swagger.AuthApiResponses
@@ -213,6 +215,39 @@ class PrisonerContactController(
       example = "1L",
     ) prisonerContactId: Long,
   ): PrisonerContactRestrictionsResponse = prisonerContactRestrictionsFacade.getPrisonerContactRestrictions(prisonerContactId)
+
+  @Operation(
+    summary = "Get the prisoner contact restrictions for one or more prisoner contacts where matches are found",
+    description = """
+      Get the restrictions that apply for this relationship.
+      
+      This includes prisoner-contact restrictions for this specific relationship only and any global (estate-wide) restrictions for the contact.
+      
+      If the prisoner and contact have multiple relationships, the prisoner-contact restrictions for the other relationships will not be returned. 
+    """,
+  )
+  @Tag(name = "Restrictions")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "The prisoner contact restrictions for the specified prisoner contact(s)",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = PrisonerContactsRestrictionsResponse::class),
+          ),
+        ],
+      ),
+    ],
+  )
+  @PostMapping(value = ["/restrictions"], produces = [MediaType.APPLICATION_JSON_VALUE])
+  @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__R', 'ROLE_CONTACTS__RW')")
+  fun getPrisonerContactRestrictionsByPrisonerContactIds(
+    @RequestBody
+    @Parameter(description = "The ids of the prisoner contacts to search for", required = true)
+    prisonerContactIdsRequest: PrisonerContactIdsRequest,
+  ): PrisonerContactsRestrictionsResponse = prisonerContactRestrictionsFacade.getPrisonerContactRestrictions(prisonerContactIdsRequest.prisonerContactIds.toSet())
 
   @PostMapping("/{prisonerContactId}/restriction", consumes = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(

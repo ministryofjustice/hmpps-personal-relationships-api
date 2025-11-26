@@ -13,8 +13,12 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdateContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactRestrictionDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.GlobalContactRestriction
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestriction
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionDetails
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictions
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRestrictionsResponse
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactsRestrictionsResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRestrictionDetailsRepository
@@ -94,6 +98,70 @@ class RestrictionsService(
       },
       contactGlobalRestrictions = getGlobalRestrictionsForContact(prisonerContact.contactId),
     )
+  }
+
+  fun getPrisonerContactRestrictions(prisonerContactIds: Set<Long>): PrisonerContactsRestrictionsResponse {
+    val prisonerContactRestrictions = buildList {
+      prisonerContactRepository.findAllById(prisonerContactIds)
+        .forEach { prisonerContact ->
+
+          val prisonerContactRestrictions = run {
+            val restrictionsWithEnteredBy = prisonerContactRestrictionDetailsRepository.findAllByPrisonerContactId(prisonerContact.prisonerContactId)
+              .map { entity -> entity to (entity.updatedBy ?: entity.createdBy) }
+
+            val enteredByMap = restrictionsWithEnteredBy
+              .map { (_, enteredByUsername) -> enteredByUsername }
+              .toSet().associateWith { enteredByUsername -> manageUsersService.getUserByUsername(enteredByUsername)?.name ?: enteredByUsername }
+
+            restrictionsWithEnteredBy.map { (entity, enteredByUsername) ->
+              PrisonerContactRestriction(
+                prisonerContactRestrictionId = entity.prisonerContactRestrictionId,
+                prisonerContactId = prisonerContact.prisonerContactId,
+                contactId = prisonerContact.contactId,
+                prisonerNumber = prisonerContact.prisonerNumber,
+                restrictionType = entity.restrictionType,
+                restrictionTypeDescription = entity.restrictionTypeDescription,
+                startDate = entity.startDate,
+                expiryDate = entity.expiryDate,
+                comments = entity.comments,
+                enteredByDisplayName = enteredByMap[enteredByUsername] ?: enteredByUsername,
+              )
+            }
+          }
+
+          val globalContactRestrictions = run {
+            val restrictionsWithEnteredBy = contactRestrictionDetailsRepository.findAllByContactId(prisonerContact.contactId)
+              .map { entity -> entity to (entity.updatedBy ?: entity.createdBy) }
+
+            val enteredByMap = restrictionsWithEnteredBy
+              .map { (_, enteredByUsername) -> enteredByUsername }
+              .toSet().associateWith { enteredByUsername -> manageUsersService.getUserByUsername(enteredByUsername)?.name ?: enteredByUsername }
+
+            restrictionsWithEnteredBy.map { (entity, enteredByUsername) ->
+              GlobalContactRestriction(
+                contactRestrictionId = entity.contactRestrictionId,
+                contactId = entity.contactId,
+                restrictionType = entity.restrictionType,
+                restrictionTypeDescription = entity.restrictionTypeDescription,
+                startDate = entity.startDate,
+                expiryDate = entity.expiryDate,
+                comments = entity.comments,
+                enteredByDisplayName = enteredByMap[enteredByUsername] ?: enteredByUsername,
+              )
+            }
+          }
+
+          add(
+            PrisonerContactRestrictions(
+              prisonerContactId = prisonerContact.prisonerContactId,
+              prisonerContactRestrictions = prisonerContactRestrictions,
+              globalContactRestrictions = globalContactRestrictions,
+            ),
+          )
+        }
+    }
+
+    return PrisonerContactsRestrictionsResponse(prisonerContactRestrictions)
   }
 
   fun createContactGlobalRestriction(
