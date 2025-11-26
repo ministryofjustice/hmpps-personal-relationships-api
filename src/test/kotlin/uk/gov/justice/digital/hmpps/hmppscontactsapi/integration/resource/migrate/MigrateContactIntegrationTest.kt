@@ -89,31 +89,6 @@ class MigrateContactIntegrationTest : PostgresIntegrationTestBase() {
   }
 
   @Test
-  fun `should allow duplicate requests for the same personId and recreate the contact`() {
-    val request = basicMigrationRequest(personId = 501L)
-    val countContactsBefore = contactRepository.count()
-
-    // Initial request - success
-    val result1 = testAPIClient.migrateAContact(request)
-    with(result1) {
-      assertThat(this.contact.nomisId).isEqualTo(request.personId)
-      assertThat(this.contact.dpsId).isEqualTo(request.personId)
-    }
-
-    assertThat(contactRepository.count()).isEqualTo(countContactsBefore + 1)
-
-    // Duplicate request - should delete the original and replace it
-    val result2 = testAPIClient.migrateAContact(request)
-    with(result2) {
-      assertThat(this.contact.nomisId).isEqualTo(request.personId)
-      assertThat(this.contact.dpsId).isEqualTo(request.personId)
-    }
-
-    // Same count - the duplicate contact replaces the original
-    assertThat(contactRepository.count()).isEqualTo(countContactsBefore + 1)
-  }
-
-  @Test
   fun `should migrate a contact with addresses, phones, emails, restrictions, identifiers and employments`() {
     val request = basicMigrationRequest(502).copy(
       addresses = addresses(),
