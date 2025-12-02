@@ -4,6 +4,9 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntit
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreatePrisonerContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerContact
 
+// NO Change is required - create prisoner contact mapping
+// - approved by and approved time will be set to null as by default when you create a new prisoner contact in NOMIS , the approved to visit flag is set to false.
+
 fun SyncCreatePrisonerContactRequest.toEntity(): PrisonerContactEntity = PrisonerContactEntity(
   prisonerContactId = 0L,
   contactId = this.contactId,

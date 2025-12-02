@@ -55,8 +55,9 @@ class SyncAdminService(
     prisonerContactRepository.deleteAllByPrisonerNumber(request.removedPrisonerNumber)
     prisonerContactRepository.deleteAllByPrisonerNumber(request.retainedPrisonerNumber)
 
-    // Recreate the relationships and restrictions provided for the retained prisoner number only
-    val relationshipPairs = extractAndSavePrisonerContacts(request.prisonerContacts)
+    // removed relationships have been decided by NOMIS based on the last updated record,
+    // Therefore, we need to try and find approved by details from the retained relationships
+    val relationshipPairs = extractAndSavePrisonerContacts(request.prisonerContacts, relationshipsForRetainedPrisoner)
     val restrictionPairs = extractAndSavePrisonerContactRestrictions(request.prisonerContacts, relationshipPairs)
 
     // Build the response objects for relationships and restrictions that were removed
@@ -97,7 +98,7 @@ class SyncAdminService(
     prisonerContactRepository.deleteAllByPrisonerNumber(request.prisonerNumber)
 
     // Recreate the relationships and restrictions provided for this prisoner
-    val relationshipPairs = extractAndSavePrisonerContacts(request.prisonerContacts)
+    val relationshipPairs = extractAndSavePrisonerContacts(request.prisonerContacts, relationshipsForPrisoner)
     val restrictionPairs = extractAndSavePrisonerContactRestrictions(request.prisonerContacts, relationshipPairs)
 
     // Build a list of the IDs for relationships that were removed
@@ -141,31 +142,69 @@ class SyncAdminService(
     }
   }.flatten()
 
-  private fun extractAndSavePrisonerContacts(prisonerContacts: List<SyncPrisonerRelationship>) = prisonerContacts.map { relationship ->
+  private fun extractAndSavePrisonerContacts(
+    prisonerContacts: List<SyncPrisonerRelationship>,
+    existingPrisonerContacts: List<PrisonerContactEntity>,
+  ): List<Pair<Long, PrisonerContactEntity>> {
+    val resettingPrisonerContacts = prisonerContacts.map { relationship ->
+      val approvedByDetails = relationship
+        // check if the approved visitor flag is set to true in the request
+        .takeIf { it.approvedVisitor }
+        // Try to find corresponding approved details from previous records of the keeping prisoner
+        ?.let { findApprovedByDetailsFromExistingRecord(existingPrisonerContacts, it) }
+
+      EnrichedPrisonerContactRequestUpdated(
+        prisonerContact = relationship,
+        approvedBy = approvedByDetails?.approvedBy,
+        approvedTime = approvedByDetails?.approvedTime,
+      )
+    }
+
+    return getUpdatedRelationships(resettingPrisonerContacts)
+  }
+
+  private fun getUpdatedRelationships(resettingPrisonerContacts: List<EnrichedPrisonerContactRequestUpdated>) = resettingPrisonerContacts.map { relationshipUpdate ->
+    val prisonerContact = relationshipUpdate.prisonerContact
     Pair(
-      relationship.id,
+      prisonerContact.id,
       prisonerContactRepository.save(
         PrisonerContactEntity(
           prisonerContactId = 0L,
-          contactId = relationship.contactId,
-          prisonerNumber = relationship.prisonerNumber,
-          relationshipType = relationship.contactType.code,
-          relationshipToPrisoner = relationship.relationshipType.code,
-          nextOfKin = relationship.nextOfKin,
-          emergencyContact = relationship.emergencyContact,
-          comments = relationship.comment,
-          active = relationship.active,
-          approvedVisitor = relationship.approvedVisitor,
-          currentTerm = relationship.currentTerm,
-          createdBy = relationship.createUsername ?: "SYSTEM",
-          createdTime = relationship.createDateTime ?: LocalDateTime.now(),
+          contactId = prisonerContact.contactId,
+          prisonerNumber = prisonerContact.prisonerNumber,
+          relationshipType = prisonerContact.contactType.code,
+          relationshipToPrisoner = prisonerContact.relationshipType.code,
+          nextOfKin = prisonerContact.nextOfKin,
+          emergencyContact = prisonerContact.emergencyContact,
+          comments = prisonerContact.comment,
+          active = prisonerContact.active,
+          approvedVisitor = prisonerContact.approvedVisitor,
+          currentTerm = prisonerContact.currentTerm,
+          createdBy = prisonerContact.createUsername ?: "SYSTEM",
+          createdTime = prisonerContact.createDateTime ?: LocalDateTime.now(),
         ).also {
-          it.updatedBy = relationship.modifyUsername
-          it.updatedTime = relationship.modifyDateTime
-          it.expiryDate = relationship.expiryDate
+          // when recreating a relationship during reset records scenarios, approved by and approved time set with value from the existing records
+          it.approvedBy = relationshipUpdate.approvedBy
+          it.approvedTime = relationshipUpdate.approvedTime
+          it.updatedBy = prisonerContact.modifyUsername
+          it.updatedTime = prisonerContact.modifyDateTime
+          it.expiryDate = prisonerContact.expiryDate
         },
       ),
     )
+  }
+
+  // Find the approved by and approved time from the resettingPrisonerContacts when approved visitor is set to true in both incoming and resetting records
+  // this is to ensure that the approved by and approved time is not lost during reset process
+  private fun findApprovedByDetailsFromExistingRecord(
+    resettingPrisonerContacts: List<PrisonerContactEntity>,
+    incomingRelationship: SyncPrisonerRelationship,
+  ) = resettingPrisonerContacts.find {
+    it.contactId == incomingRelationship.contactId &&
+      it.prisonerNumber == incomingRelationship.prisonerNumber &&
+      it.relationshipType == incomingRelationship.contactType.code &&
+      it.relationshipToPrisoner == incomingRelationship.relationshipType.code &&
+      it.approvedVisitor
   }
 
   private fun extractAndSavePrisonerContactRestrictions(
@@ -199,3 +238,13 @@ class SyncAdminService(
     )
   }
 }
+
+data class EnrichedPrisonerContactRequestUpdated(
+
+  val prisonerContact: SyncPrisonerRelationship,
+
+  val approvedBy: String? = null,
+
+  val approvedTime: LocalDateTime? = null,
+
+)
