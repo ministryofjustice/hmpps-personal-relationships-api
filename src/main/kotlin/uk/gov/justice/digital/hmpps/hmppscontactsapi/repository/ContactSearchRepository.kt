@@ -7,7 +7,6 @@ import jakarta.persistence.criteria.CriteriaQuery
 import jakarta.persistence.criteria.Order
 import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
-import jakarta.persistence.criteria.Subquery
 import org.hibernate.query.NullPrecedence
 import org.hibernate.query.criteria.HibernateCriteriaBuilder
 import org.hibernate.query.criteria.JpaOrder
@@ -15,8 +14,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAuditPk
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntityAudit
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.mapSortPropertiesOfContactSearch
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
@@ -98,13 +95,30 @@ class ContactSearchRepository(
     if (cb !is HibernateCriteriaBuilder) {
       throw RuntimeException("Configuration issue. Cannot do ilike unless using hibernate.")
     }
+    if (request.soundsLike) {
+      val lastNameSoundex = cb.function("soundex", String::class.java, contact.get<String>("lastName"))
+      val lastNameInputSoundex = cb.function("soundex", String::class.java, cb.literal(request.lastName))
+      predicates.add(cb.equal(lastNameSoundex, lastNameInputSoundex))
 
-    // Build predicates for current name OR historical names
-    val namePredicates = buildNamePredicates(request, cb, contact)
-    if (namePredicates.isNotEmpty()) {
-      predicates.add(cb.or(*namePredicates.toTypedArray()))
+      request.firstName?.let {
+        val fnSoundex = cb.function("soundex", String::class.java, contact.get<String>("firstName"))
+        val fnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
+        predicates.add(cb.equal(fnSoundex, fnInputSoundex))
+      }
+      request.middleNames?.let {
+        val mnSoundex = cb.function("soundex", String::class.java, contact.get<String>("middleNames"))
+        val mnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
+        predicates.add(cb.equal(mnSoundex, mnInputSoundex))
+      }
+    } else {
+      predicates.add(cb.ilike(contact.get("lastName"), "%${request.lastName}%", '#'))
+      request.firstName?.let {
+        predicates.add(cb.ilike(contact.get("firstName"), "%$it%", '#'))
+      }
+      request.middleNames?.let {
+        predicates.add(cb.ilike(contact.get("middleNames"), "%$it%", '#'))
+      }
     }
-
     // partial match on contactId by converting to string
     request.contactId?.let {
       if (request.contactId.isNotEmpty()) {
@@ -122,100 +136,5 @@ class ContactSearchRepository(
     }
 
     return predicates
-  }
-
-  private fun buildNamePredicates(
-    request: ContactSearchRequest,
-    cb: HibernateCriteriaBuilder,
-    contact: Root<ContactWithAddressEntity>,
-  ): List<Predicate> {
-    val namePredicates: MutableList<Predicate> = ArrayList()
-
-    // Current name matching
-    val currentNamePredicates = buildCurrentNamePredicates(request, cb, contact)
-    namePredicates.add(cb.and(*currentNamePredicates.toTypedArray()))
-
-    // Historical name matching from audit table
-    val historicalNamePredicate = buildHistoricalNamePredicate(request, cb, contact)
-    namePredicates.add(historicalNamePredicate)
-
-    return namePredicates
-  }
-
-  private fun buildCurrentNamePredicates(
-    request: ContactSearchRequest,
-    cb: HibernateCriteriaBuilder,
-    contact: Root<ContactWithAddressEntity>,
-  ): List<Predicate> {
-    val currentPredicates: MutableList<Predicate> = ArrayList()
-
-    if (request.soundsLike) {
-      val lastNameSoundex = cb.function("soundex", String::class.java, contact.get<String>("lastName"))
-      val lastNameInputSoundex = cb.function("soundex", String::class.java, cb.literal(request.lastName))
-      currentPredicates.add(cb.equal(lastNameSoundex, lastNameInputSoundex))
-
-      request.firstName?.let {
-        val fnSoundex = cb.function("soundex", String::class.java, contact.get<String>("firstName"))
-        val fnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
-        currentPredicates.add(cb.equal(fnSoundex, fnInputSoundex))
-      }
-      request.middleNames?.let {
-        val mnSoundex = cb.function("soundex", String::class.java, contact.get<String>("middleNames"))
-        val mnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
-        currentPredicates.add(cb.equal(mnSoundex, mnInputSoundex))
-      }
-    } else {
-      currentPredicates.add(cb.ilike(contact.get("lastName"), "%${request.lastName}%", '#'))
-      request.firstName?.let {
-        currentPredicates.add(cb.ilike(contact.get("firstName"), "%$it%", '#'))
-      }
-      request.middleNames?.let {
-        currentPredicates.add(cb.ilike(contact.get("middleNames"), "%$it%", '#'))
-      }
-    }
-
-    return currentPredicates
-  }
-
-  private fun buildHistoricalNamePredicate(
-    request: ContactSearchRequest,
-    cb: HibernateCriteriaBuilder,
-    contact: Root<ContactWithAddressEntity>,
-  ): Predicate {
-    val subquery: Subquery<Long> = cb.createQuery().subquery(Long::class.java)
-    val auditContact = subquery.from(ContactEntityAudit::class.java)
-
-    subquery.select(auditContact.get<ContactAuditPk>("id").get("contactId"))
-
-    val auditPredicates: MutableList<Predicate> = ArrayList()
-
-    if (request.soundsLike) {
-      val lastNameSoundex = cb.function("soundex", String::class.java, auditContact.get<String>("lastName"))
-      val lastNameInputSoundex = cb.function("soundex", String::class.java, cb.literal(request.lastName))
-      auditPredicates.add(cb.equal(lastNameSoundex, lastNameInputSoundex))
-
-      request.firstName?.let {
-        val fnSoundex = cb.function("soundex", String::class.java, auditContact.get<String>("firstName"))
-        val fnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
-        auditPredicates.add(cb.equal(fnSoundex, fnInputSoundex))
-      }
-      request.middleNames?.let {
-        val mnSoundex = cb.function("soundex", String::class.java, auditContact.get<String>("middleNames"))
-        val mnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
-        auditPredicates.add(cb.equal(mnSoundex, mnInputSoundex))
-      }
-    } else {
-      auditPredicates.add(cb.like(cb.lower(auditContact.get("lastName")), "%${request.lastName.lowercase()}%"))
-      request.firstName?.let {
-        auditPredicates.add(cb.like(cb.lower(auditContact.get("firstName")), "%${it.lowercase()}%"))
-      }
-      request.middleNames?.let {
-        auditPredicates.add(cb.like(cb.lower(auditContact.get("middleNames")), "%${it.lowercase()}%"))
-      }
-    }
-
-    subquery.where(*auditPredicates.toTypedArray())
-
-    return contact.get<Long>("contactId").`in`(subquery)
   }
 }
