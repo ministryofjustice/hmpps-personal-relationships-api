@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreatePrisonerContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncPrisonerContact
+import java.time.LocalDateTime
 
 fun SyncCreatePrisonerContactRequest.toEntity(): PrisonerContactEntity = PrisonerContactEntity(
   prisonerContactId = 0L,
@@ -19,6 +20,14 @@ fun SyncCreatePrisonerContactRequest.toEntity(): PrisonerContactEntity = Prisone
   createdBy = this.createdBy,
   createdTime = this.createdTime,
 ).also {
+  if (this.approvedVisitor == true) {
+    // Set approved fields if approvedVisitor is true
+    it.approvedBy = this.createdBy
+    it.approvedTime = LocalDateTime.now()
+  } else {
+    it.approvedBy = null
+    it.approvedTime = null
+  }
   it.expiryDate = this.expiryDate
   it.createdAtPrison = this.createdAtPrison
 }

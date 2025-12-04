@@ -363,6 +363,14 @@ class ContactMigrationService(
           createdBy = relationship.createUsername ?: "MIGRATION",
           createdTime = relationship.createDateTime ?: LocalDateTime.now(),
         ).also {
+          if (relationship.approvedVisitor) {
+            // Set approvedBy and approvedTime if approvedVisitor is true
+            it.approvedBy = relationship.createUsername
+            it.approvedTime = relationship.createDateTime
+          } else {
+            it.approvedBy = null
+            it.approvedTime = null
+          }
           it.updatedBy = relationship.modifyUsername
           it.updatedTime = relationship.modifyDateTime
           it.expiryDate = relationship.expiryDate

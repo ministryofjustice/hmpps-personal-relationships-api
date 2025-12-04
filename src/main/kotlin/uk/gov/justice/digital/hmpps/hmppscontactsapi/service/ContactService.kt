@@ -404,7 +404,7 @@ class ContactService(
     )
   }
 
-  fun assessIfRelationshipCanBeDeleted(prisonerContactId: Long, user: User): RelationshipDeletePlan {
+  fun assessIfRelationshipCanBeDeleted(prisonerContactId: Long): RelationshipDeletePlan {
     val relationship = requirePrisonerContactEntity(prisonerContactId)
     val hasRestrictions = hasPrisonerContactRestrictions(prisonerContactId)
     val remainingRelationships = getRemainingRelationships(relationship, prisonerContactId)
@@ -466,8 +466,20 @@ class ContactService(
     relationshipToPrisoner = request.relationshipToPrisonerCode.orElse(this.relationshipToPrisoner),
     comments = request.comments.orElse(this.comments),
   ).also {
-    it.approvedBy = this.approvedBy
-    it.approvedTime = this.approvedTime
+    val approvedVisitor = request.isApprovedVisitor
+
+    if (approvedVisitor.isPresent) {
+      if (approvedVisitor.get() == true) {
+        it.approvedBy = user.username
+        it.approvedTime = LocalDateTime.now()
+      } else {
+        it.approvedBy = null
+        it.approvedTime = null
+      }
+    } else {
+      it.approvedBy = this.approvedBy
+      it.approvedTime = this.approvedTime
+    }
     it.expiryDate = this.expiryDate
     it.createdAtPrison = this.createdAtPrison
     it.updatedBy = user.username
@@ -648,7 +660,12 @@ class ContactService(
     val createdAfter = LocalDateTime.now().minusDays(daysAgo)
 
     val relationshipsSaved = prisonerContactRepository.getRelationshipsToApprove(createdAfter, createdByList).map { r ->
-      prisonerContactRepository.saveAndFlush(r.copy(approvedVisitor = true))
+      val updatedRelationship = r.copy(approvedVisitor = true).also {
+        // this is utility function only used by system user to approve relationships in the event of reconciliation jobs
+        it.approvedBy = User.SYS_USER.username
+        it.approvedTime = LocalDateTime.now()
+      }
+      prisonerContactRepository.saveAndFlush(updatedRelationship)
     }
 
     return relationshipsSaved.map { r ->
