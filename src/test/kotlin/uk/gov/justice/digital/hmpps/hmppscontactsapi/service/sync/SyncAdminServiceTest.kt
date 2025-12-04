@@ -171,7 +171,7 @@ class SyncAdminServiceTest {
     }
 
     @Test
-    fun `should preserve approved visitor details during merge when approved visitor is true`() {
+    fun `should preserve latest approved visitor details during merge when approved visitor is true`() {
       val fixedTime = LocalDateTime.now()
       val request = createMergePrisonerContactRequest(
         listOf(createSyncPrisonerRelationship(approvedVisitor = true)),
@@ -191,7 +191,7 @@ class SyncAdminServiceTest {
           100L,
           approvedVisitor = true,
           approvedBy = "APPROVER_RETAINED",
-          approvedTime = fixedTime.minusDays(1),
+          approvedTime = fixedTime.minusDays(1), // latest approved time
         ),
       )
 
