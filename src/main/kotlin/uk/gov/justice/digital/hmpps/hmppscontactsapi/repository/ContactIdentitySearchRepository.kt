@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.mapSortPropertiesOfContactSearch
+import java.time.LocalDate
 
 @Repository
 class ContactIdentitySearchRepository(
@@ -25,13 +26,17 @@ class ContactIdentitySearchRepository(
     private const val MAX_CONTACT_ID_LENGTH = 20
   }
 
-  fun searchByContactId(contactId: String, pageable: Pageable): Page<ContactEntity> {
+  fun searchContactsByIdPartialMatch(
+    contactId: String,
+    dateOfBirth: LocalDate?,
+    pageable: Pageable,
+  ): Page<ContactEntity> {
     val cb = entityManager.criteriaBuilder
     val cq = cb.createQuery(ContactEntity::class.java)
     val contact = cq.from(ContactEntity::class.java)
 
     val sanitized = sanitizeContactId(contactId)
-    val predicates = buildPredicatesForContactId(sanitized, cb, contact)
+    val predicates = buildPredicatesForContactId(sanitized, dateOfBirth, cb, contact)
 
     cq.where(*predicates.toTypedArray())
 
@@ -42,16 +47,16 @@ class ContactIdentitySearchRepository(
       .setMaxResults(pageable.pageSize)
       .resultList
 
-    val total = countBySanitizedContactId(sanitized)
+    val total = countBySanitizedContactId(sanitized, dateOfBirth)
     return PageImpl(results, pageable, total)
   }
 
-  private fun countBySanitizedContactId(sanitizedContactId: String): Long {
+  private fun countBySanitizedContactId(sanitizedContactId: String, dateOfBirth: LocalDate?): Long {
     val cb = entityManager.criteriaBuilder
     val countQuery = cb.createQuery(Long::class.java)
     val contact = countQuery.from(ContactEntity::class.java)
 
-    val predicates = buildPredicatesForContactId(sanitizedContactId, cb, contact)
+    val predicates = buildPredicatesForContactId(sanitizedContactId, dateOfBirth, cb, contact)
     countQuery.select(cb.count(contact)).where(*predicates.toTypedArray())
     return entityManager.createQuery(countQuery).singleResult
   }
@@ -66,10 +71,17 @@ class ContactIdentitySearchRepository(
 
     val orders: List<Order> = pageable.sort.map { sort ->
       val property = mapSortPropertiesOfContactSearch(sort.property)
-      var order: Order = if (sort.isAscending) cb.asc(contact.get<String>(property)) else cb.desc(contact.get<String>(property))
+      var order: Order =
+        if (sort.isAscending) cb.asc(contact.get<String>(property)) else cb.desc(contact.get<String>(property))
 
       if (property == ContactEntity::dateOfBirth.name && order is JpaOrder) {
-        order = if (sort.isAscending) order.nullPrecedence(NullPrecedence.FIRST) else order.nullPrecedence(NullPrecedence.LAST)
+        order = if (sort.isAscending) {
+          order.nullPrecedence(NullPrecedence.FIRST)
+        } else {
+          order.nullPrecedence(
+            NullPrecedence.LAST,
+          )
+        }
       }
 
       order
@@ -84,6 +96,7 @@ class ContactIdentitySearchRepository(
   // Helper: builds predicates for a sanitized contact id (or an always-false predicate if empty)
   private fun buildPredicatesForContactId(
     sanitizedContactId: String,
+    dateOfBirth: LocalDate?,
     cb: CriteriaBuilder,
     contact: Root<ContactEntity>,
   ): MutableList<Predicate> {
@@ -97,6 +110,15 @@ class ContactIdentitySearchRepository(
 
     val contactIdAsString = contactIdAsString(cb, contact)
     predicates.add(cb.like(contactIdAsString, "%$sanitizedContactId%"))
+
+    dateOfBirth?.let {
+      predicates.add(
+        cb.equal(
+          contact.get<LocalDate>("dateOfBirth"),
+          dateOfBirth,
+        ),
+      )
+    }
 
     return predicates
   }

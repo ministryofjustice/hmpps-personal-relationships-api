@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAdvancedS
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactIdentitySearchRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactSummaryRepository
+import java.time.LocalDate
 import kotlin.collections.get
 
 @Service
@@ -78,13 +79,18 @@ class ContactSearchService(
   }
 
   @Transactional(readOnly = true)
-  fun searchContactsById(
-    pageable: Pageable,
+  fun searchContactsByIdPartialMatch(
     contactId: String,
+    dateOfBirth: LocalDate?,
     includeAnyExistingRelationshipsToPrisoner: String?,
+    pageable: Pageable,
   ): Page<AdvancedContactSearchResultItem> {
     val prisonerNumber = includeAnyExistingRelationshipsToPrisoner
-    val matchingContactsPage = contactIdentitySearchRepository.searchByContactId(contactId, pageable)
+    val matchingContactsPage = contactIdentitySearchRepository.searchContactsByIdPartialMatch(
+      contactId,
+      dateOfBirth,
+      pageable,
+    )
 
     val contactIdList = matchingContactsPage.content.map { it.contactId!! }
     val contactExistingRelationships = if (!prisonerNumber.isNullOrBlank()) {

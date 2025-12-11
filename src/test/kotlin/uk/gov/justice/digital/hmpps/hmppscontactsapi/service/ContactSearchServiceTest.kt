@@ -210,7 +210,7 @@ class ContactSearchServiceTest {
       val pageContacts = PageImpl(listOf(contact), pageable, 1L)
 
       // When
-      whenever(contactIdentitySearchRepository.searchByContactId("C123", pageable)).thenReturn(pageContacts)
+      whenever(contactIdentitySearchRepository.searchContactsByIdPartialMatch("C123", LocalDate.of(2004, 6, 11), pageable)).thenReturn(pageContacts)
       whenever(prisonerContactSummaryRepository.findByPrisonerNumberAndContactIdIn("A1234BC", listOf(42L)))
         .thenReturn(
           listOf(
@@ -264,10 +264,10 @@ class ContactSearchServiceTest {
         )
 
       // Act
-      val result = service.searchContactsById(pageable, "C123", "A1234BC")
+      val result = service.searchContactsByIdPartialMatch("C123", LocalDate.of(2004, 6, 11), "A1234BC", pageable)
 
       // Then
-      verify(contactIdentitySearchRepository).searchByContactId("C123", pageable)
+      verify(contactIdentitySearchRepository).searchContactsByIdPartialMatch("C123", LocalDate.of(2004, 6, 11), pageable)
       verify(prisonerContactSummaryRepository).findByPrisonerNumberAndContactIdIn("A1234BC", listOf(42L))
       assertThat(result.content[0].existingRelationships).isEqualTo(
         listOf(

@@ -323,9 +323,9 @@ class ContactController(
     ),
   )
 
-  @GetMapping("/search/contact-id")
+  @GetMapping("/search/partial-contact-id")
   @Operation(
-    summary = "Search contacts by contact id",
+    summary = "Search contacts by partial contact id",
     description = "Search contacts by a partial match on contact id (contact id as string). Returns contacts whose contactId string contains the provided value.",
   )
   @ApiResponses(
@@ -343,12 +343,21 @@ class ContactController(
   )
   @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__R', 'ROLE_CONTACTS__RW')")
   @PageableAsQueryParam
-  fun searchContactsById(
+  fun searchContactsByIdPartialMatch(
     @Parameter(hidden = true)
     pageable: Pageable,
     @Parameter(`in` = ParameterIn.QUERY, description = "The contact id (partial match)", example = "123", required = true)
     @NotBlank(message = "must not be blank")
     contactId: String,
+    @Parameter(
+      `in` = ParameterIn.QUERY,
+      description = "Date of Birth of the contact in dd/MM/yyyy format",
+      example = "30/12/2010",
+      required = false,
+    )
+    @Past(message = "The date of birth must be in the past")
+    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    dateOfBirth: LocalDate?,
     @Parameter(
       `in` = ParameterIn.QUERY,
       description = "If a prisoner number is specified, check all matching contacts for any existing relationships to the prisoner.",
@@ -357,7 +366,12 @@ class ContactController(
     )
     @Pattern(regexp = VALID_LETTER_OR_NUMBER_REGEX, message = VALID_LETTER_OR_NUMBER_MESSAGE)
     includeAnyExistingRelationshipsToPrisoner: String?,
-  ): PagedModel<AdvancedContactSearchResultItem> = contactFacade.searchContactsById(pageable, contactId, includeAnyExistingRelationshipsToPrisoner)
+  ): PagedModel<AdvancedContactSearchResultItem> = contactFacade.searchContactsByIdPartialMatch(
+    contactId,
+    dateOfBirth,
+    includeAnyExistingRelationshipsToPrisoner,
+    pageable,
+  )
 
   @PatchMapping("/{contactId}")
   @Operation(

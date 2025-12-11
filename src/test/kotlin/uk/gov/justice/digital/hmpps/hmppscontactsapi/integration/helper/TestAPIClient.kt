@@ -718,7 +718,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .returnResult().responseBody!!
 
   fun getSearchContactsById(contactId: String, includeAnyExistingRelationshipsToPrisoner: String? = null) = webTestClient.get()
-    .uri("/contact/search/contact-id?contactId=$contactId${includeAnyExistingRelationshipsToPrisoner?.let { "&includeAnyExistingRelationshipsToPrisoner=$it" } ?: ""}")
+    .uri("/contact/search/partial-contact-id?contactId=$contactId${includeAnyExistingRelationshipsToPrisoner?.let { "&includeAnyExistingRelationshipsToPrisoner=$it" } ?: ""}")
     .accept(MediaType.APPLICATION_JSON)
     .headers(setAuthorisationUsingCurrentUser())
     .exchange()

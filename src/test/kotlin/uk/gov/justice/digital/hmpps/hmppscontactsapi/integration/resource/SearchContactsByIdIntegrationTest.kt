@@ -26,7 +26,7 @@ class SearchContactsByIdIntegrationTest : SecureAPIIntegrationTestBase() {
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
   override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()
-    .uri("/contact/search/contact-id?contactId=$contactId")
+    .uri("/contact/search/partial-contact-id?contactId=$contactId")
     .accept(MediaType.APPLICATION_JSON)
 
   @Test

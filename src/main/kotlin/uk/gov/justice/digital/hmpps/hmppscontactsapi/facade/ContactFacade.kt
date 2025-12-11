@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.Source
+import java.time.LocalDate
 
 @Service
 class ContactFacade(
@@ -145,7 +146,19 @@ class ContactFacade(
 
   fun advancedSearchContacts(pageable: Pageable, request: AdvancedContactSearchRequest): PagedModel<AdvancedContactSearchResultItem> = PagedModel(contactSearchService.advancedContactSearch(pageable, request))
 
-  fun searchContactsById(pageable: Pageable, contactId: String, includeAnyExistingRelationshipsToPrisoner: String?): PagedModel<AdvancedContactSearchResultItem> = PagedModel(contactSearchService.searchContactsById(pageable, contactId, includeAnyExistingRelationshipsToPrisoner))
+  fun searchContactsByIdPartialMatch(
+    contactId: String,
+    dateOfBirth: LocalDate?,
+    includeAnyExistingRelationshipsToPrisoner: String?,
+    pageable: Pageable,
+  ): PagedModel<AdvancedContactSearchResultItem> = PagedModel(
+    contactSearchService.searchContactsByIdPartialMatch(
+      contactId,
+      dateOfBirth,
+      includeAnyExistingRelationshipsToPrisoner,
+      pageable,
+    ),
+  )
 
   fun patchRelationship(prisonerContactId: Long, request: PatchRelationshipRequest, user: User) {
     contactService.updateContactRelationship(prisonerContactId, request, user)
