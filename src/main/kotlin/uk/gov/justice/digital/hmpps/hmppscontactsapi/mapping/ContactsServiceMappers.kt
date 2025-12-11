@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEn
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.AdvancedContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ExistingRelationshipToPrisoner
 import java.time.LocalDateTime
@@ -35,6 +36,18 @@ fun ContactWithAddressEntity.toModel(existingRelationships: List<ExistingRelatio
   endDate = this.endDate,
   noFixedAddress = this.noFixedAddress,
   comments = this.comments,
+  existingRelationships = existingRelationships,
+)
+
+fun ContactEntity.toModel(existingRelationships: List<ExistingRelationshipToPrisoner>?) = AdvancedContactSearchResultItem(
+  id = this.contactId!!,
+  lastName = this.lastName,
+  firstName = this.firstName,
+  middleNames = this.middleNames,
+  dateOfBirth = this.dateOfBirth,
+  deceasedDate = this.deceasedDate,
+  createdBy = this.createdBy,
+  createdTime = this.createdTime,
   existingRelationships = existingRelationships,
 )
 
