@@ -6,10 +6,12 @@ import org.springframework.data.web.PagedModel
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AddContactRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AdvancedContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.AdvancedContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAuditEntry
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
@@ -140,6 +142,10 @@ class ContactFacade(
   fun getContactHistory(contactId: Long): List<ContactAuditEntry>? = contactService.getContactHistory(contactId)
 
   fun searchContacts(pageable: Pageable, request: ContactSearchRequest): PagedModel<ContactSearchResultItem> = PagedModel(contactSearchService.searchContacts(pageable, request))
+
+  fun advancedSearchContacts(pageable: Pageable, request: AdvancedContactSearchRequest): PagedModel<AdvancedContactSearchResultItem> = PagedModel(contactSearchService.advancedContactSearch(pageable, request))
+
+  fun searchContactsById(pageable: Pageable, contactId: String, includeAnyExistingRelationshipsToPrisoner: String?): PagedModel<AdvancedContactSearchResultItem> = PagedModel(contactSearchService.searchContactsById(pageable, contactId, includeAnyExistingRelationshipsToPrisoner))
 
   fun patchRelationship(prisonerContactId: Long, request: PatchRelationshipRequest, user: User) {
     contactService.updateContactRelationship(prisonerContactId, request, user)

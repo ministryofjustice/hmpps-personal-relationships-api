@@ -4,51 +4,136 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AdvancedContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.AdvancedContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ExistingRelationshipToPrisoner
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAdvancedSearchRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactIdentitySearchRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactSummaryRepository
+import kotlin.collections.get
 
 @Service
 class ContactSearchService(
   private val contactSearchRepository: ContactSearchRepository,
+  private val contactAdvancedSearchRepository: ContactAdvancedSearchRepository,
+  private val contactIdentitySearchRepository: ContactIdentitySearchRepository,
   private val prisonerContactSummaryRepository: PrisonerContactSummaryRepository,
 ) {
 
   @Transactional(readOnly = true)
   fun searchContacts(pageable: Pageable, request: ContactSearchRequest): Page<ContactSearchResultItem> {
-    val checkForExistingRelationships = request.includeAnyExistingRelationshipsToPrisoner != null
+    val prisonerNumber = request.includeAnyExistingRelationshipsToPrisoner
     val matchingContactsPage = contactSearchRepository.searchContacts(request, pageable)
-    val contactExistingRelationships: Map<Long, List<ExistingRelationshipToPrisoner>> =
-      if (checkForExistingRelationships) {
-        val contactIds = matchingContactsPage.content.map { it.contactId }
-        prisonerContactSummaryRepository
-          .findByPrisonerNumberAndContactIdIn(request.includeAnyExistingRelationshipsToPrisoner, contactIds)
-          .groupBy { it.contactId }
-          .mapValues {
-            it.value.map { summary ->
-              ExistingRelationshipToPrisoner(
-                prisonerContactId = summary.prisonerContactId,
-                relationshipTypeCode = summary.relationshipType,
-                relationshipTypeDescription = summary.relationshipTypeDescription,
-                relationshipToPrisonerCode = summary.relationshipToPrisoner,
-                relationshipToPrisonerDescription = summary.relationshipToPrisonerDescription,
-                isRelationshipActive = summary.active,
-              )
-            }
-          }
-      } else {
-        emptyMap()
-      }
-    return matchingContactsPage.map {
-      val existingRelationships: List<ExistingRelationshipToPrisoner>? = if (checkForExistingRelationships) {
-        contactExistingRelationships[it.contactId] ?: emptyList()
-      } else {
-        null
-      }
-      it.toModel(existingRelationships)
+
+    val contactIdList = matchingContactsPage.content.map { it.contactId!! }
+    val contactExistingRelationships = if (!prisonerNumber.isNullOrBlank()) {
+      mapExistingRelationshipToPrisoner(prisonerNumber, contactIdList)
+    } else {
+      emptyMap()
     }
+    return matchingContactsPage.map { contactWithAddressEntity ->
+      val existingRelationships: List<ExistingRelationshipToPrisoner>? =
+        if (!prisonerNumber.isNullOrBlank()) {
+          contactExistingRelationships[contactWithAddressEntity.contactId]
+            ?: emptyList()
+        } else {
+          null
+        }
+
+      contactWithAddressEntity.toModel(existingRelationships)
+    }
+  }
+
+  @Transactional(readOnly = true)
+  fun advancedContactSearch(
+    pageable: Pageable,
+    request: AdvancedContactSearchRequest,
+  ): Page<AdvancedContactSearchResultItem> {
+    val prisonerNumber = request.includeAnyExistingRelationshipsToPrisoner
+    val matchingContactsPage = performAdvancedSearch(request, pageable)
+
+    val contactIdList = matchingContactsPage.content.map { it.contactId!! }
+    val contactExistingRelationships = if (!prisonerNumber.isNullOrBlank()) {
+      mapExistingRelationshipToPrisoner(prisonerNumber, contactIdList)
+    } else {
+      emptyMap()
+    }
+
+    return matchingContactsPage.map { contactEntity ->
+      val existingRelationships: List<ExistingRelationshipToPrisoner>? =
+        if (!prisonerNumber.isNullOrBlank()) {
+          contactExistingRelationships[contactEntity.contactId]
+            ?: emptyList()
+        } else {
+          null
+        }
+
+      contactEntity.toModel(existingRelationships)
+    }
+  }
+
+  @Transactional(readOnly = true)
+  fun searchContactsById(
+    pageable: Pageable,
+    contactId: String,
+    includeAnyExistingRelationshipsToPrisoner: String?,
+  ): Page<AdvancedContactSearchResultItem> {
+    val prisonerNumber = includeAnyExistingRelationshipsToPrisoner
+    val matchingContactsPage = contactIdentitySearchRepository.searchByContactId(contactId, pageable)
+
+    val contactIdList = matchingContactsPage.content.map { it.contactId!! }
+    val contactExistingRelationships = if (!prisonerNumber.isNullOrBlank()) {
+      mapExistingRelationshipToPrisoner(prisonerNumber, contactIdList)
+    } else {
+      emptyMap()
+    }
+
+    return matchingContactsPage.map { contactEntity ->
+      val existingRelationships: List<ExistingRelationshipToPrisoner>? =
+        if (!prisonerNumber.isNullOrBlank()) {
+          contactExistingRelationships[contactEntity.contactId]
+            ?: emptyList()
+        } else {
+          null
+        }
+
+      contactEntity.toModel(existingRelationships)
+    }
+  }
+
+  private fun performAdvancedSearch(
+    request: AdvancedContactSearchRequest,
+    pageable: Pageable,
+  ): Page<ContactEntity> = when {
+    request.soundsLike -> contactAdvancedSearchRepository.phoneticSearchContacts(request, pageable)
+    else -> contactAdvancedSearchRepository.likeSearchContacts(request, pageable)
+  }
+
+  private fun mapExistingRelationshipToPrisoner(
+    prisonerNumber: String,
+    contactIdList: List<Long>,
+  ): Map<Long, List<ExistingRelationshipToPrisoner>> {
+    if (contactIdList.isEmpty()) return emptyMap()
+
+    return prisonerContactSummaryRepository
+      .findByPrisonerNumberAndContactIdIn(prisonerNumber, contactIdList)
+      .groupBy { it.contactId }
+      .mapValues { entry ->
+        entry.value.map { summary ->
+          ExistingRelationshipToPrisoner(
+            prisonerContactId = summary.prisonerContactId,
+            relationshipTypeCode = summary.relationshipType,
+            relationshipTypeDescription = summary.relationshipTypeDescription,
+            relationshipToPrisonerCode = summary.relationshipToPrisoner,
+            relationshipToPrisonerDescription = summary.relationshipToPrisonerDescription,
+            isRelationshipActive = summary.active,
+          )
+        }
+      }
   }
 }
