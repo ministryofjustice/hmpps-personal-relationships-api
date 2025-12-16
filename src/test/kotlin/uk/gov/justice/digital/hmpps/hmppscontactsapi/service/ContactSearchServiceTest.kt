@@ -166,7 +166,7 @@ class ContactSearchServiceTest {
       val contactOne = contactEntity(1L)
       val pageContacts = ContactSearchResultWrapper<ContactEntity>(
         page = PageImpl(listOf(contactOne), pageable, 1L),
-        total=0L,
+        total = 0L,
         truncated = false,
         message = null,
       )
@@ -192,7 +192,7 @@ class ContactSearchServiceTest {
       val contactTwo = contactEntity(2L)
       val pageContacts = ContactSearchResultWrapper<ContactEntity>(
         page = PageImpl(listOf(contactOne, contactTwo), pageable, 2L),
-        total=0L,
+        total = 0L,
         truncated = false,
         message = null,
       )
