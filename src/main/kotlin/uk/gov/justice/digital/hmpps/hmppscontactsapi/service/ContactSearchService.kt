@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AdvancedConta
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.AdvancedContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultWrapper
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ExistingRelationshipToPrisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAdvancedSearchRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactIdentitySearchRepository
@@ -54,18 +55,18 @@ class ContactSearchService(
   fun advancedContactSearch(
     pageable: Pageable,
     request: AdvancedContactSearchRequest,
-  ): Page<AdvancedContactSearchResultItem> {
+  ): ContactSearchResultWrapper<AdvancedContactSearchResultItem> {
     val prisonerNumber = request.includeAnyExistingRelationshipsToPrisoner
-    val matchingContactsPage = performAdvancedSearch(request, pageable)
+    val resultWrapper = performAdvancedSearch(request, pageable)
 
-    val contactIdList = matchingContactsPage.content.map { it.contactId!! }
+    val contactIdList = resultWrapper.page.content.map { it.contactId!! }
     val contactExistingRelationships = if (!prisonerNumber.isNullOrBlank()) {
       mapExistingRelationshipToPrisoner(prisonerNumber, contactIdList)
     } else {
       emptyMap()
     }
 
-    return matchingContactsPage.map { contactEntity ->
+    val mappedPage = resultWrapper.page.map { contactEntity ->
       val existingRelationships: List<ExistingRelationshipToPrisoner>? =
         if (!prisonerNumber.isNullOrBlank()) {
           contactExistingRelationships[contactEntity.contactId]
@@ -76,6 +77,48 @@ class ContactSearchService(
 
       contactEntity.toModel(existingRelationships)
     }
+
+    return ContactSearchResultWrapper(
+      page = mappedPage,
+      total = resultWrapper.total,
+      truncated = resultWrapper.truncated,
+      message = resultWrapper.message,
+    )
+  }
+
+  @Transactional(readOnly = true)
+  fun advancedContactSearchWithMetadata(
+    pageable: Pageable,
+    request: AdvancedContactSearchRequest,
+  ): ContactSearchResultWrapper<AdvancedContactSearchResultItem> {
+    val prisonerNumber = request.includeAnyExistingRelationshipsToPrisoner
+    val resultWrapper = performAdvancedSearch(request, pageable)
+
+    val contactIdList = resultWrapper.page.content.map { it.contactId!! }
+    val contactExistingRelationships = if (!prisonerNumber.isNullOrBlank()) {
+      mapExistingRelationshipToPrisoner(prisonerNumber, contactIdList)
+    } else {
+      emptyMap()
+    }
+
+    val mappedPage = resultWrapper.page.map { contactEntity ->
+      val existingRelationships: List<ExistingRelationshipToPrisoner>? =
+        if (!prisonerNumber.isNullOrBlank()) {
+          contactExistingRelationships[contactEntity.contactId]
+            ?: emptyList()
+        } else {
+          null
+        }
+
+      contactEntity.toModel(existingRelationships)
+    }
+
+    return ContactSearchResultWrapper(
+      page = mappedPage,
+      total = resultWrapper.total,
+      truncated = resultWrapper.truncated,
+      message = resultWrapper.message,
+    )
   }
 
   @Transactional(readOnly = true)
@@ -115,7 +158,7 @@ class ContactSearchService(
   private fun performAdvancedSearch(
     request: AdvancedContactSearchRequest,
     pageable: Pageable,
-  ): Page<ContactEntity> = when {
+  ): ContactSearchResultWrapper<ContactEntity> = when {
     request.soundsLike -> contactAdvancedSearchRepository.phoneticSearchContacts(request, pageable)
     else -> contactAdvancedSearchRepository.likeSearchContacts(request, pageable)
   }

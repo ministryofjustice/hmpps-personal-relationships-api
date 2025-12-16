@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddres
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AdvancedContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultWrapper
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ExistingRelationshipToPrisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAdvancedSearchRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactIdentitySearchRepository
@@ -163,7 +164,12 @@ class ContactSearchServiceTest {
       // Given
       val pageable = PageRequest.of(0, 10)
       val contactOne = contactEntity(1L)
-      val pageContacts = PageImpl(listOf(contactOne), pageable, 1L)
+      val pageContacts = ContactSearchResultWrapper<ContactEntity>(
+        page = PageImpl(listOf(contactOne), pageable, 1L),
+        total=0L,
+        truncated = false,
+        message = null,
+      )
 
       // When
       val request = AdvancedContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1), true, null)
@@ -173,7 +179,7 @@ class ContactSearchServiceTest {
       val result = service.advancedContactSearch(pageable, request)
 
       // Then
-      assertThat(result.totalElements).isEqualTo(1)
+      assertThat(result.page.totalElements).isEqualTo(1)
       verify(contactAdvancedSearchRepository).phoneticSearchContacts(request, pageable)
       verify(prisonerContactSummaryRepository, never()).findByPrisonerNumberAndContactIdIn(any(), any())
     }
@@ -184,7 +190,12 @@ class ContactSearchServiceTest {
       val pageable = PageRequest.of(0, 10)
       val contactOne = contactEntity(1L)
       val contactTwo = contactEntity(2L)
-      val pageContacts = PageImpl(listOf(contactOne, contactTwo), pageable, 2L)
+      val pageContacts = ContactSearchResultWrapper<ContactEntity>(
+        page = PageImpl(listOf(contactOne, contactTwo), pageable, 2L),
+        total=0L,
+        truncated = false,
+        message = null,
+      )
 
       // When
       val request = AdvancedContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1), false, "A9999ZZ")
@@ -196,9 +207,9 @@ class ContactSearchServiceTest {
       val result = service.advancedContactSearch(pageable, request)
 
       // Then
-      assertThat(result.totalElements).isEqualTo(2)
-      assertThat(result.content[0].existingRelationships).isEqualTo(emptyList<ExistingRelationshipToPrisoner>())
-      assertThat(result.content[1].existingRelationships).isEqualTo(emptyList<ExistingRelationshipToPrisoner>())
+      assertThat(result.page.totalElements).isEqualTo(2)
+      assertThat(result.page.content[0].existingRelationships).isEqualTo(emptyList<ExistingRelationshipToPrisoner>())
+      assertThat(result.page.content[1].existingRelationships).isEqualTo(emptyList<ExistingRelationshipToPrisoner>())
       verify(prisonerContactSummaryRepository).findByPrisonerNumberAndContactIdIn("A9999ZZ", listOf(1L, 2L))
     }
 

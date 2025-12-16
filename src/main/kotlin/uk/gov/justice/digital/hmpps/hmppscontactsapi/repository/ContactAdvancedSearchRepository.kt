@@ -10,13 +10,16 @@ import jakarta.persistence.criteria.Root
 import org.hibernate.query.NullPrecedence
 import org.hibernate.query.criteria.HibernateCriteriaBuilder
 import org.hibernate.query.criteria.JpaOrder
-import org.springframework.data.domain.Page
+import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactAuditPk
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntityAudit
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.mapSortPropertiesOfContactSearch
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AdvancedContactSearchRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultWrapper
 import java.time.LocalDate
 
 @Repository
@@ -24,132 +27,204 @@ class ContactAdvancedSearchRepository(
   @PersistenceContext
   private val entityManager: EntityManager,
 ) {
-  fun likeSearchContacts(request: AdvancedContactSearchRequest, pageable: Pageable): Page<ContactEntity> {
-    val cb = entityManager.criteriaBuilder
-    val cq = cb.createQuery(ContactEntity::class.java)
-    val contact = cq.from(ContactEntity::class.java)
 
-    val predicates: List<Predicate> = buildLikeSearchNamesPredicates(request, cb, contact)
-
-    cq.where(*predicates.toTypedArray())
-
-    applyContactSorting(pageable, cq, cb, contact)
-
-    val resultList = entityManager.createQuery(cq)
-      .setFirstResult(pageable.offset.toInt())
-      .setMaxResults(pageable.pageSize)
-      .resultList
-
-    val total = getLikeSearchTotalContactsCount(request)
-
-    return PageImpl(resultList, pageable, total)
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+    private const val MAX_CANDIDATE_IDS = 1000
+    private const val HARD_CAP_THRESHOLD = 500
+    private const val TOO_MANY_RESULTS = "Your search returned a large number of results. Only the top 500 are shown. Refine your search to narrow the results."
   }
 
-  private fun getLikeSearchTotalContactsCount(
+  fun likeSearchContacts(
     request: AdvancedContactSearchRequest,
-  ): Long {
+    pageable: Pageable,
+  ): ContactSearchResultWrapper<ContactEntity> {
     val cb = entityManager.criteriaBuilder
-    val countQuery = cb.createQuery(Long::class.java)
-    val contact = countQuery.from(ContactEntity::class.java)
-
-    val predicates: List<Predicate> = buildLikeSearchNamesPredicates(request, cb, contact)
-
-    countQuery.select(cb.count(contact)).where(*predicates.toTypedArray<Predicate>())
-    return entityManager.createQuery(countQuery).singleResult
-  }
-
-  private fun buildLikeSearchNamesPredicates(
-    request: AdvancedContactSearchRequest,
-    cb: CriteriaBuilder,
-    contact: Root<ContactEntity>,
-  ): MutableList<Predicate> {
-    val predicates: MutableList<Predicate> = mutableListOf()
     if (cb !is HibernateCriteriaBuilder) {
       throw IllegalStateException("Configuration issue. Expected HibernateCriteriaBuilder but received ${cb::class.qualifiedName ?: cb.javaClass.name}")
     }
-    predicates.add(cb.ilike(contact.get("lastName"), "%${request.lastName}%", '#'))
+
+    // 1) collect matching contactIds from the contact table
+    val contactIdQuery = cb.createQuery(Long::class.java)
+    val contactRootForIds = contactIdQuery.from(ContactEntity::class.java)
+    val contactIdPreds = mutableListOf<Predicate>()
+    contactIdPreds.add(cb.ilike(contactRootForIds.get("lastName"), "%${request.lastName}%", '#'))
     request.firstName?.let {
-      predicates.add(cb.ilike(contact.get("firstName"), "%$it%", '#'))
+      contactIdPreds.add(cb.ilike(contactRootForIds.get("firstName"), "%$it%", '#'))
     }
     request.middleNames?.let {
-      predicates.add(cb.ilike(contact.get("middleNames"), "%$it%", '#'))
+      contactIdPreds.add(cb.ilike(contactRootForIds.get("middleNames"), "%$it%", '#'))
     }
-    request.dateOfBirth?.let {
-      predicates.add(
-        cb.equal(
-          contact.get<LocalDate>("dateOfBirth"),
-          request.dateOfBirth,
-        ),
+    contactIdQuery.select(contactRootForIds.get("contactId")).where(*contactIdPreds.toTypedArray())
+    val contactIdsFromContact = entityManager
+      .createQuery(contactIdQuery)
+      .setMaxResults(MAX_CANDIDATE_IDS)
+      .resultList
+    log.info("likeSearchContacts: found ${contactIdsFromContact.size} matching contact IDs from ContactEntity table")
+
+    // 2) collect matching contactIds from the audit table (no EXISTS / JOIN)
+    val auditIdQuery = cb.createQuery(Long::class.java)
+    val auditRootForIds = auditIdQuery.from(ContactEntityAudit::class.java)
+    val auditPreds = mutableListOf<Predicate>()
+    auditPreds.add(cb.ilike(auditRootForIds.get("lastName"), "%${request.lastName}%", '#'))
+    request.firstName?.let {
+      auditPreds.add(cb.ilike(auditRootForIds.get("firstName"), "%$it%", '#'))
+    }
+    request.middleNames?.let {
+      auditPreds.add(cb.ilike(auditRootForIds.get("middleNames"), "%$it%", '#'))
+    }
+    auditIdQuery.select(auditRootForIds.get<ContactAuditPk>("id").get<Long>("contactId"))
+      .where(*auditPreds.toTypedArray())
+    val contactIdsFromAudit = entityManager
+      .createQuery(auditIdQuery)
+      .setMaxResults(MAX_CANDIDATE_IDS)
+      .resultList
+    log.info("likeSearchContacts: found ${contactIdsFromAudit.size} matching contact IDs from ContactAuditEntity table")
+
+    // 3) merge ids and apply optional DOB filter later against contacts
+    var combinedIds = (contactIdsFromContact + contactIdsFromAudit).toSet().toList()
+    if (combinedIds.isEmpty()) {
+      return ContactSearchResultWrapper(
+        page = PageImpl(emptyList(), pageable, 0),
+        total = 0,
+        truncated = false,
+        message = null,
       )
     }
 
-    return predicates
-  }
+    var isTruncated = false
+    var truncationMessage: String? = null
+    if (combinedIds.size > HARD_CAP_THRESHOLD) {
+      log.warn("likeSearchContacts: Large result set of ${combinedIds.size} contact IDs found for lastName='${request.lastName}', firstName='${request.firstName}', middleNames='${request.middleNames}'")
+      isTruncated = true
+      truncationMessage = TOO_MANY_RESULTS
+      combinedIds = combinedIds.take(HARD_CAP_THRESHOLD)
+    }
 
-  fun phoneticSearchContacts(request: AdvancedContactSearchRequest, pageable: Pageable): Page<ContactEntity> {
-    val cb = entityManager.criteriaBuilder
-    val cq = cb.createQuery(ContactEntity::class.java)
-    val contact = cq.from(ContactEntity::class.java)
+    // 4) final query: fetch contacts by id list, apply DOB filter and sorting, with paging
+    val finalCb = entityManager.criteriaBuilder
+    val finalCq = finalCb.createQuery(ContactEntity::class.java)
+    val contact = finalCq.from(ContactEntity::class.java)
 
-    val predicates: List<Predicate> = buildPhoneticSearchPredicates(request, cb, contact)
+    val finalPreds = mutableListOf<Predicate>()
+    finalPreds.add(contact.get<Long>("contactId").`in`(combinedIds))
+    request.dateOfBirth?.let {
+      finalPreds.add(finalCb.equal(contact.get<LocalDate>("dateOfBirth"), it))
+    }
 
-    cq.where(*predicates.toTypedArray())
+    finalCq.select(contact).distinct(true).where(*finalPreds.toTypedArray())
 
-    applyContactSorting(pageable, cq, cb, contact)
+    applyContactSorting(pageable, finalCq, finalCb, contact)
 
-    val resultList = entityManager.createQuery(cq)
+    val query = entityManager.createQuery(finalCq)
       .setFirstResult(pageable.offset.toInt())
       .setMaxResults(pageable.pageSize)
-      .resultList
 
-    val total = getPhoneticSearchTotalCount(request)
+    val resultList = query.resultList
+    val total = combinedIds.size.toLong()
+    val pageResult = PageImpl(resultList, pageable, total)
 
-    return PageImpl(resultList, pageable, total)
+    return ContactSearchResultWrapper(
+      page = pageResult,
+      total = total,
+      truncated = isTruncated,
+      message = truncationMessage,
+    )
   }
 
-  private fun getPhoneticSearchTotalCount(
+  fun phoneticSearchContacts(
     request: AdvancedContactSearchRequest,
-  ): Long {
+    pageable: Pageable,
+  ): ContactSearchResultWrapper<ContactEntity> {
     val cb = entityManager.criteriaBuilder
-    val countQuery = cb.createQuery(Long::class.java)
-    val contact = countQuery.from(ContactEntity::class.java)
+    if (cb !is HibernateCriteriaBuilder) {
+      throw IllegalStateException("Configuration issue. Expected HibernateCriteriaBuilder but received ${cb::class.qualifiedName ?: cb.javaClass.name}")
+    }
 
-    val predicates: List<Predicate> = buildPhoneticSearchPredicates(request, cb, contact)
+    // 1) collect matching contactIds from the contact table (phonetic)
+    val contactIdQuery = cb.createQuery(Long::class.java)
+    val contactRootForIds = contactIdQuery.from(ContactEntity::class.java)
+    val contactIdPreds = buildPhoneticPredicates(request, cb, contactRootForIds)
+    contactIdQuery.select(contactRootForIds.get("contactId")).where(*contactIdPreds.toTypedArray())
+    val contactIdsFromContact = entityManager.createQuery(contactIdQuery).resultList
 
-    countQuery.select(cb.count(contact)).where(*predicates.toTypedArray<Predicate>())
-    return entityManager.createQuery(countQuery).singleResult
+    // 2) collect matching contactIds from the audit table (phonetic, no EXISTS / JOIN)
+    val auditIdQuery = cb.createQuery(Long::class.java)
+    val auditRootForIds = auditIdQuery.from(ContactEntityAudit::class.java)
+    val auditPreds = buildPhoneticPredicates(request, cb, auditRootForIds)
+    auditIdQuery.select(auditRootForIds.get<ContactAuditPk>("id").get<Long>("contactId"))
+      .where(*auditPreds.toTypedArray())
+    val contactIdsFromAudit = entityManager.createQuery(auditIdQuery).resultList
+
+    // 3) merge ids
+    val combinedIds = (contactIdsFromContact + contactIdsFromAudit).toSet().toList()
+    if (combinedIds.isEmpty()) {
+      return ContactSearchResultWrapper(
+        page = PageImpl(emptyList(), pageable, 0),
+        total = 0,
+        truncated = false,
+        message = null,
+      )
+    }
+
+    // 4) final query: fetch contacts by id list, apply DOB filter and sorting, with paging
+    val finalCb = entityManager.criteriaBuilder
+    val finalCq = finalCb.createQuery(ContactEntity::class.java)
+    val contact = finalCq.from(ContactEntity::class.java)
+
+    val finalPreds = mutableListOf<Predicate>()
+    finalPreds.add(contact.get<Long>("contactId").`in`(combinedIds))
+    request.dateOfBirth?.let {
+      finalPreds.add(finalCb.equal(contact.get<LocalDate>("dateOfBirth"), it))
+    }
+
+    finalCq.select(contact).distinct(true).where(*finalPreds.toTypedArray())
+
+    applyContactSorting(pageable, finalCq, finalCb, contact)
+
+    val query = entityManager.createQuery(finalCq)
+      .setFirstResult(pageable.offset.toInt())
+      .setMaxResults(pageable.pageSize)
+
+    val resultList = query.resultList
+    val total = combinedIds.size.toLong()
+    val pageResult = PageImpl(resultList, pageable, total)
+
+    return ContactSearchResultWrapper(
+      page = pageResult,
+      total = total,
+      truncated = false,
+      message = null,
+    )
   }
 
-  private fun buildPhoneticSearchPredicates(
+  private fun buildPhoneticPredicates(
     request: AdvancedContactSearchRequest,
     cb: CriteriaBuilder,
-    contact: Root<ContactEntity>,
+    root: Root<*>,
   ): MutableList<Predicate> {
     val predicates: MutableList<Predicate> = mutableListOf()
     if (cb !is HibernateCriteriaBuilder) {
       throw IllegalStateException("Configuration issue. Expected HibernateCriteriaBuilder but received ${cb::class.qualifiedName ?: cb.javaClass.name}")
     }
-    val lastNameSoundex = cb.function("soundex", String::class.java, contact.get<String>("lastName"))
+
+    // Soundex comparison for lastName (required)
+    val lastNameSoundex = cb.function("soundex", String::class.java, root.get<String>("lastName"))
     val lastNameInputSoundex = cb.function("soundex", String::class.java, cb.literal(request.lastName))
     predicates.add(cb.equal(lastNameSoundex, lastNameInputSoundex))
 
+    // Soundex comparison for firstName (optional)
     request.firstName?.let {
-      val fnSoundex = cb.function("soundex", String::class.java, contact.get<String>("firstName"))
+      val fnSoundex = cb.function("soundex", String::class.java, root.get<String>("firstName"))
       val fnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
       predicates.add(cb.equal(fnSoundex, fnInputSoundex))
     }
+
+    // Soundex comparison for middleNames (optional)
     request.middleNames?.let {
-      val mnSoundex = cb.function("soundex", String::class.java, contact.get<String>("middleNames"))
+      val mnSoundex = cb.function("soundex", String::class.java, root.get<String>("middleNames"))
       val mnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
       predicates.add(cb.equal(mnSoundex, mnInputSoundex))
-    }
-    request.dateOfBirth?.let {
-      predicates.add(
-        cb.equal(
-          contact.get<LocalDate>("dateOfBirth"),
-          request.dateOfBirth,
-        ),
-      )
     }
 
     return predicates

@@ -3,18 +3,14 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.repository
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
 import jakarta.persistence.criteria.CriteriaBuilder
-import jakarta.persistence.criteria.CriteriaQuery
-import jakarta.persistence.criteria.Order
 import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
-import org.hibernate.query.NullPrecedence
-import org.hibernate.query.criteria.JpaOrder
+import org.hibernate.query.criteria.HibernateCriteriaBuilder
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.mapSortPropertiesOfContactSearch
 import java.time.LocalDate
 
 @Repository
@@ -40,8 +36,6 @@ class ContactIdentitySearchRepository(
 
     cq.where(*predicates.toTypedArray())
 
-    applyContactSorting(pageable, cq, cb, contact)
-
     val results = entityManager.createQuery(cq)
       .setFirstResult(pageable.offset.toInt())
       .setMaxResults(pageable.pageSize)
@@ -61,35 +55,6 @@ class ContactIdentitySearchRepository(
     return entityManager.createQuery(countQuery).singleResult
   }
 
-  private fun applyContactSorting(
-    pageable: Pageable,
-    cq: CriteriaQuery<ContactEntity>,
-    cb: CriteriaBuilder,
-    contact: Root<ContactEntity>,
-  ) {
-    if (!pageable.sort.isSorted) return
-
-    val orders: List<Order> = pageable.sort.map { sort ->
-      val property = mapSortPropertiesOfContactSearch(sort.property)
-      var order: Order =
-        if (sort.isAscending) cb.asc(contact.get<String>(property)) else cb.desc(contact.get<String>(property))
-
-      if (property == ContactEntity::dateOfBirth.name && order is JpaOrder) {
-        order = if (sort.isAscending) {
-          order.nullPrecedence(NullPrecedence.FIRST)
-        } else {
-          order.nullPrecedence(
-            NullPrecedence.LAST,
-          )
-        }
-      }
-
-      order
-    }.toList()
-
-    cq.orderBy(orders)
-  }
-
   // Helper: centralises sanitisation logic and length cap
   private fun sanitizeContactId(contactId: String): String = contactId.filter(Char::isDigit).take(MAX_CONTACT_ID_LENGTH)
 
@@ -100,6 +65,9 @@ class ContactIdentitySearchRepository(
     cb: CriteriaBuilder,
     contact: Root<ContactEntity>,
   ): MutableList<Predicate> {
+    if (cb !is HibernateCriteriaBuilder) {
+      throw IllegalStateException("Configuration issue. Expected HibernateCriteriaBuilder but received ${cb::class.qualifiedName ?: cb.javaClass.name}")
+    }
     val predicates: MutableList<Predicate> = ArrayList()
 
     if (sanitizedContactId.isEmpty()) {
@@ -109,7 +77,7 @@ class ContactIdentitySearchRepository(
     }
 
     val contactIdAsString = contactIdAsString(cb, contact)
-    predicates.add(cb.like(contactIdAsString, "%$sanitizedContactId%"))
+    predicates.add(cb.ilike(contactIdAsString, "%$sanitizedContactId%", '#'))
 
     dateOfBirth?.let {
       predicates.add(

@@ -18,6 +18,7 @@ import org.springdoc.core.converters.models.PageableAsQueryParam
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PagedModel
 import org.springframework.format.annotation.DateTimeFormat
+import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -311,17 +312,30 @@ class ContactController(
     )
     @Pattern(regexp = VALID_LETTER_OR_NUMBER_REGEX, message = VALID_LETTER_OR_NUMBER_MESSAGE)
     includeAnyExistingRelationshipsToPrisoner: String?,
-  ): PagedModel<AdvancedContactSearchResultItem> = contactFacade.advancedSearchContacts(
-    pageable,
-    AdvancedContactSearchRequest(
-      lastName = lastName,
-      firstName = firstName,
-      middleNames = middleNames,
-      dateOfBirth = dateOfBirth,
-      soundsLike = soundsLike,
-      includeAnyExistingRelationshipsToPrisoner = includeAnyExistingRelationshipsToPrisoner,
-    ),
-  )
+  ): ResponseEntity<PagedModel<AdvancedContactSearchResultItem>> {
+    val resultWrapper = contactFacade.advancedSearchContactsWithMetadata(
+      pageable,
+      AdvancedContactSearchRequest(
+        lastName = lastName,
+        firstName = firstName,
+        middleNames = middleNames,
+        dateOfBirth = dateOfBirth,
+        soundsLike = soundsLike,
+        includeAnyExistingRelationshipsToPrisoner = includeAnyExistingRelationshipsToPrisoner,
+      ),
+    )
+
+    val headers = HttpHeaders()
+    headers.add("X-Total-Records", resultWrapper.total.toString())
+    headers.add("X-Truncated", resultWrapper.truncated.toString())
+    if (resultWrapper.truncated && resultWrapper.message != null) {
+      headers.add("X-Truncation-Message", resultWrapper.message)
+    }
+
+    return ResponseEntity.ok()
+      .headers(headers)
+      .body(PagedModel(resultWrapper.page))
+  }
 
   @GetMapping("/search/partial-contact-id")
   @Operation(

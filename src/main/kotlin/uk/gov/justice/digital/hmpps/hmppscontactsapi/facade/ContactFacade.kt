@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreat
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactNameDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultWrapper
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PatchContactResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.RelationshipsApproved
@@ -144,7 +145,7 @@ class ContactFacade(
 
   fun searchContacts(pageable: Pageable, request: ContactSearchRequest): PagedModel<ContactSearchResultItem> = PagedModel(contactSearchService.searchContacts(pageable, request))
 
-  fun advancedSearchContacts(pageable: Pageable, request: AdvancedContactSearchRequest): PagedModel<AdvancedContactSearchResultItem> = PagedModel(contactSearchService.advancedContactSearch(pageable, request))
+  fun advancedSearchContactsWithMetadata(pageable: Pageable, request: AdvancedContactSearchRequest): ContactSearchResultWrapper<AdvancedContactSearchResultItem> = contactSearchService.advancedContactSearchWithMetadata(pageable, request)
 
   fun searchContactsByIdPartialMatch(
     contactId: String,
