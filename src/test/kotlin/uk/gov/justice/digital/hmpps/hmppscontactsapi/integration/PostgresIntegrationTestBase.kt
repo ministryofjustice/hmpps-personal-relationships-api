@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.integration
 
+import org.slf4j.LoggerFactory
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import org.springframework.test.context.ActiveProfiles
@@ -13,6 +14,7 @@ abstract class PostgresIntegrationTestBase : IntegrationTestBase() {
 
   companion object {
     private val pgContainer = PostgresContainer.instance
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     @JvmStatic
     @DynamicPropertySource
@@ -21,6 +23,10 @@ abstract class PostgresIntegrationTestBase : IntegrationTestBase() {
         registry.add("spring.datasource.url", pgContainer::getJdbcUrl)
         registry.add("spring.datasource.username", pgContainer::getUsername)
         registry.add("spring.datasource.password", pgContainer::getPassword)
+      }
+
+      pgContainer.let {
+        logger.info("Using Postgres container with URL: ${it?.jdbcUrl}, username: ${it?.username}")
       }
     }
   }
