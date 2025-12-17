@@ -55,6 +55,9 @@ class ContactAdvancedSearchRepository(
     request.middleNames?.let {
       contactIdPreds.add(cb.ilike(contactRootForIds.get("middleNames"), "%$it%", '#'))
     }
+    request.dateOfBirth?.let {
+      contactIdPreds.add(cb.equal(contactRootForIds.get<LocalDate>("dateOfBirth"), it))
+    }
     contactIdQuery.select(contactRootForIds.get("contactId")).where(*contactIdPreds.toTypedArray())
     val contactIdsFromContact = entityManager
       .createQuery(contactIdQuery)
@@ -72,6 +75,9 @@ class ContactAdvancedSearchRepository(
     }
     request.middleNames?.let {
       auditPreds.add(cb.ilike(auditRootForIds.get("middleNames"), "%$it%", '#'))
+    }
+    request.dateOfBirth?.let {
+      auditPreds.add(cb.equal(auditRootForIds.get<LocalDate>("dateOfBirth"), it))
     }
     auditIdQuery.select(auditRootForIds.get<ContactAuditPk>("id").get<Long>("contactId"))
       .where(*auditPreds.toTypedArray())
@@ -95,7 +101,7 @@ class ContactAdvancedSearchRepository(
     var isTruncated = false
     var truncationMessage: String? = null
     if (combinedIds.size > HARD_CAP_THRESHOLD) {
-      log.warn("likeSearchContacts: Large result set of ${combinedIds.size} contact IDs found for lastName='${request.lastName}', firstName='${request.firstName}', middleNames='${request.middleNames}'")
+      log.warn("likeSearchContacts: Large result set of ${combinedIds.size} contact IDs found. Applying hard cap of $HARD_CAP_THRESHOLD.'")
       isTruncated = true
       truncationMessage = TOO_MANY_RESULTS
       combinedIds = combinedIds.take(HARD_CAP_THRESHOLD)
@@ -225,6 +231,10 @@ class ContactAdvancedSearchRepository(
       val mnSoundex = cb.function("soundex", String::class.java, root.get<String>("middleNames"))
       val mnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
       predicates.add(cb.equal(mnSoundex, mnInputSoundex))
+    }
+
+    request.dateOfBirth?.let {
+      predicates.add(cb.equal(root.get<LocalDate>("dateOfBirth"), it))
     }
 
     return predicates

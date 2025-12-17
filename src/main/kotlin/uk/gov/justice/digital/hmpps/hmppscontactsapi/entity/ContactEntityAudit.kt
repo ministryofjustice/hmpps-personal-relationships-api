@@ -5,6 +5,7 @@ import jakarta.persistence.Embeddable
 import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
 import jakarta.persistence.Table
+import java.time.LocalDate
 
 @Embeddable
 data class ContactAuditPk(
@@ -28,4 +29,7 @@ data class ContactEntityAudit(
 
   @Column(name = "middle_names")
   val middleNames: String?,
+
+  @Column(name = "date_of_birth")
+  val dateOfBirth: LocalDate?,
 )
