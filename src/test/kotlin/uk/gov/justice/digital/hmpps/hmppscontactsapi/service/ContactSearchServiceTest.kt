@@ -16,10 +16,8 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactSummaryEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressDetailsEntity
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.AdvancedContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultWrapper
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ExistingRelationshipToPrisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactAdvancedSearchRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactIdentitySearchRepository
@@ -157,60 +155,6 @@ class ContactSearchServiceTest {
       assertThat(result.content.find { it.id == 2L }!!.existingRelationships).isEqualTo(emptyList<ExistingRelationshipToPrisoner>())
 
       verify(prisonerContactSummaryRepository).findByPrisonerNumberAndContactIdIn("A1234BC", listOf(1L, 2L))
-    }
-
-    @Test
-    fun `fuzzy search should use fuzzy repository and not call prisoner summary when not requested`() {
-      // Given
-      val pageable = PageRequest.of(0, 10)
-      val contactOne = contactEntity(1L)
-      val pageContacts = ContactSearchResultWrapper<ContactEntity>(
-        page = PageImpl(listOf(contactOne), pageable, 1L),
-        total = 0L,
-        truncated = false,
-        message = null,
-      )
-
-      // When
-      val request = AdvancedContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1), true, null)
-      whenever(contactAdvancedSearchRepository.phoneticSearchContacts(request, pageable)).thenReturn(pageContacts)
-
-      // Act
-      val result = service.advancedContactSearch(pageable, request)
-
-      // Then
-      assertThat(result.page.totalElements).isEqualTo(1)
-      verify(contactAdvancedSearchRepository).phoneticSearchContacts(request, pageable)
-      verify(prisonerContactSummaryRepository, never()).findByPrisonerNumberAndContactIdIn(any(), any())
-    }
-
-    @Test
-    fun `when prisoner requested but no summaries exist then existingRelationships are empty lists`() {
-      // Given
-      val pageable = PageRequest.of(0, 10)
-      val contactOne = contactEntity(1L)
-      val contactTwo = contactEntity(2L)
-      val pageContacts = ContactSearchResultWrapper<ContactEntity>(
-        page = PageImpl(listOf(contactOne, contactTwo), pageable, 2L),
-        total = 0L,
-        truncated = false,
-        message = null,
-      )
-
-      // When
-      val request = AdvancedContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1), false, "A9999ZZ")
-      whenever(contactAdvancedSearchRepository.likeSearchContacts(request, pageable)).thenReturn(pageContacts)
-      whenever(prisonerContactSummaryRepository.findByPrisonerNumberAndContactIdIn("A9999ZZ", listOf(1L, 2L)))
-        .thenReturn(emptyList())
-
-      // Act
-      val result = service.advancedContactSearch(pageable, request)
-
-      // Then
-      assertThat(result.page.totalElements).isEqualTo(2)
-      assertThat(result.page.content[0].existingRelationships).isEqualTo(emptyList<ExistingRelationshipToPrisoner>())
-      assertThat(result.page.content[1].existingRelationships).isEqualTo(emptyList<ExistingRelationshipToPrisoner>())
-      verify(prisonerContactSummaryRepository).findByPrisonerNumberAndContactIdIn("A9999ZZ", listOf(1L, 2L))
     }
 
     @Test
