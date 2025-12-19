@@ -164,7 +164,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   fun `should get the contacts when searched by first name and last name with partial match`() {
     val uri = UriComponentsBuilder.fromPath("contact/search")
       .queryParam("lastName", "Las")
-      .queryParam("firstName", "ck")
+      .queryParam("firstName", "Jack")
       .build()
       .toUri()
 
