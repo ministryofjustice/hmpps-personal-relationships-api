@@ -67,20 +67,20 @@ class ContactSearchRepository(
     if (pageable.sort.isSorted) {
       val order = pageable.sort.map {
         val property = mapSortPropertiesOfContactSearch(it.property)
-        var sortOrder: Order = if (it.isAscending) {
+        var order: Order = if (it.isAscending) {
           cb.asc(contact.get<String>(property))
         } else {
           cb.desc(contact.get<String>(property))
         }
         // order date of birth with nulls as if they are the eldest.
-        if (property == ContactWithAddressEntity::dateOfBirth.name && sortOrder is JpaOrder) {
-          sortOrder = if (it.isAscending) {
-            sortOrder.nullPrecedence(NullPrecedence.FIRST)
+        if (property == ContactWithAddressEntity::dateOfBirth.name && order is JpaOrder) {
+          order = if (it.isAscending) {
+            order.nullPrecedence(NullPrecedence.FIRST)
           } else {
-            sortOrder.nullPrecedence(NullPrecedence.LAST)
+            order.nullPrecedence(NullPrecedence.LAST)
           }
         }
-        sortOrder
+        order
       }.toList()
       cq.orderBy(order)
     }
@@ -93,14 +93,38 @@ class ContactSearchRepository(
   ): MutableList<Predicate> {
     val predicates: MutableList<Predicate> = ArrayList()
     if (cb !is HibernateCriteriaBuilder) {
-      throw IllegalStateException("Configuration issue. Expected HibernateCriteriaBuilder but received ${cb::class.qualifiedName ?: cb.javaClass.name}")
+      throw RuntimeException("Configuration issue. Cannot do ilike unless using hibernate.")
     }
-    predicates.add(cb.ilike(contact.get("lastName"), "%${request.lastName}%", '#'))
-    request.firstName?.let {
-      predicates.add(cb.ilike(contact.get("firstName"), "%$it%", '#'))
+    if (request.soundsLike) {
+      val lastNameSoundex = cb.function("soundex", String::class.java, contact.get<String>("lastName"))
+      val lastNameInputSoundex = cb.function("soundex", String::class.java, cb.literal(request.lastName))
+      predicates.add(cb.equal(lastNameSoundex, lastNameInputSoundex))
+
+      request.firstName?.let {
+        val fnSoundex = cb.function("soundex", String::class.java, contact.get<String>("firstName"))
+        val fnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
+        predicates.add(cb.equal(fnSoundex, fnInputSoundex))
+      }
+      request.middleNames?.let {
+        val mnSoundex = cb.function("soundex", String::class.java, contact.get<String>("middleNames"))
+        val mnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
+        predicates.add(cb.equal(mnSoundex, mnInputSoundex))
+      }
+    } else {
+      predicates.add(cb.ilike(contact.get("lastName"), "%${request.lastName}%", '#'))
+      request.firstName?.let {
+        predicates.add(cb.ilike(contact.get("firstName"), "%$it%", '#'))
+      }
+      request.middleNames?.let {
+        predicates.add(cb.ilike(contact.get("middleNames"), "%$it%", '#'))
+      }
     }
-    request.middleNames?.let {
-      predicates.add(cb.ilike(contact.get("middleNames"), "%$it%", '#'))
+    // partial match on contactId by converting to string
+    request.contactId?.let {
+      if (request.contactId.isNotEmpty()) {
+        val contactIdAsString = cb.function("str", String::class.java, contact.get<Long>("contactId"))
+        predicates.add(cb.like(contactIdAsString, "%$it%"))
+      }
     }
     request.dateOfBirth?.let {
       predicates.add(
