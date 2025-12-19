@@ -111,7 +111,10 @@ class ContactSearchRepository(
         predicates.add(cb.equal(mnSoundex, mnInputSoundex))
       }
     } else {
-      predicates.add(cb.ilike(contact.get("lastName"), "${request.lastName}%", '#'))
+      request.lastName?.let {
+        predicates.add(cb.ilike(contact.get("lastName"), "${request.lastName}%", '#'))
+      }
+
       request.firstName?.let {
         predicates.add(cb.ilike(contact.get("firstName"), "$it%", '#'))
       }
