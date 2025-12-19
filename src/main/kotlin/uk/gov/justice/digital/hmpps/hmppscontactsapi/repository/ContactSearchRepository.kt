@@ -113,10 +113,10 @@ class ContactSearchRepository(
     } else {
       predicates.add(cb.ilike(contact.get("lastName"), "${request.lastName}%", '#'))
       request.firstName?.let {
-        predicates.add(cb.ilike(contact.get("firstName"), "%$it%", '#'))
+        predicates.add(cb.ilike(contact.get("firstName"), "$it%", '#'))
       }
       request.middleNames?.let {
-        predicates.add(cb.ilike(contact.get("middleNames"), "%$it%", '#'))
+        predicates.add(cb.ilike(contact.get("middleNames"), "$it%", '#'))
       }
     }
     // partial match on contactId by converting to string
