@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdateContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.restrictions.UpdatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactRequest
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.AdvancedContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAddressResponse
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAuditEntry
@@ -209,16 +208,6 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectStatus().isOk
     .expectHeader().contentType(MediaType.APPLICATION_JSON)
     .expectBody(ContactSearchResponse::class.java)
-    .returnResult().responseBody
-
-  fun getAdvancedSearchContactResults(uri: URI) = webTestClient.get()
-    .uri(uri.toString())
-    .accept(MediaType.APPLICATION_JSON)
-    .headers(setAuthorisationUsingCurrentUser())
-    .exchange()
-    .expectStatus().isOk
-    .expectHeader().contentType(MediaType.APPLICATION_JSON)
-    .expectBody(AdvancedContactSearchResponse::class.java)
     .returnResult().responseBody
 
   fun getBadResponseErrors(uri: URI) = webTestClient.get()
@@ -716,21 +705,6 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectHeader().contentType(MediaType.APPLICATION_JSON)
     .expectBodyList(ContactAuditEntry::class.java)
     .returnResult().responseBody!!
-
-  fun getSearchContactsById(contactId: String, includeAnyExistingRelationshipsToPrisoner: String? = null) = webTestClient.get()
-    .uri("/contact/search/partial-contact-id?contactId=$contactId${includeAnyExistingRelationshipsToPrisoner?.let { "&includeAnyExistingRelationshipsToPrisoner=$it" } ?: ""}")
-    .accept(MediaType.APPLICATION_JSON)
-    .headers(setAuthorisationUsingCurrentUser())
-    .exchange()
-    .expectStatus().isOk
-    .expectHeader().contentType(MediaType.APPLICATION_JSON)
-    .expectBody(AdvancedContactSearchResponse::class.java)
-    .returnResult().responseBody
-
-  data class AdvancedContactSearchResponse(
-    val content: List<AdvancedContactSearchResultItem>,
-    val page: PagedModel.PageMetadata,
-  )
 
   data class ContactSearchResponse(
     val content: List<ContactSearchResultItem>,
