@@ -204,7 +204,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should get the contacts when searched by contact id and last name with partial match`() {
     val uri = UriComponentsBuilder.fromPath("contact/search")
-      .queryParam("contactId", "1104") // partial match on 11041, 11042, 11043
+      .queryParam("contactId", "11041") // partial match on 11041, 11042, 11043
       .queryParam("lastName", "NELS") // partial match on NELSINWOOD
       .build()
       .toUri()
@@ -213,11 +213,11 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
     with(body!!) {
       assertThat(content).isNotEmpty()
-      assertThat(content.size).isEqualTo(3)
-      assertThat(page.totalElements).isEqualTo(3)
+      assertThat(content.size).isEqualTo(1)
+      assertThat(page.totalElements).isEqualTo(1)
       assertThat(page.totalPages).isEqualTo(1)
 
-      assertThat(content).extracting("id").containsAll(listOf(11041L, 11042L, 11043L))
+      assertThat(content).extracting("id").containsAll(listOf(11041L))
       assertThat(content).extracting("lastName").containsAll(listOf("NELSINWOOD", "NELSINWOOD", "NELSINWOOD"))
     }
   }

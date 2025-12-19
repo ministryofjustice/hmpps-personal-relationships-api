@@ -111,7 +111,7 @@ class ContactSearchRepository(
         predicates.add(cb.equal(mnSoundex, mnInputSoundex))
       }
     } else {
-      predicates.add(cb.ilike(contact.get("lastName"), "%${request.lastName}%", '#'))
+      predicates.add(cb.ilike(contact.get("lastName"), "${request.lastName}%", '#'))
       request.firstName?.let {
         predicates.add(cb.ilike(contact.get("firstName"), "%$it%", '#'))
       }
@@ -122,8 +122,12 @@ class ContactSearchRepository(
     // partial match on contactId by converting to string
     request.contactId?.let {
       if (request.contactId.isNotEmpty()) {
-        val contactIdAsString = cb.function("str", String::class.java, contact.get<Long>("contactId"))
-        predicates.add(cb.like(contactIdAsString, "%$it%"))
+        predicates.add(
+          cb.equal(
+            contact.get<Long>("contactId"),
+            it,
+          ),
+        )
       }
     }
     request.dateOfBirth?.let {
