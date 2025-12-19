@@ -42,7 +42,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     "contact/search?lastName=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure: searchContacts.lastName: must be a letter or punctuation",
     "contact/search?lastName=foo&middleNames=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure: searchContacts.middleNames: must be a letter or punctuation",
     "contact/search?lastName=foo&firstName=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure: searchContacts.firstName: must be a letter or punctuation",
-    "contact/search?lastName=   &middleNames=foo,Validation failure: searchContacts.lastName: must not be blank",
     "contact/search?includeAnyExistingRelationshipsToPrisoner=A-B-1&lastName=foo,Validation failure: searchContacts.includeAnyExistingRelationshipsToPrisoner: must contain only letters or numbers",
     "contact/search?dateOfBirth=30/12/2150&lastName=foo,Validation failure: searchContacts.dateOfBirth: The date of birth must be in the past",
   )
@@ -542,19 +541,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  fun `should get bad request when searched with empty last name`() {
-    val uri = UriComponentsBuilder.fromPath("contact/search")
-      .queryParam("lastName", "")
-      .queryParam("firstName", "Jack")
-      .build()
-      .toUri()
-
-    val errors = testAPIClient.getBadResponseErrors(uri)
-
-    assertThat(errors.developerMessage).isEqualTo("searchContacts.lastName: must not be blank")
-  }
-
-  @Test
   fun `should get bad request when searched with invalid date format for date of birth`() {
     val uri: URI = UriComponentsBuilder.fromPath("contact/search")
       .queryParam("lastName", "Eleven")
@@ -565,17 +551,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     val errors = testAPIClient.getBadResponseErrors(uri)
 
     assertThat(errors.developerMessage).contains("Method parameter 'dateOfBirth': Failed to convert value of type 'java.lang.String' to required type 'java.time.LocalDate'")
-  }
-
-  @Test
-  fun `should get bad request when searched with no last name`() {
-    val uri: URI = UriComponentsBuilder.fromPath("contact/search")
-      .build()
-      .toUri()
-
-    val errors = testAPIClient.getBadResponseErrors(uri)
-
-    assertThat(errors.developerMessage).contains("searchContacts.lastName: must not be blank")
   }
 
   @Test

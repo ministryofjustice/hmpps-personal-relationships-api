@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Past
 import jakarta.validation.constraints.Pattern
 import org.slf4j.LoggerFactory
@@ -212,10 +211,9 @@ class ContactController(
   fun searchContacts(
     @Parameter(hidden = true)
     pageable: Pageable,
-    @Parameter(`in` = ParameterIn.QUERY, description = "Last name of the contact", example = "Jones", required = true)
-    @NotBlank(message = "must not be blank")
+    @Parameter(`in` = ParameterIn.QUERY, description = "Last name of the contact", example = "Jones", required = false)
     @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
-    lastName: String,
+    lastName: String?,
     @Parameter(`in` = ParameterIn.QUERY, description = "First name of the contact", example = "Elton", required = false)
     @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
     firstName: String?,
