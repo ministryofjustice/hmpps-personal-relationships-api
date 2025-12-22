@@ -14,7 +14,7 @@ spring:
     show-sql: true
 
   flyway:
-    locations: classpath:/migrations/common
+    locations: classpath:/migrations/common,classpath:/migrations/test
     placeholders:
       dpr_user: ${DPR_USER}
       dpr_password: ${DPR_PASSWORD}
