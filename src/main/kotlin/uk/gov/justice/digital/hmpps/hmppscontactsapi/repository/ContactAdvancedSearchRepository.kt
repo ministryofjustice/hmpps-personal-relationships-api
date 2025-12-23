@@ -152,7 +152,10 @@ class ContactAdvancedSearchRepository(
     val contactRootForIds = contactIdQuery.from(ContactEntity::class.java)
     val contactIdPreds = buildPhoneticPredicates(request, cb, contactRootForIds)
     contactIdQuery.select(contactRootForIds.get("contactId")).where(*contactIdPreds.toTypedArray())
-    val contactIdsFromContact = entityManager.createQuery(contactIdQuery).resultList
+    val contactIdsFromContact = entityManager.createQuery(contactIdQuery)
+      .setMaxResults(MAX_CANDIDATE_IDS)
+      .resultList
+    log.info("phoneticSearchContacts: found ${contactIdsFromContact.size} matching contact IDs from ContactEntity table")
 
     // 2) collect matching contactIds from the audit table (phonetic, no EXISTS / JOIN)
     val auditIdQuery = cb.createQuery(Long::class.java)
@@ -160,10 +163,13 @@ class ContactAdvancedSearchRepository(
     val auditPreds = buildPhoneticPredicates(request, cb, auditRootForIds)
     auditIdQuery.select(auditRootForIds.get<ContactAuditPk>("id").get<Long>("contactId"))
       .where(*auditPreds.toTypedArray())
-    val contactIdsFromAudit = entityManager.createQuery(auditIdQuery).resultList
+    val contactIdsFromAudit = entityManager.createQuery(auditIdQuery)
+      .setMaxResults(MAX_CANDIDATE_IDS)
+      .resultList
+    log.info("phoneticSearchContacts: found ${contactIdsFromAudit.size} matching contact IDs from ContactAuditEntity table")
 
     // 3) merge ids
-    val combinedIds = (contactIdsFromContact + contactIdsFromAudit).toSet().toList()
+    var combinedIds = (contactIdsFromContact + contactIdsFromAudit).toSet().toList()
     if (combinedIds.isEmpty()) {
       return ContactSearchResultWrapper(
         page = PageImpl(emptyList(), pageable, 0),
@@ -171,6 +177,15 @@ class ContactAdvancedSearchRepository(
         truncated = false,
         message = null,
       )
+    }
+
+    var isTruncated = false
+    var truncationMessage: String? = null
+    if (combinedIds.size > HARD_CAP_THRESHOLD) {
+      log.warn("phoneticSearchContacts: Large result set of ${combinedIds.size} contact IDs found. Applying hard cap of $HARD_CAP_THRESHOLD.'")
+      isTruncated = true
+      truncationMessage = TOO_MANY_RESULTS
+      combinedIds = combinedIds.take(HARD_CAP_THRESHOLD)
     }
 
     // 4) final query: fetch contacts by id list, apply DOB filter and sorting, with paging
@@ -188,6 +203,8 @@ class ContactAdvancedSearchRepository(
 
     applyContactSorting(pageable, finalCq, finalCb, contact)
 
+    log.info("phoneticSearchContacts: final queriing ${combinedIds.size} matching contact IDs from ContactAuditEntity table")
+
     val query = entityManager.createQuery(finalCq)
       .setFirstResult(pageable.offset.toInt())
       .setMaxResults(pageable.pageSize)
@@ -199,8 +216,8 @@ class ContactAdvancedSearchRepository(
     return ContactSearchResultWrapper(
       page = pageResult,
       total = total,
-      truncated = false,
-      message = null,
+      truncated = isTruncated,
+      message = truncationMessage,
     )
   }
 

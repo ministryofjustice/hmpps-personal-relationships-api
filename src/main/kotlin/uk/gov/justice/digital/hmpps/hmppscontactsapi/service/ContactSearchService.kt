@@ -52,41 +52,6 @@ class ContactSearchService(
   }
 
   @Transactional(readOnly = true)
-  fun advancedContactSearch(
-    pageable: Pageable,
-    request: AdvancedContactSearchRequest,
-  ): ContactSearchResultWrapper<AdvancedContactSearchResultItem> {
-    val prisonerNumber = request.includeAnyExistingRelationshipsToPrisoner
-    val resultWrapper = performAdvancedSearch(request, pageable)
-
-    val contactIdList = resultWrapper.page.content.map { it.contactId!! }
-    val contactExistingRelationships = if (!prisonerNumber.isNullOrBlank()) {
-      mapExistingRelationshipToPrisoner(prisonerNumber, contactIdList)
-    } else {
-      emptyMap()
-    }
-
-    val mappedPage = resultWrapper.page.map { contactEntity ->
-      val existingRelationships: List<ExistingRelationshipToPrisoner>? =
-        if (!prisonerNumber.isNullOrBlank()) {
-          contactExistingRelationships[contactEntity.contactId]
-            ?: emptyList()
-        } else {
-          null
-        }
-
-      contactEntity.toModel(existingRelationships)
-    }
-
-    return ContactSearchResultWrapper(
-      page = mappedPage,
-      total = resultWrapper.total,
-      truncated = resultWrapper.truncated,
-      message = resultWrapper.message,
-    )
-  }
-
-  @Transactional(readOnly = true)
   fun advancedContactSearchWithMetadata(
     pageable: Pageable,
     request: AdvancedContactSearchRequest,

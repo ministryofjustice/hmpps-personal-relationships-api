@@ -259,16 +259,32 @@ class ContactController(
     summary = "Sound like or partial Search contacts",
     description = "Search all contacts by their last name or first name or middle name or date of birth with improved matching algorithms, such as sounds-like or partial search for contacts.",
   )
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "200",
-        description = "Found contacts",
+  @ApiResponse(
+    responseCode = "200",
+    description = "Found contacts",
+    content = [
+      Content(
+        mediaType = "application/json",
+        schema = Schema(
+          implementation = PagedModel::class,
+        ),
       ),
-      ApiResponse(
-        responseCode = "400",
-        description = "Invalid request",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+    ],
+    headers = [
+      Header(
+        name = "X-Total-Records",
+        description = "Total number of records matching the search criteria",
+        schema = Schema(type = "integer", format = "int64", example = "1500"),
+      ),
+      Header(
+        name = "X-Truncated",
+        description = "Indicates whether the result set was truncated due to size limits",
+        schema = Schema(type = "boolean", example = "true"),
+      ),
+      Header(
+        name = "X-Truncation-Message",
+        description = "Message explaining why results were truncated (only present if X-Truncated is true)",
+        schema = Schema(type = "string"),
       ),
     ],
   )
