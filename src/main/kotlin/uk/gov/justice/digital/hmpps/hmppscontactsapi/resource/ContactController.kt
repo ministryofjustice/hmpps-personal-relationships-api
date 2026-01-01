@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequestV2
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAuditEntry
@@ -189,6 +190,9 @@ class ContactController(
     }
   }
 
+  /**
+   *  The V1 search controller
+   */
   @GetMapping("/search")
   @Operation(
     summary = "Search contacts",
@@ -222,18 +226,12 @@ class ContactController(
     @Parameter(`in` = ParameterIn.QUERY, description = "Middle names of the contact", example = "Simon", required = false)
     @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
     middleNames: String?,
-    @Parameter(
-      `in` = ParameterIn.QUERY,
-      description = "Date of Birth of the contact in ISO format",
-      example = "30/12/2010",
-      required = false,
-    )
     @Parameter(`in` = ParameterIn.QUERY, description = "The contact ID", example = "123456", required = false)
     contactId: String?,
     @Parameter(
       `in` = ParameterIn.QUERY,
-      description = "The contact id",
-      example = "123456",
+      description = "Date of Birth of the contact in ISO format",
+      example = "30/12/2010",
       required = false,
     )
     @Past(message = "The date of birth must be in the past")
@@ -265,6 +263,66 @@ class ContactController(
       soundsLike = soundsLike,
       contactId = contactId,
       includeAnyExistingRelationshipsToPrisoner = includeAnyExistingRelationshipsToPrisoner,
+    ),
+  )
+
+  /**
+   * The V2 search controller
+   */
+  @GetMapping("/searchV2")
+  @Operation(summary = "Search contacts V2", description = "Search contacts by name, date of birth or contact ID")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "A page of contacts and their primary address",
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "Invalid request",
+        content = [
+          Content(schema = Schema(implementation = ErrorResponse::class)),
+        ],
+      ),
+    ],
+  )
+  @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__R', 'ROLE_CONTACTS__RW')")
+  @PageableAsQueryParam
+  fun searchContactsV2(
+    @Parameter(hidden = true)
+    pageable: Pageable,
+    @Parameter(`in` = ParameterIn.QUERY, description = "Last name of the contact", example = "Jones", required = false)
+    @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
+    lastName: String?,
+    @Parameter(`in` = ParameterIn.QUERY, description = "First name of the contact", example = "Elton", required = false)
+    @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
+    firstName: String?,
+    @Parameter(`in` = ParameterIn.QUERY, description = "Middle names of the contact", example = "Simon", required = false)
+    @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
+    middleNames: String?,
+    @Parameter(`in` = ParameterIn.QUERY, description = "The contact ID", example = "123456", required = false)
+    contactId: String?,
+    @Parameter(`in` = ParameterIn.QUERY, description = "Date of birth (dd/mm/yyyy)", example = "30/12/2010", required = false)
+    @Past(message = "The date of birth must be in the past")
+    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    dateOfBirth: LocalDate?,
+    @Parameter(`in` = ParameterIn.QUERY, description = "Use a trigram sounds-like search", example = "false", required = false)
+    soundsLike: Boolean = false,
+    @Parameter(`in` = ParameterIn.QUERY, description = "Prisoner number to check relationships", example = "A1234BC", required = false)
+    @Pattern(regexp = VALID_LETTER_OR_NUMBER_REGEX, message = VALID_LETTER_OR_NUMBER_MESSAGE)
+    includeAnyExistingRelationshipsToPrisoner: String?,
+  ): PagedModel<ContactSearchResultItem> = contactFacade.searchContactsV2(
+    pageable,
+    ContactSearchRequestV2(
+      lastName = lastName,
+      firstName = firstName,
+      middleNames = middleNames,
+      dateOfBirth = dateOfBirth,
+      lastNameSoundex = soundsLike,
+      firstNameSoundex = firstName?.let { soundsLike } ?: false,
+      middleNamesSoundex = middleNames?.let { soundsLike } ?: false,
+      contactId = contactId?.toLong(),
+      includePrisonerRelationships = includeAnyExistingRelationshipsToPrisoner,
     ),
   )
 

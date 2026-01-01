@@ -32,7 +32,7 @@ import java.util.*
 
 @RestControllerAdvice
 class HmppsContactsApiExceptionHandler {
-  @ExceptionHandler(ValidationException::class)
+  @ExceptionHandler(ValidationException::class, IllegalArgumentException::class)
   fun handleValidationException(e: ValidationException): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(BAD_REQUEST)
     .body(
