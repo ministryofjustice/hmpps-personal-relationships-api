@@ -79,7 +79,7 @@ class ContactSearchService(
     validateRequest(request)
     val pageOfContactIds = getPageOfContactIds(request, pageable)
 
-    logger.info("PageOfContacts is ${pageOfContactIds.content.size} and ${pageOfContactIds.totalElements}")
+    logger.info("PageOfContacts is (page) ${pageOfContactIds.content.size} and (totalElements) ${pageOfContactIds.totalElements}")
 
     return if (!pageOfContactIds.isEmpty) {
       enrichOnePage(pageOfContactIds, request, pageable)
@@ -208,7 +208,8 @@ class ContactSearchService(
     // Add the relationships for a prisoner, if specified in the request
     val checkForRelationships = request.includePrisonerRelationships != null
     val contactRelationships: Map<Long, List<ExistingRelationshipToPrisoner>> = if (checkForRelationships) {
-      prisonerContactSummaryRepository.findByPrisonerNumberAndContactIdIn(request.includePrisonerRelationships!!, contactIds)
+      prisonerContactSummaryRepository
+        .findByPrisonerNumberAndContactIdIn(request.includePrisonerRelationships!!, contactIds)
         .groupBy { it.contactId }
         .mapValues {
           it.value.map { summary ->

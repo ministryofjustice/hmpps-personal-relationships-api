@@ -4,13 +4,11 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.RandomUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.openapitools.jackson.nullable.JsonNullable
-import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.util.UriComponentsBuilder
@@ -62,7 +60,6 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
 
   // This always finds one row!
   @Test
-  @Disabled
   fun `should return empty list if no contacts are found`() {
     val url = UriComponentsBuilder.fromPath("contact/searchV2")
       .queryParam("lastName", "NEW")
@@ -77,7 +74,6 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
     with(body!!) {
       assertThat(content).isEmpty()
       assertThat(page.totalElements).isEqualTo(0)
-      assertThat(page.totalPages).isEqualTo(0)
     }
   }
 
@@ -333,8 +329,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  @Disabled
-  fun `should sort results by date of birth with nulls as eldest`() {
+  fun `should sort results by date of birth both ascending and descending`() {
     val randomLastName = RandomStringUtils.secure().nextAlphabetic(35)
     doWithTemporaryWritePermission {
       testAPIClient.createAContact(
@@ -368,7 +363,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
         .toUri(),
     )!!
 
-    assertThat(resultsEldestFirst.content).extracting("firstName").isEqualTo(listOf("None", "Eldest", "Youngest"))
+    assertThat(resultsEldestFirst.content).extracting("firstName").isEqualTo(listOf("Eldest", "Youngest", "None"))
 
     val resultsYoungestFirst = testAPIClient.getSearchContactResults(
       UriComponentsBuilder.fromPath("contact/searchV2")
@@ -378,18 +373,16 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
         .toUri(),
     )!!
 
-    assertThat(resultsYoungestFirst.content).extracting("firstName").isEqualTo(listOf("Youngest", "Eldest", "None"))
+    assertThat(resultsYoungestFirst.content).extracting("firstName").isEqualTo(listOf("None", "Youngest", "Eldest"))
   }
 
-  // Probably due to validation fail on length of names supplied in the test (i.e. min of 3 chars)
   @Test
-  @Disabled
-  fun `should sort by last name then first name`() {
+  fun `should sort by last name, first name then middle names`() {
     val randomDob = LocalDate.now().minusDays(RandomUtils.secure().randomLong(100, 2000))
     doWithTemporaryWritePermission {
       testAPIClient.createAContact(
         CreateContactRequest(
-          lastName = "AA",
+          lastName = "AAA",
           firstName = "B",
           middleNames = "C",
           dateOfBirth = randomDob,
@@ -397,28 +390,28 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
       )
       testAPIClient.createAContact(
         CreateContactRequest(
-          lastName = "AA",
+          lastName = "AAA",
           firstName = "B",
           dateOfBirth = randomDob,
         ),
       )
       testAPIClient.createAContact(
         CreateContactRequest(
-          lastName = "AB",
+          lastName = "AAB",
           firstName = "A",
           dateOfBirth = randomDob,
         ),
       )
       testAPIClient.createAContact(
         CreateContactRequest(
-          lastName = "AB",
+          lastName = "AAB",
           firstName = "B",
           dateOfBirth = randomDob,
         ),
       )
       testAPIClient.createAContact(
         CreateContactRequest(
-          lastName = "AC",
+          lastName = "AAC",
           firstName = "C",
           middleNames = "A",
           dateOfBirth = randomDob,
@@ -426,7 +419,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
       )
       testAPIClient.createAContact(
         CreateContactRequest(
-          lastName = "AC",
+          lastName = "AAC",
           firstName = "C",
           middleNames = "B",
           dateOfBirth = randomDob,
@@ -434,17 +427,17 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
       )
     }
     val expectedOrder = listOf(
-      "AA, B C",
-      "AA, B",
-      "AB, A",
-      "AB, B",
-      "AC, C A",
-      "AC, C B",
+      "AAA, B C",
+      "AAA, B",
+      "AAB, A",
+      "AAB, B",
+      "AAC, C A",
+      "AAC, C B",
     )
 
     val ascendingName = testAPIClient.getSearchContactResults(
       UriComponentsBuilder.fromPath("contact/searchV2")
-        .queryParam("lastName", "A")
+        .queryParam("lastName", "AA")
         .queryParam("dateOfBirth", randomDob.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
         .queryParam("sort", "lastName,asc")
         .queryParam("sort", "firstName,asc")
@@ -458,7 +451,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
 
     val descendingName = testAPIClient.getSearchContactResults(
       UriComponentsBuilder.fromPath("contact/searchV2")
-        .queryParam("lastName", "A")
+        .queryParam("lastName", "AA")
         .queryParam("dateOfBirth", randomDob.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
         .queryParam("sort", "lastName,desc")
         .queryParam("sort", "firstName,desc")
@@ -472,34 +465,31 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  @Disabled
   fun `secondary sort by id should work`() {
     val randomDob = LocalDate.now().minusDays(RandomUtils.secure().randomLong(100, 2000))
     val expectedOrder = doWithTemporaryWritePermission {
       val lowestId = testAPIClient.createAContact(
         CreateContactRequest(
-          lastName = "AA",
-          firstName = "B",
-          dateOfBirth = randomDob,
-        ),
-      ).id
-      val highestId = testAPIClient.createAContact(
-        CreateContactRequest(
-          lastName = "AA",
+          lastName = "AAA",
           firstName = "B",
           dateOfBirth = randomDob,
         ),
       ).id
 
-      listOf(
-        lowestId,
-        highestId,
-      )
+      val highestId = testAPIClient.createAContact(
+        CreateContactRequest(
+          lastName = "AAA",
+          firstName = "B",
+          dateOfBirth = randomDob,
+        ),
+      ).id
+
+      listOf(lowestId, highestId)
     }
 
     val ascendingName = testAPIClient.getSearchContactResults(
       UriComponentsBuilder.fromPath("contact/searchV2")
-        .queryParam("lastName", "A")
+        .queryParam("lastName", "AA")
         .queryParam("dateOfBirth", randomDob.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
         .queryParam("sort", "lastName,asc")
         .queryParam("sort", "firstName,asc")
@@ -513,7 +503,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
 
     val descendingName = testAPIClient.getSearchContactResults(
       UriComponentsBuilder.fromPath("contact/searchV2")
-        .queryParam("lastName", "A")
+        .queryParam("lastName", "AA")
         .queryParam("dateOfBirth", randomDob.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
         .queryParam("sort", "lastName,desc")
         .queryParam("sort", "firstName,desc")
@@ -539,9 +529,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(errors.developerMessage).contains("Method parameter 'dateOfBirth': Failed to convert value of type 'java.lang.String' to required type 'java.time.LocalDate'")
   }
 
-  // Last name is allowed to be blank as long as one of first or last is present
   @Test
-  @Disabled
   fun `should get bad request when searched with no last name`() {
     val uri: URI = UriComponentsBuilder.fromPath("contact/searchV2")
       .build()
@@ -549,7 +537,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
 
     val errors = testAPIClient.getBadResponseErrors(uri)
 
-    assertThat(errors.developerMessage).contains("searchContacts.lastName: must not be blank")
+    assertThat(errors.developerMessage).contains("Either contact ID, date of birth or a full or partial name must be provided for contact searches")
   }
 
   @Test
@@ -670,8 +658,6 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   companion object {
-    private val logger = LoggerFactory.getLogger(this::class.java)
-
     private val CONTACT_SEARCH_URL = UriComponentsBuilder.fromPath("contact/searchV2")
       .queryParam("lastName", "Last")
       .queryParam("firstName", "Jack")

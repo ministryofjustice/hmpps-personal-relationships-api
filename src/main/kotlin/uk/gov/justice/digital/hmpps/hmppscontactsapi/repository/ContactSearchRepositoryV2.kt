@@ -21,63 +21,56 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
 
   @Query(
     """
-    select c.contactId 
-    from ContactEntity c 
-    where c.dateOfBirth = :dateOfBirth 
-    order by c.lastName, c.firstName
+    select c.contactId
+    from ContactEntity c
+    where c.dateOfBirth = :dateOfBirth
     """,
   )
   fun findAllByDateOfBirthEquals(dateOfBirth: LocalDate, pageable: Pageable): Page<Long>
 
   @Query(
     """
-    select c.contactId 
-    from ContactEntity c 
-    where c.dateOfBirth = :dateOfBirth and  
+    select c.contactId
+    from ContactEntity c
+    where c.dateOfBirth = :dateOfBirth and
        (:lastName is null or c.lastName ilike %:lastName% escape '#') and
        (:firstName is null or c.firstName ilike %:firstName% escape '#') and
        (:middleNames is null or c.middleNames ilike %:middleNames% escape '#')
-    order by c.lastName, c.firstName    
     """,
   )
   fun findAllByDateOfBirthAndNamesMatch(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
   @Query(
     """
-    select c.contact_id 
-    from contact c 
-    where c.date_of_birth = :dateOfBirth and  
-       (:lastName is null or c.last_name_soundex = soundex(:lastName)) and
-       (:firstName is null or c.first_name_soundex = soundex(:firstName)) and
-       (:middleNames is null or c.middle_names_soundex = soundex(:middleNames))
-    order by c.last_name, c.first_name
+    select c.contactId
+    from ContactEntity c
+    where c.dateOfBirth = :dateOfBirth and
+       (:lastName is null or c.lastNameSoundex = function('soundex', CAST(:lastName AS string))) and
+       (:firstName is null or c.firstNameSoundex = function('soundex', CAST(:firstName AS string))) and
+       (:middleNames is null or c.middleNamesSoundex = function('soundex', CAST(:middleNames AS string)))
     """,
-    nativeQuery = true,
   )
   fun findAllByDateOfBirthAndNamesSoundLike(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
   @Query(
     """
-    select c.contactId 
-    from ContactEntity c 
+    select c.contactId
+    from ContactEntity c
     where (:lastName is null or c.lastName ilike %:lastName% escape '#') and
           (:firstName is null or c.firstName ilike %:firstName% escape '#') and
           (:middleNames is null or c.middleNames ilike %:middleNames% escape '#')
-    order by c.lastName, c.firstName      
     """,
   )
   fun findAllByNamesMatch(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
   @Query(
     """
-    select c.contact_id 
-    from contact c 
-    where (:lastName is null or c.last_name_soundex = soundex(:lastName)) and
-          (:firstName is null or c.first_name_soundex = soundex(:firstName)) and
-          (:middleNames is null or c.middle_names_soundex = soundex(:middleNames))
-    order by c.last_name, c.first_name      
+    select c.contactId
+    from ContactEntity c
+    where (:lastName is null or c.lastNameSoundex = function('soundex', CAST(:lastName AS string))) and
+          (:firstName is null or c.firstNameSoundex = function('soundex', CAST(:firstName AS string))) and
+          (:middleNames is null or c.middleNamesSoundex = function('soundex', CAST(:middleNames AS string)))
     """,
-    nativeQuery = true,
   )
   fun findAllByNamesSoundLike(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
@@ -85,14 +78,14 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
     """
       select c.contact_id
       from contact c where c.contact_id in (
-        select distinct ca.contact_id 
-        from contact_audit ca 
-        where ca.rev_type in (0, 1) 
-        and (:lastName is null or ca.last_name ilike %:lastName% escape '#') 
-        and (:firstName is null or ca.first_name ilike %:firstName% escape '#') 
+        select distinct ca.contact_id
+        from contact_audit ca
+        where ca.rev_type in (0, 1)
+        and (:lastName is null or ca.last_name ilike %:lastName% escape '#')
+        and (:firstName is null or ca.first_name ilike %:firstName% escape '#')
         and (:middleNames is null or ca.middle_names ilike %:middleNames% escape '#')
     )
-    order by c.last_name, c.first_name      
+    order by c.last_name, c.first_name
     """,
     nativeQuery = true,
   )
@@ -100,7 +93,7 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
 
   @Query(
     """      
-    select c.contact_id 
+    select c.contact_id
     from contact c
     where c.contact_id in (
       select distinct ca.contact_id
@@ -112,7 +105,7 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
           (:middleNames is null or ca.middle_names_soundex = soundex(:middleNames))
         )
     )
-    order by c.last_name, c.first_name      
+    order by c.last_name, c.first_name
     """,
     nativeQuery = true,
   )
@@ -121,17 +114,17 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
   @Query(
     """
       select c.contact_id
-      from contact c 
+      from contact c
       where c.date_of_birth = :dateOfBirth
       and c.contact_id in (
-        select distinct ca.contact_id 
-        from contact_audit ca 
-        where ca.rev_type in (0, 1) 
-        and (:lastName is null or ca.last_name ilike %:lastName% escape '#') 
-        and (:firstName is null or ca.first_name ilike %:firstName% escape '#') 
+        select distinct ca.contact_id
+        from contact_audit ca
+        where ca.rev_type in (0, 1)
+        and (:lastName is null or ca.last_name ilike %:lastName% escape '#')
+        and (:firstName is null or ca.first_name ilike %:firstName% escape '#')
         and (:middleNames is null or ca.middle_names ilike %:middleNames% escape '#')
     )
-    order by c.last_name, c.first_name      
+    order by c.last_name, c.first_name
     """,
     nativeQuery = true,
   )
@@ -139,9 +132,9 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
 
   @Query(
     """      
-    select c.contact_id 
+    select c.contact_id
     from contact c
-    where c.date_of_birth = :dateOfBirth 
+    where c.date_of_birth = :dateOfBirth
     and c.contact_id in (
       select distinct ca.contact_id
       from contact_audit ca
@@ -152,7 +145,7 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
           (:middleNames is null or ca.middle_names_soundex = soundex(:middleNames))
         )
     )
-    order by c.last_name, c.first_name      
+    order by c.last_name, c.first_name
     """,
     nativeQuery = true,
   )
