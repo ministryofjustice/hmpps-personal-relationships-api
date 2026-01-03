@@ -279,10 +279,12 @@ class ContactSearchService(
       contactIdPresent -> CONTACT_ID_ONLY
       dateOfBirthOnly -> DATE_OF_BIRTH_ONLY
       dateOfBirthPresent -> {
-        if (soundsLike) {
+        if (soundsLike && !historyLastName) {
           DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE
-        } else if (historyLastName) {
+        } else if (!soundsLike && historyLastName) {
           DATE_OF_BIRTH_AND_NAMES_MATCH_AND_HISTORY
+        } else if (soundsLike) {
+          DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE_AND_HISTORY
         } else {
           DATE_OF_BIRTH_AND_NAMES_MATCH
         }

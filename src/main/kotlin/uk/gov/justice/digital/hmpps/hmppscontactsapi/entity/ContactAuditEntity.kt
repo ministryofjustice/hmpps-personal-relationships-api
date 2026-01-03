@@ -81,13 +81,14 @@ data class ContactAuditEntity(
 
   @Column(name = "updated_time")
   val updatedTime: LocalDateTime? = null,
-
+) {
+  // These are generated columns in the database - here only for JPQL queries on search
   @Column(name = "last_name_soundex", updatable = false, insertable = false)
-  val lastNameSoundex: String? = null,
+  val lastNameSoundex: String? = null
 
   @Column(name = "first_name_soundex", updatable = false, insertable = false)
-  val firstNameSoundex: String? = null,
+  val firstNameSoundex: String? = null
 
   @Column(name = "middle_names_soundex", updatable = false, insertable = false)
-  val middleNamesSoundex: String? = null,
-)
+  val middleNamesSoundex: String? = null
+}

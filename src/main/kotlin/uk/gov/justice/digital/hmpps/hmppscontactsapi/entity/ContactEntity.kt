@@ -64,11 +64,11 @@ data class ContactEntity(
 
   // These are generated columns in the database - here only for JPQL queries on search
   @Column(insertable = false, updatable = false)
-  lateinit var lastNameSoundex: String
+  var lastNameSoundex: String? = null
 
   @Column(insertable = false, updatable = false)
-  lateinit var firstNameSoundex: String
+  var firstNameSoundex: String? = null
 
   @Column(insertable = false, updatable = false)
-  lateinit var middleNamesSoundex: String
+  var middleNamesSoundex: String? = null
 }
