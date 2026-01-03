@@ -4,7 +4,6 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.RandomUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -328,11 +327,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
     }
   }
 
-  // TODO: The following 4 tests need historical data (in ContactAudit) setting up for the test.
-  // Currently, there is no audit data present for data loaded up for tests i.e. no initial revisions.
-
   @Test
-  @Disabled
   fun `should find contacts via historic last name match`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
       .queryParam("lastName", "kin")
@@ -343,11 +338,9 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
     val body = testAPIClient.getSearchContactResults(uri)!!
 
     assertThat(body.page.totalElements).isGreaterThanOrEqualTo(1)
-    // assertThat(body.content[0].deceasedDate).isEqualTo(LocalDate.of(2000, 1, 1))
   }
 
   @Test
-  @Disabled
   fun `should find contacts via historic name sounds like`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
       .queryParam("lastName", "kyng")
@@ -359,11 +352,9 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
     val body = testAPIClient.getSearchContactResults(uri)!!
 
     assertThat(body.page.totalElements).isGreaterThanOrEqualTo(1)
-    // assertThat(body.content[0].deceasedDate).isEqualTo(LocalDate.of(2000, 1, 1))
   }
 
   @Test
-  @Disabled
   fun `should find contacts by date of birth and historic name match`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
       .queryParam("lastName", "kin")
@@ -376,14 +367,12 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
     val body = testAPIClient.getSearchContactResults(uri)!!
 
     assertThat(body.page.totalElements).isGreaterThanOrEqualTo(1)
-    // assertThat(body.content[0].deceasedDate).isEqualTo(LocalDate.of(2000, 1, 1))
   }
 
   @Test
-  @Disabled
   fun `should find contacts by date of birth and historic name sounds like`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
-      .queryParam("lastName", "king")
+      .queryParam("lastName", "kyng")
       .queryParam("firstName", "isobel")
       .queryParam("dateOfBirth", "2000-01-01")
       .queryParam("soundsLike", "true")
@@ -394,7 +383,6 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
     val body = testAPIClient.getSearchContactResults(uri)!!
 
     assertThat(body.page.totalElements).isGreaterThanOrEqualTo(1)
-    // assertThat(body.content[0].deceasedDate).isEqualTo(LocalDate.of(2000, 1, 1))
   }
 
   @Test
