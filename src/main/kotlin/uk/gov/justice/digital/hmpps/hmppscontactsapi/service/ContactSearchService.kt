@@ -72,8 +72,7 @@ class ContactSearchService(
   }
 
   /**
-   * The V2 contacts search which attempts to use specific JPQL or native queries to suit the search
-   * criteria provided.
+   * The V2 contacts search which attempts to use specific JPQL queries to suit the criteria provided.
    */
   fun searchContactsV2(request: ContactSearchRequestV2, pageable: Pageable): Page<ContactSearchResultItem> {
     validateRequest(request)

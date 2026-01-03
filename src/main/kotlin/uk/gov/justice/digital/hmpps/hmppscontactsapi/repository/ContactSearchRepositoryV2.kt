@@ -76,78 +76,70 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
 
   @Query(
     """
-      select c.contact_id
-      from contact c where c.contact_id in (
-        select distinct ca.contact_id
-        from contact_audit ca
-        where ca.rev_type in (0, 1)
-        and (:lastName is null or ca.last_name ilike %:lastName% escape '#')
-        and (:firstName is null or ca.first_name ilike %:firstName% escape '#')
-        and (:middleNames is null or ca.middle_names ilike %:middleNames% escape '#')
-    )
-    order by c.last_name, c.first_name
+      select c.contactId
+      from ContactEntity c where c.contactId in (
+        select distinct ca.contactId
+        from ContactAuditEntity ca
+        where ca.revType in (0, 1)
+        and (:lastName is null or ca.lastName ilike %:lastName% escape '#')
+        and (:firstName is null or ca.firstName ilike %:firstName% escape '#')
+        and (:middleNames is null or ca.middleNames ilike %:middleNames% escape '#')
+    ) 
     """,
-    nativeQuery = true,
   )
   fun findAllByNamesMatchAndHistory(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
   @Query(
     """      
-    select c.contact_id
-    from contact c
-    where c.contact_id in (
-      select distinct ca.contact_id
-      from contact_audit ca
-      where c.rev_type in (0, 1)
+    select c.contactId
+    from ContactEntity c
+    where c.contactId in (
+      select distinct ca.contactId
+      from ContactAuditEntity ca
+      where ca.revType in (0, 1)
         and (
-          (:lastName is null or ca.last_name_soundex = soundex(:lastName)) and
-          (:firstName is null or ca.first_name_soundex = soundex(:firstName)) and
-          (:middleNames is null or ca.middle_names_soundex = soundex(:middleNames))
+          (:lastName is null or ca.lastNameSoundex = function('soundex', CAST(:lastName AS string))) and
+          (:firstName is null or ca.firstNameSoundex = function('soundex', CAST(:firstName AS string))) and
+          (:middleNames is null or ca.middleNamesSoundex = function('soundex', CAST(:middleNames as string)))
         )
-    )
-    order by c.last_name, c.first_name
+    ) 
     """,
-    nativeQuery = true,
   )
   fun findAllByNamesSoundLikeAndHistory(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
   @Query(
     """
-      select c.contact_id
-      from contact c
-      where c.date_of_birth = :dateOfBirth
-      and c.contact_id in (
-        select distinct ca.contact_id
-        from contact_audit ca
-        where ca.rev_type in (0, 1)
-        and (:lastName is null or ca.last_name ilike %:lastName% escape '#')
-        and (:firstName is null or ca.first_name ilike %:firstName% escape '#')
-        and (:middleNames is null or ca.middle_names ilike %:middleNames% escape '#')
-    )
-    order by c.last_name, c.first_name
+      select c.contactId
+      from ContactEntity c
+      where c.dateOfBirth = :dateOfBirth
+      and c.contactId in (
+        select distinct ca.contactId
+        from ContactAuditEntity ca
+        where ca.revType in (0, 1)
+        and (:lastName is null or ca.lastName ilike %:lastName% escape '#')
+        and (:firstName is null or ca.firstName ilike %:firstName% escape '#')
+        and (:middleNames is null or ca.middleNames ilike %:middleNames% escape '#')
+    )    
     """,
-    nativeQuery = true,
   )
   fun findAllByDateOfBirthAndNamesMatchAndHistory(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
   @Query(
     """      
-    select c.contact_id
-    from contact c
-    where c.date_of_birth = :dateOfBirth
-    and c.contact_id in (
-      select distinct ca.contact_id
-      from contact_audit ca
-      where c.rev_type in (0, 1)
+    select c.contactId
+    from ContactEntity c
+    where c.dateOfBirth = :dateOfBirth
+    and c.contactId in (
+      select distinct ca.contactId
+      from ContactAuditEntity ca
+      where ca.revType in (0, 1)
         and (
-          (:lastName is null or ca.last_name_soundex = soundex(:lastName)) and
-          (:firstName is null or ca.first_name_soundex = soundex(:firstName)) and
-          (:middleNames is null or ca.middle_names_soundex = soundex(:middleNames))
+          (:lastName is null or ca.lastNameSoundex = function('soundex', CAST(:lastName AS string))) and
+          (:firstName is null or ca.firstNameSoundex = function('soundex', CAST(:firstName AS string))) and
+          (:middleNames is null or ca.middleNamesSoundex = function('soundex', CAST(:middleNames as string)))
         )
     )
-    order by c.last_name, c.first_name
     """,
-    nativeQuery = true,
   )
   fun findAllByDateOfBirthAndNamesSoundLikeAndHistory(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 }

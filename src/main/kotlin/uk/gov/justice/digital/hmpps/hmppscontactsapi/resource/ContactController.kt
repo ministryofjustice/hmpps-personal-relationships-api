@@ -311,6 +311,8 @@ class ContactController(
     @Parameter(`in` = ParameterIn.QUERY, description = "Prisoner number to check relationships", example = "A1234BC", required = false)
     @Pattern(regexp = VALID_LETTER_OR_NUMBER_REGEX, message = VALID_LETTER_OR_NUMBER_MESSAGE)
     includeAnyExistingRelationshipsToPrisoner: String?,
+    @Parameter(`in` = ParameterIn.QUERY, description = "Search for historical names", example = "false", required = false)
+    lastNameHistorical: Boolean = false,
   ): PagedModel<ContactSearchResultItem> = contactFacade.searchContactsV2(
     pageable,
     ContactSearchRequestV2(
@@ -323,6 +325,7 @@ class ContactController(
       middleNamesSoundex = middleNames?.let { soundsLike } ?: false,
       contactId = contactId?.toLong(),
       includePrisonerRelationships = includeAnyExistingRelationshipsToPrisoner,
+      lastNameHistorical = lastNameHistorical,
     ),
   )
 
