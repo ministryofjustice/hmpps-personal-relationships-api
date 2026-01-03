@@ -11,3 +11,18 @@ data class ContactSearchRequest(
   val soundsLike: Boolean = false,
   val includeAnyExistingRelationshipsToPrisoner: String?,
 )
+
+data class ContactSearchRequestV2(
+  val lastName: String? = null,
+  val lastNameSoundex: Boolean? = false,
+  val lastNameHistorical: Boolean? = false,
+  val firstName: String? = null,
+  val firstNameSoundex: Boolean? = false,
+  val middleNames: String? = null,
+  val middleNamesSoundex: Boolean? = false,
+  val contactId: Long? = null,
+  val dateOfBirth: LocalDate? = null,
+  val maxResults: Int? = 200,
+  val sortOrder: String? = "lastName ASC",
+  val includePrisonerRelationships: String? = null,
+)

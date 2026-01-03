@@ -34,9 +34,9 @@ class GetContactHistoryIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  fun `should not return initial creation audit for seeded contact`() {
+  fun `should return initial creation audit for seeded contact`() {
     val history: List<ContactAuditEntry> = testAPIClient.getContactHistory(1)
-    assertThat(history).isEmpty()
+    assertThat(history).isNotEmpty()
   }
 
   @Test

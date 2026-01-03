@@ -14,11 +14,12 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactSummaryEntity
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.helpers.createContactAddressDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ExistingRelationshipToPrisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRepositoryV2
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactWithAddressRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactSummaryRepository
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -27,9 +28,15 @@ class ContactSearchServiceTest {
 
   private val contactSearchRepository: ContactSearchRepository = mock()
   private val prisonerContactSummaryRepository: PrisonerContactSummaryRepository = mock()
-  private val service = ContactSearchService(contactSearchRepository, prisonerContactSummaryRepository)
+  private val contactSearchRepositoryV2: ContactSearchRepositoryV2 = mock()
+  private val contactWithAddressRepository: ContactWithAddressRepository = mock()
 
-  private val aContactAddressDetailsEntity = createContactAddressDetailsEntity()
+  private val service = ContactSearchService(
+    contactSearchRepository,
+    prisonerContactSummaryRepository,
+    contactSearchRepositoryV2,
+    contactWithAddressRepository,
+  )
 
   @Nested
   inner class SearchContact {

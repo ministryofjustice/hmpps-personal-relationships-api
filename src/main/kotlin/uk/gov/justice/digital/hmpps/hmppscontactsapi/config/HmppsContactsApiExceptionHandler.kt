@@ -43,6 +43,17 @@ class HmppsContactsApiExceptionHandler {
       ),
     ).also { log.info("Validation exception: {}", e.message) }
 
+  @ExceptionHandler(IllegalArgumentException::class)
+  fun handleIllegalArgumentException(e: IllegalArgumentException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(BAD_REQUEST)
+    .body(
+      ErrorResponse(
+        status = BAD_REQUEST,
+        userMessage = "Illegal argument failure: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.info("Illegal argument exception: {}", e.message) }
+
   @ExceptionHandler(NoResourceFoundException::class)
   fun handleNoResourceFoundException(e: NoResourceFoundException): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(NOT_FOUND)
