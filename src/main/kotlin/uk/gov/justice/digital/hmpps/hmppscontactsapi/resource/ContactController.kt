@@ -306,13 +306,13 @@ class ContactController(
     @Past(message = "The date of birth must be in the past")
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     dateOfBirth: LocalDate?,
-    @Parameter(`in` = ParameterIn.QUERY, description = "Use a trigram sounds-like search", example = "false", required = false)
+    @Parameter(`in` = ParameterIn.QUERY, description = "Use a soundex sounds-like search", example = "false", required = false)
     soundsLike: Boolean = false,
+    @Parameter(`in` = ParameterIn.QUERY, description = "Search for previous names", example = "false", required = false)
+    previousNames: Boolean = false,
     @Parameter(`in` = ParameterIn.QUERY, description = "Prisoner number to check relationships", example = "A1234BC", required = false)
     @Pattern(regexp = VALID_LETTER_OR_NUMBER_REGEX, message = VALID_LETTER_OR_NUMBER_MESSAGE)
     includeAnyExistingRelationshipsToPrisoner: String?,
-    @Parameter(`in` = ParameterIn.QUERY, description = "Search for historical names", example = "false", required = false)
-    lastNameHistorical: Boolean = false,
   ): PagedModel<ContactSearchResultItem> = contactFacade.searchContactsV2(
     pageable,
     ContactSearchRequestV2(
@@ -320,12 +320,10 @@ class ContactController(
       firstName = firstName,
       middleNames = middleNames,
       dateOfBirth = dateOfBirth,
-      lastNameSoundex = soundsLike,
-      firstNameSoundex = firstName?.let { soundsLike } ?: false,
-      middleNamesSoundex = middleNames?.let { soundsLike } ?: false,
+      soundsLike = soundsLike,
+      previousNames = previousNames,
       contactId = contactId?.toLong(),
       includePrisonerRelationships = includeAnyExistingRelationshipsToPrisoner,
-      lastNameHistorical = lastNameHistorical,
     ),
   )
 

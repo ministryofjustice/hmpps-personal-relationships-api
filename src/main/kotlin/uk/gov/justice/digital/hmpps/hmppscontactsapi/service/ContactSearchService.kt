@@ -242,23 +242,15 @@ class ContactSearchService(
    * a descriptive message of the problem
    */
   private fun validateRequest(request: ContactSearchRequestV2) {
-    if (request.lastNameHistorical == true || request.lastNameSoundex == true) {
+    if (request.previousNames == true || request.soundsLike == true) {
       require(request.lastName != null) { "Last name must be provided for historical or sounds-like searches" }
-    }
-
-    if (request.firstNameSoundex == true) {
-      require(request.firstName != null) { "First name must be provided for sounds-like searches" }
-    }
-
-    if (request.middleNamesSoundex == true) {
-      require(request.middleNames != null) { "Middle name must be provided for sounds-like searches" }
     }
 
     if (request.lastName != null) {
       require(request.lastName.length >= 2) { "Last name must be 2 or more characters" }
     }
 
-    require(request.contactId != null || request.lastName != null || request.dateOfBirth != null || request.firstName != null || request.middleNames != null) {
+    require(request.contactId != null || request.lastName != null || request.firstName != null || request.middleNames != null || request.dateOfBirth != null) {
       "Either contact ID, date of birth or a full or partial name must be provided for contact searches"
     }
   }
@@ -271,17 +263,17 @@ class ContactSearchService(
     val contactIdPresent = request.contactId != null
     val dateOfBirthPresent = request.dateOfBirth != null
     val namesEntered = !isNullOrEmpty(request.firstName) || !isNullOrEmpty(request.lastName) || !isNullOrEmpty(request.middleNames)
-    val soundsLike = request.lastNameSoundex == true || request.firstNameSoundex == true || request.middleNamesSoundex == true
+    val soundsLike = request.soundsLike == true
     val dateOfBirthOnly = request.dateOfBirth != null && !namesEntered && !contactIdPresent
-    val historyLastName = request.lastName != null && request.lastNameHistorical == true
+    val previousNames = request.lastName != null && request.previousNames == true
 
     return when {
       contactIdPresent -> CONTACT_ID_ONLY
       dateOfBirthOnly -> DATE_OF_BIRTH_ONLY
       dateOfBirthPresent -> {
-        if (soundsLike && !historyLastName) {
+        if (soundsLike && !previousNames) {
           DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE
-        } else if (!soundsLike && historyLastName) {
+        } else if (!soundsLike && previousNames) {
           DATE_OF_BIRTH_AND_NAMES_MATCH_AND_HISTORY
         } else if (soundsLike) {
           DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE_AND_HISTORY
@@ -289,9 +281,9 @@ class ContactSearchService(
           DATE_OF_BIRTH_AND_NAMES_MATCH
         }
       }
-      soundsLike && historyLastName && namesEntered -> NAMES_SOUND_LIKE_AND_HISTORY
+      soundsLike && previousNames && namesEntered -> NAMES_SOUND_LIKE_AND_HISTORY
       soundsLike && namesEntered -> NAMES_SOUND_LIKE
-      historyLastName && !soundsLike -> NAMES_MATCH_AND_HISTORY
+      previousNames && !soundsLike -> NAMES_MATCH_AND_HISTORY
       else -> NAMES_MATCH
     }
   }

@@ -331,7 +331,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   fun `should find contacts via historic last name match`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
       .queryParam("lastName", "kin")
-      .queryParam("lastNameHistorical", "true")
+      .queryParam("previousNames", "true")
       .build()
       .toUri()
 
@@ -345,7 +345,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
       .queryParam("lastName", "kyng")
       .queryParam("soundsLike", "true")
-      .queryParam("lastNameHistorical", "true")
+      .queryParam("previousNames", "true")
       .build()
       .toUri()
 
@@ -360,7 +360,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
       .queryParam("lastName", "kin")
       .queryParam("firstName", "iso")
       .queryParam("dateOfBirth", "2000-01-01")
-      .queryParam("lastNameHistorical", "true")
+      .queryParam("previousNames", "true")
       .build()
       .toUri()
 
@@ -376,7 +376,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
       .queryParam("firstName", "isobel")
       .queryParam("dateOfBirth", "2000-01-01")
       .queryParam("soundsLike", "true")
-      .queryParam("lastNameHistorical", "true")
+      .queryParam("previousNames", "true")
       .build()
       .toUri()
 
@@ -588,7 +588,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  fun `should get bad request when searched with no last name`() {
+  fun `should get bad request when searched with no search parameters`() {
     val uri: URI = UriComponentsBuilder.fromPath("contact/searchV2")
       .build()
       .toUri()

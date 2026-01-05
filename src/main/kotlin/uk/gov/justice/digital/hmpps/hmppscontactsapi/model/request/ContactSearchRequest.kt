@@ -12,17 +12,14 @@ data class ContactSearchRequest(
   val includeAnyExistingRelationshipsToPrisoner: String?,
 )
 
+// TODO: Might need an exact match flag here if offering the exact match in the UI?
 data class ContactSearchRequestV2(
   val lastName: String? = null,
-  val lastNameSoundex: Boolean? = false,
-  val lastNameHistorical: Boolean? = false,
   val firstName: String? = null,
-  val firstNameSoundex: Boolean? = false,
   val middleNames: String? = null,
-  val middleNamesSoundex: Boolean? = false,
-  val contactId: Long? = null,
   val dateOfBirth: LocalDate? = null,
-  val maxResults: Int? = 200,
-  val sortOrder: String? = "lastName ASC",
+  val soundsLike: Boolean? = false,
+  val previousNames: Boolean? = false,
+  val contactId: Long? = null,
   val includePrisonerRelationships: String? = null,
 )
