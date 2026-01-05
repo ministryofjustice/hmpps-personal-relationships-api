@@ -1,0 +1,1 @@
+ALTER TABLE contact_audit ADD COLUMN middle_names_soundex CHAR(4) GENERATED ALWAYS AS (soundex(middle_names)) STORED;
