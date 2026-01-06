@@ -4,6 +4,17 @@ generic-service:
 
   replicaCount: 4
 
+  # Temporary addition to allow long Flyway migrations to complete
+  livenessProbe:
+    initialDelaySeconds: 120
+    timeoutSeconds: 20
+    failureThreshold: 20
+
+  readinessProbe:
+    initialDelaySeconds: 120
+    timeoutSeconds: 20
+    failureThreshold: 20
+
   image:
     repository: quay.io/hmpps/hmpps-personal-relationships-api
     tag: app_version # override at deployment time
