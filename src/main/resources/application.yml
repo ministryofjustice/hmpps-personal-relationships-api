@@ -21,7 +21,7 @@ spring:
       validation-timeout: 2000
       maximum-pool-size: 25
       max-lifetime: 600000
-      leak-detection-threshold: 30000
+      leak-detection-threshold: 0
       minimum-idle: 8
       keepalive-time: 10000
 
