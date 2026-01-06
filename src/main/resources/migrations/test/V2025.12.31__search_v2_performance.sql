@@ -1,3 +1,4 @@
+-- REMOVE THIS MIGRATION WHEN THE REAL PRs ARE IN PLACE
 
 -- Remove unused indexes from contact - more effective indexes are created below
 DROP index idx_soundex_lastname;
