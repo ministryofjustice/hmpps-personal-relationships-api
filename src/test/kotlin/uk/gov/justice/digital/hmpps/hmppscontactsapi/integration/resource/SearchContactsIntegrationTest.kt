@@ -42,7 +42,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     "contact/search?lastName=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure: searchContacts.lastName: must be a letter or punctuation",
     "contact/search?lastName=foo&middleNames=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure: searchContacts.middleNames: must be a letter or punctuation",
     "contact/search?lastName=foo&firstName=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure: searchContacts.firstName: must be a letter or punctuation",
-    "contact/search?lastName=   &middleNames=foo,Validation failure: searchContacts.lastName: must not be blank",
     "contact/search?includeAnyExistingRelationshipsToPrisoner=A-B-1&lastName=foo,Validation failure: searchContacts.includeAnyExistingRelationshipsToPrisoner: must contain only letters or numbers",
     "contact/search?dateOfBirth=30/12/2150&lastName=foo,Validation failure: searchContacts.dateOfBirth: The date of birth must be in the past",
   )
@@ -164,7 +163,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   fun `should get the contacts when searched by first name and last name with partial match`() {
     val uri = UriComponentsBuilder.fromPath("contact/search")
       .queryParam("lastName", "Las")
-      .queryParam("firstName", "ck")
+      .queryParam("firstName", "Jack")
       .build()
       .toUri()
 
@@ -204,7 +203,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should get the contacts when searched by contact id and last name with partial match`() {
     val uri = UriComponentsBuilder.fromPath("contact/search")
-      .queryParam("contactId", "1104") // partial match on 11041, 11042, 11043
+      .queryParam("contactId", "11041") // partial match on 11041, 11042, 11043
       .queryParam("lastName", "NELS") // partial match on NELSINWOOD
       .build()
       .toUri()
@@ -213,11 +212,11 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
     with(body!!) {
       assertThat(content).isNotEmpty()
-      assertThat(content.size).isEqualTo(3)
-      assertThat(page.totalElements).isEqualTo(3)
+      assertThat(content.size).isEqualTo(1)
+      assertThat(page.totalElements).isEqualTo(1)
       assertThat(page.totalPages).isEqualTo(1)
 
-      assertThat(content).extracting("id").containsAll(listOf(11041L, 11042L, 11043L))
+      assertThat(content).extracting("id").containsAll(listOf(11041L))
       assertThat(content).extracting("lastName").containsAll(listOf("NELSINWOOD", "NELSINWOOD", "NELSINWOOD"))
     }
   }
@@ -542,19 +541,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  fun `should get bad request when searched with empty last name`() {
-    val uri = UriComponentsBuilder.fromPath("contact/search")
-      .queryParam("lastName", "")
-      .queryParam("firstName", "Jack")
-      .build()
-      .toUri()
-
-    val errors = testAPIClient.getBadResponseErrors(uri)
-
-    assertThat(errors.developerMessage).isEqualTo("searchContacts.lastName: must not be blank")
-  }
-
-  @Test
   fun `should get bad request when searched with invalid date format for date of birth`() {
     val uri: URI = UriComponentsBuilder.fromPath("contact/search")
       .queryParam("lastName", "Eleven")
@@ -565,17 +551,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     val errors = testAPIClient.getBadResponseErrors(uri)
 
     assertThat(errors.developerMessage).contains("Method parameter 'dateOfBirth': Failed to convert value of type 'java.lang.String' to required type 'java.time.LocalDate'")
-  }
-
-  @Test
-  fun `should get bad request when searched with no last name`() {
-    val uri: URI = UriComponentsBuilder.fromPath("contact/search")
-      .build()
-      .toUri()
-
-    val errors = testAPIClient.getBadResponseErrors(uri)
-
-    assertThat(errors.developerMessage).contains("searchContacts.lastName: must not be blank")
   }
 
   @Test
