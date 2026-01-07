@@ -259,7 +259,7 @@ class ContactSearchService(
    * This V2 function tries to determine then most appropriate repository search method based
    * on the values provided in the request.
    */
-  private fun determineSearchType(request: ContactSearchRequestV2): ContactSearchType {
+  fun determineSearchType(request: ContactSearchRequestV2): ContactSearchType {
     val contactIdPresent = request.contactId != null
     val dateOfBirthPresent = request.dateOfBirth != null
     val namesEntered = !isNullOrEmpty(request.firstName) || !isNullOrEmpty(request.lastName) || !isNullOrEmpty(request.middleNames)

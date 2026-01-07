@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactSummaryEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequestV2
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ExistingRelationshipToPrisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRepository
@@ -78,7 +79,8 @@ class ContactSearchServiceTest {
       val pageContacts = PageImpl(results, pageable, results.size.toLong())
 
       // When
-      val request = ContactSearchRequest("last", "first", "middle", "123456", LocalDate.of(1980, 1, 1), false, "A1234BC")
+      val request =
+        ContactSearchRequest("last", "first", "middle", "123456", LocalDate.of(1980, 1, 1), false, "A1234BC")
       whenever(contactSearchRepository.searchContacts(request, pageable)).thenReturn(pageContacts)
       whenever(
         prisonerContactSummaryRepository.findByPrisonerNumberAndContactIdIn(
@@ -182,5 +184,79 @@ class ContactSearchServiceTest {
       createdBy = "TEST",
       createdTime = LocalDateTime.now(),
     )
+  }
+
+  @Nested
+  inner class SearchContactV2 {
+    val request = ContactSearchRequestV2(
+      lastName = "last",
+      firstName = "first",
+      middleNames = "middle",
+      dateOfBirth = null,
+      soundsLike = false,
+      previousNames = false,
+      contactId = null,
+      includePrisonerRelationships = null,
+    )
+
+    @Test
+    fun `Should choose search by names match`() {
+      assertThat(service.determineSearchType(request)).isEqualTo(ContactSearchType.NAMES_MATCH)
+    }
+
+    @Test
+    fun `Should choose search by contact ID`() {
+      assertThat(service.determineSearchType(request.copy(contactId = 111L))).isEqualTo(ContactSearchType.CONTACT_ID_ONLY)
+    }
+
+    @Test
+    fun `Should still choose search by contact ID with other parameters set`() {
+      assertThat(service.determineSearchType(request.copy(contactId = 111L, soundsLike = true, previousNames = true))).isEqualTo(ContactSearchType.CONTACT_ID_ONLY)
+    }
+
+    @Test
+    fun `Should choose search by date of birth only`() {
+      val request2 = request.copy(dateOfBirth = LocalDate.of(1980, 1, 1), lastName = null, firstName = null, middleNames = null)
+      assertThat(service.determineSearchType(request2)).isEqualTo(ContactSearchType.DATE_OF_BIRTH_ONLY)
+    }
+
+    @Test
+    fun `Should choose search by date of birth and names match`() {
+      val request2 = request.copy(dateOfBirth = LocalDate.of(1980, 1, 1))
+      assertThat(service.determineSearchType(request2)).isEqualTo(ContactSearchType.DATE_OF_BIRTH_AND_NAMES_MATCH)
+    }
+
+    @Test
+    fun `Should choose search by names sound like`() {
+      assertThat(service.determineSearchType(request.copy(soundsLike = true))).isEqualTo(ContactSearchType.NAMES_SOUND_LIKE)
+    }
+
+    @Test
+    fun `Should choose search by date of birth and names sound like`() {
+      val request2 = request.copy(dateOfBirth = LocalDate.of(1980, 1, 1), soundsLike = true)
+      assertThat(service.determineSearchType(request2)).isEqualTo(ContactSearchType.DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE)
+    }
+
+    @Test
+    fun `Should choose search by names sound like and history`() {
+      assertThat(service.determineSearchType(request.copy(soundsLike = true, previousNames = true))).isEqualTo(ContactSearchType.NAMES_SOUND_LIKE_AND_HISTORY)
+    }
+
+    @Test
+    fun `Should choose search by names match and history`() {
+      assertThat(service.determineSearchType(request.copy(previousNames = true))).isEqualTo(ContactSearchType.NAMES_MATCH_AND_HISTORY)
+    }
+
+    @Test
+    fun `Should choose search by date of birth and names match and history`() {
+      val request2 = request.copy(dateOfBirth = LocalDate.of(1980, 1, 1), previousNames = true)
+      assertThat(service.determineSearchType(request2)).isEqualTo(ContactSearchType.DATE_OF_BIRTH_AND_NAMES_MATCH_AND_HISTORY)
+    }
+
+    @Test
+    fun `Should choose search by date of birth and names sound like and history`() {
+      val request2 = request.copy(dateOfBirth = LocalDate.of(1980, 1, 1), soundsLike = true, previousNames = true)
+      assertThat(service.determineSearchType(request2)).isEqualTo(ContactSearchType.DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE_AND_HISTORY)
+    }
   }
 }
