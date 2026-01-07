@@ -200,6 +200,21 @@ class ContactSearchServiceTest {
     )
 
     @Test
+    fun `Should default to names match (but won't get here with an invalid request`() {
+      assertThat(service.determineSearchType(request.copy(lastName = null, firstName = null, middleNames = null))).isEqualTo(ContactSearchType.NAMES_MATCH)
+    }
+
+    @Test
+    fun `Should do a names match where only first name is supplied`() {
+      assertThat(service.determineSearchType(request.copy(lastName = null, middleNames = null))).isEqualTo(ContactSearchType.NAMES_MATCH)
+    }
+
+    @Test
+    fun `Should do a names match where only middle name is supplied`() {
+      assertThat(service.determineSearchType(request.copy(lastName = null, firstName = null))).isEqualTo(ContactSearchType.NAMES_MATCH)
+    }
+
+    @Test
     fun `Should choose search by names match`() {
       assertThat(service.determineSearchType(request)).isEqualTo(ContactSearchType.NAMES_MATCH)
     }
