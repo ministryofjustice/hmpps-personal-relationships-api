@@ -39,11 +39,11 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
 
   @ParameterizedTest
   @CsvSource(
-    "contact/searchV2?lastName=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure: searchContactsV2.lastName: must be a letter or punctuation",
-    "contact/searchV2?lastName=foo&middleNames=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure: searchContactsV2.middleNames: must be a letter or punctuation",
-    "contact/searchV2?lastName=foo&firstName=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure: searchContactsV2.firstName: must be a letter or punctuation",
-    "contact/searchV2?includeAnyExistingRelationshipsToPrisoner=A-B-1&lastName=foo,Validation failure: searchContactsV2.includeAnyExistingRelationshipsToPrisoner: must contain only letters or numbers",
-    "contact/searchV2?dateOfBirth=30/12/2150&lastName=foo,Validation failure: searchContactsV2.dateOfBirth: The date of birth must be in the past",
+    "contact/searchV2?searchType=EXACT&lastName=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure: searchContactsV2.lastName: must be a letter or punctuation",
+    "contact/searchV2?searchType=EXACT&lastName=foo&middleNames=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure: searchContactsV2.middleNames: must be a letter or punctuation",
+    "contact/searchV2?searchType=EXACT&lastName=foo&firstName=%00%00%27%7C%7C(SELECT%20version())%7C%7C%27,Validation failure: searchContactsV2.firstName: must be a letter or punctuation",
+    "contact/searchV2?searchType=PARTIAL&includePrisonerRelationships=A-B-1&lastName=foo,Validation failure: searchContactsV2.includePrisonerRelationships: must contain only letters or numbers",
+    "contact/searchV2?searchType=PARTIAL&dateOfBirth=30/12/2150&lastName=foo,Validation failure: searchContactsV2.dateOfBirth: The date of birth must be in the past",
   )
   fun `should return bad request if the query params are invalid`(url: String, expectedError: String) {
     val body = webTestClient.get()
@@ -61,6 +61,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should return empty list if no contacts are found`() {
     val url = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "EXACT")
       .queryParam("lastName", "NEW")
       .queryParam("firstName", "NEW")
       .queryParam("middleName", "Middle")
@@ -78,9 +79,10 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
 
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
-  fun `should return contacts when only the last name is supplied`(role: String) {
+  fun `should find a specific contact by exact last names`(role: String) {
     setCurrentUser(StubUser.READ_ONLY_USER.copy(roles = listOf(role)))
     val url = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "EXACT")
       .queryParam("lastName", "Twelve")
       .build()
       .toUri()
@@ -121,7 +123,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  fun `should find contacts by date of birth and names matching`() {
+  fun `should find contacts by date of birth and partial names`() {
     val body = testAPIClient.getSearchContactResults(CONTACT_SEARCH_URL)
 
     with(body!!) {
@@ -159,8 +161,9 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  fun `should find contacts by names matching first and last`() {
+  fun `should find contacts by partial first and last names`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "PARTIAL")
       .queryParam("lastName", "Las")
       .queryParam("firstName", "ack")
       .build()
@@ -202,6 +205,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should find contacts by specific contact ID`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "PARTIAL")
       .queryParam("contactId", "11041")
       .build()
       .toUri()
@@ -232,15 +236,11 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
     "King,Isabel,Isabel|King|2000-01-01;Isabelle|King|2000-01-01;Isobel|King|2000-01-01",
     "Black,Marc,Marc|Black|1981-09-09;Mark|Blake|1981-10-10",
   )
-  fun `should find contacts by first and last names with sounds like option`(
-    lastName: String,
-    firstName: String,
-    expected: String,
-  ) {
+  fun `should find contacts by names sounds like`(lastName: String, firstName: String, expected: String) {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "SOUNDS_LIKE")
       .queryParam("lastName", lastName)
       .queryParam("firstName", firstName)
-      .queryParam("soundsLike", true)
       .build()
       .toUri()
 
@@ -265,6 +265,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should find contacts by last name when no addresses are associated with them`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "EXACT")
       .queryParam("lastName", "NoAddress")
       .build()
       .toUri()
@@ -283,6 +284,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should find contacts by last name even with a deceased date`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "EXACT")
       .queryParam("lastName", "Dead")
       .build()
       .toUri()
@@ -293,8 +295,9 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  fun `should find contacts by last name with minimal address data associated with them`() {
+  fun `should find contacts by last name exact with minimal address data associated with them`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "EXACT")
       .queryParam("lastName", "Address")
       .queryParam("firstName", "Minimal")
       .build()
@@ -330,6 +333,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should find contacts via historic last name match`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "PARTIAL")
       .queryParam("lastName", "kin")
       .queryParam("previousNames", "true")
       .build()
@@ -343,6 +347,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should find contacts via historic name sounds like`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "SOUNDS_LIKE")
       .queryParam("lastName", "kyng")
       .queryParam("soundsLike", "true")
       .queryParam("previousNames", "true")
@@ -357,6 +362,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should find contacts by date of birth and historic name match`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "PARTIAL")
       .queryParam("lastName", "kin")
       .queryParam("firstName", "iso")
       .queryParam("dateOfBirth", "2000-01-01")
@@ -372,10 +378,10 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should find contacts by date of birth and historic name sounds like`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "SOUNDS_LIKE")
       .queryParam("lastName", "kyng")
       .queryParam("firstName", "isobel")
       .queryParam("dateOfBirth", "2000-01-01")
-      .queryParam("soundsLike", "true")
       .queryParam("previousNames", "true")
       .build()
       .toUri()
@@ -414,6 +420,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
 
     val resultsEldestFirst = testAPIClient.getSearchContactResults(
       UriComponentsBuilder.fromPath("contact/searchV2")
+        .queryParam("searchType", "EXACT")
         .queryParam("lastName", randomLastName)
         .queryParam("sort", "dateOfBirth,asc")
         .build()
@@ -424,6 +431,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
 
     val resultsYoungestFirst = testAPIClient.getSearchContactResults(
       UriComponentsBuilder.fromPath("contact/searchV2")
+        .queryParam("searchType", "EXACT")
         .queryParam("lastName", randomLastName)
         .queryParam("sort", "dateOfBirth,desc")
         .build()
@@ -495,6 +503,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
 
     val ascendingName = testAPIClient.getSearchContactResults(
       UriComponentsBuilder.fromPath("contact/searchV2")
+        .queryParam("searchType", "PARTIAL")
         .queryParam("lastName", "AA")
         .queryParam("dateOfBirth", randomDob.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
         .queryParam("sort", "lastName,asc")
@@ -509,6 +518,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
 
     val descendingName = testAPIClient.getSearchContactResults(
       UriComponentsBuilder.fromPath("contact/searchV2")
+        .queryParam("searchType", "PARTIAL")
         .queryParam("lastName", "AA")
         .queryParam("dateOfBirth", randomDob.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
         .queryParam("sort", "lastName,desc")
@@ -547,6 +557,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
 
     val ascendingName = testAPIClient.getSearchContactResults(
       UriComponentsBuilder.fromPath("contact/searchV2")
+        .queryParam("searchType", "PARTIAL")
         .queryParam("lastName", "AA")
         .queryParam("dateOfBirth", randomDob.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
         .queryParam("sort", "lastName,asc")
@@ -561,6 +572,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
 
     val descendingName = testAPIClient.getSearchContactResults(
       UriComponentsBuilder.fromPath("contact/searchV2")
+        .queryParam("searchType", "PARTIAL")
         .queryParam("lastName", "AA")
         .queryParam("dateOfBirth", randomDob.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
         .queryParam("sort", "lastName,desc")
@@ -577,6 +589,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `should get bad request when searched with invalid date format for date of birth`() {
     val uri: URI = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "PARTIAL")
       .queryParam("lastName", "Eleven")
       .queryParam("dateOfBirth", "=01-10-2001")
       .build()
@@ -588,14 +601,51 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  fun `should get bad request when searched with no search parameters`() {
+  fun `should get bad request with single letter last name with sounds like`() {
     val uri: URI = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "SOUNDS_LIKE")
+      .queryParam("lastName", "A")
+      .build()
+      .toUri()
+
+    val errors = testAPIClient.getBadResponseErrors(uri)
+
+    assertThat(errors.developerMessage).contains("Last name must be 2 or more characters")
+  }
+
+  @Test
+  fun `should get bad request when searched with no required search parameters`() {
+    val uri: URI = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "PARTIAL")
       .build()
       .toUri()
 
     val errors = testAPIClient.getBadResponseErrors(uri)
 
     assertThat(errors.developerMessage).contains("Either contact ID, date of birth or a full or partial name must be provided for contact searches")
+  }
+
+  @Test
+  fun `should get bad request when no search type is specified`() {
+    val uri: URI = UriComponentsBuilder.fromPath("contact/searchV2")
+      .build()
+      .toUri()
+
+    val errors = testAPIClient.getBadResponseErrors(uri)
+
+    assertThat(errors.developerMessage).contains("The search type must be one of EXACT, PARTIAL or SOUNDS_LIKE")
+  }
+
+  @Test
+  fun `should get bad request when an invalid search type is specified`() {
+    val uri: URI = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "INVALID")
+      .build()
+      .toUri()
+
+    val errors = testAPIClient.getBadResponseErrors(uri)
+
+    assertThat(errors.developerMessage).contains("The search type must be one of EXACT, PARTIAL or SOUNDS_LIKE")
   }
 
   @Test
@@ -699,9 +749,10 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
 
     val results = testAPIClient.getSearchContactResults(
       UriComponentsBuilder.fromPath("contact/searchV2")
+        .queryParam("searchType", "PARTIAL")
         .queryParam("lastName", "ABCDEFG")
         .queryParam("dateOfBirth", randomDob.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
-        .queryParam("includeAnyExistingRelationshipsToPrisoner", prisonerNumber)
+        .queryParam("includePrisonerRelationships", prisonerNumber)
         .build()
         .toUri(),
     )!!
@@ -717,6 +768,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
 
   companion object {
     private val CONTACT_SEARCH_URL = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "PARTIAL")
       .queryParam("lastName", "Last")
       .queryParam("firstName", "Jack")
       .queryParam("middleNames", "Middle")

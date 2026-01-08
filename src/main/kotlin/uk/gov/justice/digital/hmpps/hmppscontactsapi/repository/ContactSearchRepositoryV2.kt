@@ -45,12 +45,35 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
     select c.contactId
     from ContactEntity c
     where c.dateOfBirth = :dateOfBirth and
+       (:lastName is null or c.lastName ilike :lastName) and
+       (:firstName is null or c.firstName ilike :firstName) and
+       (:middleNames is null or c.middleNames ilike :middleNames)
+    """,
+  )
+  fun findAllByDateOfBirthAndNamesExact(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
+
+  @Query(
+    """
+    select c.contactId
+    from ContactEntity c
+    where c.dateOfBirth = :dateOfBirth and
        (:lastName is null or c.lastNameSoundex = function('soundex', CAST(:lastName AS string))) and
        (:firstName is null or c.firstNameSoundex = function('soundex', CAST(:firstName AS string))) and
        (:middleNames is null or c.middleNamesSoundex = function('soundex', CAST(:middleNames AS string)))
     """,
   )
   fun findAllByDateOfBirthAndNamesSoundLike(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
+
+  @Query(
+    """
+    select c.contactId
+    from ContactEntity c
+    where (:lastName is null or c.lastName ilike :lastName) and
+          (:firstName is null or c.firstName ilike :firstName) and
+          (:middleNames is null or c.middleNames ilike :middleNames)
+    """,
+  )
+  fun findAllByNamesExact(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
   @Query(
     """
@@ -73,6 +96,21 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
     """,
   )
   fun findAllByNamesSoundLike(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
+
+  @Query(
+    """
+      select c.contactId
+      from ContactEntity c where c.contactId in (
+        select distinct ca.contactId
+        from ContactAuditEntity ca
+        where ca.revType in (0, 1)
+        and (:lastName is null or ca.lastName ilike :lastName)
+        and (:firstName is null or ca.firstName ilike :firstName)
+        and (:middleNames is null or ca.middleNames ilike :middleNames)
+    ) 
+    """,
+  )
+  fun findAllByNamesExactAndHistory(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
   @Query(
     """
@@ -106,6 +144,23 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
     """,
   )
   fun findAllByNamesSoundLikeAndHistory(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
+
+  @Query(
+    """
+      select c.contactId
+      from ContactEntity c
+      where c.dateOfBirth = :dateOfBirth
+      and c.contactId in (
+        select distinct ca.contactId
+        from ContactAuditEntity ca
+        where ca.revType in (0, 1)
+        and (:lastName is null or ca.lastName ilike :lastName)
+        and (:firstName is null or ca.firstName ilike :firstName)
+        and (:middleNames is null or ca.middleNames ilike :middleNames)
+    )
+    """,
+  )
+  fun findAllByDateOfBirthAndNamesExactAndHistory(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
   @Query(
     """

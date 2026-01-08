@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Past
 import jakarta.validation.constraints.Pattern
 import org.slf4j.LoggerFactory
@@ -36,6 +37,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearch
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequestV2
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UserSearchType
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAuditEntry
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
@@ -62,6 +64,7 @@ class ContactController(
     private const val VALID_NAME_MESSAGE = "must be a letter or punctuation"
     private const val VALID_LETTER_OR_NUMBER_REGEX = "[a-zA-Z0-9]*"
     private const val VALID_LETTER_OR_NUMBER_MESSAGE = "must contain only letters or numbers"
+    private const val VALID_SEARCH_TYPE = "(EXACT|PARTIAL|SOUNDS_LIKE)"
   }
 
   @PostMapping(consumes = [MediaType.APPLICATION_JSON_VALUE])
@@ -306,13 +309,15 @@ class ContactController(
     @Past(message = "The date of birth must be in the past")
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     dateOfBirth: LocalDate?,
-    @Parameter(`in` = ParameterIn.QUERY, description = "Use a soundex sounds-like search", example = "false", required = false)
-    soundsLike: Boolean = false,
+    @NotNull(message = "The search type must be one of EXACT, PARTIAL or SOUNDS_LIKE")
+    @Pattern(regexp = VALID_SEARCH_TYPE, message = "The search type must be one of EXACT, PARTIAL or SOUNDS_LIKE")
+    @Parameter(`in` = ParameterIn.QUERY, description = "The search type one of EXACT, PARTIAL or SOUNDS_LIKE", example = "PARTIAL", required = true)
+    searchType: String?,
     @Parameter(`in` = ParameterIn.QUERY, description = "Search for previous names", example = "false", required = false)
     previousNames: Boolean = false,
     @Parameter(`in` = ParameterIn.QUERY, description = "Prisoner number to check relationships", example = "A1234BC", required = false)
     @Pattern(regexp = VALID_LETTER_OR_NUMBER_REGEX, message = VALID_LETTER_OR_NUMBER_MESSAGE)
-    includeAnyExistingRelationshipsToPrisoner: String?,
+    includePrisonerRelationships: String?,
   ): PagedModel<ContactSearchResultItem> = contactFacade.searchContactsV2(
     pageable,
     ContactSearchRequestV2(
@@ -320,10 +325,10 @@ class ContactController(
       firstName = firstName,
       middleNames = middleNames,
       dateOfBirth = dateOfBirth,
-      soundsLike = soundsLike,
+      searchType = UserSearchType.valueOf(searchType!!),
       previousNames = previousNames,
       contactId = contactId?.toLong(),
-      includePrisonerRelationships = includeAnyExistingRelationshipsToPrisoner,
+      includePrisonerRelationships = includePrisonerRelationships,
     ),
   )
 

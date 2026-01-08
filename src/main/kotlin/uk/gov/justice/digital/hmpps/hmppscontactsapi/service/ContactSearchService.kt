@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 
-import io.netty.util.internal.StringUtil.isNullOrEmpty
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -9,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequestV2
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UserSearchType
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ExistingRelationshipToPrisoner
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRepository
@@ -16,11 +16,15 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactSearchRep
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactWithAddressRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactSummaryRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchType.CONTACT_ID_ONLY
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchType.DATE_OF_BIRTH_AND_NAMES_EXACT
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchType.DATE_OF_BIRTH_AND_NAMES_EXACT_AND_HISTORY
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchType.DATE_OF_BIRTH_AND_NAMES_MATCH
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchType.DATE_OF_BIRTH_AND_NAMES_MATCH_AND_HISTORY
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchType.DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchType.DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE_AND_HISTORY
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchType.DATE_OF_BIRTH_ONLY
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchType.NAMES_EXACT
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchType.NAMES_EXACT_AND_HISTORY
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchType.NAMES_MATCH
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchType.NAMES_MATCH_AND_HISTORY
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.ContactSearchType.NAMES_SOUND_LIKE
@@ -71,9 +75,6 @@ class ContactSearchService(
     }
   }
 
-  /**
-   * The V2 contacts search which attempts to use specific JPQL queries to suit the criteria provided.
-   */
   fun searchContactsV2(request: ContactSearchRequestV2, pageable: Pageable): Page<ContactSearchResultItem> {
     validateRequest(request)
     val pageOfContactIds = getPageOfContactIds(request, pageable)
@@ -88,8 +89,7 @@ class ContactSearchService(
   }
 
   /**
-   * Ths V2 function determines the best search method to find a requested page of contactIds, using
-   * the search criteria provided to select the most appropriate repository method.
+   * Determine the most appropriate repository method, calls it and return at most one page of contactIds
    */
   private fun getPageOfContactIds(request: ContactSearchRequestV2, pageable: Pageable): Page<Long> {
     val searchType = determineSearchType(request)
@@ -105,44 +105,35 @@ class ContactSearchService(
         contactSearchRepositoryV2.findAllByDateOfBirthEquals(request.dateOfBirth!!, pageable)
       }
 
+      DATE_OF_BIRTH_AND_NAMES_EXACT -> {
+        logger.info("DATE_OF_BIRTH_AND_NAMES_EXACT search for ${request.dateOfBirth} last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
+        contactSearchRepositoryV2.findAllByDateOfBirthAndNamesExact(
+          request.dateOfBirth!!,
+          request.firstName?.trim(),
+          request.middleNames?.trim(),
+          request.lastName?.trim(),
+          pageable,
+        )
+      }
+
+      DATE_OF_BIRTH_AND_NAMES_EXACT_AND_HISTORY -> {
+        logger.info("DATE_OF_BIRTH_AND_NAMES_EXACT_AND_HISTORY search for ${request.dateOfBirth} last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
+        contactSearchRepositoryV2.findAllByDateOfBirthAndNamesExactAndHistory(
+          request.dateOfBirth!!,
+          request.firstName?.trim(),
+          request.middleNames?.trim(),
+          request.lastName?.trim(),
+          pageable,
+        )
+      }
+
       DATE_OF_BIRTH_AND_NAMES_MATCH -> {
         logger.info("DATE_OF_BIRTH_AND_NAMES_MATCH search for ${request.dateOfBirth} last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
         contactSearchRepositoryV2.findAllByDateOfBirthAndNamesMatch(
           request.dateOfBirth!!,
-          request.firstName,
-          request.middleNames,
-          request.lastName,
-          pageable,
-        )
-      }
-
-      DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE -> {
-        logger.info("DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE search for ${request.dateOfBirth} last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByDateOfBirthAndNamesSoundLike(
-          request.dateOfBirth!!,
-          request.firstName,
-          request.middleNames,
-          request.lastName,
-          pageable,
-        )
-      }
-
-      NAMES_MATCH -> {
-        logger.info("NAMES_MATCH search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByNamesMatch(
-          request.firstName,
-          request.middleNames,
-          request.lastName,
-          pageable,
-        )
-      }
-
-      NAMES_SOUND_LIKE -> {
-        logger.info("NAMES_SOUND_LIKE search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByNamesSoundLike(
-          request.firstName,
-          request.middleNames,
-          request.lastName,
+          request.firstName?.trim(),
+          request.middleNames?.trim(),
+          request.lastName?.trim(),
           pageable,
         )
       }
@@ -151,9 +142,20 @@ class ContactSearchService(
         logger.info("DATE_OF_BIRTH_AND_NAMES_MATCH_AND_HISTORY search for dob ${request.dateOfBirth}, last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
         contactSearchRepositoryV2.findAllByDateOfBirthAndNamesMatchAndHistory(
           request.dateOfBirth!!,
-          request.firstName,
-          request.middleNames,
-          request.lastName,
+          request.firstName?.trim(),
+          request.middleNames?.trim(),
+          request.lastName?.trim(),
+          pageable,
+        )
+      }
+
+      DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE -> {
+        logger.info("DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE search for ${request.dateOfBirth} last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
+        contactSearchRepositoryV2.findAllByDateOfBirthAndNamesSoundLike(
+          request.dateOfBirth!!,
+          request.firstName?.trim(),
+          request.middleNames?.trim(),
+          request.lastName?.trim(),
           pageable,
         )
       }
@@ -162,9 +164,39 @@ class ContactSearchService(
         logger.info("DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE_AND_HISTORY search for dob ${request.dateOfBirth}, last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
         contactSearchRepositoryV2.findAllByDateOfBirthAndNamesSoundLikeAndHistory(
           request.dateOfBirth!!,
-          request.firstName,
-          request.middleNames,
-          request.lastName,
+          request.firstName?.trim(),
+          request.middleNames?.trim(),
+          request.lastName?.trim(),
+          pageable,
+        )
+      }
+
+      NAMES_EXACT -> {
+        logger.info("NAMES_EXACT search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
+        contactSearchRepositoryV2.findAllByNamesExact(
+          request.firstName?.trim(),
+          request.middleNames?.trim(),
+          request.lastName?.trim(),
+          pageable,
+        )
+      }
+
+      NAMES_EXACT_AND_HISTORY -> {
+        logger.info("NAMES_EXACT_AND_HISTORY search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
+        contactSearchRepositoryV2.findAllByNamesExactAndHistory(
+          request.firstName?.trim(),
+          request.middleNames?.trim(),
+          request.lastName?.trim(),
+          pageable,
+        )
+      }
+
+      NAMES_MATCH -> {
+        logger.info("NAMES_MATCH search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
+        contactSearchRepositoryV2.findAllByNamesMatch(
+          request.firstName?.trim(),
+          request.middleNames?.trim(),
+          request.lastName?.trim(),
           pageable,
         )
       }
@@ -172,9 +204,19 @@ class ContactSearchService(
       NAMES_MATCH_AND_HISTORY -> {
         logger.info("NAMES_MATCH_AND_HISTORY search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
         contactSearchRepositoryV2.findAllByNamesMatchAndHistory(
-          request.firstName,
-          request.middleNames,
-          request.lastName,
+          request.firstName?.trim(),
+          request.middleNames?.trim(),
+          request.lastName?.trim(),
+          pageable,
+        )
+      }
+
+      NAMES_SOUND_LIKE -> {
+        logger.info("NAMES_SOUND_LIKE search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
+        contactSearchRepositoryV2.findAllByNamesSoundLike(
+          request.firstName?.trim(),
+          request.middleNames?.trim(),
+          request.lastName?.trim(),
           pageable,
         )
       }
@@ -182,9 +224,9 @@ class ContactSearchService(
       NAMES_SOUND_LIKE_AND_HISTORY -> {
         logger.info("NAMES_SOUND_LIKE_AND_HISTORY search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
         contactSearchRepositoryV2.findAllByNamesSoundLikeAndHistory(
-          request.firstName,
-          request.middleNames,
-          request.lastName,
+          request.firstName?.trim(),
+          request.middleNames?.trim(),
+          request.lastName?.trim(),
           pageable,
         )
       }
@@ -198,7 +240,11 @@ class ContactSearchService(
    * the view v_contacts_with_primary_address for those specific contact ids on the page. The sort order of
    * lastName, firstName is maintained for all specific queries.
    */
-  private fun enrichOnePage(pageOfContactIds: Page<Long>, request: ContactSearchRequestV2, pageable: Pageable): Page<ContactSearchResultItem> {
+  private fun enrichOnePage(
+    pageOfContactIds: Page<Long>,
+    request: ContactSearchRequestV2,
+    pageable: Pageable,
+  ): Page<ContactSearchResultItem> {
     val contactIds = pageOfContactIds.content.map { it }
 
     // Retrieve the contact details and primary addresses for this page of contact IDs only
@@ -237,13 +283,9 @@ class ContactSearchService(
     }
   }
 
-  /**
-   * This V2 function validates a V2 search request and throws an IllegalArgumentException if invalid, including
-   * a descriptive message of the problem
-   */
   private fun validateRequest(request: ContactSearchRequestV2) {
-    if (request.previousNames == true || request.soundsLike == true) {
-      require(request.lastName != null) { "Last name must be provided for historical or sounds-like searches" }
+    if (request.searchType == UserSearchType.SOUNDS_LIKE) {
+      require(request.lastName != null || request.firstName != null || request.middleNames != null) { "A name must be provided for sounds-like searches" }
     }
 
     if (request.lastName != null) {
@@ -255,37 +297,34 @@ class ContactSearchService(
     }
   }
 
-  /**
-   * This V2 function tries to determine then most appropriate repository search method based
-   * on the values provided in the request.
-   */
   fun determineSearchType(request: ContactSearchRequestV2): ContactSearchType {
     val contactIdPresent = request.contactId != null
-    val dateOfBirthPresent = request.dateOfBirth != null
-    val namesEntered = !isNullOrEmpty(request.firstName) || !isNullOrEmpty(request.lastName) || !isNullOrEmpty(request.middleNames)
-    val soundsLike = request.soundsLike == true
-    val dateOfBirthOnly = request.dateOfBirth != null && !namesEntered && !contactIdPresent
+    val dobPresent = request.dateOfBirth != null
+    val namesEntered = listOf(request.firstName, request.lastName, request.middleNames).any { it != null }
     val previousNames = request.lastName != null && request.previousNames == true
 
     return when {
       contactIdPresent -> CONTACT_ID_ONLY
-      dateOfBirthOnly -> DATE_OF_BIRTH_ONLY
-      dateOfBirthPresent -> {
-        if (soundsLike && !previousNames) {
-          DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE
-        } else if (!soundsLike && previousNames) {
-          DATE_OF_BIRTH_AND_NAMES_MATCH_AND_HISTORY
-        } else if (soundsLike) {
-          DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE_AND_HISTORY
-        } else {
-          DATE_OF_BIRTH_AND_NAMES_MATCH
-        }
-      }
-      soundsLike && previousNames && namesEntered -> NAMES_SOUND_LIKE_AND_HISTORY
-      soundsLike && namesEntered -> NAMES_SOUND_LIKE
-      previousNames && !soundsLike -> NAMES_MATCH_AND_HISTORY
+      dobPresent && !namesEntered -> DATE_OF_BIRTH_ONLY
+      namesEntered -> mapNameSearch(request.searchType, dobPresent, previousNames)
       else -> NAMES_MATCH
     }
+  }
+
+  private fun mapNameSearch(type: UserSearchType, withDob: Boolean, withHistory: Boolean): ContactSearchType = when (type to withDob to withHistory) {
+    (UserSearchType.SOUNDS_LIKE to true to false) -> DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE
+    (UserSearchType.SOUNDS_LIKE to true to true) -> DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE_AND_HISTORY
+    (UserSearchType.EXACT to true to false) -> DATE_OF_BIRTH_AND_NAMES_EXACT
+    (UserSearchType.EXACT to true to true) -> DATE_OF_BIRTH_AND_NAMES_EXACT_AND_HISTORY
+    (UserSearchType.PARTIAL to true to false) -> DATE_OF_BIRTH_AND_NAMES_MATCH
+    (UserSearchType.PARTIAL to true to true) -> DATE_OF_BIRTH_AND_NAMES_MATCH_AND_HISTORY
+    (UserSearchType.SOUNDS_LIKE to false to false) -> NAMES_SOUND_LIKE
+    (UserSearchType.SOUNDS_LIKE to false to true) -> NAMES_SOUND_LIKE_AND_HISTORY
+    (UserSearchType.EXACT to false to false) -> NAMES_EXACT
+    (UserSearchType.EXACT to false to true) -> NAMES_EXACT_AND_HISTORY
+    (UserSearchType.PARTIAL to false to false) -> NAMES_MATCH
+    (UserSearchType.PARTIAL to false to true) -> NAMES_MATCH_AND_HISTORY
+    else -> NAMES_MATCH
   }
 
   companion object {
@@ -293,18 +332,19 @@ class ContactSearchService(
   }
 }
 
-/**
- * A V2 enum of the available JPA repository search types
- */
 enum class ContactSearchType {
   CONTACT_ID_ONLY,
   DATE_OF_BIRTH_ONLY,
   DATE_OF_BIRTH_AND_NAMES_MATCH,
-  DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE,
   DATE_OF_BIRTH_AND_NAMES_MATCH_AND_HISTORY,
+  DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE,
   DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE_AND_HISTORY,
+  DATE_OF_BIRTH_AND_NAMES_EXACT,
+  DATE_OF_BIRTH_AND_NAMES_EXACT_AND_HISTORY,
+  NAMES_EXACT,
+  NAMES_EXACT_AND_HISTORY,
   NAMES_MATCH,
-  NAMES_SOUND_LIKE,
   NAMES_MATCH_AND_HISTORY,
+  NAMES_SOUND_LIKE,
   NAMES_SOUND_LIKE_AND_HISTORY,
 }
