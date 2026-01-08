@@ -20,7 +20,7 @@ allOpen {
 configurations.all {
   resolutionStrategy.eachDependency {
     if (requested.group == "io.netty") {
-      useVersion("4.1.129.Final")
+      useVersion("4.1.130.Final")
       because("Fix CVE-2025-67735")
     }
   }
