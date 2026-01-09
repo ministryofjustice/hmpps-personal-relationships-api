@@ -17,6 +17,14 @@ allOpen {
   )
 }
 
+configurations.all {
+  resolutionStrategy.eachDependency {
+    if (requested.group == "io.netty") {
+      useVersion("4.1.130.Final")
+      because("Fix CVE-2025-67735")
+    }
+  }
+}
 configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
@@ -28,6 +36,7 @@ dependencyCheck {
 
 dependencies {
   // Spring boot dependencies
+
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.8.1")
