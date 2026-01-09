@@ -622,7 +622,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
 
     val errors = testAPIClient.getBadResponseErrors(uri)
 
-    assertThat(errors.developerMessage).contains("Either contact ID, date of birth or a full or partial name must be provided for contact searches")
+    assertThat(errors.developerMessage).contains("A name must be provided for partial searches")
   }
 
   @Test

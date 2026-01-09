@@ -284,15 +284,19 @@ class ContactSearchService(
   }
 
   private fun validateRequest(request: ContactSearchRequestV2) {
-    if (request.searchType == UserSearchType.SOUNDS_LIKE) {
-      require(request.lastName != null || request.firstName != null || request.middleNames != null) { "A name must be provided for sounds-like searches" }
+    val nameProvided = request.lastName != null || request.firstName != null || request.middleNames != null
+    val isNamedSearchType = request.searchType in setOf(UserSearchType.SOUNDS_LIKE, UserSearchType.PARTIAL, UserSearchType.EXACT)
+
+    if (isNamedSearchType && request.contactId == null && request.dateOfBirth == null) {
+      val typeLabel = request.searchType.name.lowercase().replace("_", "-")
+      require(nameProvided) { "A name must be provided for $typeLabel searches" }
+
+      request.lastName?.let {
+        require(it.length >= 2) { "Last name must be 2 or more characters" }
+      }
     }
 
-    if (request.lastName != null) {
-      require(request.lastName.length >= 2) { "Last name must be 2 or more characters" }
-    }
-
-    require(request.contactId != null || request.lastName != null || request.firstName != null || request.middleNames != null || request.dateOfBirth != null) {
+    require(request.contactId != null || request.dateOfBirth != null || nameProvided) {
       "Either contact ID, date of birth or a full or partial name must be provided for contact searches"
     }
   }
