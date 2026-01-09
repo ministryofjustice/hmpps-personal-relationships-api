@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.entity
 
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -60,4 +61,14 @@ data class ContactEntity(
   updatedTime = updatedTime,
 ) {
   override fun id(): Long = requireNotNull(this.contactId) { "Contact id should be non-null once created" }
+
+  // These are generated columns in the database - here only for JPQL queries on search
+  @Column(insertable = false, updatable = false)
+  var lastNameSoundex: String? = null
+
+  @Column(insertable = false, updatable = false)
+  var firstNameSoundex: String? = null
+
+  @Column(insertable = false, updatable = false)
+  var middleNamesSoundex: String? = null
 }

@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Past
 import jakarta.validation.constraints.Pattern
 import org.slf4j.LoggerFactory
@@ -33,8 +34,10 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.config.User
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.facade.ContactFacade
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequestV2
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.UserSearchType
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactAuditEntry
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ContactDetails
@@ -61,6 +64,7 @@ class ContactController(
     private const val VALID_NAME_MESSAGE = "must be a letter or punctuation"
     private const val VALID_LETTER_OR_NUMBER_REGEX = "[a-zA-Z0-9]*"
     private const val VALID_LETTER_OR_NUMBER_MESSAGE = "must contain only letters or numbers"
+    private const val VALID_SEARCH_TYPE = "(EXACT|PARTIAL|SOUNDS_LIKE)"
   }
 
   @PostMapping(consumes = [MediaType.APPLICATION_JSON_VALUE])
@@ -189,6 +193,9 @@ class ContactController(
     }
   }
 
+  /**
+   *  The V1 search controller
+   */
   @GetMapping("/search")
   @Operation(
     summary = "Search contacts",
@@ -222,18 +229,12 @@ class ContactController(
     @Parameter(`in` = ParameterIn.QUERY, description = "Middle names of the contact", example = "Simon", required = false)
     @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
     middleNames: String?,
-    @Parameter(
-      `in` = ParameterIn.QUERY,
-      description = "Date of Birth of the contact in ISO format",
-      example = "30/12/2010",
-      required = false,
-    )
     @Parameter(`in` = ParameterIn.QUERY, description = "The contact ID", example = "123456", required = false)
     contactId: String?,
     @Parameter(
       `in` = ParameterIn.QUERY,
-      description = "The contact id",
-      example = "123456",
+      description = "Date of Birth of the contact in ISO format",
+      example = "30/12/2010",
       required = false,
     )
     @Past(message = "The date of birth must be in the past")
@@ -265,6 +266,69 @@ class ContactController(
       soundsLike = soundsLike,
       contactId = contactId,
       includeAnyExistingRelationshipsToPrisoner = includeAnyExistingRelationshipsToPrisoner,
+    ),
+  )
+
+  /**
+   * The V2 search controller
+   */
+  @GetMapping("/searchV2")
+  @Operation(summary = "Search contacts V2", description = "Search contacts by name, date of birth or contact ID")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "A page of contacts and their primary address",
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "Invalid request",
+        content = [
+          Content(schema = Schema(implementation = ErrorResponse::class)),
+        ],
+      ),
+    ],
+  )
+  @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__R', 'ROLE_CONTACTS__RW')")
+  @PageableAsQueryParam
+  fun searchContactsV2(
+    @Parameter(hidden = true)
+    pageable: Pageable,
+    @Parameter(`in` = ParameterIn.QUERY, description = "Last name of the contact", example = "Jones", required = false)
+    @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
+    lastName: String?,
+    @Parameter(`in` = ParameterIn.QUERY, description = "First name of the contact", example = "Elton", required = false)
+    @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
+    firstName: String?,
+    @Parameter(`in` = ParameterIn.QUERY, description = "Middle names of the contact", example = "Simon", required = false)
+    @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
+    middleNames: String?,
+    @Parameter(`in` = ParameterIn.QUERY, description = "The contact ID", example = "123456", required = false)
+    contactId: String?,
+    @Parameter(`in` = ParameterIn.QUERY, description = "Date of birth (dd/mm/yyyy)", example = "30/12/2010", required = false)
+    @Past(message = "The date of birth must be in the past")
+    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    dateOfBirth: LocalDate?,
+    @NotNull(message = "The search type must be one of EXACT, PARTIAL or SOUNDS_LIKE")
+    @Pattern(regexp = VALID_SEARCH_TYPE, message = "The search type must be one of EXACT, PARTIAL or SOUNDS_LIKE")
+    @Parameter(`in` = ParameterIn.QUERY, description = "The search type one of EXACT, PARTIAL or SOUNDS_LIKE", example = "PARTIAL", required = true)
+    searchType: String?,
+    @Parameter(`in` = ParameterIn.QUERY, description = "Search for previous names", example = "false", required = false)
+    previousNames: Boolean = false,
+    @Parameter(`in` = ParameterIn.QUERY, description = "Prisoner number to check relationships", example = "A1234BC", required = false)
+    @Pattern(regexp = VALID_LETTER_OR_NUMBER_REGEX, message = VALID_LETTER_OR_NUMBER_MESSAGE)
+    includePrisonerRelationships: String?,
+  ): PagedModel<ContactSearchResultItem> = contactFacade.searchContactsV2(
+    pageable,
+    ContactSearchRequestV2(
+      lastName = lastName,
+      firstName = firstName,
+      middleNames = middleNames,
+      dateOfBirth = dateOfBirth,
+      searchType = UserSearchType.valueOf(searchType!!),
+      previousNames = previousNames,
+      contactId = contactId?.toLong(),
+      includePrisonerRelationships = includePrisonerRelationships,
     ),
   )
 
