@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -82,7 +83,7 @@ class ContactSearchService(
     logger.info("PageOfContacts is (page) ${pageOfContactIds.content.size} and (totalElements) ${pageOfContactIds.totalElements}")
 
     return if (!pageOfContactIds.isEmpty) {
-      enrichOnePage(pageOfContactIds, request, pageable)
+      enrichOnePage(pageOfContactIds, request, pageable, pageOfContactIds.totalElements)
     } else {
       Page.empty()
     }
@@ -244,11 +245,15 @@ class ContactSearchService(
     pageOfContactIds: Page<Long>,
     request: ContactSearchRequestV2,
     pageable: Pageable,
+    totalCount: Long,
   ): Page<ContactSearchResultItem> {
     val contactIds = pageOfContactIds.content.map { it }
 
-    // Retrieve the contact details and primary addresses for this page of contact IDs only
-    val contactsWithAddresses = contactWithAddressRepository.findAllWhereContactIdIn(contactIds, pageable)
+    // Take the sort criteria from the original user query
+    val sort = pageable.sort
+
+    // Retrieve the contact details and primary addresses for this one page of contact IDs only - not paginated
+    val contactsWithAddresses = contactWithAddressRepository.findAllWhereContactIdUnpaginated(contactIds, sort)
 
     // Add the relationships for a prisoner, if specified in the request
     val checkForRelationships = request.includePrisonerRelationships != null
@@ -273,7 +278,7 @@ class ContactSearchService(
     }
 
     // Return the page of contact search results, including relationships if requested
-    return contactsWithAddresses.map {
+    val contactsModelWithAddresses = contactsWithAddresses.map {
       val existingRelationships: List<ExistingRelationshipToPrisoner>? = if (checkForRelationships) {
         contactRelationships[it.contactId] ?: emptyList()
       } else {
@@ -281,6 +286,9 @@ class ContactSearchService(
       }
       it.toModel(existingRelationships)
     }
+
+    // Use the original pageable and total count
+    return PageImpl(contactsModelWithAddresses, pageable, totalCount)
   }
 
   private fun validateRequest(request: ContactSearchRequestV2) {
