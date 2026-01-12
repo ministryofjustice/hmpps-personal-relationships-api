@@ -35,7 +35,6 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   @Autowired
   protected lateinit var prisonerContactRepository: PrisonerContactRepository
 
-
   @BeforeEach
   fun setUp() {
     setCurrentUser(StubUser.READ_ONLY_USER)
