@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.openapitools.jackson.nullable.JsonNullable
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -19,6 +20,8 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelati
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.PrisonerContactSummary
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.service.events.PrisonerContactInfo
@@ -27,6 +30,12 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
+
+  @Autowired
+  protected lateinit var contactRepository: ContactRepository
+
+  @Autowired
+  protected lateinit var prisonerContactRepository: PrisonerContactRepository
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
@@ -78,6 +87,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     assertThat(errors.userMessage).isEqualTo("Validation failure: $expectedMessage")
     stubEvents.assertHasNoEvents(event = OutboundEvent.PRISONER_CONTACT_UPDATED)
+    contactRepository.deleteById(prisonerContactId)
   }
 
   @ParameterizedTest
@@ -104,6 +114,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     assertThat(errors.userMessage).isEqualTo("Validation failure(s): $expectedMessage")
     stubEvents.assertHasNoEvents(event = OutboundEvent.PRISONER_CONTACT_UPDATED)
+    contactRepository.deleteById(prisonerContactId)
   }
 
   @Test
@@ -128,6 +139,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
+    contactRepository.deleteById(prisonerContactId)
   }
 
   @Test
@@ -135,7 +147,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     val prisonerNumber = getRandomPrisonerCode()
     stubPrisonSearchWithResponse(prisonerNumber)
     val firstRelationship = cretePrisonerContact(prisonerNumber)
-    testAPIClient.addAContactRelationship(
+    val prisonerContactId = testAPIClient.addAContactRelationship(
       AddContactRelationshipRequest(
         firstRelationship.contactId,
         ContactRelationship(
@@ -148,7 +160,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
           comments = null,
         ),
       ),
-    )
+    ).prisonerContactId
 
     val updateRequest = PatchRelationshipRequest(
       // try to change BRO to a second SIS
@@ -164,6 +176,10 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isEqualTo(HttpStatus.CONFLICT)
+
+    prisonerContactRepository.deleteById(prisonerContactId)
+    prisonerContactRepository.deleteById(firstRelationship.prisonerContactId)
+    contactRepository.deleteById(firstRelationship.contactId)
   }
 
   @Test
@@ -190,6 +206,9 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
+
+    prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
+    contactRepository.deleteById(prisonerContact.contactId)
   }
 
   @Test
@@ -214,6 +233,8 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
+    prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
+    contactRepository.deleteById(prisonerContact.contactId)
   }
 
   @Test
@@ -238,6 +259,8 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
+    prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
+    contactRepository.deleteById(prisonerContact.contactId)
   }
 
   @Test
@@ -262,6 +285,8 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
+    prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
+    contactRepository.deleteById(prisonerContact.contactId)
   }
 
   @Test
@@ -286,6 +311,8 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
+    prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
+    contactRepository.deleteById(prisonerContact.contactId)
   }
 
   @Test
@@ -310,6 +337,8 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
+    prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
+    contactRepository.deleteById(prisonerContact.contactId)
   }
 
   @Test
@@ -331,6 +360,8 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
+    prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
+    contactRepository.deleteById(prisonerContact.contactId)
   }
 
   @ParameterizedTest
@@ -363,6 +394,8 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
+    prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
+    contactRepository.deleteById(prisonerContact.contactId)
   }
 
   private fun assertUpdatedPrisonerContactEquals(

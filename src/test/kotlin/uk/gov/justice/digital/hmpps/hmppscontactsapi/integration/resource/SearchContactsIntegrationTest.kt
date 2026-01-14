@@ -9,6 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.openapitools.jackson.nullable.JsonNullable
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.util.UriComponentsBuilder
@@ -19,12 +20,20 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactRelati
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.PatchRelationshipRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.ExistingRelationshipToPrisoner
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactRepository
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.PrisonerContactRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.util.StubUser
 import java.net.URI
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
+
+  @Autowired
+  protected lateinit var contactRepository: ContactRepository
+
+  @Autowired
+  protected lateinit var prisonerContactRepository: PrisonerContactRepository
 
   @BeforeEach
   fun setUp() {
@@ -370,7 +379,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           firstName = "Eldest",
           dateOfBirth = LocalDate.of(1990, 1, 1),
         ),
-      )
+      ).id
       testAPIClient.createAContact(
         CreateContactRequest(
           lastName = randomLastName,
@@ -398,9 +407,14 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         .build()
         .toUri(),
     )!!
+
     assertThat(resultsYoungestFirst.content).extracting("firstName").isEqualTo(
       listOf("Youngest", "Eldest", "None"),
     )
+
+    resultsYoungestFirst.content.forEach { contact ->
+      contactRepository.deleteById(contact.id)
+    }
   }
 
   @Test
@@ -487,6 +501,10 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     )!!
     assertThat(descendingName.content.map { "${it.lastName}, ${it.firstName}${if (it.middleNames != null) " ${it.middleNames}" else ""}" })
       .isEqualTo(expectedOrder.reversed())
+
+    descendingName.content.forEach { contact ->
+      contactRepository.deleteById(contact.id)
+    }
   }
 
   @Test
@@ -539,6 +557,10 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
         .toUri(),
     )!!
     assertThat(descendingName.content).extracting("id").isEqualTo(expectedOrder.reversed())
+
+    descendingName.content.forEach { contact ->
+      contactRepository.deleteById(contact.id)
+    }
   }
 
   @Test
@@ -692,6 +714,16 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
       val contactResult = results.content.find { it.id == contactId }
       assertThat(contactResult).isNotNull
       assertThat(contactResult!!.existingRelationships).containsExactlyInAnyOrderElementsOf(expectedRelationships)
+    }
+
+    results.content.forEach { contact ->
+      contact.existingRelationships?.forEach { existingRelationship ->
+        prisonerContactRepository.deleteById(existingRelationship.prisonerContactId)
+      }
+    }
+
+    results.content.forEach { contact ->
+      contactRepository.deleteById(contact.id)
     }
   }
 
