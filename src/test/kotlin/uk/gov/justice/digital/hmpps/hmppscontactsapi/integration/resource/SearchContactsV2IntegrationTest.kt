@@ -345,6 +345,41 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
+  fun `should paginate contacts via historic last name match`() {
+    val uri = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "PARTIAL")
+      .queryParam("lastName", "kin")
+      .queryParam("previousNames", "true")
+      .queryParam("page", "0")
+      .queryParam("size", "2")
+      .build()
+      .toUri()
+
+    val body = testAPIClient.getSearchContactResults(uri)!!
+
+    assertThat(body.page.number).isEqualTo(0)
+    assertThat(body.content.size).isEqualTo(2)
+    assertThat(body.page.totalPages).isEqualTo(2)
+    assertThat(body.page.totalElements).isEqualTo(3)
+
+    val uri2 = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "PARTIAL")
+      .queryParam("lastName", "kin")
+      .queryParam("previousNames", "true")
+      .queryParam("page", "1")
+      .queryParam("size", "2")
+      .build()
+      .toUri()
+
+    val body2 = testAPIClient.getSearchContactResults(uri2)!!
+
+    assertThat(body2.page.number).isEqualTo(1)
+    assertThat(body2.content.size).isEqualTo(1)
+    assertThat(body2.page.totalPages).isEqualTo(2)
+    assertThat(body2.page.totalElements).isEqualTo(3)
+  }
+
+  @Test
   fun `should find contacts via historic name sounds like`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
       .queryParam("searchType", "SOUNDS_LIKE")
