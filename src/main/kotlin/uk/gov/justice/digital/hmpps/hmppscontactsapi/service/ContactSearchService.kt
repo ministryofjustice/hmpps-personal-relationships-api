@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppscontactsapi.service
 
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
@@ -38,6 +39,7 @@ class ContactSearchService(
   private val prisonerContactSummaryRepository: PrisonerContactSummaryRepository,
   private val contactSearchRepositoryV2: ContactSearchRepositoryV2,
   private val contactWithAddressRepository: ContactWithAddressRepository,
+  @Value("\${contact-search.slow-query.row-limit}") val rowLimiter: Int = 2000,
 ) {
   /**
    * The original V1 search for contacts
@@ -255,8 +257,9 @@ class ContactSearchService(
     // Retrieve the contact details and primary addresses for this one page of contact IDs only - not paginated
     val contactsWithAddresses = contactWithAddressRepository.findAllWhereContactIdUnpaginated(contactIds, sort)
 
-    // Add the relationships for a prisoner, if specified in the request
     val checkForRelationships = request.includePrisonerRelationships != null
+
+    // Add the relationships for a prisoner, if requested
     val contactRelationships: Map<Long, List<ExistingRelationshipToPrisoner>> = if (checkForRelationships) {
       prisonerContactSummaryRepository
         .findByPrisonerNumberAndContactIdIn(request.includePrisonerRelationships!!, contactIds)
