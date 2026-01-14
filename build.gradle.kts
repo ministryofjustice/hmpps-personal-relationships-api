@@ -45,6 +45,7 @@ dependencies {
   implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.26.0")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.openapitools:jackson-databind-nullable:0.2.8")
+  implementation("org.apache.logging.log4j:log4j-api:2.25.3")
 
   // CSV dependencies
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.20.1")
