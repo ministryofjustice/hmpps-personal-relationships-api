@@ -123,9 +123,9 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
         and ca.rev_type in (0, 1)
         limit :rowLimiter
       )
-      select c.contact_id       
-      from contact c 
-      where c.contact_id in (select contact_id from filtered_contacts) 
+      select c.contact_id
+      from contact c
+      where c.contact_id in (select contact_id from filtered_contacts)
     """,
     countQuery = """
       with filtered_contacts AS (
@@ -137,8 +137,8 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
         and ca.rev_type in (0, 1)
         limit :rowLimiter
       )
-      select count(c.contact_id) as count 
-      from contact c 
+      select count(c.contact_id) as count
+      from contact c
       where c.contact_id in (select contact_id from filtered_contacts)
     """,
     nativeQuery = true,

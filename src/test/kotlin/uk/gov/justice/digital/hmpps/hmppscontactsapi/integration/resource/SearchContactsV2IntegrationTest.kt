@@ -331,7 +331,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  fun `should find contacts via historic last name match with default sort`() {
+  fun `should find contacts via historic last name match with default sort order`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
       .queryParam("searchType", "PARTIAL")
       .queryParam("lastName", "kin")
@@ -387,7 +387,8 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
       .queryParam("previousNames", "true")
       .queryParam("page", "0")
       .queryParam("size", "3")
-      .queryParam("sort", "lastName,firstName")
+      .queryParam("sort", "lastName")
+      .queryParam("sort", "firstName")
       .build()
       .toUri()
 
