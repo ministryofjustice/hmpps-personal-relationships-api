@@ -103,10 +103,10 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
       from ContactEntity c where c.contactId in (
         select distinct ca.contactId
         from ContactAuditEntity ca
-        where ca.revType in (0, 1)
-        and (:lastName is null or ca.lastName ilike :lastName)
+        where (:lastName is null or ca.lastName ilike :lastName)
         and (:firstName is null or ca.firstName ilike :firstName)
         and (:middleNames is null or ca.middleNames ilike :middleNames)
+        and ca.revType in (0, 1)
     ) 
     """,
   )
@@ -114,18 +114,36 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
 
   @Query(
     """
-      select c.contactId
-      from ContactEntity c where c.contactId in (
-        select distinct ca.contactId
-        from ContactAuditEntity ca
-        where ca.revType in (0, 1)
-        and (:lastName is null or ca.lastName ilike %:lastName% escape '#')
-        and (:firstName is null or ca.firstName ilike %:firstName% escape '#')
-        and (:middleNames is null or ca.middleNames ilike %:middleNames% escape '#')
-    ) 
+      with filtered_contacts AS (
+        select distinct ca.contact_id
+        from contact_audit ca
+        where (:lastName is null or ca.last_name ilike '%'||:lastName||'%' escape '#')
+        and (:firstName is null or ca.first_name ilike '%'||:firstName||'%' escape '#')
+        and (:middleNames is null or ca.middle_names ilike '%'||:middleNames||'%' escape '#')
+        and ca.rev_type in (0, 1)
+        limit :rowLimiter
+      )
+      select c.contact_id 
+      from contact c 
+      where c.contact_id in (select contact_id from filtered_contacts) 
     """,
+    countQuery = """
+      with filtered_contacts AS (
+        select distinct ca.contact_id
+        from contact_audit ca
+        where (:lastName is null or ca.last_name ilike '%'||:lastName||'%' escape '#')
+        and (:firstName is null or ca.first_name ilike '%'||:firstName||'%' escape '#')
+        and (:middleNames is null or ca.middle_names ilike '%'||:middleNames||'%' escape '#')
+        and ca.rev_type in (0, 1)
+        limit :rowLimiter
+      )
+      select count(c.contact_id) as count 
+      from contact c 
+      where c.contact_id in (select contact_id from filtered_contacts)
+    """,
+    nativeQuery = true,
   )
-  fun findAllByNamesMatchAndHistory(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
+  fun findAllByNamesMatchAndHistory(firstName: String?, middleNames: String?, lastName: String?, rowLimiter: Int, pageable: Pageable): Page<Long>
 
   @Query(
     """      

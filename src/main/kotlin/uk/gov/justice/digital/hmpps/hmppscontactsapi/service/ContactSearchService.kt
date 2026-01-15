@@ -82,7 +82,7 @@ class ContactSearchService(
     validateRequest(request)
     val pageOfContactIds = getPageOfContactIds(request, pageable)
 
-    logger.info("PageOfContacts is (page) ${pageOfContactIds.content.size} and (totalElements) ${pageOfContactIds.totalElements}")
+    logger.info("PageOfContacts is (elementsInThisPage) ${pageOfContactIds.content.size} and (totalElements) ${pageOfContactIds.totalElements}")
 
     return if (!pageOfContactIds.isEmpty) {
       enrichOnePage(pageOfContactIds, request, pageable, pageOfContactIds.totalElements)
@@ -210,6 +210,7 @@ class ContactSearchService(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
+          rowLimiter,
           pageable,
         )
       }
