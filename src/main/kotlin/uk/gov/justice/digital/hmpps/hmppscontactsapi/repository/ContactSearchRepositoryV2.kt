@@ -123,7 +123,7 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
         and ca.rev_type in (0, 1)
         limit :rowLimiter
       )
-      select c.contact_id 
+      select c.contact_id       
       from contact c 
       where c.contact_id in (select contact_id from filtered_contacts) 
     """,

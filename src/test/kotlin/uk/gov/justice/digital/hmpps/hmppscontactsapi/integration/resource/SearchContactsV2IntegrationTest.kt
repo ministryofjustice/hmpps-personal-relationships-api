@@ -331,7 +331,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  fun `should find contacts via historic last name match`() {
+  fun `should find contacts via historic last name match with default sort`() {
     val uri = UriComponentsBuilder.fromPath("contact/searchV2")
       .queryParam("searchType", "PARTIAL")
       .queryParam("lastName", "kin")
@@ -341,7 +341,7 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
 
     val body = testAPIClient.getSearchContactResults(uri)!!
 
-    assertThat(body.page.totalElements).isGreaterThanOrEqualTo(1)
+    assertThat(body.page.totalElements).isEqualTo(3)
   }
 
   @Test
@@ -377,6 +377,64 @@ class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(body2.content.size).isEqualTo(1)
     assertThat(body2.page.totalPages).isEqualTo(2)
     assertThat(body2.page.totalElements).isEqualTo(3)
+  }
+
+  @Test
+  fun `should paginate and sort the NATIVE query for historic last name match`() {
+    val uri = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "PARTIAL")
+      .queryParam("lastName", "kin")
+      .queryParam("previousNames", "true")
+      .queryParam("page", "0")
+      .queryParam("size", "3")
+      .queryParam("sort", "lastName,firstName")
+      .build()
+      .toUri()
+
+    val body = testAPIClient.getSearchContactResults(uri)!!
+
+    assertThat(body.page.number).isEqualTo(0)
+    assertThat(body.content.size).isEqualTo(3)
+    assertThat(body.page.totalPages).isEqualTo(1)
+    assertThat(body.page.totalElements).isEqualTo(3)
+
+    with(body.content.first()) {
+      assertThat(firstName).isEqualTo("Isabel")
+    }
+
+    with(body.content.last()) {
+      assertThat(firstName).isEqualTo("Isobel")
+    }
+  }
+
+  @Test
+  fun `should accept complex sorting parameters and sort the NATIVE query for historic last name match`() {
+    val uri = UriComponentsBuilder.fromPath("contact/searchV2")
+      .queryParam("searchType", "PARTIAL")
+      .queryParam("lastName", "kin")
+      .queryParam("previousNames", "true")
+      .queryParam("page", "0")
+      .queryParam("size", "3")
+      .queryParam("sort", "lastName,asc")
+      .queryParam("sort", "firstName,desc")
+      .queryParam("sort", "dateOfBirth,asc")
+      .build()
+      .toUri()
+
+    val body = testAPIClient.getSearchContactResults(uri)!!
+
+    assertThat(body.page.number).isEqualTo(0)
+    assertThat(body.content.size).isEqualTo(3)
+    assertThat(body.page.totalPages).isEqualTo(1)
+    assertThat(body.page.totalElements).isEqualTo(3)
+
+    with(body.content.first()) {
+      assertThat(firstName).isEqualTo("Isobel")
+    }
+
+    with(body.content.last()) {
+      assertThat(firstName).isEqualTo("Isabel")
+    }
   }
 
   @Test
