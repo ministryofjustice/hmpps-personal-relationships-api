@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.exception.DuplicatePersonEx
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.sync.mapSyncRequestToEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCreateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdateContactRequest
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactIdentityRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactWithFixedIdRepository
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -23,7 +24,8 @@ import java.util.*
 
 class SyncContactServiceTest {
   private val contactRepository: ContactWithFixedIdRepository = mock()
-  private val syncService = SyncContactService(contactRepository)
+  private val contactIdentityRepository: ContactIdentityRepository = mock()
+  private val syncService = SyncContactService(contactRepository, contactIdentityRepository)
 
   @Nested
   inner class ContactTests {

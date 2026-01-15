@@ -14,12 +14,14 @@ import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncCrea
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.sync.SyncUpdateContactRequest
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContact
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.response.sync.SyncContactId
+import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactIdentityRepository
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.repository.ContactWithFixedIdRepository
 
 @Service
 @Transactional
 class SyncContactService(
   val contactRepository: ContactWithFixedIdRepository,
+  val contactIdentityRepository: ContactIdentityRepository,
 ) {
   companion object {
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -35,6 +37,7 @@ class SyncContactService(
   fun deleteContact(contactId: Long) {
     contactRepository.findById(contactId)
       .orElseThrow { EntityNotFoundException("Contact with ID $contactId not found") }
+    contactIdentityRepository.deleteAllByContactId(contactId)
     contactRepository.deleteById(contactId)
   }
 
