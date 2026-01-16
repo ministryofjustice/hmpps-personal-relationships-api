@@ -4,6 +4,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
 import org.mockito.kotlin.never
@@ -12,6 +14,7 @@ import org.mockito.kotlin.whenever
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.ContactWithAddressEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactSummaryEntity
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.model.request.ContactSearchRequest
@@ -289,6 +292,65 @@ class ContactSearchServiceTest {
     fun `Should choose search by date of birth and names sound like and history`() {
       val request2 = request.copy(dateOfBirth = LocalDate.of(1980, 1, 1), searchType = UserSearchType.SOUNDS_LIKE, previousNames = true)
       assertThat(service.determineSearchType(request2)).isEqualTo(ContactSearchType.DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE_AND_HISTORY)
+    }
+  }
+
+  @Nested
+  inner class ContactSearchV2Utilities {
+    @ParameterizedTest
+    @CsvSource(
+      "lastName, last_name",
+      "firstName, first_name",
+      "dateOfBirth, date_of_birth",
+      "aVeryVeryVeryLongName, a_very_very_very_long_name",
+      "contactId, contact_id",
+    )
+    fun `Should manipulate camel case sort order names to snake case column names for native queries`(camelName: String, snakeName: String) {
+      assertThat(service.convertCamelToSnake(camelName)).isEqualTo(snakeName)
+    }
+  }
+
+  @Nested
+  inner class ContactSearchV2SortOrder {
+    @Test
+    fun `Should manipulate sort order to native SQL sort order with default direction`() {
+      val oldSort = Sort.by("lastName", "firstName", "dateOfBirth")
+
+      val newSort = service.manipulateSortToNative(oldSort)
+
+      assertThat(newSort.isSorted).isTrue()
+      assertThat(newSort.get().toList()).containsExactly(
+        Sort.Order(Sort.Direction.ASC, "last_name"),
+        Sort.Order(Sort.Direction.ASC, "first_name"),
+        Sort.Order(Sort.Direction.ASC, "date_of_birth"),
+      )
+    }
+
+    @Test
+    fun `Should not try to sort an unsorted query`() {
+      val oldSort = Sort.unsorted()
+      val newSort = service.manipulateSortToNative(oldSort)
+      assertThat(newSort.isUnsorted).isTrue()
+    }
+
+    @Test
+    fun `Should retain the sort order including ASC or DESC supplied for columns`() {
+      val oldSort = Sort.by(
+        listOf(
+          Sort.Order(Sort.Direction.ASC, "lastName"),
+          Sort.Order(Sort.Direction.DESC, "firstName"),
+          Sort.Order(Sort.Direction.ASC, "dateOfBirth"),
+        ),
+      )
+
+      val newSort = service.manipulateSortToNative(oldSort)
+
+      assertThat(newSort.isSorted).isTrue()
+      assertThat(newSort.get().toList()).containsExactly(
+        Sort.Order(Sort.Direction.ASC, "last_name"),
+        Sort.Order(Sort.Direction.DESC, "first_name"),
+        Sort.Order(Sort.Direction.ASC, "date_of_birth"),
+      )
     }
   }
 }

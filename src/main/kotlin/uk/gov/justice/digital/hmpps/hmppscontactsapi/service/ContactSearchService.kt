@@ -4,7 +4,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.hmppscontactsapi.mapping.toModel
@@ -206,12 +208,15 @@ class ContactSearchService(
 
       NAMES_MATCH_AND_HISTORY -> {
         logger.info("NAMES_MATCH_AND_HISTORY search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
+        // This search option involves a native query so sort parameters need to be manipulated to native column name format
+        val newPageable = PageRequest.of(pageable.pageNumber, pageable.pageSize, manipulateSortToNative(pageable.sort))
+
         contactSearchRepositoryV2.findAllByNamesMatchAndHistory(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
           rowLimiter,
-          pageable,
+          newPageable,
         )
       }
 
@@ -311,6 +316,17 @@ class ContactSearchService(
     require(request.contactId != null || request.dateOfBirth != null || nameProvided) {
       "Either contact ID, date of birth or a full or partial name must be provided for contact searches"
     }
+  }
+
+  fun manipulateSortToNative(originalSort: Sort = Sort.unsorted()): Sort = if (originalSort.isUnsorted) {
+    originalSort
+  } else {
+    Sort.by(originalSort.map { Sort.Order(it.direction, convertCamelToSnake(it.property)) }.toList())
+  }
+
+  fun convertCamelToSnake(property: String): String {
+    val regex = "(?<=.)([A-Z])".toRegex()
+    return property.trim().replace(regex) { "_${it.value.lowercase()}" }.lowercase()
   }
 
   fun determineSearchType(request: ContactSearchRequestV2): ContactSearchType {
