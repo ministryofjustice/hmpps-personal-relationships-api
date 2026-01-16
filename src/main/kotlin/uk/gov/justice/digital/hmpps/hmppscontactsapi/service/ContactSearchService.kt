@@ -333,7 +333,7 @@ class ContactSearchService(
     val contactIdPresent = request.contactId != null
     val dobPresent = request.dateOfBirth != null
     val namesEntered = listOf(request.firstName, request.lastName, request.middleNames).any { it != null }
-    val previousNames = request.lastName != null && request.previousNames == true
+    val previousNames = namesEntered && request.previousNames == true
 
     return when {
       contactIdPresent -> CONTACT_ID_ONLY

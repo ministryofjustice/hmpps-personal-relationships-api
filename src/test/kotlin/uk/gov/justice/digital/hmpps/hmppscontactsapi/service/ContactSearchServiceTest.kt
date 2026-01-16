@@ -277,6 +277,11 @@ class ContactSearchServiceTest {
     }
 
     @Test
+    fun `Should choose search by names match and history with only a partial first name`() {
+      assertThat(service.determineSearchType(request.copy(lastName = null, middleNames = null, previousNames = true))).isEqualTo(ContactSearchType.NAMES_MATCH_AND_HISTORY)
+    }
+
+    @Test
     fun `Should choose search by date of birth and names exact and history`() {
       val request2 = request.copy(dateOfBirth = LocalDate.of(1980, 1, 1), previousNames = true, searchType = UserSearchType.EXACT)
       assertThat(service.determineSearchType(request2)).isEqualTo(ContactSearchType.DATE_OF_BIRTH_AND_NAMES_EXACT_AND_HISTORY)
