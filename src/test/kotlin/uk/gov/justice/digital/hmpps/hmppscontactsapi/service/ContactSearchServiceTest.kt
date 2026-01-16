@@ -304,9 +304,8 @@ class ContactSearchServiceTest {
       "dateOfBirth, date_of_birth",
       "aVeryVeryVeryLongName, a_very_very_very_long_name",
       "contactId, contact_id",
-      ",",
     )
-    fun `Should manipulate camel case sort order names to snake case column names for native queries`(camelName: String?, snakeName: String?) {
+    fun `Should manipulate camel case sort order names to snake case column names for native queries`(camelName: String, snakeName: String) {
       assertThat(service.convertCamelToSnake(camelName)).isEqualTo(snakeName)
     }
   }

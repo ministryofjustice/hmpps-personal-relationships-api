@@ -321,12 +321,12 @@ class ContactSearchService(
   fun manipulateSortToNative(originalSort: Sort = Sort.unsorted()): Sort = if (originalSort.isUnsorted) {
     originalSort
   } else {
-    Sort.by(originalSort.map { Sort.Order(it.direction, convertCamelToSnake(it.property)!!) }.toList())
+    Sort.by(originalSort.map { Sort.Order(it.direction, convertCamelToSnake(it.property)) }.toList())
   }
 
-  fun convertCamelToSnake(property: String?): String? {
+  fun convertCamelToSnake(property: String): String {
     val regex = "(?<=.)([A-Z])".toRegex()
-    return property?.trim()?.replace(regex) { "_${it.value.lowercase()}" }?.lowercase()
+    return property.trim().replace(regex) { "_${it.value.lowercase()}" }.lowercase()
   }
 
   fun determineSearchType(request: ContactSearchRequestV2): ContactSearchType {
