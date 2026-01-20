@@ -8,7 +8,7 @@
     <selectedOptions>
       <option name="environmentVariables" />
     </selectedOptions>
-    <option name="SPRING_BOOT_MAIN_CLASS" value="uk.gov.justice.digital.hmpps.hmppscontactsapi.HmppsPersonalRelationshipsApi" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="uk.gov.justice.digital.hmpps.personalrelationships.HmppsPersonalRelationshipsApi" />
     <extension name="net.ashald.envfile">
       <option name="IS_ENABLED" value="false" />
       <option name="IS_SUBST" value="false" />

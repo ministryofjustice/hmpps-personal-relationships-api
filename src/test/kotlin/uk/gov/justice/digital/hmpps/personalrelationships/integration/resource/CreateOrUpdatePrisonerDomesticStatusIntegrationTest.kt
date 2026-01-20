@@ -1,0 +1,233 @@
+package uk.gov.justice.digital.hmpps.personalrelationships.integration.resource
+
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.helpers.prisoner
+import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
+import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateOrUpdatePrisonerDomesticStatusRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerDomesticStatusResponse
+import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
+import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PrisonerDomesticStatus
+import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.util.StubUser
+
+class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegrationTestBase() {
+
+  @BeforeEach
+  fun setUp() {
+    setCurrentUser(StubUser.READ_WRITE_USER)
+  }
+
+  private val prisonerNumber = "A1234BC"
+  private val prisoner1 = prisoner(
+    prisonerNumber = "A1234BC",
+    prisonId = "MDI",
+    firstName = "Joe",
+    middleNames = "Middle",
+    lastName = "Bloggs",
+  )
+  override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
+
+  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.put()
+    .uri("/prisoner/$prisonerNumber/domestic-status")
+    .accept(MediaType.APPLICATION_JSON)
+    .contentType(MediaType.APPLICATION_JSON)
+    .bodyValue(createRequest())
+
+  @ParameterizedTest
+  @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
+  fun `should create new domestic status`(role: String) {
+    setCurrentUser(StubUser.READ_WRITE_USER.copy(roles = listOf(role)))
+    stubPrisonerSearch(prisoner1)
+    val request = createRequest()
+
+    val response = webTestClient.put()
+      .uri("/prisoner/$prisonerNumber/domestic-status")
+      .headers(setAuthorisationUsingCurrentUser())
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(request)
+      .exchange()
+      .expectStatus().isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(PrisonerDomesticStatusResponse::class.java)
+      .returnResult().responseBody
+
+    assertThat(response).isNotNull
+    assertThat(response).usingRecursiveComparison()
+      .ignoringFields("id", "createdTime")
+      .isEqualTo(
+        PrisonerDomesticStatusResponse(
+          id = 2L,
+          domesticStatusCode = "M",
+          domesticStatusDescription = "Married or in a civil partnership",
+          active = true,
+          createdBy = "read_write_user",
+        ),
+      )
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
+      additionalInfo = PrisonerDomesticStatus(response!!.id, Source.DPS, "read_write_user", "BXI"),
+      personReference = PersonReference(nomsNumber = prisonerNumber),
+    )
+  }
+
+  @Test
+  fun `should allow null for domestic status`() {
+    stubPrisonerSearch(prisoner1)
+    val request = CreateOrUpdatePrisonerDomesticStatusRequest(
+      domesticStatusCode = null,
+    )
+
+    val response = webTestClient.put()
+      .uri("/prisoner/$prisonerNumber/domestic-status")
+      .headers(setAuthorisationUsingCurrentUser())
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(request)
+      .exchange()
+      .expectStatus().isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(PrisonerDomesticStatusResponse::class.java)
+      .returnResult().responseBody
+
+    assertThat(response).isNotNull
+    assertThat(response).usingRecursiveComparison()
+      .ignoringFields("id", "createdTime")
+      .isEqualTo(
+        PrisonerDomesticStatusResponse(
+          id = 2L,
+          domesticStatusCode = null,
+          domesticStatusDescription = null,
+          active = true,
+          createdBy = "read_write_user",
+        ),
+      )
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
+      additionalInfo = PrisonerDomesticStatus(response!!.id, Source.DPS, "read_write_user", "BXI"),
+      personReference = PersonReference(nomsNumber = prisonerNumber),
+    )
+  }
+
+  @Test
+  fun `should update existing domestic status`() {
+    stubPrisonerSearch(prisoner1)
+    val request = createRequest()
+    val response = webTestClient.put()
+      .uri("/prisoner/$prisonerNumber/domestic-status")
+      .headers(setAuthorisationUsingCurrentUser())
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(request)
+      .exchange()
+      .expectStatus().isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(PrisonerDomesticStatusResponse::class.java)
+      .returnResult().responseBody
+
+    assertThat(response).isNotNull
+
+    val updateResponse = webTestClient.put()
+      .uri("/prisoner/$prisonerNumber/domestic-status")
+      .headers(setAuthorisationUsingCurrentUser())
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(request)
+      .exchange()
+      .expectStatus().isOk
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(PrisonerDomesticStatusResponse::class.java)
+      .returnResult().responseBody
+
+    assertThat(updateResponse).isNotNull
+    assertThat(updateResponse!!.id).isGreaterThan(response!!.id)
+    assertThat(updateResponse).usingRecursiveComparison()
+      .ignoringFields("id", "createdTime")
+      .isEqualTo(
+        PrisonerDomesticStatusResponse(
+          id = 1L,
+          domesticStatusCode = "M",
+          domesticStatusDescription = "Married or in a civil partnership",
+          active = true,
+          createdBy = "read_write_user",
+        ),
+      )
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
+      additionalInfo = PrisonerDomesticStatus(response.id, Source.DPS, "read_write_user", "BXI"),
+      personReference = PersonReference(nomsNumber = prisonerNumber),
+    )
+  }
+
+  @Test
+  fun `should return 400 when domestic status code is more than 12 characters`() {
+    webTestClient.put()
+      .uri("/prisoner/$prisonerNumber/domestic-status")
+      .headers(setAuthorisationUsingCurrentUser())
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(
+        CreateOrUpdatePrisonerDomesticStatusRequest(
+          domesticStatusCode = "MORE THAN 12 CHARACTERS",
+        ),
+      )
+      .exchange()
+      .expectStatus().isBadRequest
+      .expectBody()
+      .jsonPath("$.userMessage")
+      .isEqualTo("Validation failure(s): domesticStatusCode must be less than or equal to 12 characters")
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
+    )
+  }
+
+  @Test
+  fun `should return 404 when domestic status code is empty`() {
+    stubPrisonerSearch(prisoner1)
+    webTestClient.put()
+      .uri("/prisoner/$prisonerNumber/domestic-status")
+      .headers(setAuthorisationUsingCurrentUser())
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(
+        CreateOrUpdatePrisonerDomesticStatusRequest(
+          domesticStatusCode = "",
+        ),
+      )
+      .exchange()
+      .expectStatus().isNotFound
+      .expectBody()
+      .jsonPath("$.userMessage")
+      .isEqualTo("Entity not found : No reference data found for groupCode: DOMESTIC_STS and code: ")
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
+    )
+  }
+
+  @Test
+  fun `should return 404 when domestic status code is invalid`() {
+    stubPrisonerSearch(prisoner1)
+    webTestClient.put()
+      .uri("/prisoner/$prisonerNumber/domestic-status")
+      .headers(setAuthorisationUsingCurrentUser())
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(
+        CreateOrUpdatePrisonerDomesticStatusRequest(
+          domesticStatusCode = "Q",
+        ),
+      )
+      .exchange()
+      .expectStatus().isNotFound
+      .expectBody()
+      .jsonPath("$.userMessage")
+      .isEqualTo("Entity not found : No reference data found for groupCode: DOMESTIC_STS and code: Q")
+    stubEvents.assertHasNoEvents(
+      event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
+    )
+  }
+
+  private fun createRequest() = CreateOrUpdatePrisonerDomesticStatusRequest(
+    domesticStatusCode = "M",
+  )
+}

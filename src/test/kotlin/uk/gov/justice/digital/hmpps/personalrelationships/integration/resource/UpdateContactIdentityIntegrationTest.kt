@@ -1,0 +1,271 @@
+package uk.gov.justice.digital.hmpps.personalrelationships.integration.resource
+
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
+import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.CreateIdentityRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.UpdateIdentityRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.service.events.ContactIdentityInfo
+import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
+import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.util.StubUser
+import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
+
+class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
+  private var savedContactId = 0L
+  private var savedContactIdentityId = 0L
+
+  override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
+
+  @BeforeEach
+  fun initialiseData() {
+    setCurrentUser(StubUser.CREATING_USER)
+    savedContactId = testAPIClient.createAContact(
+      CreateContactRequest(
+        lastName = "identity",
+        firstName = "has",
+      ),
+
+    ).id
+    savedContactIdentityId = testAPIClient.createAContactIdentity(
+      savedContactId,
+      CreateIdentityRequest(
+        identityType = "DL",
+        identityValue = "DL123456789",
+        issuingAuthority = "DVLA",
+      ),
+
+    ).contactIdentityId
+    setCurrentUser(StubUser.UPDATING_USER)
+  }
+
+  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.put()
+    .uri("/contact/$savedContactId/identity/$savedContactIdentityId")
+    .accept(MediaType.APPLICATION_JSON)
+    .contentType(MediaType.APPLICATION_JSON)
+    .bodyValue(aMinimalRequest())
+
+  @ParameterizedTest
+  @CsvSource(
+    value = [
+      "identityType must not be null;{\"identityType\": null, \"identityValue\": \"0123456789\"}",
+      "identityType must not be null;{\"identityValue\": \"0123456789\"}",
+      "identityValue must not be null;{\"identityType\": \"DL\", \"identityValue\": null}",
+      "identityValue must not be null;{\"identityType\": \"DL\"}",
+    ],
+    delimiter = ';',
+  )
+  fun `should return bad request if required fields are null`(expectedMessage: String, json: String) {
+    val errors = webTestClient.put()
+      .uri("/contact/$savedContactId/identity/$savedContactIdentityId")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisationUsingCurrentUser())
+      .bodyValue(json)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Validation failure: $expectedMessage")
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_IDENTITY_UPDATED)
+  }
+
+  @ParameterizedTest
+  @MethodSource("allFieldConstraintViolations")
+  fun `should enforce field constraints`(expectedMessage: String, request: UpdateIdentityRequest) {
+    val errors = webTestClient.put()
+      .uri("/contact/$savedContactId/identity/$savedContactIdentityId")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisationUsingCurrentUser())
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Validation failure(s): $expectedMessage")
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_IDENTITY_UPDATED)
+  }
+
+  @Test
+  fun `should validate PNC number`() {
+    val expectedMessage = "Identity value (1923/1Z34567A) is not a valid PNC Number"
+    val request = aMinimalRequest().copy(identityType = "PNC", identityValue = "1923/1Z34567A")
+    val errors = webTestClient.put()
+      .uri("/contact/$savedContactId/identity/$savedContactIdentityId")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisationUsingCurrentUser())
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Validation failure: $expectedMessage")
+  }
+
+  @Test
+  fun `should not update the identity if the type is unknown`() {
+    val request = UpdateIdentityRequest(
+      identityType = "MACRO",
+      identityValue = "DL123456789",
+    )
+
+    val errors = webTestClient.put()
+      .uri("/contact/$savedContactId/identity/$savedContactIdentityId")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisationUsingCurrentUser())
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported identity type (MACRO)")
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_IDENTITY_UPDATED)
+  }
+
+  @Test
+  fun `should not update the identity if the contact is not found`() {
+    val request = aMinimalRequest()
+
+    val errors = webTestClient.put()
+      .uri("/contact/-321/identity/$savedContactIdentityId")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisationUsingCurrentUser())
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isNotFound
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Entity not found : Contact (-321) not found")
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_IDENTITY_UPDATED)
+  }
+
+  @Test
+  fun `should not update the identity if the identity is not found`() {
+    val request = aMinimalRequest()
+
+    val errors = webTestClient.put()
+      .uri("/contact/$savedContactId/identity/-99")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisationUsingCurrentUser())
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .isNotFound
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Entity not found : Contact identity (-99) not found")
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_IDENTITY_UPDATED)
+  }
+
+  @Test
+  fun `should update the identity with minimal fields`() {
+    val request = UpdateIdentityRequest(
+      identityType = "PASS",
+      identityValue = "P978654312",
+      issuingAuthority = null,
+    )
+    val updated = testAPIClient.updateAContactIdentity(
+      savedContactId,
+      savedContactIdentityId,
+      request,
+    )
+
+    with(updated) {
+      assertThat(identityType).isEqualTo(request.identityType)
+      assertThat(identityValue).isEqualTo(request.identityValue)
+      assertThat(issuingAuthority).isNull()
+      assertThat(createdBy).isEqualTo("created")
+      assertThat(createdTime).isNotNull()
+      assertThat(updatedBy).isEqualTo("updated")
+      assertThat(updatedTime).isNotNull()
+    }
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.CONTACT_IDENTITY_UPDATED,
+      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "updated", "BXI"),
+      personReference = PersonReference(dpsContactId = savedContactId),
+    )
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
+  fun `should update the identity with all fields`(role: String) {
+    setCurrentUser(StubUser.UPDATING_USER.copy(roles = listOf(role)))
+    val request = UpdateIdentityRequest(
+      identityType = "PASS",
+      identityValue = "P978654312",
+      issuingAuthority = "Passport office",
+    )
+
+    val updated = testAPIClient.updateAContactIdentity(
+      savedContactId,
+      savedContactIdentityId,
+      request,
+    )
+
+    with(updated) {
+      assertThat(identityType).isEqualTo(request.identityType)
+      assertThat(identityValue).isEqualTo(request.identityValue)
+      assertThat(issuingAuthority).isEqualTo(request.issuingAuthority)
+      assertThat(createdBy).isEqualTo("created")
+      assertThat(createdTime).isNotNull()
+      assertThat(updatedBy).isEqualTo("updated")
+      assertThat(updatedTime).isNotNull()
+    }
+
+    stubEvents.assertHasEvent(
+      event = OutboundEvent.CONTACT_IDENTITY_UPDATED,
+      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "updated", "BXI"),
+      personReference = PersonReference(dpsContactId = savedContactId),
+    )
+  }
+
+  companion object {
+    @JvmStatic
+    fun allFieldConstraintViolations(): List<Arguments> = listOf(
+      Arguments.of("identityType must be <= 12 characters", aMinimalRequest().copy(identityType = "".padStart(13, 'X'))),
+      Arguments.of("identityValue must be <= 20 characters", aMinimalRequest().copy(identityValue = "".padStart(21, 'X'))),
+      Arguments.of(
+        "issuingAuthority must be <= 40 characters",
+        aMinimalRequest().copy(issuingAuthority = "".padStart(41, 'X')),
+      ),
+    )
+
+    private fun aMinimalRequest() = UpdateIdentityRequest(
+      identityType = "DL",
+      identityValue = "DL123456789",
+    )
+  }
+}
