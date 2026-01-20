@@ -103,7 +103,7 @@ tasks.register("buildOrganisationApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
   inputSpec.set("openapi-specs/hmpps-organisations-api.json")
   outputDir.set("$buildDirectory/generated/organisationsapi")
-  modelPackage.set("uk.gov.justice.digital.hmpps.hmppscontactsapi.client.organisationsapi.model")
+  modelPackage.set("uk.gov.justice.digital.hmpps.personalrelationships.client.organisationsapi.model")
   configOptions.set(configValues)
   globalProperties.set(mapOf("models" to ""))
 }
