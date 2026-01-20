@@ -1414,7 +1414,6 @@ class ContactServiceTest {
         "true,false, Admin",
         "false,true, null",
         "false,false,null",
-
       )
       fun `should update the approved visitor , approved by user and approved time`(updatingApprovedVisitor: Boolean, savedApprovedVisitorValue: Boolean, expectedApprovedBy: String) {
         val request = PatchRelationshipRequest(
