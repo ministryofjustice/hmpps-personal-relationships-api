@@ -35,7 +35,7 @@ fi
 # 1. Retrieves client credentials from a Kubernetes secret
 # 2. Run gatling tests,
 # to run specific simulation file add the simulation file name
-# --simulation uk.gov.justice.digital.hmpps.hmppscontactsapi.simulations.CreateOrUpdateDomesticStatusSimulation
+# --simulation uk.gov.justice.digital.hmpps.personalrelationships.simulations.CreateOrUpdateDomesticStatusSimulation
 # To run all gatling tests, use --all and remove --simulation simulation.filename
 
 
@@ -53,7 +53,7 @@ echo "Running gatling tests"
 # Response time percentile: 1000ms
 # Successful requests percentage: 95%
 cd ..
-./gradlew gatlingRun --simulation uk.gov.justice.digital.hmpps.hmppscontactsapi.simulations.AddContactRelationshipSimulation \
+./gradlew gatlingRun --simulation uk.gov.justice.digital.hmpps.personalrelationships.simulations.AddContactRelationshipSimulation \
 -DuserCount=60 \
 -DtestDuration=300 \
 -DtestPauseRangeMin=${GATLING_PAUSE_MIN:-3} \
