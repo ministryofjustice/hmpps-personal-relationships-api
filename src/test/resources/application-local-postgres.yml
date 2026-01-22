@@ -1,7 +1,7 @@
 spring:
 
   datasource:
-    url: 'jdbc:postgresql://localhost:5432/personal-relationships-db'
+    url: 'jdbc:postgresql://localhost:5773/personal-relationships-db'
     username: contacts
     password: contacts
   flyway:

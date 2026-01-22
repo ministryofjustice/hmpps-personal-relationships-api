@@ -9,6 +9,7 @@ import java.net.ServerSocket
 
 object PostgresContainer {
   private val log = LoggerFactory.getLogger(this::class.java)
+
   val instance: PostgreSQLContainer<Nothing>? by lazy { startPostgresqlIfNotRunning() }
   private fun startPostgresqlIfNotRunning(): PostgreSQLContainer<Nothing>? {
     if (isPostgresRunning()) {
@@ -22,6 +23,7 @@ object PostgresContainer {
       withDatabaseName("contacts")
       withUsername("contacts")
       withPassword("contacts")
+      portBindings = listOf("5773:5432")
       setWaitStrategy(Wait.forListeningPort())
       withReuse(false)
       start()
@@ -30,7 +32,7 @@ object PostgresContainer {
   }
 
   private fun isPostgresRunning(): Boolean = try {
-    val serverSocket = ServerSocket(5432)
+    val serverSocket = ServerSocket(5773)
     serverSocket.localPort == 0
   } catch (e: IOException) {
     true
