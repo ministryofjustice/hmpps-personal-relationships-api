@@ -7,8 +7,10 @@
 # The environment variables here will also override values supplied in spring profile properties, specifically
 # around setting the DB properties, SERVER_PORT and client credentials to match those used in the docker-compose files.
 #
+# The default port for the local postgresq docker container is the standard 5432/tcp, but can be overridden here in
+# the DB_SERVER environment. e.g. `export DB_SERVER=localhost:5555`
 
-# Provide the DB connection details to local container-hosted Postgresql DB already running
+# Provide the DB connection details to local docker Postgresql DB already running
 export DB_SERVER=localhost
 export DB_NAME=personal-relationships-db
 export DB_USER=contacts

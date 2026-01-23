@@ -1,6 +1,7 @@
 #
-# The "-local" profile is for running the API service locally against pre-existing
+# The "local" profile is for running the API service locally against pre-existing
 # docker containers that are listening on a known port numbers for a postgres database (5432).
+# Some values are provided by the run-local.sh script.
 #
 
 # Most values are inherited from - application.yml - except the following:

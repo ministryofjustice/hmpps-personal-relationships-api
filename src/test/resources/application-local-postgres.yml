@@ -1,11 +1,15 @@
-spring:
+#
+# The "local-postgres" profile is for running the API integration tests against a Postgres TestContainer instance.
+# It would normally start the test container with a random host port and export the JDBC URL, database, username and password
+# as properties to the current environment, overriding the properties given below. However, we've configured the startup
+# of the test container to expose the Postqresql default port 5432/tcp on localhost.
+#
+# The default port exposed by the TestContainer on localhost can be overridden by providing the required port in an
+# environment variable POSTGRES_TEST_DB_PORT=5555, either on the commandline or by setting this up in your IDE.
+# e.g.  `POSTGRES_TEST_DB_PORT=5555 ./gradlew clean build test`
 
+spring:
   datasource:
-    url: 'jdbc:postgresql://localhost:5432/personal-relationships-db'
+    url: 'jdbc:postgresql://localhost/personal-relationships-db'
     username: contacts
     password: contacts
-  flyway:
-    locations: classpath:/migrations/common,classpath:/migrations/test
-    placeholders:
-      dpr_user: dpr_user
-      dpr_password: dpr_password
