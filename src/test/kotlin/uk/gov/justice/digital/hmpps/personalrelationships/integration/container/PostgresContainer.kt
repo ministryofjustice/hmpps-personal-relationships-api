@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.personalrelationships.integration.container
 
+import io.github.cdimascio.dotenv.dotenv
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
@@ -9,10 +10,16 @@ import java.net.ServerSocket
 
 object PostgresContainer {
   // Override the external container port if the environment variable exists - otherwise default to 5432/tcp
-  val hostPort: Int = System.getenv("POSTGRES_TEST_DB_PORT")?.toInt() ?: 5432
+  private val dotenv = dotenv {
+    ignoreIfMissing = true // don't crash if .env is absent
+  }
+  val hostPort: Int =
+    dotenv["CONTACTS_POSTGRES_TEST_DB_PORT"]?.toInt()
+      ?: System.getenv("CONTACTS_POSTGRES_TEST_DB_PORT")?.toInt()
+      ?: 5432
 
   // Binding externalPort:internalContainer port
-  val bindings = listOf("$hostPort:5432")
+  private val bindings = listOf("$hostPort:5432")
 
   private val log = LoggerFactory.getLogger(this::class.java)
 

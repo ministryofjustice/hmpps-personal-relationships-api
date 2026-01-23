@@ -5,8 +5,8 @@
 # of the test container to expose the Postqresql default port 5432/tcp on localhost.
 #
 # The default port exposed by the TestContainer on localhost can be overridden by providing the required port in an
-# environment variable POSTGRES_TEST_DB_PORT=5555, either on the commandline or by setting this up in your IDE.
-# e.g.  `POSTGRES_TEST_DB_PORT=5555 ./gradlew clean build test`
+# environment variable CONTACTS_POSTGRES_TEST_DB_PORT=5555, either on the commandline or by setting this up in your IDE.
+# e.g.  `CONTACTS_POSTGRES_TEST_DB_PORT=5555 ./gradlew clean build test`
 
 spring:
   datasource:

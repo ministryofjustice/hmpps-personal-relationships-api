@@ -43,21 +43,22 @@ N.B. you must escape any '$' characters with '\\$'
 ```
 SYSTEM_CLIENT_ID=<system.client.id>
 SYSTEM_CLIENT_SECRET=<system.client.secret>
-HMPPS_AUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth
-PRISON_SEARCH_API_URL=https://prisoner-search-dev.prison.service.justice.gov.uk
 DB_SERVER=localhost
 DB_NAME=personal-relationships-db
-DB_USER=personal-relationships
+DB_USER=contacts
 DB_PASS=contacts
 DB_SSL_MODE=prefer
+LOCAL_DB_PORT=5572
+CONTACTS_POSTGRES_TEST_DB_PORT=5573
 DPR_USER=dpr_user
 DPR_PASSWORD=dpr_password
 ```
 
-Start up the docker dependencies using the docker-compose file in the `hmpps-personal-relationships-api` service.
+Start up the docker dependencies using the docker-compose file in the `hmpps-personal-relationships-api` service. It will start 
+on the port set in your .env LOCAL_DB_PORT.
 
 ```
-docker-compose up --remove-orphans
+docker compose up -d
 ```
 
 There is a script to help, which sets local profiles, port and DB connection properties to the
