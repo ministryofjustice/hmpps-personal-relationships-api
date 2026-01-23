@@ -14,8 +14,8 @@ object PostgresContainer {
     ignoreIfMissing = true // don't crash if .env is absent
   }
   val hostPort: Int =
-    dotenv["CONTACTS_POSTGRES_TEST_DB_PORT"]?.toInt()
-      ?: System.getenv("CONTACTS_POSTGRES_TEST_DB_PORT")?.toInt()
+    dotenv["POSTGRES_TEST_DB_PORT"]?.toInt()
+      ?: System.getenv("POSTGRES_TEST_DB_PORT")?.toInt()
       ?: 5432
 
   // Binding externalPort:internalContainer port
