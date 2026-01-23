@@ -45,6 +45,8 @@ dependencies {
   implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.26.0")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.openapitools:jackson-databind-nullable:0.2.8")
+  implementation("org.apache.logging.log4j:log4j-api:2.25.3")
+  implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
 
   // CSV dependencies
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.20.1")
@@ -102,7 +104,7 @@ tasks.register("buildOrganisationApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
   inputSpec.set("openapi-specs/hmpps-organisations-api.json")
   outputDir.set("$buildDirectory/generated/organisationsapi")
-  modelPackage.set("uk.gov.justice.digital.hmpps.hmppscontactsapi.client.organisationsapi.model")
+  modelPackage.set("uk.gov.justice.digital.hmpps.personalrelationships.client.organisationsapi.model")
   configOptions.set(configValues)
   globalProperties.set(mapOf("models" to ""))
 }

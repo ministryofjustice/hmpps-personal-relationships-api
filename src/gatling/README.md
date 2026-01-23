@@ -71,7 +71,7 @@ After running the tests, the results will be available in the `build/reports/gat
 
 To add new tests:
 
-1. Create a new simulation class in the `src/gatling/kotlin/uk/gov/justice/digital/hmpps/hmppscontactsapi/simulations` directory
+1. Create a new simulation class in the `src/gatling/kotlin/uk/gov/justice/digital/hmpps/personalrelationships/simulations` directory
 2. Extend the `BaseSimulation` class or implement the `Simulation` interface
 3. Define your scenarios and assertions
 4. Add any required test data to the `src/gatling/resources/data` directory
