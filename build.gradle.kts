@@ -21,8 +21,8 @@ configurations
   .matching { !it.name.startsWith("gatling") }
   .all {
     resolutionStrategy.eachDependency {
-      if (requested.group == "io.netty"
-        && !requested.name.startsWith("netty-tcnative")
+      if (requested.group == "io.netty" &&
+        !requested.name.startsWith("netty-tcnative")
       ) {
         useVersion("4.1.130.Final")
         because("Fix CVE-2025-67735")
