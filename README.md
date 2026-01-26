@@ -77,11 +77,7 @@ This project includes Gatling performance tests to evaluate the API's performanc
 
 ### Running Gatling Tests
 
-You can run the Gatling tests using the following Gradle command:
-
-```bash
-./gradlew gatlingRun
-```
+You can run the Gatling tests by following the steps in the Gatling README, found in /src/gatling
 
 ### Configuration Options
 
