@@ -74,3 +74,6 @@ sonar-project.properties
 
 #hmpps-personal-relationships-api specific
 .env
+
+#Perf tests
+./src/gatling/resources/data/

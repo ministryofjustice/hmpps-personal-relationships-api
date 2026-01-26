@@ -10,14 +10,7 @@ This directory contains Gatling performance tests for the HMPPS Personal Relatio
 
 ## Running the Tests
 
-You can run the Gatling tests using the following Gradle command:
-
-```bash
-./gradlew gatlingRun
-```
-Please refer to run-perf-tests.sh for easy run of the gatling tests
-
-Alternatively use this script to run gatling tests [run-perf-tests.sh](../../scripts/run-perf-tests.sh).
+You can run the Gatling tests by using the [run-perf-tests.sh](../../scripts/run-perf-tests.sh) script.
 
 ### Configuration Options
 
