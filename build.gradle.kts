@@ -2,11 +2,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.4"
-  id("org.openapi.generator") version "7.17.0"
-  id("io.gatling.gradle") version "3.13.1"
-  kotlin("plugin.spring") version "2.2.21"
-  kotlin("plugin.jpa") version "2.2.21"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.1"
+  id("org.openapi.generator") version "7.19.0"
+  id("io.gatling.gradle") version "3.14.9.5"
+  kotlin("plugin.spring") version "2.3.0"
+  kotlin("plugin.jpa") version "2.3.0"
 }
 
 allOpen {
@@ -44,28 +44,28 @@ dependencies {
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.8.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.0.0")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.6.1")
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.26.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:6.0.0")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.31.0")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.openapitools:jackson-databind-nullable:0.2.8")
   implementation("org.apache.logging.log4j:log4j-api:2.25.3")
-  implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
+  implementation("io.github.cdimascio:dotenv-kotlin:6.5.1")
 
   // CSV dependencies
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.20.1")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.21.0")
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
-  runtimeOnly("org.postgresql:postgresql:42.7.8")
+  runtimeOnly("org.postgresql:postgresql:42.7.9")
   implementation("org.hibernate.orm:hibernate-envers")
   implementation("org.springframework.data:spring-data-envers")
 
   // OpenAPI
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1")
 
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.21.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.24.0")
 
   // Test dependencies
   testImplementation("io.jsonwebtoken:jjwt-impl:0.13.0")
@@ -77,11 +77,11 @@ dependencies {
   testImplementation("org.mockito:mockito-inline:5.2.0")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation("org.springframework.security:spring-security-test")
-  testImplementation("org.testcontainers:postgresql:1.21.3")
-  testImplementation("org.testcontainers:localstack:1.21.3")
+  testImplementation("org.testcontainers:postgresql:1.21.4")
+  testImplementation("org.testcontainers:localstack:1.21.4")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.8.1")
-  testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.56.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.0.0")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.58.0")
 }
 
 tasks {
