@@ -4,7 +4,6 @@ import jakarta.persistence.EntityNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.hmppscontactsapi.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicateRelationshipException
 import uk.gov.justice.digital.hmpps.personalrelationships.mapping.sync.toEntity

@@ -11,8 +11,6 @@ import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerContactEntity
-import uk.gov.justice.digital.hmpps.personalrelationships.mapping.sync.toEntity
-import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncCreatePrisonerContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncUpdatePrisonerContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerContactRepository
 import java.time.LocalDate

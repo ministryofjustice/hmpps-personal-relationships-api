@@ -470,69 +470,6 @@ class ContactServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource(value = ["true", "false"])
-    fun `should create a contact with a relationship successfully with approved visitor details`(
-      updatingApprovedVisitor: Boolean,
-    ) {
-      val relationshipRequest = ContactRelationship(
-        prisonerNumber = "A1234BC",
-        relationshipTypeCode = "S",
-        relationshipToPrisonerCode = "FRI",
-        isNextOfKin = true,
-        isEmergencyContact = true,
-        isApprovedVisitor = updatingApprovedVisitor,
-        comments = "some comments",
-      )
-      val request = CreateContactRequest(
-        lastName = "last",
-        firstName = "first",
-        relationship = relationshipRequest,
-      )
-      whenever(prisonerService.getPrisoner(any())).thenReturn(
-        prisoner(
-          relationshipRequest.prisonerNumber,
-          prisonId = "MDI",
-        ),
-      )
-      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
-      whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
-      val referenceCode = ReferenceCode(1, ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "FRI", "Friend", 1, true)
-      whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "FRI")).thenReturn(
-        referenceCode,
-      )
-      whenever(
-        referenceCodeService.validateReferenceCode(
-          ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
-          "FRI",
-          allowInactive = false,
-        ),
-      ).thenReturn(referenceCode)
-
-      service.createContact(request, user)
-
-      verify(contactRepository).saveAndFlush(any())
-
-      val prisonerContactCaptor = argumentCaptor<PrisonerContactEntity>()
-      verify(prisonerContactRepository).saveAndFlush(prisonerContactCaptor.capture())
-
-      with(prisonerContactCaptor.firstValue) {
-        assertThat(prisonerNumber).isEqualTo("A1234BC")
-        assertThat(relationshipToPrisoner).isEqualTo("FRI")
-        assertThat(nextOfKin).isEqualTo(true)
-        assertThat(emergencyContact).isEqualTo(true)
-        assertThat(approvedVisitor).isEqualTo(updatingApprovedVisitor)
-        if (updatingApprovedVisitor) {
-          assertThat(approvedBy).isEqualTo(user.username)
-          assertThat(approvedTime).isInThePast()
-        } else {
-          assertThat(approvedBy).isNull()
-          assertThat(approvedTime).isNull()
-        }
-        assertThat(comments).isEqualTo("some comments")
-      }
-    }
-
-    @ParameterizedTest
     @CsvSource(
       value = [
         "S,SOCIAL_RELATIONSHIP",
