@@ -147,33 +147,35 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
 
   @Query(
     value = """
-    with filtered_contacts AS (
-      select distinct ca.contact_id
-      from contact_audit ca
-      where (:lastName is null or ca.last_name_soundex = soundex(:lastName))
-      and (:firstName is null or ca.first_name_soundex = soundex(:firstName))
-      and (:middleNames is null or ca.middle_names_soundex = soundex(:middleNames))
-      and ca.rev_type in (0, 1)
-      limit :rowLimiter
-    )
-    select c.contact_id
-    from contact c
-    where c.contact_id in (select contact_id from filtered_contacts)
-  """,
+  with filtered_contacts AS (
+    select distinct ca.contact_id
+    from contact_audit ca
+    where (:lastName is null or ca.last_name_soundex = soundex(:lastName))
+    and (:firstName is null or ca.first_name_soundex = soundex(:firstName))
+    and (:middleNames is null or ca.middle_names_soundex = soundex(:middleNames))
+    and ca.rev_type in (0, 1)
+    order by ca.contact_id
+    limit :rowLimiter
+  )
+  select c.contact_id
+  from contact c
+  where c.contact_id in (select contact_id from filtered_contacts)
+""",
     countQuery = """
-    with filtered_contacts AS (
-      select distinct ca.contact_id
-      from contact_audit ca
-      where (:lastName is null or ca.last_name_soundex = soundex(:lastName))
-      and (:firstName is null or ca.first_name_soundex = soundex(:firstName))
-      and (:middleNames is null or ca.middle_names_soundex = soundex(:middleNames))
-      and ca.rev_type in (0, 1)
-      limit :rowLimiter
-    )
-    select count(c.contact_id) as count
-    from contact c
-    where c.contact_id in (select contact_id from filtered_contacts)
-  """,
+  with filtered_contacts AS (
+    select distinct ca.contact_id
+    from contact_audit ca
+    where (:lastName is null or ca.last_name_soundex = soundex(:lastName))
+    and (:firstName is null or ca.first_name_soundex = soundex(:firstName))
+    and (:middleNames is null or ca.middle_names_soundex = soundex(:middleNames))
+    and ca.rev_type in (0, 1)
+    order by ca.contact_id
+    limit :rowLimiter
+  )
+  select count(c.contact_id) as count
+  from contact c
+  where c.contact_id in (select contact_id from filtered_contacts)
+""",
     nativeQuery = true,
   )
   fun findAllByNamesSoundLikeAndHistory(firstName: String?, middleNames: String?, lastName: String?, rowLimiter: Int, pageable: Pageable): Page<Long>
