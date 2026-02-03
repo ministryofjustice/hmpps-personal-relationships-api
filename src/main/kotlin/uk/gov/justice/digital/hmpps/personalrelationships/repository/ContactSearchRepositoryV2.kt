@@ -154,7 +154,6 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
     and (:firstName is null or ca.first_name_soundex = soundex(:firstName))
     and (:middleNames is null or ca.middle_names_soundex = soundex(:middleNames))
     and ca.rev_type in (0, 1)
-    order by ca.contact_id
     limit :rowLimiter
   )
   select c.contact_id
@@ -169,7 +168,6 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
     and (:firstName is null or ca.first_name_soundex = soundex(:firstName))
     and (:middleNames is null or ca.middle_names_soundex = soundex(:middleNames))
     and ca.rev_type in (0, 1)
-    order by ca.contact_id
     limit :rowLimiter
   )
   select count(c.contact_id) as count
