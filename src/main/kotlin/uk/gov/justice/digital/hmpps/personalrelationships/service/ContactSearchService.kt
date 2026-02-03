@@ -232,11 +232,15 @@ class ContactSearchService(
 
       NAMES_SOUND_LIKE_AND_HISTORY -> {
         logger.info("NAMES_SOUND_LIKE_AND_HISTORY search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
+        // native query - adjust sort to native column names
+        val nativePageable = PageRequest.of(pageable.pageNumber, pageable.pageSize, manipulateSortToNative(pageable.sort))
+
         contactSearchRepositoryV2.findAllByNamesSoundLikeAndHistory(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
-          pageable,
+          rowLimiter,
+          nativePageable,
         )
       }
     }

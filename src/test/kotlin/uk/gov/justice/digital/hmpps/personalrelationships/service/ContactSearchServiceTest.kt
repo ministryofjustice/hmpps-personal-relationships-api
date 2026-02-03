@@ -8,12 +8,15 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactWithAddressEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerContactSummaryEntity
@@ -264,6 +267,40 @@ class ContactSearchServiceTest {
     fun `Should choose search by date of birth and names sound like`() {
       val request2 = request.copy(dateOfBirth = LocalDate.of(1980, 1, 1), searchType = UserSearchType.SOUNDS_LIKE)
       assertThat(service.determineSearchType(request2)).isEqualTo(ContactSearchType.DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE)
+    }
+
+    @Test
+    fun `NAMES_SOUND_LIKE_AND_HISTORY uses rowLimiter and converts sort to snake_case`() {
+      val pageable = PageRequest.of(0, 10, Sort.by("lastName", "firstName", "dateOfBirth"))
+      val request = request.copy(
+        searchType = UserSearchType.SOUNDS_LIKE,
+        previousNames = true,
+      )
+
+      val captorLimit = argumentCaptor<Int>()
+      val captorPageable = argumentCaptor<Pageable>()
+
+      whenever(contactSearchRepositoryV2.findAllByNamesSoundLikeAndHistory(any(), any(), any(), any(), any()))
+        .thenReturn(PageImpl(emptyList<Long>(), pageable, 0))
+
+      service.searchContactsV2(request, pageable)
+
+      verify(contactSearchRepositoryV2).findAllByNamesSoundLikeAndHistory(
+        eq(request.firstName?.trim()),
+        eq(request.middleNames?.trim()),
+        eq(request.lastName?.trim()),
+        captorLimit.capture(),
+        captorPageable.capture(),
+      )
+
+      assertThat(captorLimit.firstValue).isEqualTo(service.rowLimiter)
+
+      val nativeSortOrders = captorPageable.firstValue.sort.get().toList()
+      assertThat(nativeSortOrders).containsExactly(
+        Sort.Order(Sort.Direction.ASC, "last_name"),
+        Sort.Order(Sort.Direction.ASC, "first_name"),
+        Sort.Order(Sort.Direction.ASC, "date_of_birth"),
+      )
     }
 
     @Test

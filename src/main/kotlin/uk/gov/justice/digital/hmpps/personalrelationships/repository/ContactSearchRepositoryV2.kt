@@ -146,20 +146,37 @@ interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
   fun findAllByNamesMatchAndHistory(firstName: String?, middleNames: String?, lastName: String?, rowLimiter: Int, pageable: Pageable): Page<Long>
 
   @Query(
-    """      
-    select c.contactId
-    from ContactEntity c
-    where c.contactId in (
-      select distinct ca.contactId
-      from ContactAuditEntity ca
-      where (:lastName is null or ca.lastNameSoundex = CAST(function('soundex', CAST(:lastName AS string)) AS char(4)))
-        and (:firstName is null or ca.firstNameSoundex = CAST(function('soundex', CAST(:firstName AS string)) AS char(4)))
-        and (:middleNames is null or ca.middleNamesSoundex = CAST(function('soundex', CAST(:middleNames AS string)) AS char(4)))
-        and ca.revType in (0, 1)
-    ) 
-    """,
+    value = """
+  with filtered_contacts AS (
+    select distinct ca.contact_id
+    from contact_audit ca
+    where (:lastName is null or ca.last_name_soundex = soundex(:lastName))
+    and (:firstName is null or ca.first_name_soundex = soundex(:firstName))
+    and (:middleNames is null or ca.middle_names_soundex = soundex(:middleNames))
+    and ca.rev_type in (0, 1)
+    limit :rowLimiter
   )
-  fun findAllByNamesSoundLikeAndHistory(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
+  select c.contact_id
+  from contact c
+  where c.contact_id in (select contact_id from filtered_contacts)
+""",
+    countQuery = """
+  with filtered_contacts AS (
+    select distinct ca.contact_id
+    from contact_audit ca
+    where (:lastName is null or ca.last_name_soundex = soundex(:lastName))
+    and (:firstName is null or ca.first_name_soundex = soundex(:firstName))
+    and (:middleNames is null or ca.middle_names_soundex = soundex(:middleNames))
+    and ca.rev_type in (0, 1)
+    limit :rowLimiter
+  )
+  select count(c.contact_id) as count
+  from contact c
+  where c.contact_id in (select contact_id from filtered_contacts)
+""",
+    nativeQuery = true,
+  )
+  fun findAllByNamesSoundLikeAndHistory(firstName: String?, middleNames: String?, lastName: String?, rowLimiter: Int, pageable: Pageable): Page<Long>
 
   @Query(
     """
