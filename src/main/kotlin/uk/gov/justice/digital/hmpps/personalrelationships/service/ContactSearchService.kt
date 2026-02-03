@@ -11,11 +11,9 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.personalrelationships.mapping.toModel
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactSearchRequest
-import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactSearchRequestV2
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.UserSearchType
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ExistingRelationshipToPrisoner
-import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactSearchRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactSearchRepositoryV2
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactWithAddressRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerContactSummaryRepository
@@ -37,50 +35,12 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.ContactSearchT
 @Service
 @Transactional(readOnly = true)
 class ContactSearchService(
-  private val contactSearchRepository: ContactSearchRepository,
   private val prisonerContactSummaryRepository: PrisonerContactSummaryRepository,
   private val contactSearchRepositoryV2: ContactSearchRepositoryV2,
   private val contactWithAddressRepository: ContactWithAddressRepository,
   @Value("\${contact-search.slow-query.row-limit}") val rowLimiter: Int = 2000,
 ) {
-  /**
-   * The original V1 search for contacts
-   */
-  fun searchContacts(pageable: Pageable, request: ContactSearchRequest): Page<ContactSearchResultItem> {
-    val checkForExistingRelationships = request.includeAnyExistingRelationshipsToPrisoner != null
-    val matchingContactsPage = contactSearchRepository.searchContacts(request, pageable)
-    val contactExistingRelationships: Map<Long, List<ExistingRelationshipToPrisoner>> =
-      if (checkForExistingRelationships) {
-        val contactIds = matchingContactsPage.content.map { it.contactId }
-        prisonerContactSummaryRepository
-          .findByPrisonerNumberAndContactIdIn(request.includeAnyExistingRelationshipsToPrisoner!!, contactIds)
-          .groupBy { it.contactId }
-          .mapValues {
-            it.value.map { summary ->
-              ExistingRelationshipToPrisoner(
-                prisonerContactId = summary.prisonerContactId,
-                relationshipTypeCode = summary.relationshipType,
-                relationshipTypeDescription = summary.relationshipTypeDescription,
-                relationshipToPrisonerCode = summary.relationshipToPrisoner,
-                relationshipToPrisonerDescription = summary.relationshipToPrisonerDescription,
-                isRelationshipActive = summary.active,
-              )
-            }
-          }
-      } else {
-        emptyMap()
-      }
-    return matchingContactsPage.map {
-      val existingRelationships: List<ExistingRelationshipToPrisoner>? = if (checkForExistingRelationships) {
-        contactExistingRelationships[it.contactId] ?: emptyList()
-      } else {
-        null
-      }
-      it.toModel(existingRelationships)
-    }
-  }
-
-  fun searchContactsV2(request: ContactSearchRequestV2, pageable: Pageable): Page<ContactSearchResultItem> {
+  fun searchContacts(request: ContactSearchRequest, pageable: Pageable): Page<ContactSearchResultItem> {
     validateRequest(request)
     val pageOfContactIds = getPageOfContactIds(request, pageable)
 
@@ -96,7 +56,7 @@ class ContactSearchService(
   /**
    * Determine the most appropriate repository method, calls it and return at most one page of contactIds
    */
-  private fun getPageOfContactIds(request: ContactSearchRequestV2, pageable: Pageable): Page<Long> {
+  private fun getPageOfContactIds(request: ContactSearchRequest, pageable: Pageable): Page<Long> {
     val searchType = determineSearchType(request)
 
     val pageOfContactIds = when (searchType) {
@@ -255,7 +215,7 @@ class ContactSearchService(
    */
   private fun enrichOnePage(
     pageOfContactIds: Page<Long>,
-    request: ContactSearchRequestV2,
+    request: ContactSearchRequest,
     pageable: Pageable,
     totalCount: Long,
   ): Page<ContactSearchResultItem> {
@@ -304,7 +264,7 @@ class ContactSearchService(
     return PageImpl(contactsModelWithAddresses, pageable, totalCount)
   }
 
-  private fun validateRequest(request: ContactSearchRequestV2) {
+  private fun validateRequest(request: ContactSearchRequest) {
     val nameProvided = request.lastName != null || request.firstName != null || request.middleNames != null
     val isNamedSearchType = request.searchType in setOf(UserSearchType.SOUNDS_LIKE, UserSearchType.PARTIAL, UserSearchType.EXACT)
 
@@ -333,7 +293,7 @@ class ContactSearchService(
     return property.trim().replace(regex) { "_${it.value.lowercase()}" }.lowercase()
   }
 
-  fun determineSearchType(request: ContactSearchRequestV2): ContactSearchType {
+  fun determineSearchType(request: ContactSearchRequest): ContactSearchType {
     val contactIdPresent = request.contactId != null
     val dobPresent = request.dateOfBirth != null
     val namesEntered = listOf(request.firstName, request.lastName, request.middleNames).any { it != null }

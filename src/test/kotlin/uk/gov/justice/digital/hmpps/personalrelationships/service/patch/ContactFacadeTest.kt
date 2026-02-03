@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactS
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.PatchContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.PatchRelationshipRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.request.UserSearchType
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactSearchResultItem
@@ -326,7 +327,7 @@ class ContactFacadeTest {
   @Test
   fun `search should send no domain event`() {
     val pageable = Pageable.unpaged()
-    val request = ContactSearchRequest(lastName = "foo", firstName = null, middleNames = null, "123456", dateOfBirth = null, includeAnyExistingRelationshipsToPrisoner = null)
+    val request = ContactSearchRequest(lastName = "foo", firstName = null, middleNames = null, dateOfBirth = null, UserSearchType.PARTIAL, false, 123456, includePrisonerRelationships = null)
     val result = PageImpl<ContactSearchResultItem>(listOf())
 
     whenever(contactSearchService.searchContacts(any(), any())).thenReturn(result)
