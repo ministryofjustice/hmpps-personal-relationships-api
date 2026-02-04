@@ -17,7 +17,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.UserSearchType
-import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactSearchRepositoryV2
+import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactSearchRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactWithAddressRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerContactSummaryRepository
 import java.time.LocalDate
@@ -25,12 +25,12 @@ import java.time.LocalDate
 class ContactSearchServiceTest {
 
   private val prisonerContactSummaryRepository: PrisonerContactSummaryRepository = mock()
-  private val contactSearchRepositoryV2: ContactSearchRepositoryV2 = mock()
+  private val contactSearchRepository: ContactSearchRepository = mock()
   private val contactWithAddressRepository: ContactWithAddressRepository = mock()
 
   private val service = ContactSearchService(
     prisonerContactSummaryRepository,
-    contactSearchRepositoryV2,
+    contactSearchRepository,
     contactWithAddressRepository,
   )
 
@@ -121,12 +121,12 @@ class ContactSearchServiceTest {
       val captorLimit = argumentCaptor<Int>()
       val captorPageable = argumentCaptor<Pageable>()
 
-      whenever(contactSearchRepositoryV2.findAllByNamesSoundLikeAndHistory(any(), any(), any(), any(), any()))
+      whenever(contactSearchRepository.findAllByNamesSoundLikeAndHistory(any(), any(), any(), any(), any()))
         .thenReturn(PageImpl(emptyList<Long>(), pageable, 0))
 
       service.searchContacts(request, pageable)
 
-      verify(contactSearchRepositoryV2).findAllByNamesSoundLikeAndHistory(
+      verify(contactSearchRepository).findAllByNamesSoundLikeAndHistory(
         eq(request.firstName?.trim()),
         eq(request.middleNames?.trim()),
         eq(request.lastName?.trim()),

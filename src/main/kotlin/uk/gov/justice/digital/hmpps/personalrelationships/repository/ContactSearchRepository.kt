@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactEntity
 import java.time.LocalDate
 
 @Repository
-interface ContactSearchRepositoryV2 : JpaRepository<ContactEntity, Long> {
+interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
   @Query(
     """
     select c.contactId 

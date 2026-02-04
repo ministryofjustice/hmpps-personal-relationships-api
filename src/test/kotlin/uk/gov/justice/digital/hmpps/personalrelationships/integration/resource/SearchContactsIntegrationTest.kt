@@ -24,7 +24,7 @@ import java.net.URI
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-class SearchContactsV2IntegrationTest : SecureAPIIntegrationTestBase() {
+class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @BeforeEach
   fun setUp() {

@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactS
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.UserSearchType
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ExistingRelationshipToPrisoner
-import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactSearchRepositoryV2
+import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactSearchRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactWithAddressRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerContactSummaryRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.service.ContactSearchType.CONTACT_ID_ONLY
@@ -36,7 +36,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.ContactSearchT
 @Transactional(readOnly = true)
 class ContactSearchService(
   private val prisonerContactSummaryRepository: PrisonerContactSummaryRepository,
-  private val contactSearchRepositoryV2: ContactSearchRepositoryV2,
+  private val contactSearchRepository: ContactSearchRepository,
   private val contactWithAddressRepository: ContactWithAddressRepository,
   @Value("\${contact-search.slow-query.row-limit}") val rowLimiter: Int = 2000,
 ) {
@@ -62,17 +62,17 @@ class ContactSearchService(
     val pageOfContactIds = when (searchType) {
       CONTACT_ID_ONLY -> {
         logger.info("CONTACT_ID_ONLY search for ${request.contactId}")
-        contactSearchRepositoryV2.findAllByContactIdEquals(request.contactId!!, pageable)
+        contactSearchRepository.findAllByContactIdEquals(request.contactId!!, pageable)
       }
 
       DATE_OF_BIRTH_ONLY -> {
         logger.info("DATE_OF_BIRTH_ONLY search for ${request.dateOfBirth}")
-        contactSearchRepositoryV2.findAllByDateOfBirthEquals(request.dateOfBirth!!, pageable)
+        contactSearchRepository.findAllByDateOfBirthEquals(request.dateOfBirth!!, pageable)
       }
 
       DATE_OF_BIRTH_AND_NAMES_EXACT -> {
         logger.info("DATE_OF_BIRTH_AND_NAMES_EXACT search for ${request.dateOfBirth} last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByDateOfBirthAndNamesExact(
+        contactSearchRepository.findAllByDateOfBirthAndNamesExact(
           request.dateOfBirth!!,
           request.firstName?.trim(),
           request.middleNames?.trim(),
@@ -83,7 +83,7 @@ class ContactSearchService(
 
       DATE_OF_BIRTH_AND_NAMES_EXACT_AND_HISTORY -> {
         logger.info("DATE_OF_BIRTH_AND_NAMES_EXACT_AND_HISTORY search for ${request.dateOfBirth} last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByDateOfBirthAndNamesExactAndHistory(
+        contactSearchRepository.findAllByDateOfBirthAndNamesExactAndHistory(
           request.dateOfBirth!!,
           request.firstName?.trim(),
           request.middleNames?.trim(),
@@ -94,7 +94,7 @@ class ContactSearchService(
 
       DATE_OF_BIRTH_AND_NAMES_MATCH -> {
         logger.info("DATE_OF_BIRTH_AND_NAMES_MATCH search for ${request.dateOfBirth} last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByDateOfBirthAndNamesMatch(
+        contactSearchRepository.findAllByDateOfBirthAndNamesMatch(
           request.dateOfBirth!!,
           request.firstName?.trim(),
           request.middleNames?.trim(),
@@ -105,7 +105,7 @@ class ContactSearchService(
 
       DATE_OF_BIRTH_AND_NAMES_MATCH_AND_HISTORY -> {
         logger.info("DATE_OF_BIRTH_AND_NAMES_MATCH_AND_HISTORY search for dob ${request.dateOfBirth}, last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByDateOfBirthAndNamesMatchAndHistory(
+        contactSearchRepository.findAllByDateOfBirthAndNamesMatchAndHistory(
           request.dateOfBirth!!,
           request.firstName?.trim(),
           request.middleNames?.trim(),
@@ -116,7 +116,7 @@ class ContactSearchService(
 
       DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE -> {
         logger.info("DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE search for ${request.dateOfBirth} last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByDateOfBirthAndNamesSoundLike(
+        contactSearchRepository.findAllByDateOfBirthAndNamesSoundLike(
           request.dateOfBirth!!,
           request.firstName?.trim(),
           request.middleNames?.trim(),
@@ -127,7 +127,7 @@ class ContactSearchService(
 
       DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE_AND_HISTORY -> {
         logger.info("DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE_AND_HISTORY search for dob ${request.dateOfBirth}, last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByDateOfBirthAndNamesSoundLikeAndHistory(
+        contactSearchRepository.findAllByDateOfBirthAndNamesSoundLikeAndHistory(
           request.dateOfBirth!!,
           request.firstName?.trim(),
           request.middleNames?.trim(),
@@ -138,7 +138,7 @@ class ContactSearchService(
 
       NAMES_EXACT -> {
         logger.info("NAMES_EXACT search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByNamesExact(
+        contactSearchRepository.findAllByNamesExact(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
@@ -148,7 +148,7 @@ class ContactSearchService(
 
       NAMES_EXACT_AND_HISTORY -> {
         logger.info("NAMES_EXACT_AND_HISTORY search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByNamesExactAndHistory(
+        contactSearchRepository.findAllByNamesExactAndHistory(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
@@ -158,7 +158,7 @@ class ContactSearchService(
 
       NAMES_MATCH -> {
         logger.info("NAMES_MATCH search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByNamesMatch(
+        contactSearchRepository.findAllByNamesMatch(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
@@ -171,7 +171,7 @@ class ContactSearchService(
         // This search option involves a native query so sort parameters need to be manipulated to native column name format
         val newPageable = PageRequest.of(pageable.pageNumber, pageable.pageSize, manipulateSortToNative(pageable.sort))
 
-        contactSearchRepositoryV2.findAllByNamesMatchAndHistory(
+        contactSearchRepository.findAllByNamesMatchAndHistory(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
@@ -182,7 +182,7 @@ class ContactSearchService(
 
       NAMES_SOUND_LIKE -> {
         logger.info("NAMES_SOUND_LIKE search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByNamesSoundLike(
+        contactSearchRepository.findAllByNamesSoundLike(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
@@ -195,7 +195,7 @@ class ContactSearchService(
         // native query - adjust sort to native column names
         val nativePageable = PageRequest.of(pageable.pageNumber, pageable.pageSize, manipulateSortToNative(pageable.sort))
 
-        contactSearchRepositoryV2.findAllByNamesSoundLikeAndHistory(
+        contactSearchRepository.findAllByNamesSoundLikeAndHistory(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
