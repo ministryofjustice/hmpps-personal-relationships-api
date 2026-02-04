@@ -1,140 +1,231 @@
 package uk.gov.justice.digital.hmpps.personalrelationships.repository
 
-import jakarta.persistence.EntityManager
-import jakarta.persistence.PersistenceContext
-import jakarta.persistence.criteria.CriteriaBuilder
-import jakarta.persistence.criteria.CriteriaQuery
-import jakarta.persistence.criteria.Order
-import jakarta.persistence.criteria.Predicate
-import jakarta.persistence.criteria.Root
-import org.hibernate.query.NullPrecedence
-import org.hibernate.query.criteria.HibernateCriteriaBuilder
-import org.hibernate.query.criteria.JpaOrder
 import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactWithAddressEntity
-import uk.gov.justice.digital.hmpps.personalrelationships.mapping.mapSortPropertiesOfContactSearch
-import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactSearchRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactEntity
 import java.time.LocalDate
 
 @Repository
-class ContactSearchRepository(
-  @PersistenceContext
-  private var entityManager: EntityManager,
-) {
-  fun searchContacts(request: ContactSearchRequest, pageable: Pageable): Page<ContactWithAddressEntity> {
-    val cb = entityManager.criteriaBuilder
-    val cq = cb.createQuery(ContactWithAddressEntity::class.java)
-    val contact = cq.from(ContactWithAddressEntity::class.java)
+interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
+  @Query(
+    """
+    select c.contactId 
+    from ContactEntity c 
+    where c.contactId = :contactId
+    """,
+  )
+  fun findAllByContactIdEquals(contactId: Long, pageable: Pageable): Page<Long>
 
-    val predicates: List<Predicate> = buildPredicates(request, cb, contact)
+  @Query(
+    """
+    select c.contactId
+    from ContactEntity c
+    where c.dateOfBirth = :dateOfBirth
+    """,
+  )
+  fun findAllByDateOfBirthEquals(dateOfBirth: LocalDate, pageable: Pageable): Page<Long>
 
-    cq.where(*predicates.toTypedArray())
+  @Query(
+    """
+    select c.contactId
+    from ContactEntity c
+    where c.dateOfBirth = :dateOfBirth
+      and (:lastName is null or c.lastName ilike %:lastName% escape '#')
+      and (:firstName is null or c.firstName ilike %:firstName% escape '#')
+      and (:middleNames is null or c.middleNames ilike %:middleNames% escape '#')
+    """,
+  )
+  fun findAllByDateOfBirthAndNamesMatch(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
-    applySorting(pageable, cq, cb, contact)
+  @Query(
+    """
+    select c.contactId
+    from ContactEntity c
+    where c.dateOfBirth = :dateOfBirth
+       and (:lastName is null or c.lastName ilike :lastName)
+       and (:firstName is null or c.firstName ilike :firstName)
+       and (:middleNames is null or c.middleNames ilike :middleNames)
+    """,
+  )
+  fun findAllByDateOfBirthAndNamesExact(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
-    val resultList = entityManager.createQuery(cq)
-      .setFirstResult(pageable.offset.toInt())
-      .setMaxResults(pageable.pageSize)
-      .resultList
+  @Query(
+    """
+    select c.contactId
+    from ContactEntity c
+    where c.dateOfBirth = :dateOfBirth
+       and ( :lastName is null or c.lastNameSoundex = CAST(function('soundex', CAST(:lastName AS string)) AS char(4)))
+       and ( :firstName is null or c.firstNameSoundex = CAST(function('soundex', CAST(:firstName AS string)) AS char(4)))
+       and (:middleNames is null or c.middleNamesSoundex = CAST(function('soundex', CAST(:middleNames AS string)) AS char(4)))
+    """,
+  )
+  fun findAllByDateOfBirthAndNamesSoundLike(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
-    val total = getTotalCount(request)
+  @Query(
+    """
+    select c.contactId
+    from ContactEntity c
+    where (:lastName is null or c.lastName ilike :lastName)
+      and (:firstName is null or c.firstName ilike :firstName)
+      and (:middleNames is null or c.middleNames ilike :middleNames)
+    """,
+  )
+  fun findAllByNamesExact(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
-    return PageImpl(resultList, pageable, total)
-  }
+  @Query(
+    """
+    select c.contactId
+    from ContactEntity c
+    where (:lastName is null or c.lastName ilike %:lastName% escape '#')
+      and (:firstName is null or c.firstName ilike %:firstName% escape '#')
+      and (:middleNames is null or c.middleNames ilike %:middleNames% escape '#')
+    """,
+  )
+  fun findAllByNamesMatch(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
-  private fun getTotalCount(
-    request: ContactSearchRequest,
-  ): Long {
-    val cb = entityManager.criteriaBuilder
-    val countQuery = cb.createQuery(Long::class.java)
-    val contact = countQuery.from(ContactWithAddressEntity::class.java)
+  @Query(
+    """
+    select c.contactId
+    from ContactEntity c
+    where (:lastName is null or c.lastNameSoundex = CAST(function('soundex', CAST(:lastName AS string)) AS char(4)))
+      and (:firstName is null or c.firstNameSoundex = CAST(function('soundex', CAST(:firstName AS string)) AS char(4)))
+      and (:middleNames is null or c.middleNamesSoundex = CAST(function('soundex', CAST(:middleNames AS string)) AS char(4)))
+    """,
+  )
+  fun findAllByNamesSoundLike(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
-    val predicates: List<Predicate> = buildPredicates(request, cb, contact)
+  @Query(
+    """
+      select c.contactId
+      from ContactEntity c where c.contactId in (
+        select distinct ca.contactId
+        from ContactAuditEntity ca
+        where (:lastName is null or ca.lastName ilike :lastName)
+        and (:firstName is null or ca.firstName ilike :firstName)
+        and (:middleNames is null or ca.middleNames ilike :middleNames)
+        and ca.revType in (0, 1)
+    ) 
+    """,
+  )
+  fun findAllByNamesExactAndHistory(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
-    countQuery.select(cb.count(contact)).where(*predicates.toTypedArray<Predicate>())
-    return entityManager.createQuery(countQuery).singleResult
-  }
-
-  private fun applySorting(
-    pageable: Pageable,
-    cq: CriteriaQuery<ContactWithAddressEntity>,
-    cb: CriteriaBuilder,
-    contact: Root<ContactWithAddressEntity>,
-  ) {
-    if (pageable.sort.isSorted) {
-      val order = pageable.sort.map {
-        val property = mapSortPropertiesOfContactSearch(it.property)
-        var order: Order = if (it.isAscending) {
-          cb.asc(contact.get<String>(property))
-        } else {
-          cb.desc(contact.get<String>(property))
-        }
-        // order date of birth with nulls as if they are the eldest.
-        if (property == ContactWithAddressEntity::dateOfBirth.name && order is JpaOrder) {
-          order = if (it.isAscending) {
-            order.nullPrecedence(NullPrecedence.FIRST)
-          } else {
-            order.nullPrecedence(NullPrecedence.LAST)
-          }
-        }
-        order
-      }.toList()
-      cq.orderBy(order)
-    }
-  }
-
-  private fun buildPredicates(
-    request: ContactSearchRequest,
-    cb: CriteriaBuilder,
-    contact: Root<ContactWithAddressEntity>,
-  ): MutableList<Predicate> {
-    val predicates: MutableList<Predicate> = ArrayList()
-    if (cb !is HibernateCriteriaBuilder) {
-      throw RuntimeException("Configuration issue. Cannot do ilike unless using hibernate.")
-    }
-    if (request.soundsLike) {
-      val lastNameSoundex = cb.function("soundex", String::class.java, contact.get<String>("lastName"))
-      val lastNameInputSoundex = cb.function("soundex", String::class.java, cb.literal(request.lastName))
-      predicates.add(cb.equal(lastNameSoundex, lastNameInputSoundex))
-
-      request.firstName?.let {
-        val fnSoundex = cb.function("soundex", String::class.java, contact.get<String>("firstName"))
-        val fnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
-        predicates.add(cb.equal(fnSoundex, fnInputSoundex))
-      }
-      request.middleNames?.let {
-        val mnSoundex = cb.function("soundex", String::class.java, contact.get<String>("middleNames"))
-        val mnInputSoundex = cb.function("soundex", String::class.java, cb.literal(it))
-        predicates.add(cb.equal(mnSoundex, mnInputSoundex))
-      }
-    } else {
-      predicates.add(cb.ilike(contact.get("lastName"), "%${request.lastName}%", '#'))
-      request.firstName?.let {
-        predicates.add(cb.ilike(contact.get("firstName"), "%$it%", '#'))
-      }
-      request.middleNames?.let {
-        predicates.add(cb.ilike(contact.get("middleNames"), "%$it%", '#'))
-      }
-    }
-    // partial match on contactId by converting to string
-    request.contactId?.let {
-      if (request.contactId.isNotEmpty()) {
-        val contactIdAsString = cb.function("str", String::class.java, contact.get<Long>("contactId"))
-        predicates.add(cb.like(contactIdAsString, "%$it%"))
-      }
-    }
-    request.dateOfBirth?.let {
-      predicates.add(
-        cb.equal(
-          contact.get<LocalDate>("dateOfBirth"),
-          request.dateOfBirth,
-        ),
+  @Query(
+    """
+      with filtered_contacts AS (
+        select distinct ca.contact_id
+        from contact_audit ca
+        where (:lastName is null or ca.last_name ilike '%'||:lastName||'%' escape '#')
+        and (:firstName is null or ca.first_name ilike '%'||:firstName||'%' escape '#')
+        and (:middleNames is null or ca.middle_names ilike '%'||:middleNames||'%' escape '#')
+        and ca.rev_type in (0, 1)
+        limit :rowLimiter
       )
-    }
+      select c.contact_id
+      from contact c
+      where c.contact_id in (select contact_id from filtered_contacts)
+    """,
+    countQuery = """
+      with filtered_contacts AS (
+        select distinct ca.contact_id
+        from contact_audit ca
+        where (:lastName is null or ca.last_name ilike '%'||:lastName||'%' escape '#')
+        and (:firstName is null or ca.first_name ilike '%'||:firstName||'%' escape '#')
+        and (:middleNames is null or ca.middle_names ilike '%'||:middleNames||'%' escape '#')
+        and ca.rev_type in (0, 1)
+        limit :rowLimiter
+      )
+      select count(c.contact_id) as count
+      from contact c
+      where c.contact_id in (select contact_id from filtered_contacts)
+    """,
+    nativeQuery = true,
+  )
+  fun findAllByNamesMatchAndHistory(firstName: String?, middleNames: String?, lastName: String?, rowLimiter: Int, pageable: Pageable): Page<Long>
 
-    return predicates
-  }
+  @Query(
+    value = """
+  with filtered_contacts AS (
+    select distinct ca.contact_id
+    from contact_audit ca
+    where (:lastName is null or ca.last_name_soundex = soundex(:lastName))
+    and (:firstName is null or ca.first_name_soundex = soundex(:firstName))
+    and (:middleNames is null or ca.middle_names_soundex = soundex(:middleNames))
+    and ca.rev_type in (0, 1)
+    limit :rowLimiter
+  )
+  select c.contact_id
+  from contact c
+  where c.contact_id in (select contact_id from filtered_contacts)
+""",
+    countQuery = """
+  with filtered_contacts AS (
+    select distinct ca.contact_id
+    from contact_audit ca
+    where (:lastName is null or ca.last_name_soundex = soundex(:lastName))
+    and (:firstName is null or ca.first_name_soundex = soundex(:firstName))
+    and (:middleNames is null or ca.middle_names_soundex = soundex(:middleNames))
+    and ca.rev_type in (0, 1)
+    limit :rowLimiter
+  )
+  select count(c.contact_id) as count
+  from contact c
+  where c.contact_id in (select contact_id from filtered_contacts)
+""",
+    nativeQuery = true,
+  )
+  fun findAllByNamesSoundLikeAndHistory(firstName: String?, middleNames: String?, lastName: String?, rowLimiter: Int, pageable: Pageable): Page<Long>
+
+  @Query(
+    """
+      select c.contactId
+      from ContactEntity c
+      where c.dateOfBirth = :dateOfBirth
+      and c.contactId in (
+        select distinct ca.contactId
+        from ContactAuditEntity ca
+        where (:lastName is null or ca.lastName ilike :lastName)
+        and (:firstName is null or ca.firstName ilike :firstName)
+        and (:middleNames is null or ca.middleNames ilike :middleNames)
+        and ca.revType in (0, 1)
+    )
+    """,
+  )
+  fun findAllByDateOfBirthAndNamesExactAndHistory(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
+
+  @Query(
+    """
+      select c.contactId
+      from ContactEntity c
+      where c.dateOfBirth = :dateOfBirth
+      and c.contactId in (
+        select distinct ca.contactId
+        from ContactAuditEntity ca
+        where (:lastName is null or ca.lastName ilike %:lastName% escape '#')
+        and (:firstName is null or ca.firstName ilike %:firstName% escape '#')
+        and (:middleNames is null or ca.middleNames ilike %:middleNames% escape '#')
+        and ca.revType in (0, 1)
+    )    
+    """,
+  )
+  fun findAllByDateOfBirthAndNamesMatchAndHistory(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
+
+  @Query(
+    """      
+    select c.contactId
+    from ContactEntity c
+    where c.dateOfBirth = :dateOfBirth
+    and c.contactId in (
+      select distinct ca.contactId
+      from ContactAuditEntity ca
+      where (:lastName is null or ca.lastNameSoundex =  CAST(function('soundex', CAST(:lastName AS string)) AS char(4)))
+        and (:firstName is null or ca.firstNameSoundex = CAST(function('soundex', CAST(:firstName AS string)) AS char(4)))
+        and (:middleNames is null or ca.middleNamesSoundex = CAST(function('soundex', CAST(:middleNames as string)) AS char(4)))
+        and ca.revType in (0, 1)
+    )
+    """,
+  )
+  fun findAllByDateOfBirthAndNamesSoundLikeAndHistory(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 }

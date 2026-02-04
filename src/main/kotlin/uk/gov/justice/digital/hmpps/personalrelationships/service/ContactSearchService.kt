@@ -11,12 +11,10 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.personalrelationships.mapping.toModel
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactSearchRequest
-import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactSearchRequestV2
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.UserSearchType
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactSearchResultItem
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ExistingRelationshipToPrisoner
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactSearchRepository
-import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactSearchRepositoryV2
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactWithAddressRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerContactSummaryRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.service.ContactSearchType.CONTACT_ID_ONLY
@@ -37,50 +35,12 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.ContactSearchT
 @Service
 @Transactional(readOnly = true)
 class ContactSearchService(
-  private val contactSearchRepository: ContactSearchRepository,
   private val prisonerContactSummaryRepository: PrisonerContactSummaryRepository,
-  private val contactSearchRepositoryV2: ContactSearchRepositoryV2,
+  private val contactSearchRepository: ContactSearchRepository,
   private val contactWithAddressRepository: ContactWithAddressRepository,
   @Value("\${contact-search.slow-query.row-limit}") val rowLimiter: Int = 2000,
 ) {
-  /**
-   * The original V1 search for contacts
-   */
-  fun searchContacts(pageable: Pageable, request: ContactSearchRequest): Page<ContactSearchResultItem> {
-    val checkForExistingRelationships = request.includeAnyExistingRelationshipsToPrisoner != null
-    val matchingContactsPage = contactSearchRepository.searchContacts(request, pageable)
-    val contactExistingRelationships: Map<Long, List<ExistingRelationshipToPrisoner>> =
-      if (checkForExistingRelationships) {
-        val contactIds = matchingContactsPage.content.map { it.contactId }
-        prisonerContactSummaryRepository
-          .findByPrisonerNumberAndContactIdIn(request.includeAnyExistingRelationshipsToPrisoner!!, contactIds)
-          .groupBy { it.contactId }
-          .mapValues {
-            it.value.map { summary ->
-              ExistingRelationshipToPrisoner(
-                prisonerContactId = summary.prisonerContactId,
-                relationshipTypeCode = summary.relationshipType,
-                relationshipTypeDescription = summary.relationshipTypeDescription,
-                relationshipToPrisonerCode = summary.relationshipToPrisoner,
-                relationshipToPrisonerDescription = summary.relationshipToPrisonerDescription,
-                isRelationshipActive = summary.active,
-              )
-            }
-          }
-      } else {
-        emptyMap()
-      }
-    return matchingContactsPage.map {
-      val existingRelationships: List<ExistingRelationshipToPrisoner>? = if (checkForExistingRelationships) {
-        contactExistingRelationships[it.contactId] ?: emptyList()
-      } else {
-        null
-      }
-      it.toModel(existingRelationships)
-    }
-  }
-
-  fun searchContactsV2(request: ContactSearchRequestV2, pageable: Pageable): Page<ContactSearchResultItem> {
+  fun searchContacts(request: ContactSearchRequest, pageable: Pageable): Page<ContactSearchResultItem> {
     validateRequest(request)
     val pageOfContactIds = getPageOfContactIds(request, pageable)
 
@@ -96,23 +56,23 @@ class ContactSearchService(
   /**
    * Determine the most appropriate repository method, calls it and return at most one page of contactIds
    */
-  private fun getPageOfContactIds(request: ContactSearchRequestV2, pageable: Pageable): Page<Long> {
+  private fun getPageOfContactIds(request: ContactSearchRequest, pageable: Pageable): Page<Long> {
     val searchType = determineSearchType(request)
 
     val pageOfContactIds = when (searchType) {
       CONTACT_ID_ONLY -> {
         logger.info("CONTACT_ID_ONLY search for ${request.contactId}")
-        contactSearchRepositoryV2.findAllByContactIdEquals(request.contactId!!, pageable)
+        contactSearchRepository.findAllByContactIdEquals(request.contactId!!, pageable)
       }
 
       DATE_OF_BIRTH_ONLY -> {
         logger.info("DATE_OF_BIRTH_ONLY search for ${request.dateOfBirth}")
-        contactSearchRepositoryV2.findAllByDateOfBirthEquals(request.dateOfBirth!!, pageable)
+        contactSearchRepository.findAllByDateOfBirthEquals(request.dateOfBirth!!, pageable)
       }
 
       DATE_OF_BIRTH_AND_NAMES_EXACT -> {
         logger.info("DATE_OF_BIRTH_AND_NAMES_EXACT search for ${request.dateOfBirth} last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByDateOfBirthAndNamesExact(
+        contactSearchRepository.findAllByDateOfBirthAndNamesExact(
           request.dateOfBirth!!,
           request.firstName?.trim(),
           request.middleNames?.trim(),
@@ -123,7 +83,7 @@ class ContactSearchService(
 
       DATE_OF_BIRTH_AND_NAMES_EXACT_AND_HISTORY -> {
         logger.info("DATE_OF_BIRTH_AND_NAMES_EXACT_AND_HISTORY search for ${request.dateOfBirth} last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByDateOfBirthAndNamesExactAndHistory(
+        contactSearchRepository.findAllByDateOfBirthAndNamesExactAndHistory(
           request.dateOfBirth!!,
           request.firstName?.trim(),
           request.middleNames?.trim(),
@@ -134,7 +94,7 @@ class ContactSearchService(
 
       DATE_OF_BIRTH_AND_NAMES_MATCH -> {
         logger.info("DATE_OF_BIRTH_AND_NAMES_MATCH search for ${request.dateOfBirth} last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByDateOfBirthAndNamesMatch(
+        contactSearchRepository.findAllByDateOfBirthAndNamesMatch(
           request.dateOfBirth!!,
           request.firstName?.trim(),
           request.middleNames?.trim(),
@@ -145,7 +105,7 @@ class ContactSearchService(
 
       DATE_OF_BIRTH_AND_NAMES_MATCH_AND_HISTORY -> {
         logger.info("DATE_OF_BIRTH_AND_NAMES_MATCH_AND_HISTORY search for dob ${request.dateOfBirth}, last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByDateOfBirthAndNamesMatchAndHistory(
+        contactSearchRepository.findAllByDateOfBirthAndNamesMatchAndHistory(
           request.dateOfBirth!!,
           request.firstName?.trim(),
           request.middleNames?.trim(),
@@ -156,7 +116,7 @@ class ContactSearchService(
 
       DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE -> {
         logger.info("DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE search for ${request.dateOfBirth} last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByDateOfBirthAndNamesSoundLike(
+        contactSearchRepository.findAllByDateOfBirthAndNamesSoundLike(
           request.dateOfBirth!!,
           request.firstName?.trim(),
           request.middleNames?.trim(),
@@ -167,7 +127,7 @@ class ContactSearchService(
 
       DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE_AND_HISTORY -> {
         logger.info("DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE_AND_HISTORY search for dob ${request.dateOfBirth}, last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByDateOfBirthAndNamesSoundLikeAndHistory(
+        contactSearchRepository.findAllByDateOfBirthAndNamesSoundLikeAndHistory(
           request.dateOfBirth!!,
           request.firstName?.trim(),
           request.middleNames?.trim(),
@@ -178,7 +138,7 @@ class ContactSearchService(
 
       NAMES_EXACT -> {
         logger.info("NAMES_EXACT search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByNamesExact(
+        contactSearchRepository.findAllByNamesExact(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
@@ -188,7 +148,7 @@ class ContactSearchService(
 
       NAMES_EXACT_AND_HISTORY -> {
         logger.info("NAMES_EXACT_AND_HISTORY search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByNamesExactAndHistory(
+        contactSearchRepository.findAllByNamesExactAndHistory(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
@@ -198,7 +158,7 @@ class ContactSearchService(
 
       NAMES_MATCH -> {
         logger.info("NAMES_MATCH search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByNamesMatch(
+        contactSearchRepository.findAllByNamesMatch(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
@@ -211,7 +171,7 @@ class ContactSearchService(
         // This search option involves a native query so sort parameters need to be manipulated to native column name format
         val newPageable = PageRequest.of(pageable.pageNumber, pageable.pageSize, manipulateSortToNative(pageable.sort))
 
-        contactSearchRepositoryV2.findAllByNamesMatchAndHistory(
+        contactSearchRepository.findAllByNamesMatchAndHistory(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
@@ -222,7 +182,7 @@ class ContactSearchService(
 
       NAMES_SOUND_LIKE -> {
         logger.info("NAMES_SOUND_LIKE search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        contactSearchRepositoryV2.findAllByNamesSoundLike(
+        contactSearchRepository.findAllByNamesSoundLike(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
@@ -235,7 +195,7 @@ class ContactSearchService(
         // native query - adjust sort to native column names
         val nativePageable = PageRequest.of(pageable.pageNumber, pageable.pageSize, manipulateSortToNative(pageable.sort))
 
-        contactSearchRepositoryV2.findAllByNamesSoundLikeAndHistory(
+        contactSearchRepository.findAllByNamesSoundLikeAndHistory(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
@@ -255,7 +215,7 @@ class ContactSearchService(
    */
   private fun enrichOnePage(
     pageOfContactIds: Page<Long>,
-    request: ContactSearchRequestV2,
+    request: ContactSearchRequest,
     pageable: Pageable,
     totalCount: Long,
   ): Page<ContactSearchResultItem> {
@@ -304,7 +264,7 @@ class ContactSearchService(
     return PageImpl(contactsModelWithAddresses, pageable, totalCount)
   }
 
-  private fun validateRequest(request: ContactSearchRequestV2) {
+  private fun validateRequest(request: ContactSearchRequest) {
     val nameProvided = request.lastName != null || request.firstName != null || request.middleNames != null
     val isNamedSearchType = request.searchType in setOf(UserSearchType.SOUNDS_LIKE, UserSearchType.PARTIAL, UserSearchType.EXACT)
 
@@ -333,7 +293,7 @@ class ContactSearchService(
     return property.trim().replace(regex) { "_${it.value.lowercase()}" }.lowercase()
   }
 
-  fun determineSearchType(request: ContactSearchRequestV2): ContactSearchType {
+  fun determineSearchType(request: ContactSearchRequest): ContactSearchType {
     val contactIdPresent = request.contactId != null
     val dobPresent = request.dateOfBirth != null
     val namesEntered = listOf(request.firstName, request.lastName, request.middleNames).any { it != null }
