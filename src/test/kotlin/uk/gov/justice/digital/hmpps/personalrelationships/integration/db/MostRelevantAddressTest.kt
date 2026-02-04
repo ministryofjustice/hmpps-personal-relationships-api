@@ -65,7 +65,7 @@ class MostRelevantAddressTest : PostgresIntegrationTestBase() {
     val searchUrl = UriComponentsBuilder.fromPath("contact/search")
       .queryParam("lastName", contactName)
       .queryParam("firstName", "ThisIsFor")
-      .queryParam("searchType", "PARTIAL")
+      .queryParam("searchType", "EXACT")
       .build()
       .toUri()
 
