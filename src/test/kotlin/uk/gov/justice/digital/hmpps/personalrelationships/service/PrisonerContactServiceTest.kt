@@ -86,7 +86,7 @@ class PrisonerContactServiceTest {
     )
     val contacts = listOf(c1, c2)
     val page = PageImpl(contacts, pageable, contacts.size.toLong())
-    val request = PrisonerContactSearchParams(prisonerNumber, null, null, null, null, null, Pageable.unpaged())
+    val request = PrisonerContactSearchParams(prisonerNumber, null, null, null, null, null, null, Pageable.unpaged())
 
     whenever(prisonerContactSearchRepository.searchPrisonerContacts(any())).thenReturn(page)
     whenever(prisonerContactRestrictionCountsRepository.findAllByPrisonerContactIdIn(any())).thenReturn(
@@ -148,7 +148,7 @@ class PrisonerContactServiceTest {
     )
     val contacts = listOf(c1, c2)
     val page = PageImpl(contacts, pageable, contacts.size.toLong())
-    val request = PrisonerContactSearchParams(prisonerNumber, null, null, null, null, null, Pageable.unpaged())
+    val request = PrisonerContactSearchParams(prisonerNumber, null, null, null, null, null, null, Pageable.unpaged())
 
     whenever(prisonerContactSearchRepository.searchPrisonerContacts(any())).thenReturn(page)
     whenever(prisonerContactRestrictionCountsRepository.findAllByPrisonerContactIdIn(any())).thenReturn(
@@ -195,11 +195,12 @@ class PrisonerContactServiceTest {
         null,
         null,
         null,
+        null,
         Pageable.unpaged(),
       ),
     )
     assertThat(result.content).isEmpty()
-    assertThat(result.metadata!!.totalElements).isEqualTo(0)
+    assertThat(result.metadata.totalElements).isEqualTo(0)
   }
 
   @Test
@@ -211,6 +212,7 @@ class PrisonerContactServiceTest {
       prisonerContactService.getAllContacts(
         PrisonerContactSearchParams(
           prisonerNumber,
+          null,
           null,
           null,
           null,
