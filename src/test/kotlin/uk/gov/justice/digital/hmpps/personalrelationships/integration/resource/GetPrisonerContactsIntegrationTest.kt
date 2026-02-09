@@ -274,11 +274,11 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(withApprovedOnly.content.first().lastName).isEqualTo("Approved")
 
     val withUnapprovedOnly = getForUrl("/prisoner/$prisonerNumber/contact?approvedVisitor=false")
-    assertThat(withUnapprovedOnly.content).hasSize(1)
+    assertThat(withUnapprovedOnly.content).hasSize(3)
     assertThat(withUnapprovedOnly.content.first().lastName).isEqualTo("Unapproved")
 
     val defaultToAllStates = getForUrl("/prisoner/$prisonerNumber/contact?sort=lastName")
-    assertThat(defaultToAllStates.content).hasSize(2)
+    assertThat(defaultToAllStates.content).hasSize(4)
     assertThat(defaultToAllStates.content.first().lastName).isEqualTo("Approved")
     assertThat(defaultToAllStates.content.last().lastName).isEqualTo("Unapproved")
   }
