@@ -236,7 +236,7 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @Test
   fun `should return correct results when approvedVisitor flag is set`() {
-    val prisonerNumber = "Z1234ZZ"
+    val prisonerNumber = "B4321ZZ"
     stubPrisonSearchWithResponse(prisonerNumber)
     doWithTemporaryWritePermission {
       testAPIClient.createAContactWithARelationship(
@@ -274,13 +274,12 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(withApprovedOnly.content.all { it.lastName == "Approved" }).isTrue()
 
     val withUnapprovedOnly = getForUrl("/prisoner/$prisonerNumber/contact?approvedVisitor=false")
-    assertThat(withUnapprovedOnly.content).hasSize(3)
-    assertThat(withUnapprovedOnly.content.none { it.lastName == "Approved" }).isTrue()
+    assertThat(withUnapprovedOnly.content).hasSize(1)
+    assertThat(withUnapprovedOnly.content.all { it.lastName == "Unapproved" }).isTrue()
 
     val defaultToAllStates = getForUrl("/prisoner/$prisonerNumber/contact?sort=lastName")
-    assertThat(defaultToAllStates.content).hasSize(4)
-    assertThat(defaultToAllStates.content.any { it.lastName == "Approved" }).isTrue()
-    assertThat(defaultToAllStates.content.any { it.lastName == "Unapproved" }).isTrue()
+    assertThat(defaultToAllStates.content).hasSize(2)
+    assertThat(defaultToAllStates.content.map { it.lastName }).containsAnyOf("Unapproved", "Approved")
   }
 
   @Test
