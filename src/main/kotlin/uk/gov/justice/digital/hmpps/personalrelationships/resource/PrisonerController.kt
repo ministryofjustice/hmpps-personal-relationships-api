@@ -61,6 +61,12 @@ class PrisonerController(private val prisonerContactService: PrisonerContactServ
     @PathVariable("prisonNumber") @PrisonNumberDoc prisonerNumber: String,
     @Parameter(
       `in` = ParameterIn.QUERY,
+      description = "If specified and true then only approved contacts will be returned, or if false only unapproved contacts. If omitted, then it will not influence the query.",
+      required = false,
+    )
+    approvedVisitor: Boolean? = null,
+    @Parameter(
+      `in` = ParameterIn.QUERY,
       description = "If specified and true then only relationships that are active will be returned, or if false only inactive ones. If omitted, then all relationships will be returned.",
       required = false,
     )
@@ -96,6 +102,7 @@ class PrisonerController(private val prisonerContactService: PrisonerContactServ
   ): PagedModel<PrisonerContactSummary> {
     val params = PrisonerContactSearchParams(
       prisonerNumber = prisonerNumber,
+      approvedVisitor = approvedVisitor,
       active = active,
       relationshipType = relationshipType,
       emergencyContact = emergencyContact,

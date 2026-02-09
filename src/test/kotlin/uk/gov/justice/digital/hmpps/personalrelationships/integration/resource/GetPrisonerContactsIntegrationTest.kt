@@ -235,6 +235,54 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
+  fun `should return correct results when approvedVisitor flag is set`() {
+    val prisonerNumber = "B4321ZZ"
+    stubPrisonSearchWithResponse(prisonerNumber)
+    doWithTemporaryWritePermission {
+      testAPIClient.createAContactWithARelationship(
+        CreateContactRequest(
+          lastName = "Approved",
+          firstName = "Contact",
+          relationship = ContactRelationship(
+            prisonerNumber = prisonerNumber,
+            relationshipTypeCode = "S",
+            relationshipToPrisonerCode = "MOT",
+            isNextOfKin = false,
+            isEmergencyContact = false,
+            isApprovedVisitor = true,
+          ),
+        ),
+      )
+      testAPIClient.createAContactWithARelationship(
+        CreateContactRequest(
+          lastName = "Unapproved",
+          firstName = "Contact",
+          relationship = ContactRelationship(
+            prisonerNumber = prisonerNumber,
+            relationshipTypeCode = "S",
+            relationshipToPrisonerCode = "MOT",
+            isNextOfKin = false,
+            isEmergencyContact = false,
+            isApprovedVisitor = false,
+          ),
+        ),
+      )
+    }
+
+    val withApprovedOnly = getForUrl("/prisoner/$prisonerNumber/contact?approvedVisitor=true")
+    assertThat(withApprovedOnly.content).hasSize(1)
+    assertThat(withApprovedOnly.content.all { it.lastName == "Approved" }).isTrue()
+
+    val withUnapprovedOnly = getForUrl("/prisoner/$prisonerNumber/contact?approvedVisitor=false")
+    assertThat(withUnapprovedOnly.content).hasSize(1)
+    assertThat(withUnapprovedOnly.content.all { it.lastName == "Unapproved" }).isTrue()
+
+    val defaultToAllStates = getForUrl("/prisoner/$prisonerNumber/contact?sort=lastName")
+    assertThat(defaultToAllStates.content).hasSize(2)
+    assertThat(defaultToAllStates.content.map { it.lastName }).containsAnyOf("Unapproved", "Approved")
+  }
+
+  @Test
   fun `should only accept S or O for relationshipType`() {
     val error = webTestClient.get()
       .uri("/prisoner/A4385DZ/contact?relationshipType=X")

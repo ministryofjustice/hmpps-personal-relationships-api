@@ -93,6 +93,9 @@ class PrisonerContactSearchRepository(
   ): MutableList<Predicate> {
     val predicates: MutableList<Predicate> = ArrayList()
     predicates.add(cb.equal(contact.get<String>(PrisonerContactSummaryEntity::prisonerNumber.name), params.prisonerNumber))
+    if (params.approvedVisitor != null) {
+      predicates.add(cb.equal(contact.get<Boolean>(PrisonerContactSummaryEntity::approvedVisitor.name), params.approvedVisitor))
+    }
     if (params.active != null) {
       predicates.add(cb.equal(contact.get<Boolean>(PrisonerContactSummaryEntity::active.name), params.active))
     }
