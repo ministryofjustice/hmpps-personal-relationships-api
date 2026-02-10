@@ -104,7 +104,6 @@ jobs:
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_postgres_verify.yml@v2 # WORKFLOW_VERSION
     secrets: inherit
     with:
-      jdk-tag: "21.0"
       postgres-tag: "16"
       postgres-db: personal-relationships-db
       postgres-username: contacts
