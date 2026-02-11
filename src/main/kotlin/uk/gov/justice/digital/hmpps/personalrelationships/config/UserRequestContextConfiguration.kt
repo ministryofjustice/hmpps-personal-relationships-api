@@ -28,11 +28,14 @@ class UserRequestContextInterceptor(private val manageUsersService: ManageUsersS
     private val logger = LoggerFactory.getLogger(this::class.java)
   }
 
+  private val modifyMethods = arrayOf("POST", "PUT", "PATCH", "DELETE")
+
+  private val excludedPaths = arrayOf("/prisoner-contact/restrictions")
+
   override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
     val username = authentication().userName?.trim()
     // Require a valid username for all modifying methods
-    val isModifyingAction = request.method in arrayOf("POST", "PUT", "PATCH", "DELETE")
-    val user = if (isModifyingAction) {
+    val user = if (request.method in modifyMethods && request.requestURI !in excludedPaths) {
       if (username === null) {
         throw AccessDeniedException("Username is missing from token")
       }
