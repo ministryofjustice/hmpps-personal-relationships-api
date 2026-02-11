@@ -1,8 +1,9 @@
 # hmpps-personal-relationships-api
-[![repo standards badge](https://img.shields.io/badge/dynamic/json?color=blue&style=flat&logo=github&label=MoJ%20Compliant&query=%24.result&url=https%3A%2F%2Foperations-engineering-reports.cloud-platform.service.justice.gov.uk%2Fapi%2Fv1%2Fcompliant_public_repositories%2Fhmpps-personal-relationships-api)](https://operations-engineering-reports.cloud-platform.service.justice.gov.uk/public-github-repositories.html#hmpps-personal-relationships-api "Link to report")
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/ministryofjustice/hmpps-personal-relationships-api/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/ministryofjustice/hmpps-personal-relationships-api/tree/main)
-[![Docker Repository on Quay](https://quay.io/repository/hmpps/hmpps-personal-relationships-api/status "Docker Repository on Quay")](https://quay.io/repository/hmpps/hmpps-personal-relationships-api)
-[![API docs](https://img.shields.io/badge/API_docs-view-85EA2D.svg?logo=swagger)](https://personal-relationships-api-dev.hmpps.service.justice.gov.uk/swagger-ui/index.html#/)
+
+[![repo standards badge](https://img.shields.io/badge/endpoint.svg?&style=flat&logo=github&url=https%3A%2F%2Foperations-engineering-reports.cloud-platform.service.justice.gov.uk%2Fapi%2Fv1%2Fcompliant_public_repositories%2Fhmpps-personal-relationships-api)](https://operations-engineering-reports.cloud-platform.service.justice.gov.uk/public-report/hmpps-personal-relationships-api "Link to report")
+[![Docker Repository on ghcr](https://img.shields.io/badge/ghcr.io-repository-2496ED.svg?logo=docker)](https://ghcr.io/ministryofjustice/hmpps-personal-relationships-api)
+[![API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://personal-relationships-api-dev.hmpps.service.justice.gov.uk/swagger-ui/index.html)
+[![GitHub Actions Pipeline](https://github.com/ministryofjustice/hmpps-personal-relationships-api/actions/workflows/pipeline.yml/badge.svg)](https://github.com/ministryofjustice/hmpps-personal-relationships-api/actions/workflows/pipeline.yml)
 
 API to support the front end service allowing court and probation users to manage personal relationships for the people in prison.
 
