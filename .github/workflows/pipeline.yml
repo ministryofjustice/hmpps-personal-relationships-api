@@ -20,7 +20,7 @@ permissions:
   packages: write
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: true
 jobs:
   helm_lint:
     strategy:
@@ -39,32 +39,26 @@ jobs:
       - id: app_version
         name: Application version creators
         uses: ministryofjustice/hmpps-github-actions/.github/actions/build-test-and-deploy/create_app_version@v2 # WORKFLOW_VERSION
-  gradle_verify:
+  kotlin_validate:
     name: Validate the kotlin
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
+    uses: ./.github/workflows/setup-and-validate.yml
     secrets: inherit
     with:
-      gradle-command: 'BUILD_NUMBER=${{ needs.app_version.outputs.version}} ./gradlew assemble check'
-      upload-build-artifacts: ${{ github.ref == 'refs/heads/main' }}
-      java-version: "21"
-    needs:
-      - app_version
+      java_version: '21'
   build:
     name: Build docker image from hmpps-github-actions
-    if: github.ref == 'refs/heads/main'
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2 # WORKFLOW_VERSION
     needs:
-      - gradle_verify
+      - kotlin_validate
     with:
       docker_registry: 'ghcr.io'
       registry_org: 'ministryofjustice'
       additional_docker_tag: ${{ inputs.additional_docker_tag }}
-      push: ${{ inputs.push || inputs.push == null }}
-      docker_multiplatform: true
+      push: ${{ inputs.push || true }}
+      docker_multiplatform: false
       download_build_artifacts: true
   deploy_dev:
     name: Deploy to the dev environment
-    if: github.ref == 'refs/heads/main'
     needs:
       - build
       - helm_lint
@@ -75,6 +69,7 @@ jobs:
       app_version: '${{ needs.build.outputs.app_version }}'
       helm_timeout: '5m'
   deploy_preprod:
+    if: github.ref == 'refs/heads/main'
     name: Deploy to the preprod environment
     needs:
       - build
@@ -87,6 +82,7 @@ jobs:
       app_version: '${{ needs.build.outputs.app_version }}'
       helm_timeout: '5m'
   deploy_prod:
+    if: github.ref == 'refs/heads/main'
     name: Deploy to the prod environment
     needs:
       - build
@@ -99,12 +95,3 @@ jobs:
       app_version: '${{ needs.build.outputs.app_version }}'
       helm_timeout: '5m'
       slack_notification: true
-  kotlin_validate:
-    name: Validate the kotlin
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_postgres_verify.yml@v2 # WORKFLOW_VERSION
-    secrets: inherit
-    with:
-      postgres-tag: "16"
-      postgres-db: personal-relationships-db
-      postgres-username: contacts
-      postgres-password: contacts
