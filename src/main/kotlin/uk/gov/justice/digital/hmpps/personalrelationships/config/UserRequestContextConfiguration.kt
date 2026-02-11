@@ -16,9 +16,8 @@ import uk.gov.justice.hmpps.kotlin.auth.AuthAwareAuthenticationToken
 class UserRequestContextConfiguration(private val userRequestContextInterceptor: UserRequestContextInterceptor) : WebMvcConfigurer {
   override fun addInterceptors(registry: InterceptorRegistry) {
     registry.addInterceptor(userRequestContextInterceptor)
-      .addPathPatterns("/contact/**")
-      .addPathPatterns("/prisoner/**")
-      .addPathPatterns("/prisoner-contact/**")
+      .addPathPatterns("/contact/**", "/prisoner/**", "/prisoner-contact/**")
+      .excludePathPatterns("/prisoner-contact/restrictions")
   }
 }
 
@@ -31,8 +30,8 @@ class UserRequestContextInterceptor(private val manageUsersService: ManageUsersS
   override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
     val username = authentication().userName?.trim()
     // Require a valid username for all modifying methods
-    val isModifyingAction = request.method in arrayOf("POST", "PUT", "PATCH", "DELETE")
-    val user = if (isModifyingAction) {
+    val modifyingMethods = arrayOf("POST", "PUT", "PATCH", "DELETE")
+    val user = if (request.method in modifyingMethods) {
       if (username === null) {
         throw AccessDeniedException("Username is missing from token")
       }
