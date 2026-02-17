@@ -121,7 +121,7 @@ tasks.named("runKtlintCheckOverMainSourceSet") {
 }
 
 kotlin {
-  jvmToolchain(21)
+  jvmToolchain(25)
   sourceSets["main"].apply {
     kotlin.srcDir("$buildDirectory/generated/organisationsapi/src/main/kotlin")
   }
