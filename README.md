@@ -11,7 +11,7 @@ API to support the front end service allowing court and probation users to manag
 
 Tools required:
 
-* JDK v25+
+* JDK v21+
 * Kotlin (Intellij)
 * docker
 * docker-compose
