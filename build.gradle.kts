@@ -71,7 +71,6 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-jackson2")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.21.0")
 
-  //implementation("com.fasterxml.jackson:jackson-bom:2.20.2")
   // Test dependencies
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.0.0")
   testImplementation("org.springframework.boot:spring-boot-starter-webclient-test")
