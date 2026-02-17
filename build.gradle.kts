@@ -82,7 +82,6 @@ dependencies {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("org.testcontainers:testcontainers-postgresql:2.0.3")
-  testImplementation("org.testcontainers:testcontainers-localstack:2.0.3")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.56.0")
 }

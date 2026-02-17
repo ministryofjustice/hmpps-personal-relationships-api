@@ -60,8 +60,8 @@ object PostgresContainer {
   // not running, this comes back false, allowing the container to be started, ready for integration tests. If you don't
   // set the variable POSTGRES_TEST_DB_PORT, it defaults to 5432.
   private fun isPostgresRunning(): Boolean = try {
-      ServerSocket(hostPort).use { false }
-    } catch (_: IOException) {
-      true
-    }
+    ServerSocket(hostPort).use { false }
+  } catch (_: IOException) {
+    true
+  }
 }
