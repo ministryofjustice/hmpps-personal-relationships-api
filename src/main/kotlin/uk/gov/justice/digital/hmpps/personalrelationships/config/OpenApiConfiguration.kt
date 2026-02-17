@@ -114,9 +114,8 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun jsonNullableModule() = JsonNullableModule()
 
   @Bean
-  fun jsonCustomizer(): Jackson2ObjectMapperBuilderCustomizer =
-    Jackson2ObjectMapperBuilderCustomizer { builder: Jackson2ObjectMapperBuilder ->
-      builder.serializationInclusion(JsonInclude.Include.NON_NULL)
-      builder.featuresToEnable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
-    }
+  fun jsonCustomizer(): Jackson2ObjectMapperBuilderCustomizer = Jackson2ObjectMapperBuilderCustomizer { builder: Jackson2ObjectMapperBuilder ->
+    builder.serializationInclusion(JsonInclude.Include.NON_NULL)
+    builder.featuresToEnable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+  }
 }
