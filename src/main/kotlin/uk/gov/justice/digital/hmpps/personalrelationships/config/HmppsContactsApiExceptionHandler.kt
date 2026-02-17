@@ -92,7 +92,7 @@ class HmppsContactsApiExceptionHandler {
     var message = e.message
     val rootCause = ExceptionUtils.getRootCause(e)
     if (rootCause != null && rootCause is InvalidReferenceCodeGroupException) {
-      message = rootCause.message
+      message = rootCause.message ?: "NA"
     }
     return ResponseEntity
       .status(BAD_REQUEST)
