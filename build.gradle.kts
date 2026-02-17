@@ -81,9 +81,8 @@ dependencies {
     testImplementation("org.mockito:mockito-inline:5.2.0")
     exclude(group = "io.swagger.core.v3")
   }
-  testImplementation("org.testcontainers:postgresql:1.21.3")
-
-  testImplementation("org.testcontainers:localstack:1.21.4")
+  testImplementation("org.testcontainers:testcontainers-postgresql:2.0.3")
+  testImplementation("org.testcontainers:testcontainers-localstack:2.0.3")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.56.0")
 }

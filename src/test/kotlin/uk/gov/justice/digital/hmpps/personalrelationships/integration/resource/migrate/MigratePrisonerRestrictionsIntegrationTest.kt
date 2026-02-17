@@ -26,6 +26,7 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
   @BeforeEach
   fun setUp() {
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
+    prisonerRestrictionsRepository.deleteAll()
   }
 
   @Nested

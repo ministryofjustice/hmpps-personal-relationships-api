@@ -824,7 +824,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
           ),
           contactMultiple.createdContact.id to listOf(
             ExistingRelationshipToPrisoner(
-              prisonerContactId = contactMultiple.createdRelationship!!.prisonerContactId,
+              prisonerContactId = contactMultiple.createdRelationship.prisonerContactId,
               relationshipTypeCode = "S",
               relationshipTypeDescription = "Social",
               relationshipToPrisonerCode = "MOT",

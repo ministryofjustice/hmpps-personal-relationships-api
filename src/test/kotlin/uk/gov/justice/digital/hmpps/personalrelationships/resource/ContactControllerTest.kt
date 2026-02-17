@@ -170,7 +170,7 @@ class ContactControllerTest {
 
       // Then
       assertNotNull(result)
-      assertThat(result.metadata!!.totalElements).isEqualTo(1)
+      assertThat(result.metadata.totalElements).isEqualTo(1)
       assertThat(result.content[0].lastName).isEqualTo("last")
       assertThat(result.content[0].firstName).isEqualTo("first")
       assertThat(result.content[0].mailAddress).isEqualTo(true)
