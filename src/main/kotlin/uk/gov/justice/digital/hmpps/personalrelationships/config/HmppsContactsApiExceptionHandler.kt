@@ -89,7 +89,7 @@ class HmppsContactsApiExceptionHandler {
 
   @ExceptionHandler(MethodArgumentTypeMismatchException::class)
   fun handleInvalidReferenceCodeGroupException(e: MethodArgumentTypeMismatchException): ResponseEntity<ErrorResponse> {
-    var message = e.message
+    var message: String? = e.message
     val rootCause = ExceptionUtils.getRootCause(e)
     if (rootCause != null && rootCause is InvalidReferenceCodeGroupException) {
       message = rootCause.message

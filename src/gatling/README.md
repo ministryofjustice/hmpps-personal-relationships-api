@@ -5,7 +5,7 @@ This directory contains Gatling performance tests for the HMPPS Personal Relatio
 ## Prerequisites
 
 - JDK 21 or higher
-- Gradle 8.x or higher
+- Gradle 9.x or higher
 - Running instance of the HMPPS Personal Relationships API
 
 ## Running the Tests

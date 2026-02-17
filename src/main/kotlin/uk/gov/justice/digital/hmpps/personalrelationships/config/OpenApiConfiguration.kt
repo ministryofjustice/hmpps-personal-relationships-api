@@ -13,8 +13,8 @@ import io.swagger.v3.oas.models.servers.Server
 import io.swagger.v3.oas.models.tags.Tag
 import jakarta.annotation.PostConstruct
 import org.openapitools.jackson.nullable.JsonNullableModule
-import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer
 import org.springframework.boot.info.BuildProperties
+import org.springframework.boot.jackson2.autoconfigure.Jackson2ObjectMapperBuilderCustomizer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder
@@ -22,7 +22,7 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder
 @Configuration
 class OpenApiConfiguration(buildProperties: BuildProperties) {
 
-  private val version: String = buildProperties.version
+  private val version: String = buildProperties.version ?: "VERSION UNKNOWN"
 
   @Bean
   fun customOpenAPI(buildProperties: BuildProperties): OpenAPI? = OpenAPI()

@@ -18,9 +18,9 @@ abstract class PostgresIntegrationTestBase : IntegrationTestBase() {
     @DynamicPropertySource
     fun properties(registry: DynamicPropertyRegistry) {
       pgContainer?.run {
-        registry.add("spring.datasource.url", pgContainer::getJdbcUrl)
-        registry.add("spring.datasource.username", pgContainer::getUsername)
-        registry.add("spring.datasource.password", pgContainer::getPassword)
+        registry.add("spring.datasource.url") { PostgresContainer.jdbcUrl }
+        registry.add("spring.datasource.username") { PostgresContainer.dbUsername }
+        registry.add("spring.datasource.password") { PostgresContainer.dbPassword }
       }
     }
   }
