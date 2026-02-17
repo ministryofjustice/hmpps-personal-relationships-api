@@ -6,9 +6,9 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.Sy
 
 fun ContactIdentityEntity.toModel(): SyncContactIdentity = SyncContactIdentity(
   contactIdentityId = this.contactIdentityId,
-  contactId = this.contactId!!,
+  contactId = this.contactId,
   identityType = this.identityType,
-  identityValue = this.identityValue!!,
+  identityValue = this.identityValue,
   issuingAuthority = this.issuingAuthority,
   createdBy = this.createdBy,
   createdTime = this.createdTime,

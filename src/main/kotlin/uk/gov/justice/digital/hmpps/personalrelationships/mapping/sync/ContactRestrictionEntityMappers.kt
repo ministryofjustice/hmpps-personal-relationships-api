@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.Sy
 
 fun ContactRestrictionEntity.toModel(): SyncContactRestriction = SyncContactRestriction(
   contactRestrictionId = this.contactRestrictionId,
-  contactId = this.contactId!!,
+  contactId = this.contactId,
   restrictionType = this.restrictionType,
   startDate = this.startDate,
   expiryDate = this.expiryDate,

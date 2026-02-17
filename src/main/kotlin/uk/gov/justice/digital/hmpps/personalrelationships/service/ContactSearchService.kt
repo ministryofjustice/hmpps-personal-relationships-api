@@ -232,7 +232,7 @@ class ContactSearchService(
     // Add the relationships for a prisoner, if requested
     val contactRelationships: Map<Long, List<ExistingRelationshipToPrisoner>> = if (checkForRelationships) {
       prisonerContactSummaryRepository
-        .findByPrisonerNumberAndContactIdIn(request.includePrisonerRelationships!!, contactIds)
+        .findByPrisonerNumberAndContactIdIn(request.includePrisonerRelationships, contactIds)
         .groupBy { it.contactId }
         .mapValues {
           it.value.map { summary ->

@@ -12,7 +12,7 @@ parameters:
     default: managing-contacts-alerts-non-prod
   java-version:
     type: string
-    default: "25.0"
+    default: "21.0"
   postgres-tag:
     type: string
     default: "16"
