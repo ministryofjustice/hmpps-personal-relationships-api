@@ -90,7 +90,7 @@ dependencies {
 tasks {
   withType<KotlinCompile> {
     dependsOn("buildOrganisationApiModel")
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_24
     compilerOptions.freeCompilerArgs.add("-Xannotation-default-target=param-property")
   }
 }
@@ -122,10 +122,15 @@ tasks.named("runKtlintCheckOverMainSourceSet") {
 }
 
 kotlin {
-  jvmToolchain(21)
+  jvmToolchain(25)
   sourceSets["main"].apply {
     kotlin.srcDir("$buildDirectory/generated/organisationsapi/src/main/kotlin")
   }
+}
+
+java {
+  sourceCompatibility = JavaVersion.VERSION_24
+  targetCompatibility = JavaVersion.VERSION_24
 }
 
 ktlint {

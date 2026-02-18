@@ -44,7 +44,7 @@ jobs:
     uses: ./.github/workflows/setup-and-validate.yml
     secrets: inherit
     with:
-      java_version: '21'
+      java_version: '25'
   build:
     name: Build docker image from hmpps-github-actions
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2 # WORKFLOW_VERSION
