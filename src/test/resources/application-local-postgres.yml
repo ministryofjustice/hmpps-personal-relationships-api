@@ -9,6 +9,6 @@
 
 spring:
   datasource:
-    url: 'jdbc:postgresql://localhost/personal-relationships-db'
+    url: 'jdbc:postgresql://localhost:${POSTGRES_TEST_DB_PORT:-5432}/personal-relationships-db'
     username: contacts
     password: contacts
