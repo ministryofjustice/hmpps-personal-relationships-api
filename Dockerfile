@@ -1,6 +1,6 @@
 FROM --platform=$BUILDPLATFORM eclipse-temurin:25-jdk-jammy AS builder
 ARG BUILD_NUMBER
-ENV BUILD_NUMBER ${BUILD_NUMBER:-1_0_0}
+ENV BUILD_NUMBER=${BUILD_NUMBER:-1_0_0}
 
 WORKDIR /app
 ADD . .
@@ -14,7 +14,7 @@ FROM eclipse-temurin:25-jre-jammy
 LABEL maintainer="HMPPS Digital Studio <info@digital.justice.gov.uk>"
 
 ARG BUILD_NUMBER
-ENV BUILD_NUMBER ${BUILD_NUMBER:-1_0_0}
+ENV BUILD_NUMBER=${BUILD_NUMBER:-1_0_0}
 
 RUN apt-get update && \
     apt-get -y upgrade && \
