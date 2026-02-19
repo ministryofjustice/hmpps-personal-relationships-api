@@ -12,6 +12,8 @@ This directory contains Gatling performance tests for the HMPPS Personal Relatio
 
 You can run the Gatling tests by using the [run-perf-tests.sh](../../scripts/run-perf-tests.sh) script.
 
+```Note: Make sure you are using a bash shell while executing the script.```
+
 ### Configuration Options
 
 You can configure the tests using the following system properties:
