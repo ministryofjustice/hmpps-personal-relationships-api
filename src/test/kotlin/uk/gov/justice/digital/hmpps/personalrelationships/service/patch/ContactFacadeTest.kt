@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.ContactService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryService
 import java.time.LocalDateTime
 
 class ContactFacadeTest {
@@ -48,8 +49,9 @@ class ContactFacadeTest {
   private val contactPatchService: ContactPatchService = mock()
   private val contactService: ContactService = mock()
   private val contactSearchService: ContactSearchService = mock()
+  private val telemetryService: TelemetryService = mock()
 
-  private val contactFacade = ContactFacade(outboundEventsService, contactPatchService, contactService, contactSearchService)
+  private val contactFacade = ContactFacade(outboundEventsService, contactPatchService, contactService, contactSearchService, telemetryService)
 
   @Test
   fun `patch should patch contact and send domain event`() {
