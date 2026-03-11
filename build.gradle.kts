@@ -74,13 +74,12 @@ dependencies {
   // Test dependencies
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.0.2")
   testImplementation("org.springframework.boot:spring-boot-starter-webclient-test")
-
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.38") {
-    testImplementation("org.mockito:mockito-inline:5.2.0")
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.39") {
     exclude(group = "io.swagger.core.v3")
   }
+  testImplementation("org.mockito:mockito-inline:5.2.0")
   testImplementation("org.testcontainers:testcontainers-postgresql:2.0.3")
   testImplementation("org.testcontainers:testcontainers-localstack:2.0.3")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
