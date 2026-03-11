@@ -13,6 +13,7 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactIdentityDetailsEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactIdentityEntity
+import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicateIdentityDocumentException
 import uk.gov.justice.digital.hmpps.personalrelationships.helpers.aUser
 import uk.gov.justice.digital.hmpps.personalrelationships.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.CreateIdentityRequest
@@ -102,6 +103,43 @@ class ContactIdentityServiceTest {
         service.create(contactId, request.copy(identityValue = "1923/1Z34567A", identityType = "PNC"), user)
       }
       assertThat(exception.message).isEqualTo("Identity value (1923/1Z34567A) is not a valid PNC Number")
+    }
+
+    @Test
+    fun `should throw DuplicateIdentityDocument when document with same type and value found in existing documents`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
+      whenever(contactIdentityRepository.findByContactId(contactId)).thenReturn(
+        listOf(
+          ContactIdentityEntity(
+            contactIdentityId = 1234L,
+            contactId = contactId,
+            identityType = "DL",
+            identityValue = "DL123456789",
+            issuingAuthority = "DVLA",
+            createdBy = user.username,
+            createdTime = now(),
+            updatedBy = null,
+            updatedTime = null,
+          ),
+        ),
+      )
+
+      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.ID_TYPE, "DL", allowInactive = false)).thenReturn(
+        ReferenceCode(
+          0,
+          ReferenceCodeGroup.ID_TYPE,
+          "DL",
+          "Driving licence",
+          90,
+          true,
+        ),
+      )
+
+      val exception = assertThrows<DuplicateIdentityDocumentException> {
+        service.create(contactId, request, user)
+      }
+
+      assertThat(exception.message).isEqualTo("Contact already has an identity document matching type \"DL\" and value \"DL123456789\"")
     }
 
     @Test
@@ -203,6 +241,71 @@ class ContactIdentityServiceTest {
         service.createMultiple(contactId, request.copy(identities = listOf(IdentityDocument(identityValue = "1923/1Z34567A", identityType = "PNC"))), user)
       }
       assertThat(exception.message).isEqualTo("Identity value (1923/1Z34567A) is not a valid PNC Number")
+    }
+
+    @Test
+    fun `should throw DuplicateIdentityDocument when document with same type and value found in incoming request body`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
+
+      val exception = assertThrows<DuplicateIdentityDocumentException> {
+        service.createMultiple(
+          contactId = contactId,
+          request = CreateMultipleIdentitiesRequest(
+            identities = listOf(
+              IdentityDocument(
+                identityType = "DL",
+                identityValue = "DL123456789",
+                issuingAuthority = "DVLA",
+              ),
+              IdentityDocument(
+                identityType = "DL",
+                identityValue = "DL123456789",
+                issuingAuthority = null,
+              ),
+            ),
+          ),
+          user = user,
+        )
+      }
+
+      assertThat(exception.message).isEqualTo("Contact already has an identity document matching type \"DL\" and value \"DL123456789\"")
+    }
+
+    @Test
+    fun `should throw DuplicateIdentityDocument when document with same type and value found in existing documents`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
+      whenever(contactIdentityRepository.findByContactId(contactId)).thenReturn(
+        listOf(
+          ContactIdentityEntity(
+            contactIdentityId = 1234L,
+            contactId = contactId,
+            identityType = "DL",
+            identityValue = "DL123456789",
+            issuingAuthority = "DVLA",
+            createdBy = user.username,
+            createdTime = now(),
+            updatedBy = null,
+            updatedTime = null,
+          ),
+        ),
+      )
+
+      whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.ID_TYPE, "DL", allowInactive = false)).thenReturn(
+        ReferenceCode(
+          0,
+          ReferenceCodeGroup.ID_TYPE,
+          "DL",
+          "Driving licence",
+          90,
+          true,
+        ),
+      )
+
+      val exception = assertThrows<DuplicateIdentityDocumentException> {
+        service.createMultiple(contactId, request, user)
+      }
+
+      assertThat(exception.message).isEqualTo("Contact already has an identity document matching type \"DL\" and value \"DL123456789\"")
     }
 
     @Test

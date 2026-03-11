@@ -6,10 +6,12 @@ import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactIdentityEntity
+import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicateIdentityDocumentException
 import uk.gov.justice.digital.hmpps.personalrelationships.mapping.toModel
 import uk.gov.justice.digital.hmpps.personalrelationships.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.CreateIdentityRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.CreateMultipleIdentitiesRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.IdentityDocument
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.UpdateIdentityRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactIdentityDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ReferenceCode
@@ -30,6 +32,8 @@ class ContactIdentityService(
   @Transactional
   fun create(contactId: Long, request: CreateIdentityRequest, user: User): ContactIdentityDetails {
     validateContactExists(contactId)
+    validateDuplicateIdentityDocuments(contactId, listOf(IdentityDocument(identityType = request.identityType, identityValue = request.identityValue, issuingAuthority = request.issuingAuthority)))
+
     return createAContactIdentity(
       contactId,
       request.identityType,
@@ -42,6 +46,7 @@ class ContactIdentityService(
   @Transactional
   fun createMultiple(contactId: Long, request: CreateMultipleIdentitiesRequest, user: User): List<ContactIdentityDetails> {
     validateContactExists(contactId)
+    validateDuplicateIdentityDocuments(contactId, request.identities)
     return request.identities.map {
       createAContactIdentity(
         contactId,
@@ -124,6 +129,31 @@ class ContactIdentityService(
   private fun validateContactExists(contactId: Long) {
     contactRepository.findById(contactId)
       .orElseThrow { EntityNotFoundException("Contact ($contactId) not found") }
+  }
+
+  private fun validateDuplicateIdentityDocuments(contactId: Long, identities: List<IdentityDocument>) {
+    val requestedIdentities = identities.map { it.identityType to it.identityValue }
+
+    val duplicateInRequest = requestedIdentities
+      .groupingBy { it }
+      .eachCount()
+      .entries
+      .firstOrNull { it.value > 1 }
+      ?.key
+
+    if (duplicateInRequest != null) {
+      throw DuplicateIdentityDocumentException(duplicateInRequest.first, duplicateInRequest.second)
+    }
+
+    val existingIdentities = contactIdentityRepository.findByContactId(contactId)
+      .map { it.identityType to it.identityValue }
+      .toSet()
+
+    val duplicateExisting = requestedIdentities.firstOrNull { it in existingIdentities }
+
+    if (duplicateExisting != null) {
+      throw DuplicateIdentityDocumentException(duplicateExisting.first, duplicateExisting.second)
+    }
   }
 
   private fun ContactIdentityEntity.toDomainWithType(
