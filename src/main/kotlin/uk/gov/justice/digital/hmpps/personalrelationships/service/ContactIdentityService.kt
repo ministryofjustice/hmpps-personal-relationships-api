@@ -145,7 +145,7 @@ class ContactIdentityService(
       throw DuplicateIdentityDocumentException(duplicateInRequest.first, duplicateInRequest.second)
     }
 
-    val existingIdentities = contactIdentityDetailsRepository.findByContactId(contactId)
+    val existingIdentities = contactIdentityRepository.findByContactId(contactId)
       .map { it.identityType to it.identityValue }
       .toSet()
 

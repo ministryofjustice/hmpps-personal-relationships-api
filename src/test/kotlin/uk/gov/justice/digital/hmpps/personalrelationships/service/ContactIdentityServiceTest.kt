@@ -108,14 +108,12 @@ class ContactIdentityServiceTest {
     @Test
     fun `should throw DuplicateIdentityDocument when document with same type and value found in existing documents`() {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
-      whenever(contactIdentityDetailsRepository.findByContactId(contactId)).thenReturn(
+      whenever(contactIdentityRepository.findByContactId(contactId)).thenReturn(
         listOf(
-          ContactIdentityDetailsEntity(
+          ContactIdentityEntity(
             contactIdentityId = 1234L,
             contactId = contactId,
             identityType = "DL",
-            identityTypeDescription = "Driving licence",
-            identityTypeIsActive = true,
             identityValue = "DL123456789",
             issuingAuthority = "DVLA",
             createdBy = user.username,
@@ -276,14 +274,12 @@ class ContactIdentityServiceTest {
     @Test
     fun `should throw DuplicateIdentityDocument when document with same type and value found in existing documents`() {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
-      whenever(contactIdentityDetailsRepository.findByContactId(contactId)).thenReturn(
+      whenever(contactIdentityRepository.findByContactId(contactId)).thenReturn(
         listOf(
-          ContactIdentityDetailsEntity(
+          ContactIdentityEntity(
             contactIdentityId = 1234L,
             contactId = contactId,
             identityType = "DL",
-            identityTypeDescription = "Driving licence",
-            identityTypeIsActive = true,
             identityValue = "DL123456789",
             issuingAuthority = "DVLA",
             createdBy = user.username,
