@@ -5,7 +5,9 @@ import jakarta.transaction.Transactional
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
+import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactIdentityDetailsEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactIdentityEntity
+import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicateIdentityDocumentException
 import uk.gov.justice.digital.hmpps.personalrelationships.mapping.toModel
 import uk.gov.justice.digital.hmpps.personalrelationships.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.CreateIdentityRequest
@@ -30,18 +32,21 @@ class ContactIdentityService(
   @Transactional
   fun create(contactId: Long, request: CreateIdentityRequest, user: User): ContactIdentityDetails {
     validateContactExists(contactId)
+    val existingDocuments = contactIdentityDetailsRepository.findByContactId(contactId)
     return createAContactIdentity(
       contactId,
       request.identityType,
       request.identityValue,
       request.issuingAuthority,
       user.username,
+      existingDocuments,
     )
   }
 
   @Transactional
   fun createMultiple(contactId: Long, request: CreateMultipleIdentitiesRequest, user: User): List<ContactIdentityDetails> {
     validateContactExists(contactId)
+    val existingDocuments = contactIdentityDetailsRepository.findByContactId(contactId)
     return request.identities.map {
       createAContactIdentity(
         contactId,
@@ -49,6 +54,7 @@ class ContactIdentityService(
         it.identityValue,
         it.issuingAuthority,
         user.username,
+        existingDocuments,
       )
     }
   }
@@ -59,7 +65,9 @@ class ContactIdentityService(
     identityValue: String,
     issuingAuthority: String?,
     createdBy: String,
+    existingDocuments: List<ContactIdentityDetailsEntity>,
   ): ContactIdentityDetails {
+    validateDuplicateIdentityDocument(identityType, identityValue, existingDocuments)
     validatePNC(identityType, identityValue)
     val type = referenceCodeService.validateReferenceCode(
       ReferenceCodeGroup.ID_TYPE,
@@ -124,6 +132,12 @@ class ContactIdentityService(
   private fun validateContactExists(contactId: Long) {
     contactRepository.findById(contactId)
       .orElseThrow { EntityNotFoundException("Contact ($contactId) not found") }
+  }
+
+  private fun validateDuplicateIdentityDocument(identityType: String, identityValue: String, existingDocuments: List<ContactIdentityDetailsEntity>) {
+    if (existingDocuments.any { it.identityType == identityType && it.identityValue == identityValue }) {
+      throw DuplicateIdentityDocumentException(identityType, identityValue)
+    }
   }
 
   private fun ContactIdentityEntity.toDomainWithType(
