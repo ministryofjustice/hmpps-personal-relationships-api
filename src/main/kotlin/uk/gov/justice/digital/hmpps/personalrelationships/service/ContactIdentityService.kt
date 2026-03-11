@@ -5,13 +5,13 @@ import jakarta.transaction.Transactional
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
-import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactIdentityDetailsEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactIdentityEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicateIdentityDocumentException
 import uk.gov.justice.digital.hmpps.personalrelationships.mapping.toModel
 import uk.gov.justice.digital.hmpps.personalrelationships.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.CreateIdentityRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.CreateMultipleIdentitiesRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.IdentityDocument
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.UpdateIdentityRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactIdentityDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ReferenceCode
@@ -32,21 +32,21 @@ class ContactIdentityService(
   @Transactional
   fun create(contactId: Long, request: CreateIdentityRequest, user: User): ContactIdentityDetails {
     validateContactExists(contactId)
-    val existingDocuments = contactIdentityDetailsRepository.findByContactId(contactId)
+    validateDuplicateIdentityDocuments(contactId, listOf(IdentityDocument(identityType = request.identityType, identityValue = request.identityValue, issuingAuthority = request.issuingAuthority)))
+
     return createAContactIdentity(
       contactId,
       request.identityType,
       request.identityValue,
       request.issuingAuthority,
       user.username,
-      existingDocuments,
     )
   }
 
   @Transactional
   fun createMultiple(contactId: Long, request: CreateMultipleIdentitiesRequest, user: User): List<ContactIdentityDetails> {
     validateContactExists(contactId)
-    val existingDocuments = contactIdentityDetailsRepository.findByContactId(contactId)
+    validateDuplicateIdentityDocuments(contactId, request.identities)
     return request.identities.map {
       createAContactIdentity(
         contactId,
@@ -54,7 +54,6 @@ class ContactIdentityService(
         it.identityValue,
         it.issuingAuthority,
         user.username,
-        existingDocuments,
       )
     }
   }
@@ -65,9 +64,7 @@ class ContactIdentityService(
     identityValue: String,
     issuingAuthority: String?,
     createdBy: String,
-    existingDocuments: List<ContactIdentityDetailsEntity>,
   ): ContactIdentityDetails {
-    validateDuplicateIdentityDocument(identityType, identityValue, existingDocuments)
     validatePNC(identityType, identityValue)
     val type = referenceCodeService.validateReferenceCode(
       ReferenceCodeGroup.ID_TYPE,
@@ -134,9 +131,28 @@ class ContactIdentityService(
       .orElseThrow { EntityNotFoundException("Contact ($contactId) not found") }
   }
 
-  private fun validateDuplicateIdentityDocument(identityType: String, identityValue: String, existingDocuments: List<ContactIdentityDetailsEntity>) {
-    if (existingDocuments.any { it.identityType == identityType && it.identityValue == identityValue }) {
-      throw DuplicateIdentityDocumentException(identityType, identityValue)
+  private fun validateDuplicateIdentityDocuments(contactId: Long, identities: List<IdentityDocument>) {
+    val requestedIdentities = identities.map { it.identityType to it.identityValue }
+
+    val duplicateInRequest = requestedIdentities
+      .groupingBy { it }
+      .eachCount()
+      .entries
+      .firstOrNull { it.value > 1 }
+      ?.key
+
+    if (duplicateInRequest != null) {
+      throw DuplicateIdentityDocumentException(duplicateInRequest.first, duplicateInRequest.second)
+    }
+
+    val existingIdentities = contactIdentityDetailsRepository.findByContactId(contactId)
+      .map { it.identityType to it.identityValue }
+      .toSet()
+
+    val duplicateExisting = requestedIdentities.firstOrNull { it in existingIdentities }
+
+    if (duplicateExisting != null) {
+      throw DuplicateIdentityDocumentException(duplicateExisting.first, duplicateExisting.second)
     }
   }
 

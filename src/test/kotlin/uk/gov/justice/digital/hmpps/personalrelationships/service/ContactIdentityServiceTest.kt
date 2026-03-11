@@ -246,6 +246,34 @@ class ContactIdentityServiceTest {
     }
 
     @Test
+    fun `should throw DuplicateIdentityDocument when document with same type and value found in incoming request body`() {
+      whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
+
+      val exception = assertThrows<DuplicateIdentityDocumentException> {
+        service.createMultiple(
+          contactId = contactId,
+          request = CreateMultipleIdentitiesRequest(
+            identities = listOf(
+              IdentityDocument(
+                identityType = "DL",
+                identityValue = "DL123456789",
+                issuingAuthority = "DVLA",
+              ),
+              IdentityDocument(
+                identityType = "DL",
+                identityValue = "DL123456789",
+                issuingAuthority = null,
+              ),
+            ),
+          ),
+          user = user,
+        )
+      }
+
+      assertThat(exception.message).isEqualTo("Contact already has an identity document matching type \"DL\" and value \"DL123456789\"")
+    }
+
+    @Test
     fun `should throw DuplicateIdentityDocument when document with same type and value found in existing documents`() {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
       whenever(contactIdentityDetailsRepository.findByContactId(contactId)).thenReturn(
