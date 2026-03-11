@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Past
 import jakarta.validation.constraints.Pattern
@@ -34,7 +33,6 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.facade.ContactFacade
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactSearchRequest
-import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactSearchRequestV2
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.PatchContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.UserSearchType
@@ -194,86 +192,10 @@ class ContactController(
   }
 
   /**
-   *  The V1 search controller
+   * The search controller
    */
   @GetMapping("/search")
-  @Operation(
-    summary = "Search contacts",
-    description = "Search all contacts by their last name or first name or middle name or date of birth or contact id",
-  )
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "200",
-        description = "Found contacts",
-      ),
-      ApiResponse(
-        responseCode = "400",
-        description = "Invalid request",
-        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
-      ),
-    ],
-  )
-  @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__R', 'ROLE_CONTACTS__RW')")
-  @PageableAsQueryParam
-  fun searchContacts(
-    @Parameter(hidden = true)
-    pageable: Pageable,
-    @Parameter(`in` = ParameterIn.QUERY, description = "Last name of the contact", example = "Jones", required = true)
-    @NotBlank(message = "must not be blank")
-    @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
-    lastName: String,
-    @Parameter(`in` = ParameterIn.QUERY, description = "First name of the contact", example = "Elton", required = false)
-    @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
-    firstName: String?,
-    @Parameter(`in` = ParameterIn.QUERY, description = "Middle names of the contact", example = "Simon", required = false)
-    @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
-    middleNames: String?,
-    @Parameter(`in` = ParameterIn.QUERY, description = "The contact ID", example = "123456", required = false)
-    contactId: String?,
-    @Parameter(
-      `in` = ParameterIn.QUERY,
-      description = "Date of Birth of the contact in ISO format",
-      example = "30/12/2010",
-      required = false,
-    )
-    @Past(message = "The date of birth must be in the past")
-    @DateTimeFormat(pattern = "dd/MM/yyyy")
-    dateOfBirth: LocalDate?,
-    @Parameter(
-      `in` = ParameterIn.QUERY,
-      description = "If true, use sounds-like search (trigram similarity)",
-      example = "false",
-      required = false,
-    )
-    soundsLike: Boolean = false,
-    @Parameter(
-      `in` = ParameterIn.QUERY,
-      description = "If a prisoner number is specified, check all matching contacts for any existing relationships to the prisoner. " +
-        "All matching contacts are returned regardless of whether they have an existing relationship to the prisoner or not.",
-      example = "A1234BC",
-      required = false,
-    )
-    @Pattern(regexp = VALID_LETTER_OR_NUMBER_REGEX, message = VALID_LETTER_OR_NUMBER_MESSAGE)
-    includeAnyExistingRelationshipsToPrisoner: String?,
-  ): PagedModel<ContactSearchResultItem> = contactFacade.searchContacts(
-    pageable,
-    ContactSearchRequest(
-      lastName = lastName,
-      firstName = firstName,
-      middleNames = middleNames,
-      dateOfBirth = dateOfBirth,
-      soundsLike = soundsLike,
-      contactId = contactId,
-      includeAnyExistingRelationshipsToPrisoner = includeAnyExistingRelationshipsToPrisoner,
-    ),
-  )
-
-  /**
-   * The V2 search controller
-   */
-  @GetMapping("/searchV2")
-  @Operation(summary = "Search contacts V2", description = "Search contacts by name, date of birth or contact ID")
+  @Operation(summary = "Search contacts", description = "Search contacts by name, date of birth or contact ID")
   @ApiResponses(
     value = [
       ApiResponse(
@@ -291,7 +213,7 @@ class ContactController(
   )
   @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__R', 'ROLE_CONTACTS__RW')")
   @PageableAsQueryParam
-  fun searchContactsV2(
+  fun searchContacts(
     @Parameter(hidden = true)
     pageable: Pageable,
     @Parameter(`in` = ParameterIn.QUERY, description = "Last name of the contact", example = "Jones", required = false)
@@ -318,9 +240,9 @@ class ContactController(
     @Parameter(`in` = ParameterIn.QUERY, description = "Prisoner number to check relationships", example = "A1234BC", required = false)
     @Pattern(regexp = VALID_LETTER_OR_NUMBER_REGEX, message = VALID_LETTER_OR_NUMBER_MESSAGE)
     includePrisonerRelationships: String?,
-  ): PagedModel<ContactSearchResultItem> = contactFacade.searchContactsV2(
+  ): PagedModel<ContactSearchResultItem> = contactFacade.searchContacts(
     pageable,
-    ContactSearchRequestV2(
+    ContactSearchRequest(
       lastName = lastName,
       firstName = firstName,
       middleNames = middleNames,

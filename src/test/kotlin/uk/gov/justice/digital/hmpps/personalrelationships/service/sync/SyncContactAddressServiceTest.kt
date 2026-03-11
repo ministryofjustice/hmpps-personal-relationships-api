@@ -125,7 +125,7 @@ class SyncContactAddressServiceTest {
       val request = updateContactAddressRequest()
       whenever(contactRepository.findById(1L)).thenReturn(Optional.of(contactEntity()))
       whenever(contactAddressRepository.findById(1L)).thenReturn(Optional.of(request.toEntity()))
-      whenever(contactAddressRepository.saveAndFlush(any())).thenReturn(request.toEntity())
+      whenever(contactAddressRepository.saveAndFlush<ContactAddressEntity>(any())).thenReturn(request.toEntity())
 
       val updated = syncContactAddressService.updateContactAddress(1L, request)
 

@@ -197,7 +197,7 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_CREATED,
-      additionalInfo = PrisonerContactInfo(created.createdRelationship!!.prisonerContactId, Source.DPS, "created", "BXI"),
+      additionalInfo = PrisonerContactInfo(created.createdRelationship.prisonerContactId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.createdContact.id, nomsNumber = request.relationship!!.prisonerNumber),
     )
   }
@@ -235,7 +235,7 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_CREATED,
-      additionalInfo = PrisonerContactInfo(created.createdRelationship!!.prisonerContactId, Source.DPS, "created", "BXI"),
+      additionalInfo = PrisonerContactInfo(created.createdRelationship.prisonerContactId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.createdContact.id, nomsNumber = request.relationship!!.prisonerNumber),
     )
   }

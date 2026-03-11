@@ -101,7 +101,7 @@ class PrisonerNumberOfChildrenServiceTest {
         createdTime = LocalDateTime.now(),
       )
 
-      whenever(prisonerNumberOfChildrenRepository.save(any()))
+      whenever(prisonerNumberOfChildrenRepository.save<PrisonerNumberOfChildren>(any()))
         .thenReturn(newNumberOfChildrenCount)
 
       // When
@@ -139,7 +139,7 @@ class PrisonerNumberOfChildrenServiceTest {
         createdTime = LocalDateTime.now(),
       )
 
-      whenever(prisonerNumberOfChildrenRepository.save(any()))
+      whenever(prisonerNumberOfChildrenRepository.save<PrisonerNumberOfChildren>(any()))
         .thenReturn(newNumberOfChildren)
 
       // When
@@ -176,7 +176,7 @@ class PrisonerNumberOfChildrenServiceTest {
       whenever(prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
         .thenReturn(existingNumberOfChildrenCount)
 
-      whenever(prisonerNumberOfChildrenRepository.save(any()))
+      whenever(prisonerNumberOfChildrenRepository.save<PrisonerNumberOfChildren>(any()))
         .thenReturn(existingNumberOfChildrenCount)
         .thenReturn(existingNumberOfChildrenCount.copy(numberOfChildren = "2", active = true))
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))

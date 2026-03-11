@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicateEmailException
+import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicateIdentityDocumentException
 import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicatePersonException
 import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicateRelationshipException
 import uk.gov.justice.digital.hmpps.personalrelationships.exception.InvalidReferenceCodeGroupException
@@ -89,7 +90,7 @@ class HmppsContactsApiExceptionHandler {
 
   @ExceptionHandler(MethodArgumentTypeMismatchException::class)
   fun handleInvalidReferenceCodeGroupException(e: MethodArgumentTypeMismatchException): ResponseEntity<ErrorResponse> {
-    var message = e.message
+    var message: String? = e.message
     val rootCause = ExceptionUtils.getRootCause(e)
     if (rootCause != null && rootCause is InvalidReferenceCodeGroupException) {
       message = rootCause.message
@@ -149,7 +150,7 @@ class HmppsContactsApiExceptionHandler {
       ),
     )
 
-  @ExceptionHandler(DuplicatePersonException::class, DuplicateEmailException::class, DuplicateRelationshipException::class)
+  @ExceptionHandler(DuplicatePersonException::class, DuplicateEmailException::class, DuplicateRelationshipException::class, DuplicateIdentityDocumentException::class)
   fun handleDuplicateException(e: RuntimeException): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(CONFLICT)
     .body(

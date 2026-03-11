@@ -6,9 +6,9 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.Sy
 
 fun ContactPhoneEntity.toModel(): SyncContactPhone = SyncContactPhone(
   contactPhoneId = this.contactPhoneId,
-  contactId = this.contactId!!,
+  contactId = this.contactId,
   phoneType = this.phoneType,
-  phoneNumber = this.phoneNumber!!,
+  phoneNumber = this.phoneNumber,
   extNumber = this.extNumber,
   createdBy = this.createdBy,
   createdTime = this.createdTime,

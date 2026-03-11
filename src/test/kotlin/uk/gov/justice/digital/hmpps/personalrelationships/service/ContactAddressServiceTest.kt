@@ -105,7 +105,7 @@ class ContactAddressServiceTest {
     whenever(contactRepository.findById(contactId))
       .thenReturn(Optional.of(contactEntity()))
 
-    whenever(contactAddressRepository.saveAndFlush(any()))
+    whenever(contactAddressRepository.saveAndFlush<ContactAddressEntity>(any()))
       .thenReturn(contactAddressEntity)
     whenever(contactAddressPhoneService.createMultipleAddressSpecificPhones(contactId, contactAddressId, "address", request.phoneNumbers))
       .thenReturn(listOf(1L))
@@ -155,7 +155,7 @@ class ContactAddressServiceTest {
     val contactAddressEntity = request.toEntity(contactId, contactAddressId)
 
     whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contactEntity()))
-    whenever(contactAddressRepository.saveAndFlush(any())).thenReturn(contactAddressEntity)
+    whenever(contactAddressRepository.saveAndFlush<ContactAddressEntity>(any())).thenReturn(contactAddressEntity)
     whenever(contactAddressRepository.resetPrimaryAddressFlagForContact(contactId)).thenReturn(listOf(987564321L, 123456789L))
 
     val (_, otherUpdatedAddressIds) = contactAddressService.create(contactId, request, user)
@@ -173,7 +173,7 @@ class ContactAddressServiceTest {
     val contactAddressEntity = request.toEntity(contactId, contactAddressId)
 
     whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contactEntity()))
-    whenever(contactAddressRepository.saveAndFlush(any())).thenReturn(contactAddressEntity)
+    whenever(contactAddressRepository.saveAndFlush<ContactAddressEntity>(any())).thenReturn(contactAddressEntity)
     whenever(contactAddressRepository.resetMailAddressFlagForContact(contactId)).thenReturn(listOf(987564321L, 123456789L))
 
     val (_, otherUpdatedAddressIds) = contactAddressService.create(contactId, request, user)
@@ -191,7 +191,7 @@ class ContactAddressServiceTest {
     val contactAddressEntity = request.toEntity(contactId, contactAddressId)
 
     whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contactEntity()))
-    whenever(contactAddressRepository.saveAndFlush(any())).thenReturn(contactAddressEntity)
+    whenever(contactAddressRepository.saveAndFlush<ContactAddressEntity>(any())).thenReturn(contactAddressEntity)
     whenever(contactAddressRepository.resetPrimaryAddressFlagForContact(contactId)).thenReturn(listOf(999L))
     whenever(contactAddressRepository.resetMailAddressFlagForContact(contactId)).thenReturn(listOf(111L))
 
@@ -229,7 +229,7 @@ class ContactAddressServiceTest {
     whenever(contactRepository.findById(contactId))
       .thenReturn(Optional.of(contactEntity()))
 
-    whenever(contactAddressRepository.saveAndFlush(any()))
+    whenever(contactAddressRepository.saveAndFlush<ContactAddressEntity>(any()))
       .thenReturn(contactAddressEntity)
     whenever(contactAddressPhoneService.createMultipleAddressSpecificPhones(contactId, contactAddressId, "address", request.phoneNumbers))
       .thenThrow(RuntimeException("Error while saving the address phone!"))
@@ -289,7 +289,7 @@ class ContactAddressServiceTest {
     whenever(contactAddressRepository.findById(contactAddressId))
       .thenReturn(Optional.of(request.toEntity(contactId, contactAddressId)))
 
-    whenever(contactAddressRepository.saveAndFlush(any()))
+    whenever(contactAddressRepository.saveAndFlush<ContactAddressEntity>(any()))
       .thenReturn(request.toEntity(contactId, contactAddressId))
 
     val (updated, _) = contactAddressService.update(contactId, contactAddressId, request, user)
@@ -338,7 +338,7 @@ class ContactAddressServiceTest {
     whenever(contactAddressRepository.findById(contactAddressId)).thenReturn(Optional.of(existAddress))
     whenever(contactAddressRepository.resetPrimaryAddressFlagForContact(contactId)).thenReturn(listOf(987654321L, 123456789L))
 
-    whenever(contactAddressRepository.saveAndFlush(any()))
+    whenever(contactAddressRepository.saveAndFlush<ContactAddressEntity>(any()))
       .thenReturn(request.toEntity(contactId, contactAddressId))
 
     val (_, otherUpdatedIds) = contactAddressService.update(contactId, contactAddressId, request, user)
@@ -360,7 +360,7 @@ class ContactAddressServiceTest {
     whenever(contactAddressRepository.findById(contactAddressId)).thenReturn(Optional.of(existAddress))
     whenever(contactAddressRepository.resetMailAddressFlagForContact(contactId)).thenReturn(listOf(987654321L, 123456789L))
 
-    whenever(contactAddressRepository.saveAndFlush(any()))
+    whenever(contactAddressRepository.saveAndFlush<ContactAddressEntity>(any()))
       .thenReturn(request.toEntity(contactId, contactAddressId))
 
     val (_, otherUpdatedIds) = contactAddressService.update(contactId, contactAddressId, request, user)
@@ -383,7 +383,7 @@ class ContactAddressServiceTest {
     whenever(contactAddressRepository.resetPrimaryAddressFlagForContact(contactId)).thenReturn(listOf(999L))
     whenever(contactAddressRepository.resetMailAddressFlagForContact(contactId)).thenReturn(listOf(111L))
 
-    whenever(contactAddressRepository.saveAndFlush(any()))
+    whenever(contactAddressRepository.saveAndFlush<ContactAddressEntity>(any()))
       .thenReturn(request.toEntity(contactId, contactAddressId))
 
     val (_, otherUpdatedIds) = contactAddressService.update(contactId, contactAddressId, request, user)
@@ -437,7 +437,7 @@ class ContactAddressServiceTest {
       whenever(contactRepository.findById(contactId))
         .thenReturn(Optional.of(contactEntity()))
 
-      whenever(contactAddressRepository.saveAndFlush(any()))
+      whenever(contactAddressRepository.saveAndFlush<ContactAddressEntity>(any()))
         .thenReturn(contactAddressEntity)
     }
 
@@ -475,7 +475,7 @@ class ContactAddressServiceTest {
       whenever(contactAddressRepository.findById(contactAddressId))
         .thenReturn(Optional.of(request.toEntity(contactId, contactAddressId)))
 
-      whenever(contactAddressRepository.saveAndFlush(any()))
+      whenever(contactAddressRepository.saveAndFlush<ContactAddressEntity>(any()))
         .thenReturn(request.toEntity(contactId, contactAddressId))
     }
 
@@ -514,7 +514,7 @@ class ContactAddressServiceTest {
       whenever(contactAddressRepository.findById(contactAddressId))
         .thenReturn(Optional.of(request.toEntity(contactId, contactAddressId)))
 
-      whenever(contactAddressRepository.saveAndFlush(any()))
+      whenever(contactAddressRepository.saveAndFlush<ContactAddressEntity>(any()))
         .thenReturn(request.toEntity(contactId, contactAddressId))
     }
 

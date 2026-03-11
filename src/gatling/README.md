@@ -5,12 +5,14 @@ This directory contains Gatling performance tests for the HMPPS Personal Relatio
 ## Prerequisites
 
 - JDK 21 or higher
-- Gradle 8.x or higher
+- Gradle 9.x or higher
 - Running instance of the HMPPS Personal Relationships API
 
 ## Running the Tests
 
 You can run the Gatling tests by using the [run-perf-tests.sh](../../scripts/run-perf-tests.sh) script.
+
+```Note: Make sure you are using a bash shell while executing the script.```
 
 ### Configuration Options
 

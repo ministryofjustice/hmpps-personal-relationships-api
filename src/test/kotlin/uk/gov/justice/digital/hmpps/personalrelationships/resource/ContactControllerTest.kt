@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.helpers.createPrisoner
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactSearchRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.PatchContactRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.request.UserSearchType
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactAuditEntry
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactDetails
@@ -160,16 +161,16 @@ class ContactControllerTest {
       val pageContacts = PageImpl(contactEntities, pageable, contactEntities.size.toLong())
 
       // When
-      val expectedRequest = ContactSearchRequest("last", "first", "middle", "123456", LocalDate.of(1980, 1, 1), false, null)
+      val expectedRequest = ContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1), UserSearchType.PARTIAL, false, 123456, "123456")
       whenever(contactFacade.searchContacts(pageable, expectedRequest)).thenReturn(PagedModel(pageContacts))
 
       // Act
       val result: PagedModel<ContactSearchResultItem> =
-        controller.searchContacts(pageable, "last", "first", "middle", "123456", LocalDate.of(1980, 1, 1), false, null)
+        controller.searchContacts(pageable, "last", "first", "middle", "123456", LocalDate.of(1980, 1, 1), "PARTIAL", false, "123456")
 
       // Then
       assertNotNull(result)
-      assertThat(result.metadata!!.totalElements).isEqualTo(1)
+      assertThat(result.metadata.totalElements).isEqualTo(1)
       assertThat(result.content[0].lastName).isEqualTo("last")
       assertThat(result.content[0].firstName).isEqualTo("first")
       assertThat(result.content[0].mailAddress).isEqualTo(true)

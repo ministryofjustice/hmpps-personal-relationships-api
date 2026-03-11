@@ -4,10 +4,10 @@ import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
 import jakarta.persistence.criteria.CriteriaBuilder
 import jakarta.persistence.criteria.CriteriaQuery
+import jakarta.persistence.criteria.Nulls
 import jakarta.persistence.criteria.Order
 import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
-import org.hibernate.query.NullPrecedence
 import org.hibernate.query.criteria.JpaOrder
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -75,9 +75,9 @@ class PrisonerContactSearchRepository(
         // order date of birth with nulls as if they are the eldest.
         if (property == PrisonerContactSummaryEntity::dateOfBirth.name && order is JpaOrder) {
           order = if (it.isAscending) {
-            order.nullPrecedence(NullPrecedence.FIRST)
+            order.nullPrecedence(Nulls.FIRST)
           } else {
-            order.nullPrecedence(NullPrecedence.LAST)
+            order.nullPrecedence(Nulls.LAST)
           }
         }
         order
@@ -93,6 +93,9 @@ class PrisonerContactSearchRepository(
   ): MutableList<Predicate> {
     val predicates: MutableList<Predicate> = ArrayList()
     predicates.add(cb.equal(contact.get<String>(PrisonerContactSummaryEntity::prisonerNumber.name), params.prisonerNumber))
+    if (params.approvedVisitor != null) {
+      predicates.add(cb.equal(contact.get<Boolean>(PrisonerContactSummaryEntity::approvedVisitor.name), params.approvedVisitor))
+    }
     if (params.active != null) {
       predicates.add(cb.equal(contact.get<Boolean>(PrisonerContactSummaryEntity::active.name), params.active))
     }
