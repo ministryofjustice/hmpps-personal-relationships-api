@@ -103,7 +103,7 @@ class SyncContactEmailServiceTest {
       val request = updateContactEmailRequest()
       whenever(contactRepository.findById(1L)).thenReturn(Optional.of(contactEntity()))
       whenever(contactEmailRepository.findById(1L)).thenReturn(Optional.of(request.toEntity()))
-      whenever(contactEmailRepository.saveAndFlush(any())).thenReturn(request.toEntity())
+      whenever(contactEmailRepository.saveAndFlush<ContactEmailEntity>(any())).thenReturn(request.toEntity())
 
       val updated = syncService.updateContactEmail(1L, request)
 

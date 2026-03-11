@@ -147,7 +147,7 @@ class SyncContactRestrictionServiceTest {
       val request = updateContactRestrictionRequest()
       whenever(contactRepository.findById(1L)).thenReturn(Optional.of(contactEntity()))
       whenever(contactRestrictionRepository.findById(1L)).thenReturn(Optional.of(request.toEntity()))
-      whenever(contactRestrictionRepository.saveAndFlush(any())).thenReturn(request.toEntity())
+      whenever(contactRestrictionRepository.saveAndFlush<ContactRestrictionEntity>(any())).thenReturn(request.toEntity())
 
       val updated = syncService.updateContactRestriction(1L, request)
 
@@ -184,7 +184,7 @@ class SyncContactRestrictionServiceTest {
       )
       whenever(contactRepository.findById(1L)).thenReturn(Optional.of(contactEntity()))
       whenever(contactRestrictionRepository.findById(1L)).thenReturn(Optional.of(updateRequest.toEntity()))
-      whenever(contactRestrictionRepository.saveAndFlush(any())).thenReturn(updateRequest.toEntity())
+      whenever(contactRestrictionRepository.saveAndFlush<ContactRestrictionEntity>(any())).thenReturn(updateRequest.toEntity())
 
       val updated = syncService.updateContactRestriction(1L, updateRequest)
 

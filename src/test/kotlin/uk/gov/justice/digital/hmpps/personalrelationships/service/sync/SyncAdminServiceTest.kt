@@ -49,8 +49,8 @@ class SyncAdminServiceTest {
         .thenReturn(existingRestrictionsRemoved)
       whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(2L))
         .thenReturn(existingRestrictionsRetained)
-      whenever(prisonerContactRepository.save(any())).thenReturn(createPrisonerContactEntity("A1234BB", 3L))
-      whenever(prisonerContactRestrictionRepository.save(any())).thenReturn(createPrisonerContactRestrictionEntity(3L))
+      whenever(prisonerContactRepository.save<PrisonerContactEntity>(any())).thenReturn(createPrisonerContactEntity("A1234BB", 3L))
+      whenever(prisonerContactRestrictionRepository.save<PrisonerContactRestrictionEntity>(any())).thenReturn(createPrisonerContactRestrictionEntity(3L))
 
       val response = syncAdminService.mergePrisonerContacts(request)
 
@@ -98,8 +98,8 @@ class SyncAdminServiceTest {
 
       whenever(prisonerContactRepository.findAllByPrisonerNumber("A1234AA")).thenReturn(emptyList())
       whenever(prisonerContactRepository.findAllByPrisonerNumber("A1234BB")).thenReturn(emptyList())
-      whenever(prisonerContactRepository.save(any())).thenReturn(createPrisonerContactEntity("A1234BB", 3L))
-      whenever(prisonerContactRestrictionRepository.save(any())).thenReturn(createPrisonerContactRestrictionEntity(3L))
+      whenever(prisonerContactRepository.save<PrisonerContactEntity>(any())).thenReturn(createPrisonerContactEntity("A1234BB", 3L))
+      whenever(prisonerContactRestrictionRepository.save<PrisonerContactRestrictionEntity>(any())).thenReturn(createPrisonerContactRestrictionEntity(3L))
 
       val response = syncAdminService.mergePrisonerContacts(request)
 
@@ -128,8 +128,8 @@ class SyncAdminServiceTest {
         .thenReturn(existingRelationshipsRetained)
       whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(1L)).thenReturn(emptyList())
       whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(2L)).thenReturn(emptyList())
-      whenever(prisonerContactRepository.save(any())).thenReturn(createPrisonerContactEntity("A1234BB", 3L))
-      whenever(prisonerContactRestrictionRepository.save(any())).thenReturn(createPrisonerContactRestrictionEntity(3L))
+      whenever(prisonerContactRepository.save<PrisonerContactEntity>(any())).thenReturn(createPrisonerContactEntity("A1234BB", 3L))
+      whenever(prisonerContactRestrictionRepository.save<PrisonerContactRestrictionEntity>(any())).thenReturn(createPrisonerContactRestrictionEntity(3L))
 
       val response = syncAdminService.mergePrisonerContacts(request)
 
@@ -200,8 +200,8 @@ class SyncAdminServiceTest {
       whenever(prisonerContactRepository.findAllByPrisonerNumber("A1234BB"))
         .thenReturn(existingRelationshipsRetained)
       whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(100L)).thenReturn(emptyList())
-      whenever(prisonerContactRepository.save(any())).thenReturn(createPrisonerContactEntity("A1234BB", 3L))
-      whenever(prisonerContactRestrictionRepository.save(any())).thenReturn(createPrisonerContactRestrictionEntity(3L))
+      whenever(prisonerContactRepository.save<PrisonerContactEntity>(any())).thenReturn(createPrisonerContactEntity("A1234BB", 3L))
+      whenever(prisonerContactRestrictionRepository.save<PrisonerContactRestrictionEntity>(any())).thenReturn(createPrisonerContactRestrictionEntity(3L))
 
       val response = syncAdminService.mergePrisonerContacts(request)
 
@@ -248,8 +248,8 @@ class SyncAdminServiceTest {
       whenever(prisonerContactRepository.findAllByPrisonerNumber("A1234BB"))
         .thenReturn(existingRelationshipsRetained)
       whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(100L)).thenReturn(emptyList())
-      whenever(prisonerContactRepository.save(any())).thenReturn(createPrisonerContactEntity("A1234BB", 3L))
-      whenever(prisonerContactRestrictionRepository.save(any())).thenReturn(createPrisonerContactRestrictionEntity(3L))
+      whenever(prisonerContactRepository.save<PrisonerContactEntity>(any())).thenReturn(createPrisonerContactEntity("A1234BB", 3L))
+      whenever(prisonerContactRestrictionRepository.save<PrisonerContactRestrictionEntity>(any())).thenReturn(createPrisonerContactRestrictionEntity(3L))
 
       val response = syncAdminService.mergePrisonerContacts(request)
 
@@ -296,8 +296,8 @@ class SyncAdminServiceTest {
         .thenReturn(existingRelationshipsRetained)
       whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(1L)).thenReturn(emptyList())
       whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(2L)).thenReturn(emptyList())
-      whenever(prisonerContactRepository.save(any())).thenReturn(createPrisonerContactEntity("A1234BB", 3L))
-      whenever(prisonerContactRestrictionRepository.save(any())).thenReturn(createPrisonerContactRestrictionEntity(3L))
+      whenever(prisonerContactRepository.save<PrisonerContactEntity>(any())).thenReturn(createPrisonerContactEntity("A1234BB", 3L))
+      whenever(prisonerContactRestrictionRepository.save<PrisonerContactRestrictionEntity>(any())).thenReturn(createPrisonerContactRestrictionEntity(3L))
 
       val response = syncAdminService.mergePrisonerContacts(request)
 
@@ -324,8 +324,8 @@ class SyncAdminServiceTest {
 
       whenever(prisonerContactRepository.findAllByPrisonerNumber("A1234AA")).thenReturn(existingRelationships)
       whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(1L)).thenReturn(existingRestrictions)
-      whenever(prisonerContactRepository.save(any())).thenReturn(createPrisonerContactEntity("A1234AA", 2L))
-      whenever(prisonerContactRestrictionRepository.save(any())).thenReturn(createPrisonerContactRestrictionEntity(2L))
+      whenever(prisonerContactRepository.save<PrisonerContactEntity>(any())).thenReturn(createPrisonerContactEntity("A1234AA", 2L))
+      whenever(prisonerContactRestrictionRepository.save<PrisonerContactRestrictionEntity>(any())).thenReturn(createPrisonerContactRestrictionEntity(2L))
 
       val response = syncAdminService.resetPrisonerContacts(request)
 
@@ -362,8 +362,8 @@ class SyncAdminServiceTest {
       val request = createResetPrisonerContactRequest()
 
       whenever(prisonerContactRepository.findAllByPrisonerNumber("A1234AA")).thenReturn(emptyList())
-      whenever(prisonerContactRepository.save(any())).thenReturn(createPrisonerContactEntity("A1234AA", 2L))
-      whenever(prisonerContactRestrictionRepository.save(any())).thenReturn(createPrisonerContactRestrictionEntity(2L))
+      whenever(prisonerContactRepository.save<PrisonerContactEntity>(any())).thenReturn(createPrisonerContactEntity("A1234AA", 2L))
+      whenever(prisonerContactRestrictionRepository.save<PrisonerContactRestrictionEntity>(any())).thenReturn(createPrisonerContactRestrictionEntity(2L))
 
       val response = syncAdminService.resetPrisonerContacts(request)
 
@@ -385,8 +385,8 @@ class SyncAdminServiceTest {
 
       whenever(prisonerContactRepository.findAllByPrisonerNumber("A1234AA")).thenReturn(existingRelationships)
       whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(1L)).thenReturn(emptyList())
-      whenever(prisonerContactRepository.save(any())).thenReturn(createPrisonerContactEntity("A1234AA", 2L))
-      whenever(prisonerContactRestrictionRepository.save(any())).thenReturn(createPrisonerContactRestrictionEntity(2L))
+      whenever(prisonerContactRepository.save<PrisonerContactEntity>(any())).thenReturn(createPrisonerContactEntity("A1234AA", 2L))
+      whenever(prisonerContactRestrictionRepository.save<PrisonerContactRestrictionEntity>(any())).thenReturn(createPrisonerContactRestrictionEntity(2L))
 
       val response = syncAdminService.resetPrisonerContacts(request)
 
@@ -426,8 +426,8 @@ class SyncAdminServiceTest {
       )
 
       whenever(prisonerContactRepository.findAllByPrisonerNumber("A1234AA")).thenReturn(existingRelationships)
-      whenever(prisonerContactRepository.save(any())).thenReturn(createPrisonerContactEntity("A1234AA", 2L))
-      whenever(prisonerContactRestrictionRepository.save(any())).thenReturn(createPrisonerContactRestrictionEntity(2L))
+      whenever(prisonerContactRepository.save<PrisonerContactEntity>(any())).thenReturn(createPrisonerContactEntity("A1234AA", 2L))
+      whenever(prisonerContactRestrictionRepository.save<PrisonerContactRestrictionEntity>(any())).thenReturn(createPrisonerContactRestrictionEntity(2L))
 
       val response = syncAdminService.resetPrisonerContacts(request)
 
@@ -450,8 +450,8 @@ class SyncAdminServiceTest {
       )
 
       whenever(prisonerContactRepository.findAllByPrisonerNumber("A1234AA")).thenReturn(existingRelationships)
-      whenever(prisonerContactRepository.save(any())).thenReturn(createPrisonerContactEntity("A1234AA", 2L))
-      whenever(prisonerContactRestrictionRepository.save(any())).thenReturn(createPrisonerContactRestrictionEntity(2L))
+      whenever(prisonerContactRepository.save<PrisonerContactEntity>(any())).thenReturn(createPrisonerContactEntity("A1234AA", 2L))
+      whenever(prisonerContactRestrictionRepository.save<PrisonerContactRestrictionEntity>(any())).thenReturn(createPrisonerContactRestrictionEntity(2L))
 
       val response = syncAdminService.resetPrisonerContacts(request)
 

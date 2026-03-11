@@ -496,7 +496,7 @@ class RestrictionsServiceTest {
           true,
         ),
       )
-      whenever(contactRestrictionRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactRestrictionRepository.saveAndFlush<ContactRestrictionEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactRestrictionEntity).copy(
           contactRestrictionId = 9999,
         )
@@ -635,7 +635,7 @@ class RestrictionsServiceTest {
           true,
         ),
       )
-      whenever(contactRestrictionRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactRestrictionRepository.saveAndFlush<ContactRestrictionEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactRestrictionEntity).copy(
           contactRestrictionId = 9999,
         )
@@ -732,7 +732,7 @@ class RestrictionsServiceTest {
           true,
         ),
       )
-      whenever(prisonerContactRestrictionRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(prisonerContactRestrictionRepository.saveAndFlush<PrisonerContactRestrictionEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as PrisonerContactRestrictionEntity).copy(
           prisonerContactRestrictionId = 9999,
         )
@@ -861,7 +861,7 @@ class RestrictionsServiceTest {
           true,
         ),
       )
-      whenever(prisonerContactRestrictionRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(prisonerContactRestrictionRepository.saveAndFlush<PrisonerContactRestrictionEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as PrisonerContactRestrictionEntity).copy(
           prisonerContactRestrictionId = 9999,
         )

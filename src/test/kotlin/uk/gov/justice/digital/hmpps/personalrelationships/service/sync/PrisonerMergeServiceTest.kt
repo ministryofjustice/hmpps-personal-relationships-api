@@ -59,7 +59,7 @@ class PrisonerMergeServiceTest {
         .thenReturn(retainingActiveRecord)
       whenever(numberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(removingPrisonerNumber))
         .thenReturn(removingActiveRecord)
-      whenever(numberOfChildrenRepository.save(any())).thenAnswer { it.arguments[0] }
+      whenever(numberOfChildrenRepository.save<PrisonerNumberOfChildren>(any())).thenAnswer { it.arguments[0] }
 
       // When
       prisonerMergeService.mergeNumberOfChildren(retainingPrisonerNumber, removingPrisonerNumber)
@@ -174,7 +174,7 @@ class PrisonerMergeServiceTest {
       whenever(numberOfChildrenRepository.findByPrisonerNumberAndActiveFalse(removingPrisonerNumber))
         .thenReturn(listOf(removingInactiveRecord))
 
-      whenever(numberOfChildrenRepository.save(any())).thenAnswer { it.arguments[0] }
+      whenever(numberOfChildrenRepository.save<PrisonerNumberOfChildren>(any())).thenAnswer { it.arguments[0] }
 
       // When
       prisonerMergeService.mergeNumberOfChildren(retainingPrisonerNumber, removingPrisonerNumber)
@@ -213,7 +213,7 @@ class PrisonerMergeServiceTest {
       whenever(numberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(removingPrisonerNumber))
         .thenReturn(removingActiveRecord)
 
-      whenever(numberOfChildrenRepository.save(any())).thenAnswer { it.arguments[0] }
+      whenever(numberOfChildrenRepository.save<PrisonerNumberOfChildren>(any())).thenAnswer { it.arguments[0] }
 
       // When
       prisonerMergeService.mergeNumberOfChildren(retainingPrisonerNumber, removingPrisonerNumber)
@@ -301,7 +301,7 @@ class PrisonerMergeServiceTest {
         .thenReturn(retainingActiveRecord)
       whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(removingPrisonerNumber))
         .thenReturn(removingActiveRecord)
-      whenever(prisonerDomesticStatusRepository.save(any())).thenAnswer { it.arguments[0] }
+      whenever(prisonerDomesticStatusRepository.save<PrisonerDomesticStatus>(any())).thenAnswer { it.arguments[0] }
 
       // When
       prisonerMergeService.mergeDomesticStatus(retainingPrisonerNumber, removingPrisonerNumber)
@@ -417,7 +417,7 @@ class PrisonerMergeServiceTest {
       whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveFalse(removingPrisonerNumber))
         .thenReturn(listOf(removingInactiveRecord))
 
-      whenever(prisonerDomesticStatusRepository.save(any())).thenAnswer { it.arguments[0] }
+      whenever(prisonerDomesticStatusRepository.save<PrisonerDomesticStatus>(any())).thenAnswer { it.arguments[0] }
 
       // When
       prisonerMergeService.mergeDomesticStatus(retainingPrisonerNumber, removingPrisonerNumber)
@@ -456,7 +456,7 @@ class PrisonerMergeServiceTest {
       whenever(prisonerDomesticStatusRepository.findByPrisonerNumberAndActiveTrue(removingPrisonerNumber))
         .thenReturn(removingActiveRecord)
 
-      whenever(prisonerDomesticStatusRepository.save(any())).thenAnswer { it.arguments[0] }
+      whenever(prisonerDomesticStatusRepository.save<PrisonerDomesticStatus>(any())).thenAnswer { it.arguments[0] }
 
       // When
       prisonerMergeService.mergeDomesticStatus(retainingPrisonerNumber, removingPrisonerNumber)

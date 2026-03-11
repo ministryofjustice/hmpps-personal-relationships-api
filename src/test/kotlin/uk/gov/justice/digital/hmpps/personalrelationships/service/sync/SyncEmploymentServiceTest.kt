@@ -129,7 +129,7 @@ class SyncEmploymentServiceTest {
       )
 
       whenever(employmentRepository.findById(employmentId)).thenReturn(Optional.of(existingEmployment))
-      whenever(employmentRepository.saveAndFlush(any())).thenReturn(expectedUpdatedEmployment)
+      whenever(employmentRepository.saveAndFlush<EmploymentEntity>(any())).thenReturn(expectedUpdatedEmployment)
 
       // When
       val result = service.updateEmployment(employmentId, updateRequest)
@@ -199,7 +199,7 @@ class SyncEmploymentServiceTest {
       )
 
       whenever(employmentRepository.findById(employmentId)).thenReturn(Optional.of(existingEmployment))
-      whenever(employmentRepository.saveAndFlush(any())).thenReturn(expectedUpdatedEmployment)
+      whenever(employmentRepository.saveAndFlush<EmploymentEntity>(any())).thenReturn(expectedUpdatedEmployment)
 
       // When
       service.updateEmployment(employmentId, updateRequest)

@@ -110,7 +110,7 @@ class SyncPrisonerRestrictionsServiceTest {
       referenceCode,
     )
     whenever(prisonerRestrictionsRepository.findById(1L)).thenReturn(Optional.of(entity))
-    whenever(prisonerRestrictionsRepository.saveAndFlush(any())).thenReturn(updatedEntity)
+    whenever(prisonerRestrictionsRepository.saveAndFlush<PrisonerRestriction>(any())).thenReturn(updatedEntity)
 
     val result = service.updatePrisonerRestriction(1L, request)
 
