@@ -163,7 +163,7 @@ class SyncPrisonerContactRestrictionEntityServiceTest {
       whenever(prisonerContactRepository.findById(2L))
         .thenReturn(Optional.of(prisonerContactEntity()))
 
-      whenever(prisonerContactRestrictionRepository.saveAndFlush(any()))
+      whenever(prisonerContactRestrictionRepository.saveAndFlush<PrisonerContactRestrictionEntity>(any()))
         .thenReturn(request.toEntity())
 
       val updated = syncService.updatePrisonerContactRestriction(prisonerContactRestrictionId, request)

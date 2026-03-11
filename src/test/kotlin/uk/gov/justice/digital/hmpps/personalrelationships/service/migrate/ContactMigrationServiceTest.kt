@@ -87,7 +87,7 @@ class ContactMigrationServiceTest {
       val contact = aContactEntity()
 
       whenever(contactRepository.existsById(1L)).thenReturn(false)
-      whenever(contactRepository.save(any())).thenReturn(contact)
+      whenever(contactRepository.save<ContactWithFixedIdEntity>(any())).thenReturn(contact)
 
       val contactCaptor = argumentCaptor<ContactWithFixedIdEntity>()
 
@@ -120,7 +120,7 @@ class ContactMigrationServiceTest {
       val contact = aContactEntity()
 
       whenever(contactRepository.existsById(1L)).thenReturn(false)
-      whenever(contactRepository.save(any())).thenReturn(contact)
+      whenever(contactRepository.save<ContactWithFixedIdEntity>(any())).thenReturn(contact)
 
       val request = migrateRequest(personId = 1L)
 
@@ -132,7 +132,7 @@ class ContactMigrationServiceTest {
 
       // Reset mocks to ignore the first usage
       reset(contactRepository)
-      whenever(contactRepository.save(any())).thenReturn(contact)
+      whenever(contactRepository.save<ContactWithFixedIdEntity>(any())).thenReturn(contact)
       whenever(contactRepository.existsById(1L)).thenReturn(true)
 
       // Duplicate the request
@@ -171,7 +171,7 @@ class ContactMigrationServiceTest {
       val request = migrateRequest(personId = 1L)
       val contact = aContactEntity()
 
-      whenever(contactRepository.save(any())).thenReturn(contact)
+      whenever(contactRepository.save<ContactWithFixedIdEntity>(any())).thenReturn(contact)
 
       val contactCaptor = argumentCaptor<ContactWithFixedIdEntity>()
 
@@ -221,7 +221,7 @@ class ContactMigrationServiceTest {
         ),
       )
 
-      whenever(contactPhoneRepository.save(any()))
+      whenever(contactPhoneRepository.save<ContactPhoneEntity>(any()))
         .thenReturn(responses[0])
         .thenReturn(responses[1])
 
@@ -279,7 +279,7 @@ class ContactMigrationServiceTest {
         ),
       )
 
-      whenever(contactIdentityRepository.save(any()))
+      whenever(contactIdentityRepository.save<ContactIdentityEntity>(any()))
         .thenReturn(responses[0])
         .thenReturn(responses[1])
 
@@ -339,7 +339,7 @@ class ContactMigrationServiceTest {
         ),
       )
 
-      whenever(contactAddressRepository.save(any()))
+      whenever(contactAddressRepository.save<ContactAddressEntity>(any()))
         .thenReturn(responses[0])
         .thenReturn(responses[1])
 
@@ -391,7 +391,7 @@ class ContactMigrationServiceTest {
         ),
       )
 
-      whenever(contactEmailRepository.save(any()))
+      whenever(contactEmailRepository.save<ContactEmailEntity>(any()))
         .thenReturn(responses[0])
         .thenReturn(responses[1])
 
@@ -450,7 +450,7 @@ class ContactMigrationServiceTest {
         ),
       )
 
-      whenever(contactRestrictionRepository.save(any()))
+      whenever(contactRestrictionRepository.save<ContactRestrictionEntity>(any()))
         .thenReturn(responses[0])
         .thenReturn(responses[1])
 
@@ -512,7 +512,7 @@ class ContactMigrationServiceTest {
         ),
       )
 
-      whenever(employmentRepository.save(any()))
+      whenever(employmentRepository.save<EmploymentEntity>(any()))
         .thenReturn(responses[0])
         .thenReturn(responses[1])
 
@@ -582,7 +582,7 @@ class ContactMigrationServiceTest {
         ),
       )
 
-      whenever(prisonerContactRepository.save(any()))
+      whenever(prisonerContactRepository.save<PrisonerContactEntity>(any()))
         .thenReturn(responses[0])
         .thenReturn(responses[1])
 
@@ -677,9 +677,9 @@ class ContactMigrationServiceTest {
         ),
       )
 
-      whenever(prisonerContactRepository.save(any())).thenReturn(relationshipResponse)
+      whenever(prisonerContactRepository.save<PrisonerContactEntity>(any())).thenReturn(relationshipResponse)
 
-      whenever(prisonerContactRestrictionRepository.save(any()))
+      whenever(prisonerContactRestrictionRepository.save<PrisonerContactRestrictionEntity>(any()))
         .thenReturn(restrictionResponses[0])
         .thenReturn(restrictionResponses[1])
 

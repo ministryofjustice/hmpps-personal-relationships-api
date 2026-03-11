@@ -140,7 +140,7 @@ class ContactServiceTest {
           Employment(organisationId = 2, isActive = false),
         ),
       )
-      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
+      whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(contactAddressDetailsRepository.findByContactId(any())).thenReturn(listOf(aContactAddressDetailsEntity))
       whenever(contactIdentityService.createMultiple(any(), any(), any())).thenReturn(
         listOf(
@@ -256,7 +256,7 @@ class ContactServiceTest {
         dateOfBirth = LocalDate.of(1982, 6, 15),
         identities = identities,
       )
-      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123L) }
+      whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123L) }
       whenever(contactAddressDetailsRepository.findByContactId(123L)).thenReturn(listOf(aContactAddressDetailsEntity))
       whenever(contactIdentityService.createMultiple(any(), any(), any())).thenReturn(
         listOf(
@@ -303,7 +303,7 @@ class ContactServiceTest {
         domesticStatusCode = null,
         genderCode = null,
       )
-      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
+      whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
 
       val result = service.createContact(request, user)
 
@@ -374,8 +374,8 @@ class ContactServiceTest {
           prisonId = "MDI",
         ),
       )
-      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
-      whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+      whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
+      whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
       val referenceCode = ReferenceCode(1, expectedReferenceCodeGroup, "FRI", "Friend", 1, true)
       whenever(referenceCodeService.getReferenceDataByGroupAndCode(expectedReferenceCodeGroup, "FRI")).thenReturn(
         referenceCode,
@@ -431,8 +431,8 @@ class ContactServiceTest {
           prisonId = "MDI",
         ),
       )
-      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
-      whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+      whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
+      whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
       val referenceCode = ReferenceCode(1, ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "FRI", "Friend", 1, true)
       whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "FRI")).thenReturn(
         referenceCode,
@@ -500,8 +500,8 @@ class ContactServiceTest {
           prisonId = "MDI",
         ),
       )
-      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
-      whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+      whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
+      whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
       val expectedException = ValidationException("Invalid")
       val referenceCode = ReferenceCode(1, expectedReferenceCodeGroup, "FRI", "Friend", 1, true)
       whenever(referenceCodeService.getReferenceDataByGroupAndCode(expectedReferenceCodeGroup, "FRI")).thenReturn(
@@ -531,7 +531,7 @@ class ContactServiceTest {
         lastName = "last",
         firstName = "first",
       )
-      whenever(contactRepository.saveAndFlush(any())).thenThrow(RuntimeException("Bang!"))
+      whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
         service.createContact(request, user)
@@ -550,7 +550,7 @@ class ContactServiceTest {
           ),
         ),
       )
-      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
+      whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(contactAddressDetailsRepository.findByContactId(any())).thenReturn(listOf(aContactAddressDetailsEntity))
       whenever(contactIdentityService.createMultiple(any(), any(), any())).thenThrow(RuntimeException("Bang!"))
 
@@ -566,7 +566,7 @@ class ContactServiceTest {
         firstName = "first",
         addresses = listOf(createAddress()),
       )
-      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
+      whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(contactAddressDetailsRepository.findByContactId(any())).thenReturn(listOf(aContactAddressDetailsEntity))
       whenever(contactAddressService.create(any(), any(), any())).thenThrow(RuntimeException("Bang!"))
 
@@ -582,7 +582,7 @@ class ContactServiceTest {
         firstName = "first",
         phoneNumbers = listOf(createPhoneNumber()),
       )
-      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
+      whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(contactAddressDetailsRepository.findByContactId(any())).thenReturn(listOf(aContactAddressDetailsEntity))
       whenever(contactPhoneService.createMultiple(any(), any(), any())).thenThrow(RuntimeException("Bang!"))
 
@@ -598,7 +598,7 @@ class ContactServiceTest {
         firstName = "first",
         emailAddresses = listOf(EmailAddress("test@example.com")),
       )
-      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
+      whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(contactAddressDetailsRepository.findByContactId(any())).thenReturn(listOf(aContactAddressDetailsEntity))
       whenever(contactEmailService.createMultiple(any(), any(), any())).thenThrow(RuntimeException("Bang!"))
 
@@ -614,7 +614,7 @@ class ContactServiceTest {
         firstName = "first",
         employments = listOf(Employment(1, true)),
       )
-      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
+      whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(employmentService.createEmployment(any(), any(), any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
@@ -638,8 +638,8 @@ class ContactServiceTest {
         ),
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
-      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
-      whenever(prisonerContactRepository.saveAndFlush(any())).thenThrow(RuntimeException("Bang!"))
+      whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
+      whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
         service.createContact(request, user)
@@ -665,8 +665,8 @@ class ContactServiceTest {
         ),
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(null)
-      whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
-      whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+      whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
+      whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
       assertThrows<EntityNotFoundException>("Prisoner number A1234BC - not found") {
         service.createContact(request, user)
@@ -983,7 +983,7 @@ class ContactServiceTest {
         ),
       )
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
-      whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+      whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
       val referenceCode = ReferenceCode(1, ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "MOT", "Mother", 1, true)
       whenever(
         referenceCodeService.getReferenceDataByGroupAndCode(
@@ -1053,7 +1053,7 @@ class ContactServiceTest {
         ),
       )
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
-      whenever(prisonerContactRepository.saveAndFlush(any())).thenThrow(RuntimeException("Bang!"))
+      whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
         service.addContactRelationship(request, user)
@@ -1120,7 +1120,7 @@ class ContactServiceTest {
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
         service.updateContactRelationship(prisonerContactId, request, user)
 
@@ -1188,7 +1188,7 @@ class ContactServiceTest {
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
         service.updateContactRelationship(prisonerContactId, request, user)
 
@@ -1245,7 +1245,7 @@ class ContactServiceTest {
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
         service.updateContactRelationship(prisonerContactId, request, user)
 
@@ -1295,7 +1295,7 @@ class ContactServiceTest {
         )
           .thenReturn(listOf(otherExistingRelationshipWithSisCode))
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
         assertThrows<DuplicateRelationshipException> {
           service.updateContactRelationship(prisonerContactId, request, user)
@@ -1322,7 +1322,7 @@ class ContactServiceTest {
         )
           .thenReturn(listOf(prisonerContact, otherExistingRelationshipWithSisCode))
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
         service.updateContactRelationship(prisonerContactId, request, user)
         verify(prisonerContactRepository).saveAndFlush(any())
         verify(prisonerContactRepository, never()).findDuplicateRelationships(any(), any(), any())
@@ -1345,7 +1345,7 @@ class ContactServiceTest {
         )
           .thenReturn(listOf(prisonerContact))
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
         service.updateContactRelationship(prisonerContactId, request, user)
         verify(prisonerContactRepository).saveAndFlush(any())
       }
@@ -1357,7 +1357,7 @@ class ContactServiceTest {
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
         val exception = assertThrows<ValidationException> {
           service.updateContactRelationship(prisonerContactId, request, user)
@@ -1372,7 +1372,7 @@ class ContactServiceTest {
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
         val exception = assertThrows<ValidationException> {
           service.updateContactRelationship(prisonerContactId, request, user)
@@ -1387,7 +1387,7 @@ class ContactServiceTest {
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
         val expectedException = ValidationException("Invalid")
         whenever(
           referenceCodeService.validateReferenceCode(
@@ -1425,7 +1425,7 @@ class ContactServiceTest {
           it.approvedTime = LocalDateTime.now().minusDays(1)
         }
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(contactEntity))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
         service.updateContactRelationship(prisonerContactId, request, user)
 
@@ -1453,7 +1453,7 @@ class ContactServiceTest {
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
         mockBrotherRelationshipReferenceCode()
 
         service.updateContactRelationship(prisonerContactId, request, user)
@@ -1474,7 +1474,7 @@ class ContactServiceTest {
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
         val exception = assertThrows<ValidationException> {
           service.updateContactRelationship(prisonerContactId, request, user)
@@ -1494,7 +1494,7 @@ class ContactServiceTest {
         )
         mockBrotherRelationshipReferenceCode()
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
         service.updateContactRelationship(prisonerContactId, request, user)
 
@@ -1523,7 +1523,7 @@ class ContactServiceTest {
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
         val exception = assertThrows<ValidationException> {
           service.updateContactRelationship(prisonerContactId, request, user)
@@ -1543,7 +1543,7 @@ class ContactServiceTest {
         )
         mockBrotherRelationshipReferenceCode()
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
         service.updateContactRelationship(prisonerContactId, request, user)
 
@@ -1572,7 +1572,7 @@ class ContactServiceTest {
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
         val exception = assertThrows<ValidationException> {
           service.updateContactRelationship(prisonerContactId, request, user)
@@ -1592,7 +1592,7 @@ class ContactServiceTest {
         )
         mockBrotherRelationshipReferenceCode()
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
         service.updateContactRelationship(prisonerContactId, request, user)
 
@@ -1621,7 +1621,7 @@ class ContactServiceTest {
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
         val exception = assertThrows<ValidationException> {
           service.updateContactRelationship(prisonerContactId, request, user)
@@ -1651,7 +1651,7 @@ class ContactServiceTest {
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
         service.updateContactRelationship(prisonerContactId, request, user)
 
@@ -1690,7 +1690,7 @@ class ContactServiceTest {
         )
 
         whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-        whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+        whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
         service.updateContactRelationship(prisonerContactId, request, user)
 
@@ -1720,7 +1720,7 @@ class ContactServiceTest {
 
       mockBrotherRelationshipReferenceCode()
       whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-      whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+      whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
       service.updateContactRelationship(prisonerContactId, request, user)
 
@@ -1760,7 +1760,7 @@ class ContactServiceTest {
       val user = aUser("Admin")
       val request = updateRelationshipRequest()
       whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContact))
-      whenever(prisonerContactRepository.saveAndFlush(any())).thenThrow(RuntimeException("Bang!"))
+      whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
         service.updateContactRelationship(prisonerContactId, request, user)
@@ -1920,7 +1920,7 @@ class ContactServiceTest {
     fun `should delete the relationship and keep a history of it if there are no restrictions`() {
       whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContactEntity))
       whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId)).thenReturn(emptyList())
-      whenever(deletedPrisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as DeletedPrisonerContactEntity) }
+      whenever(deletedPrisonerContactRepository.saveAndFlush<DeletedPrisonerContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as DeletedPrisonerContactEntity) }
 
       val result = service.deleteContactRelationship(prisonerContactId, user)
 
@@ -1959,7 +1959,7 @@ class ContactServiceTest {
     fun `should delete of the last non internal relationship remove date of birth`() {
       whenever(prisonerContactRepository.findById(prisonerContactId)).thenReturn(Optional.of(prisonerContactEntity))
       whenever(prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId)).thenReturn(emptyList())
-      whenever(deletedPrisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> (i.arguments[0] as DeletedPrisonerContactEntity) }
+      whenever(deletedPrisonerContactRepository.saveAndFlush<DeletedPrisonerContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as DeletedPrisonerContactEntity) }
       whenever(prisonerContactRepository.findAllByContactId(prisonerContactEntity.contactId)).thenReturn(listOf(prisonerContactEntity.copy(prisonerContactId = 2L, relationshipToPrisoner = "POM")))
       val aContact = createContactEntity().copy(dateOfBirth = LocalDate.of(1990, 1, 1))
       whenever(contactRepository.findById(prisonerContactEntity.contactId)).thenReturn(Optional.of(aContact))

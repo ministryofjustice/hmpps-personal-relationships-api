@@ -93,7 +93,7 @@ class SyncPrisonerNumberOfChildrenServiceTest {
       .thenReturn(existingNumberOfChildrenCount)
 
     val deactivatedNumberOfChildrenCount = existingNumberOfChildrenCount.copy(active = false)
-    whenever(numberOfChildrenRepository.save(any())).thenReturn(deactivatedNumberOfChildrenCount)
+    whenever(numberOfChildrenRepository.save<PrisonerNumberOfChildren>(any())).thenReturn(deactivatedNumberOfChildrenCount)
 
     // When
     val response = syncNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, updateRequest)
@@ -146,7 +146,7 @@ class SyncPrisonerNumberOfChildrenServiceTest {
     whenever(numberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
       .thenReturn(null)
 
-    whenever(numberOfChildrenRepository.save(any())).thenReturn(
+    whenever(numberOfChildrenRepository.save<PrisonerNumberOfChildren>(any())).thenReturn(
       PrisonerNumberOfChildren(
         prisonerNumber = prisonerNumber,
         numberOfChildren = "1",

@@ -1,6 +1,6 @@
 # hmpps-personal-relationships-api
 
-[![repo standards badge](https://img.shields.io/badge/endpoint.svg?&style=flat&logo=github&url=https%3A%2F%2Foperations-engineering-reports.cloud-platform.service.justice.gov.uk%2Fapi%2Fv1%2Fcompliant_public_repositories%2Fhmpps-personal-relationships-api)](https://operations-engineering-reports.cloud-platform.service.justice.gov.uk/public-report/hmpps-personal-relationships-api "Link to report")
+[![Ministry of Justice Repository Compliance Badge](https://github-community.service.justice.gov.uk/repository-standards/api/hmpps-personal-relationships-api/badge)](https://github-community.service.justice.gov.uk/repository-standards/hmpps-personal-relationships-api)
 [![Docker Repository on ghcr](https://img.shields.io/badge/ghcr.io-repository-2496ED.svg?logo=docker)](https://ghcr.io/ministryofjustice/hmpps-personal-relationships-api)
 [![API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://personal-relationships-api-dev.hmpps.service.justice.gov.uk/swagger-ui/index.html)
 [![GitHub Actions Pipeline](https://github.com/ministryofjustice/hmpps-personal-relationships-api/actions/workflows/pipeline.yml/badge.svg)](https://github.com/ministryofjustice/hmpps-personal-relationships-api/actions/workflows/pipeline.yml)
