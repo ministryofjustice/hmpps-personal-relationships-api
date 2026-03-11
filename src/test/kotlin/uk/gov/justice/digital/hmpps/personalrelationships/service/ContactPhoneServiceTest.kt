@@ -169,7 +169,7 @@ class ContactPhoneServiceTest {
         ),
       )
 
-      whenever(contactPhoneRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactPhoneRepository.saveAndFlush<ContactPhoneEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactPhoneEntity).copy(
           contactPhoneId = 9999,
         )
@@ -295,7 +295,7 @@ class ContactPhoneServiceTest {
           true,
         ),
       )
-      whenever(contactPhoneRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactPhoneRepository.saveAndFlush<ContactPhoneEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactPhoneEntity).copy(
           contactPhoneId = 9999,
         )
@@ -470,7 +470,7 @@ class ContactPhoneServiceTest {
           true,
         ),
       )
-      whenever(contactPhoneRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactPhoneRepository.saveAndFlush<ContactPhoneEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactPhoneEntity).copy(
           contactPhoneId = 9999,
         )

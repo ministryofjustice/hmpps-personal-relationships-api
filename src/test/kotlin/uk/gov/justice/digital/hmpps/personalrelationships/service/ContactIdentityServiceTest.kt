@@ -155,7 +155,7 @@ class ContactIdentityServiceTest {
           true,
         ),
       )
-      whenever(contactIdentityRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactIdentityRepository.saveAndFlush<ContactIdentityEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactIdentityEntity).copy(
           contactIdentityId = 9999,
         )
@@ -331,7 +331,7 @@ class ContactIdentityServiceTest {
           true,
         ),
       )
-      whenever(contactIdentityRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactIdentityRepository.saveAndFlush<ContactIdentityEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactIdentityEntity).copy(
           contactIdentityId = 9999,
         )
@@ -471,7 +471,7 @@ class ContactIdentityServiceTest {
           true,
         ),
       )
-      whenever(contactIdentityRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactIdentityRepository.saveAndFlush<ContactIdentityEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactIdentityEntity).copy(
           contactIdentityId = 9999,
         )

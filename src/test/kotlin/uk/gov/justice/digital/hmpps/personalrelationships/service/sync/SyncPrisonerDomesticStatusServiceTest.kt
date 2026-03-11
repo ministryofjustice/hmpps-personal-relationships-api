@@ -109,7 +109,7 @@ class SyncPrisonerDomesticStatusServiceTest {
       .thenReturn(existingStatus)
 
     val deactivatedStatus = existingStatus.copy(active = false)
-    whenever(domesticStatusRepository.save(any())).thenReturn(deactivatedStatus)
+    whenever(domesticStatusRepository.save<PrisonerDomesticStatus>(any())).thenReturn(deactivatedStatus)
 
     // When
     syncDomesticStatusService.createOrUpdateDomesticStatus(prisonerNumber, updateRequest)
@@ -161,7 +161,7 @@ class SyncPrisonerDomesticStatusServiceTest {
     whenever(domesticStatusRepository.findByPrisonerNumberAndActiveTrue(prisonerNumber))
       .thenReturn(null)
 
-    whenever(domesticStatusRepository.save(any())).thenReturn(
+    whenever(domesticStatusRepository.save<PrisonerDomesticStatus>(any())).thenReturn(
       PrisonerDomesticStatus(
         prisonerNumber = prisonerNumber,
         domesticStatusCode = "D",

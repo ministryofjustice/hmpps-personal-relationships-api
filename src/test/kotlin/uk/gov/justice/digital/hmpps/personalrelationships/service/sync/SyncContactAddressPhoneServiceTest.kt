@@ -89,8 +89,8 @@ class SyncContactAddressPhoneServiceTest {
       val request = createContactAddressPhoneRequest()
 
       whenever(contactAddressRepository.findById(3L)).thenReturn(Optional.of(contactAddressEntity()))
-      whenever(contactPhoneRepository.saveAndFlush(any())).thenReturn(contactPhoneEntity())
-      whenever(contactAddressPhoneRepository.saveAndFlush(any())).thenReturn(contactAddressPhoneEntity())
+      whenever(contactPhoneRepository.saveAndFlush<ContactPhoneEntity>(any())).thenReturn(contactPhoneEntity())
+      whenever(contactAddressPhoneRepository.saveAndFlush<ContactAddressPhoneEntity>(any())).thenReturn(contactAddressPhoneEntity())
 
       val response = syncService.createContactAddressPhone(request)
 
@@ -160,7 +160,7 @@ class SyncContactAddressPhoneServiceTest {
 
       whenever(contactAddressPhoneRepository.findById(4L)).thenReturn(Optional.of(contactAddressPhoneEntity()))
       whenever(contactPhoneRepository.findById(2L)).thenReturn(Optional.of(contactPhoneEntity()))
-      whenever(contactPhoneRepository.saveAndFlush(any())).thenReturn(contactPhoneEntity())
+      whenever(contactPhoneRepository.saveAndFlush<ContactPhoneEntity>(any())).thenReturn(contactPhoneEntity())
 
       val updated = syncService.updateContactAddressPhone(4L, request)
 

@@ -115,14 +115,14 @@ class ContactAddressPhoneServiceTest {
       whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "HOME", allowInactive = false))
         .thenReturn(ReferenceCode(0, ReferenceCodeGroup.PHONE_TYPE, "HOME", "Home", 90, true))
 
-      whenever(contactPhoneRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactPhoneRepository.saveAndFlush<ContactPhoneEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactPhoneEntity).copy(
           contactPhoneId = contactPhoneId,
           contactId = contactId,
         )
       }
 
-      whenever(contactAddressPhoneRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactAddressPhoneRepository.saveAndFlush<ContactAddressPhoneEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactAddressPhoneEntity).copy(
           contactAddressPhoneId = contactAddressPhoneId,
           contactAddressId = contactAddressId,
@@ -245,7 +245,7 @@ class ContactAddressPhoneServiceTest {
       whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "HOME", allowInactive = false))
         .thenReturn(ReferenceCode(0, ReferenceCodeGroup.PHONE_TYPE, "HOME", "Home", 90, true))
 
-      whenever(contactPhoneRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactPhoneRepository.saveAndFlush<ContactPhoneEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactPhoneEntity).copy(
           contactPhoneId = 8888,
           contactId = contactId,
@@ -257,7 +257,7 @@ class ContactAddressPhoneServiceTest {
         )
       }
 
-      whenever(contactAddressPhoneRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactAddressPhoneRepository.saveAndFlush<ContactAddressPhoneEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactAddressPhoneEntity).copy(
           contactAddressPhoneId = 6666,
           contactAddressId = contactAddressId,
@@ -386,7 +386,7 @@ class ContactAddressPhoneServiceTest {
       whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "HOME", allowInactive = false))
         .thenReturn(ReferenceCode(0, ReferenceCodeGroup.PHONE_TYPE, "HOME", "Home", 90, true))
 
-      whenever(contactPhoneRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactPhoneRepository.saveAndFlush<ContactPhoneEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactPhoneEntity).copy(
           contactPhoneId = 8888,
           contactId = contactId,
@@ -398,7 +398,7 @@ class ContactAddressPhoneServiceTest {
         )
       }
 
-      whenever(contactAddressPhoneRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactAddressPhoneRepository.saveAndFlush<ContactAddressPhoneEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactAddressPhoneEntity).copy(
           contactAddressPhoneId = 6666,
           contactAddressId = contactAddressId,
@@ -548,7 +548,7 @@ class ContactAddressPhoneServiceTest {
       whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.PHONE_TYPE, "HOME", allowInactive = true))
         .thenReturn(ReferenceCode(0, ReferenceCodeGroup.PHONE_TYPE, "HOME", "Home", 90, true))
 
-      whenever(contactPhoneRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactPhoneRepository.saveAndFlush<ContactPhoneEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactPhoneEntity).copy(
           contactPhoneId = contactPhoneId,
           contactId = contactId,
@@ -558,7 +558,7 @@ class ContactAddressPhoneServiceTest {
         )
       }
 
-      whenever(contactAddressPhoneRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactAddressPhoneRepository.saveAndFlush<ContactAddressPhoneEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactAddressPhoneEntity).copy(
           contactAddressPhoneId = contactAddressPhoneId,
           contactAddressId = contactAddressId,
