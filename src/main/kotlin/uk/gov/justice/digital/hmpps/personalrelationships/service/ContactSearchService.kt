@@ -42,12 +42,20 @@ class ContactSearchService(
 ) {
   fun searchContacts(request: ContactSearchRequest, pageable: Pageable): Page<ContactSearchResultItem> {
     validateRequest(request)
-    val pageOfContactIds = getPageOfContactIds(request, pageable)
+
+    // force adding contactId sort to the pageable as without it same ID is encountered across multiple pages.
+    val pageableWithIdSort = PageRequest.of(
+      pageable.pageNumber,
+      pageable.pageSize,
+      pageable.sort.and(Sort.by("contactId").ascending()),
+    )
+
+    val pageOfContactIds = getPageOfContactIds(request, pageableWithIdSort)
 
     logger.info("PageOfContacts is (elementsInThisPage) ${pageOfContactIds.content.size} and (totalElements) ${pageOfContactIds.totalElements}")
 
     return if (!pageOfContactIds.isEmpty) {
-      enrichOnePage(pageOfContactIds, request, pageable, pageOfContactIds.totalElements)
+      enrichOnePage(pageOfContactIds, request, pageableWithIdSort, pageOfContactIds.totalElements)
     } else {
       Page.empty()
     }

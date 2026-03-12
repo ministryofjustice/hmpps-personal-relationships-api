@@ -141,6 +141,7 @@ class ContactSearchServiceTest {
         Sort.Order(Sort.Direction.ASC, "last_name"),
         Sort.Order(Sort.Direction.ASC, "first_name"),
         Sort.Order(Sort.Direction.ASC, "date_of_birth"),
+        Sort.Order(Sort.Direction.ASC, "contact_id"),
       )
     }
 

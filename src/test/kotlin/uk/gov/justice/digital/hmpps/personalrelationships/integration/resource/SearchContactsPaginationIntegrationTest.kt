@@ -9,6 +9,7 @@ import org.springframework.web.util.UriComponentsBuilder
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.util.StubUser
 import java.net.URI
+import java.time.LocalDate
 import kotlin.collections.toList
 
 class SearchContactsPaginationIntegrationTest : SecureAPIIntegrationTestBase() {
@@ -25,22 +26,56 @@ class SearchContactsPaginationIntegrationTest : SecureAPIIntegrationTestBase() {
     .accept(MediaType.APPLICATION_JSON)
 
   @Test
-  fun `when contacts search is done then proper search results are returned irrespective of sort order`() {
+  fun `when contacts search with results sorted by last name ascending then all results are returned in correct order`() {
     // test to check fix for VB-6479
     // 50 records have been added with lastName starting with ABCD and firstName as Test to replicate live scenario
     // starting from contact ID 2001 to 2050
     // the asserts check that all Ids starting from 2001 to 2050 are being returned which was not the case before the fix
-    var sortValues = listOf("lastName,asc")
-    assertPagedData(sortValues)
+    val sortValues = listOf("lastName,asc")
 
-    sortValues = listOf("lastName,desc")
+    // assert that all Ids from 2001 t0 2050 are there
     assertPagedData(sortValues)
+    val contactLastNames = getLastNames(sortValues)
+    val sortedContactLastNames = contactLastNames.sorted()
+    for (i in 0 until sortedContactLastNames.size) {
+      assertThat(contactLastNames[i]).isEqualTo(sortedContactLastNames[i])
+    }
+  }
 
-    sortValues = listOf("dateOfBirth,asc")
+  @Test
+  fun `when contacts search with results sorted by last name descending then all results are returned in correct order`() {
+    val sortValues = listOf("lastName,desc")
     assertPagedData(sortValues)
+    val contactLastNamesDesc = getLastNames(sortValues)
+    val sortedContactLastNamesDesc = contactLastNamesDesc.sortedDescending()
 
-    sortValues = listOf("dateOfBirth,desc")
+    for (i in 0 until sortedContactLastNamesDesc.size) {
+      assertThat(contactLastNamesDesc[i]).isEqualTo(sortedContactLastNamesDesc[i])
+    }
+  }
+
+  @Test
+  fun `when contacts search with results sorted by dateOfBirth ascending then all results are returned in correct order`() {
+    val sortValues = listOf("dateOfBirth,asc")
     assertPagedData(sortValues)
+    val contactDOBs = getDateOfBirths(sortValues)
+    val sortedDOBs = contactDOBs.sortedWith(nullsLast(naturalOrder()))
+
+    for (i in 0 until sortedDOBs.size) {
+      assertThat(contactDOBs[i]).isEqualTo(sortedDOBs[i])
+    }
+  }
+
+  @Test
+  fun `when contacts search with results sorted by dateOfBirth descending then all results are returned in correct order`() {
+    val sortValues = listOf("dateOfBirth,desc")
+    assertPagedData(sortValues)
+    val contactDOBsDesc = getDateOfBirths(sortValues)
+    val sortedDOBsDesc = contactDOBsDesc.sortedWith(nullsFirst(reverseOrder()))
+
+    for (i in 0 until contactDOBsDesc.size) {
+      assertThat(contactDOBsDesc[i]).isEqualTo(sortedDOBsDesc[i])
+    }
   }
 
   private fun getContactSearchUrl(pageNumber: Int? = 0, sortValues: List<String>): URI {
@@ -49,7 +84,7 @@ class SearchContactsPaginationIntegrationTest : SecureAPIIntegrationTestBase() {
       .queryParam("lastName", "ABCD")
       .queryParam("firstName", "Test")
       .queryParam("page", pageNumber)
-      .queryParam("sort", sortValues.joinToString(","))
+      .queryParam("sort", sortValues)
       .build()
       .toUri()
 
@@ -85,6 +120,32 @@ class SearchContactsPaginationIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(contactIds).containsAll(expectedIds(2001, 2050))
     assertThat(contactIds.min()).isEqualTo(2001)
     assertThat(contactIds.max()).isEqualTo(2050)
+  }
+
+  private fun getLastNames(sortValues: List<String>): List<String> {
+    val contactLastNames = mutableListOf<String>()
+
+    // iterate over the 5 pages and collate all results into a list
+    for (pageNumber in 0..4) {
+      val uri = getContactSearchUrl(pageNumber, sortValues)
+      val body = testAPIClient.getSearchContactResults(uri)
+      contactLastNames.addAll(body!!.content.map { it.lastName })
+    }
+
+    return contactLastNames
+  }
+
+  private fun getDateOfBirths(sortValues: List<String>): List<LocalDate?> {
+    val contactDateOfBirths = mutableListOf<LocalDate?>()
+
+    // iterate over the 5 pages and collate all results into a list
+    for (pageNumber in 0..4) {
+      val uri = getContactSearchUrl(pageNumber, sortValues)
+      val body = testAPIClient.getSearchContactResults(uri)
+      contactDateOfBirths.addAll(body!!.content.map { it.dateOfBirth })
+    }
+
+    return contactDateOfBirths
   }
 
   companion object {

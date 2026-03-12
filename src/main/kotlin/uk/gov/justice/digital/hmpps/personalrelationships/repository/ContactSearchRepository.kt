@@ -24,7 +24,6 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
     select c.contactId
     from ContactEntity c
     where c.dateOfBirth = :dateOfBirth
-    order by c.contactId
     """,
   )
   fun findAllByDateOfBirthEquals(dateOfBirth: LocalDate, pageable: Pageable): Page<Long>
@@ -37,7 +36,6 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
       and (:lastName is null or c.lastName ilike %:lastName% escape '#')
       and (:firstName is null or c.firstName ilike %:firstName% escape '#')
       and (:middleNames is null or c.middleNames ilike %:middleNames% escape '#')
-      order by c.contactId
     """,
   )
   fun findAllByDateOfBirthAndNamesMatch(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
@@ -50,7 +48,6 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
        and (:lastName is null or c.lastName ilike :lastName)
        and (:firstName is null or c.firstName ilike :firstName)
        and (:middleNames is null or c.middleNames ilike :middleNames)
-       order by c.contactId
     """,
   )
   fun findAllByDateOfBirthAndNamesExact(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
@@ -63,7 +60,6 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
        and ( :lastName is null or c.lastNameSoundex = CAST(function('soundex', CAST(:lastName AS string)) AS char(4)))
        and ( :firstName is null or c.firstNameSoundex = CAST(function('soundex', CAST(:firstName AS string)) AS char(4)))
        and (:middleNames is null or c.middleNamesSoundex = CAST(function('soundex', CAST(:middleNames AS string)) AS char(4)))
-       order by c.contactId
     """,
   )
   fun findAllByDateOfBirthAndNamesSoundLike(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
@@ -75,7 +71,6 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
     where (:lastName is null or c.lastName ilike :lastName)
       and (:firstName is null or c.firstName ilike :firstName)
       and (:middleNames is null or c.middleNames ilike :middleNames)
-      order by c.contactId
     """,
   )
   fun findAllByNamesExact(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
@@ -87,7 +82,6 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
     where (:lastName is null or c.lastName ilike %:lastName% escape '#')
       and (:firstName is null or c.firstName ilike %:firstName% escape '#')
       and (:middleNames is null or c.middleNames ilike %:middleNames% escape '#')
-      order by c.contactId
     """,
   )
   fun findAllByNamesMatch(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
@@ -99,7 +93,6 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
     where (:lastName is null or c.lastNameSoundex = CAST(function('soundex', CAST(:lastName AS string)) AS char(4)))
       and (:firstName is null or c.firstNameSoundex = CAST(function('soundex', CAST(:firstName AS string)) AS char(4)))
       and (:middleNames is null or c.middleNamesSoundex = CAST(function('soundex', CAST(:middleNames AS string)) AS char(4)))
-    order by c.contactId
     """,
   )
   fun findAllByNamesSoundLike(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
@@ -114,8 +107,7 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
         and (:firstName is null or ca.firstName ilike :firstName)
         and (:middleNames is null or ca.middleNames ilike :middleNames)
         and ca.revType in (0, 1)
-    )
-    order by c.contactId
+    ) 
     """,
   )
   fun findAllByNamesExactAndHistory(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
@@ -134,7 +126,6 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
       select c.contact_id
       from contact c
       where c.contact_id in (select contact_id from filtered_contacts)
-      order by c.contact_id
     """,
     countQuery = """
       with filtered_contacts AS (
@@ -168,7 +159,6 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
   select c.contact_id
   from contact c
   where c.contact_id in (select contact_id from filtered_contacts)
-  order by c.contact_id
 """,
     countQuery = """
   with filtered_contacts AS (
@@ -201,7 +191,6 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
         and (:middleNames is null or ca.middleNames ilike :middleNames)
         and ca.revType in (0, 1)
     )
-    order by c.contactId
     """,
   )
   fun findAllByDateOfBirthAndNamesExactAndHistory(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
@@ -218,8 +207,7 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
         and (:firstName is null or ca.firstName ilike %:firstName% escape '#')
         and (:middleNames is null or ca.middleNames ilike %:middleNames% escape '#')
         and ca.revType in (0, 1)
-    )
-        order by c.contactId
+    )    
     """,
   )
   fun findAllByDateOfBirthAndNamesMatchAndHistory(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
@@ -237,7 +225,6 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
         and (:middleNames is null or ca.middleNamesSoundex = CAST(function('soundex', CAST(:middleNames as string)) AS char(4)))
         and ca.revType in (0, 1)
     )
-    order by c.contactId
     """,
   )
   fun findAllByDateOfBirthAndNamesSoundLikeAndHistory(dateOfBirth: LocalDate, firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
