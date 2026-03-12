@@ -118,8 +118,8 @@ class SearchContactsPaginationIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(contactIds.distinct()).hasSize(50)
     // all contactIds from 2001 to 2050 should be present in the list
     assertThat(contactIds).containsAll(expectedIds(2001, 2050))
-    assertThat(contactIds.min()).isEqualTo(2001)
-    assertThat(contactIds.max()).isEqualTo(2050)
+    assertThat(contactIds.minOrNull()).isEqualTo(2001)
+    assertThat(contactIds.maxOrNull()).isEqualTo(2050)
   }
 
   private fun getLastNames(sortValues: List<String>): List<String> {
