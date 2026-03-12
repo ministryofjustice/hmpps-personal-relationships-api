@@ -43,9 +43,9 @@ class ContactSearchService(
   fun searchContacts(request: ContactSearchRequest, pageable: Pageable): Page<ContactSearchResultItem> {
     validateRequest(request)
 
-    // force adding contactId sort to the pageable as without it same ID is encountered across multiple pages.
-    // only append the contactId sort if it (or its alias "id") is not already present
-    val sortWithId = if (pageable.sort.getOrderFor("contactId") == null && pageable.sort.getOrderFor("id") == null) {
+    // force adding contactId sort to the pageable as without it the same contactId is encountered across multiple pages.
+    // only append the contactId sort if it is not already present
+    val sortWithId = if (pageable.sort.getOrderFor("contactId") == null) {
       pageable.sort.and(Sort.by("contactId").ascending())
     } else {
       pageable.sort
