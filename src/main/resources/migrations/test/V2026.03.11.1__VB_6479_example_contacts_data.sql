@@ -3,7 +3,7 @@
 -- Not loaded into any real environments - DEV, PREPROD or PROD
 -- Intended for integration tests and local-running only.
 -- ===========================================================
-insert into public.contact (contact_id, title, last_name, first_name, middle_names, date_of_birth, gender, domestic_status, language_code, created_by,  deceased_date, interpreter_required, staff_flag)
+insert into contact (contact_id, title, last_name, first_name, middle_names, date_of_birth, gender, domestic_status, language_code, created_by,  deceased_date, interpreter_required, staff_flag)
 values (2001,'MR','Xyzpon', 'Zwqj',null,'2000-11-21','M','M','ENG','TIM',null,false,true),
        (2002,'MR','Xyzpon','Zwqj',null,'1999-11-01','M','M','ENG','TIM',null,false,true),
        (2003,'MR','Xyzpcott','Zwqj',null,'1972-05-02','M','M','ENG','TIM',null,false,true),
