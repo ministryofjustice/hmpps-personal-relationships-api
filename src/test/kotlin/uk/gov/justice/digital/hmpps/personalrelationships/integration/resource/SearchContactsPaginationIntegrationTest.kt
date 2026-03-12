@@ -20,9 +20,18 @@ class SearchContactsPaginationIntegrationTest : SecureAPIIntegrationTestBase() {
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW", "ROLE_CONTACTS__R")
 
-  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()
-    .uri(CONTACT_SEARCH_URL.toString())
-    .accept(MediaType.APPLICATION_JSON)
+  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> {
+    val contactSearchUrl = UriComponentsBuilder.fromPath("contact/search")
+      .queryParam("searchType", "PARTIAL")
+      .queryParam("lastName", "Xyzp")
+      .queryParam("firstName", "Zwqj")
+      .build()
+      .toUri()
+
+    return webTestClient.get()
+      .uri(contactSearchUrl.toString())
+      .accept(MediaType.APPLICATION_JSON)
+  }
 
   @Test
   fun `when contacts search with results sorted by last name ascending then all results are returned in correct order`() {
@@ -145,14 +154,5 @@ class SearchContactsPaginationIntegrationTest : SecureAPIIntegrationTestBase() {
     }
 
     return contactDateOfBirths
-  }
-
-  companion object {
-    private val CONTACT_SEARCH_URL = UriComponentsBuilder.fromPath("contact/search")
-      .queryParam("searchType", "PARTIAL")
-      .queryParam("lastName", "ABCD")
-      .queryParam("firstName", "Test")
-      .build()
-      .toUri()
   }
 }
