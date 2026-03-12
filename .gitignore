@@ -76,4 +76,4 @@ sonar-project.properties
 .env
 
 #Perf tests
-./src/gatling/resources/data/
+src/gatling/resources/data/

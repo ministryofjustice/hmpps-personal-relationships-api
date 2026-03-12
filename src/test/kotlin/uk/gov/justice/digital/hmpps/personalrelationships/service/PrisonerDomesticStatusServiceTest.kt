@@ -125,7 +125,7 @@ class PrisonerDomesticStatusServiceTest {
         createdTime = LocalDateTime.now(),
       )
 
-      whenever(prisonerDomesticStatusRepository.save(any()))
+      whenever(prisonerDomesticStatusRepository.save<PrisonerDomesticStatus>(any()))
         .thenReturn(newStatus)
 
       // When
@@ -164,7 +164,7 @@ class PrisonerDomesticStatusServiceTest {
         createdTime = LocalDateTime.now(),
       )
 
-      whenever(prisonerDomesticStatusRepository.save(any()))
+      whenever(prisonerDomesticStatusRepository.save<PrisonerDomesticStatus>(any()))
         .thenReturn(newStatus)
 
       // When
@@ -211,7 +211,7 @@ class PrisonerDomesticStatusServiceTest {
         ),
       ).thenReturn(ReferenceCodeEntity(1L, ReferenceCodeGroup.DOMESTIC_STS, "D", "Divorced", 0, true, "name"))
 
-      whenever(prisonerDomesticStatusRepository.save(any()))
+      whenever(prisonerDomesticStatusRepository.save<PrisonerDomesticStatus>(any()))
         .thenReturn(existingStatus)
         .thenReturn(existingStatus.copy(domesticStatusCode = "D", active = true))
 

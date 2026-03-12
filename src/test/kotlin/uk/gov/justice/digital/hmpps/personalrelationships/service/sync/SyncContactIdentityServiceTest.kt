@@ -106,7 +106,7 @@ class SyncContactIdentityServiceTest {
       val request = updateContactIdentityRequest()
       whenever(contactRepository.findById(1L)).thenReturn(Optional.of(contactEntity()))
       whenever(contactIdentityRepository.findById(1L)).thenReturn(Optional.of(request.toEntity()))
-      whenever(contactIdentityRepository.saveAndFlush(any())).thenReturn(request.toEntity())
+      whenever(contactIdentityRepository.saveAndFlush<ContactIdentityEntity>(any())).thenReturn(request.toEntity())
 
       val updated = syncService.updateContactIdentity(1L, request)
 
@@ -137,7 +137,7 @@ class SyncContactIdentityServiceTest {
       val existingIssuingAuthority = "UKBORDER"
       whenever(contactRepository.findById(1L)).thenReturn(Optional.of(contactEntity()))
       whenever(contactIdentityRepository.findById(1L)).thenReturn(Optional.of(request.toEntity()))
-      whenever(contactIdentityRepository.saveAndFlush(any())).thenReturn(request.toEntity())
+      whenever(contactIdentityRepository.saveAndFlush<ContactIdentityEntity>(any())).thenReturn(request.toEntity())
 
       val updated = syncService.updateContactIdentity(1L, request)
 

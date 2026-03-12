@@ -607,7 +607,7 @@ class ContactPatchServiceTest {
   }
 
   private fun whenUpdateIsSuccessful() {
-    whenever(contactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+    whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
   }
 
   private fun whenContactExists() {

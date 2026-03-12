@@ -151,7 +151,7 @@ class SyncPrisonerContactServiceTest {
       val prisonerContactID = 1L
       val contactEntity = contactEntity()
       whenever(prisonerContactRepository.findById(prisonerContactID)).thenReturn(Optional.of(contactEntity))
-      whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+      whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
       val updated = syncService.updatePrisonerContact(prisonerContactID, request)
 
@@ -210,7 +210,7 @@ class SyncPrisonerContactServiceTest {
         it.approvedTime = null
       }
       whenever(prisonerContactRepository.findById(prisonerContactID)).thenReturn(Optional.of(contactEntity))
-      whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+      whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
       val updated = syncService.updatePrisonerContact(prisonerContactID, request)
 
@@ -240,7 +240,7 @@ class SyncPrisonerContactServiceTest {
         it.approvedTime = LocalDateTime.now().minusDays(1)
       }
       whenever(prisonerContactRepository.findById(prisonerContactID)).thenReturn(Optional.of(contactEntity))
-      whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+      whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
       val updated = syncService.updatePrisonerContact(prisonerContactID, request)
 
@@ -270,7 +270,7 @@ class SyncPrisonerContactServiceTest {
         it.approvedTime = null
       }
       whenever(prisonerContactRepository.findById(prisonerContactID)).thenReturn(Optional.of(contactEntity))
-      whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+      whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
       val updated = syncService.updatePrisonerContact(prisonerContactID, request)
       val contactCaptor = argumentCaptor<PrisonerContactEntity>()
       verify(prisonerContactRepository).saveAndFlush(contactCaptor.capture())
@@ -295,7 +295,7 @@ class SyncPrisonerContactServiceTest {
         it.approvedTime = LocalDateTime.now().minusDays(1)
       }
       whenever(prisonerContactRepository.findById(prisonerContactID)).thenReturn(Optional.of(contactEntity))
-      whenever(prisonerContactRepository.saveAndFlush(any())).thenAnswer { i -> i.arguments[0] }
+      whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
 
       val updated = syncService.updatePrisonerContact(prisonerContactID, request)
 

@@ -94,7 +94,7 @@ class ContactEmailServiceTest {
     @Test
     fun `should return email details after creating successfully`() {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
-      whenever(contactEmailRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactEmailRepository.saveAndFlush<ContactEmailEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactEmailEntity).copy(
           contactEmailId = 9999,
         )
@@ -184,7 +184,7 @@ class ContactEmailServiceTest {
     fun `should return a email details after updating a email successfully`() {
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(aContact))
       whenever(contactEmailRepository.findById(contactEmailId)).thenReturn(Optional.of(existingEmail))
-      whenever(contactEmailRepository.saveAndFlush(any())).thenAnswer { i ->
+      whenever(contactEmailRepository.saveAndFlush<ContactEmailEntity>(any())).thenAnswer { i ->
         (i.arguments[0] as ContactEmailEntity).copy(
           contactEmailId = 9999,
         )

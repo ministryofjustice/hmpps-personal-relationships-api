@@ -53,7 +53,7 @@ class EmploymentServiceTest {
     val org2 = createOrganisationSummary(id = 2, organisationName = "Two")
 
     whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
-    whenever(employmentRepository.saveAndFlush(any())).thenReturn(employmentEntity2)
+    whenever(employmentRepository.saveAndFlush<EmploymentEntity>(any())).thenReturn(employmentEntity2)
     whenever(employmentRepository.findByContactId(contactId))
       .thenReturn(listOf(employmentEntity1)) // before save
       .thenReturn(listOf(employmentEntity1, employmentEntity2)) // after save
@@ -119,7 +119,7 @@ class EmploymentServiceTest {
     val org2 = createOrganisationSummary(id = 2, organisationName = "Two")
 
     whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
-    whenever(employmentRepository.saveAndFlush(any())).thenReturn(employmentEntityAfterUpdate)
+    whenever(employmentRepository.saveAndFlush<EmploymentEntity>(any())).thenReturn(employmentEntityAfterUpdate)
     whenever(employmentRepository.findByContactId(contactId))
       .thenReturn(listOf(employmentEntityBeforeUpdate)) // before save
       .thenReturn(listOf(employmentEntityAfterUpdate)) // after save
@@ -298,7 +298,7 @@ class EmploymentServiceTest {
     val org = createOrganisationSummary(id = 1, organisationName = "One")
 
     whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
-    whenever(employmentRepository.saveAndFlush(any())).thenReturn(employmentEntity)
+    whenever(employmentRepository.saveAndFlush<EmploymentEntity>(any())).thenReturn(employmentEntity)
     whenever(organisationService.getOrganisationSummaryById(1)).thenReturn(org)
 
     val created = service.createEmployment(
@@ -333,7 +333,7 @@ class EmploymentServiceTest {
     val expectedException = EntityNotFoundException("Organisation with id 1 not found")
 
     whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
-    whenever(employmentRepository.saveAndFlush(any())).thenReturn(employmentEntity)
+    whenever(employmentRepository.saveAndFlush<EmploymentEntity>(any())).thenReturn(employmentEntity)
     whenever(organisationService.getOrganisationSummaryById(1)).thenThrow(expectedException)
 
     val exception = assertThrows<EntityNotFoundException> {
@@ -353,7 +353,7 @@ class EmploymentServiceTest {
     val employmentEntity = createEmploymentEntity(id = 1, organisationId = 1)
 
     whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
-    whenever(employmentRepository.saveAndFlush(any())).thenReturn(employmentEntity)
+    whenever(employmentRepository.saveAndFlush<EmploymentEntity>(any())).thenReturn(employmentEntity)
 
     val exception = assertThrows<EntityNotFoundException> {
       service.createEmployment(
@@ -378,7 +378,7 @@ class EmploymentServiceTest {
 
     whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
     whenever(employmentRepository.findById(any())).thenReturn(Optional.of(employmentEntityBeforeUpdate))
-    whenever(employmentRepository.saveAndFlush(any())).thenReturn(employmentEntityAfterUpdate)
+    whenever(employmentRepository.saveAndFlush<EmploymentEntity>(any())).thenReturn(employmentEntityAfterUpdate)
     whenever(organisationService.getOrganisationSummaryById(2)).thenReturn(org)
 
     val updated = service.updateEmployment(
@@ -418,7 +418,7 @@ class EmploymentServiceTest {
 
     whenever(employmentRepository.findById(any())).thenReturn(Optional.of(employmentEntity))
     whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
-    whenever(employmentRepository.saveAndFlush(any())).thenReturn(employmentEntity)
+    whenever(employmentRepository.saveAndFlush<EmploymentEntity>(any())).thenReturn(employmentEntity)
     whenever(organisationService.getOrganisationSummaryById(1)).thenThrow(expectedException)
 
     val exception = assertThrows<EntityNotFoundException> {
@@ -442,7 +442,7 @@ class EmploymentServiceTest {
 
     whenever(employmentRepository.findById(any())).thenReturn(Optional.empty())
     whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
-    whenever(employmentRepository.saveAndFlush(any())).thenReturn(employmentEntity)
+    whenever(employmentRepository.saveAndFlush<EmploymentEntity>(any())).thenReturn(employmentEntity)
 
     val exception = assertThrows<EntityNotFoundException> {
       service.updateEmployment(
@@ -465,7 +465,7 @@ class EmploymentServiceTest {
 
     whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
     whenever(employmentRepository.findById(any())).thenReturn(Optional.of(employmentEntity))
-    whenever(employmentRepository.saveAndFlush(any())).thenReturn(employmentEntity)
+    whenever(employmentRepository.saveAndFlush<EmploymentEntity>(any())).thenReturn(employmentEntity)
 
     val exception = assertThrows<EntityNotFoundException> {
       service.updateEmployment(
