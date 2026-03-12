@@ -89,6 +89,15 @@ class ContactIdentityService(
   fun update(contactId: Long, contactIdentityId: Long, request: UpdateIdentityRequest, user: User): ContactIdentityDetails {
     validateContactExists(contactId)
     val existing = validateExistingIdentity(contactIdentityId)
+
+    val duplicateExisting = contactIdentityRepository.findByContactId(contactId)
+      .filter { it.contactIdentityId != contactIdentityId }
+      .any { it.identityType == request.identityType && it.identityValue == request.identityValue }
+
+    if (duplicateExisting) {
+      throw DuplicateIdentityDocumentException(request.identityType, request.identityValue)
+    }
+
     val type = referenceCodeService.validateReferenceCode(ReferenceCodeGroup.ID_TYPE, request.identityType, allowInactive = true)
     validatePNC(request.identityType, request.identityValue)
 
