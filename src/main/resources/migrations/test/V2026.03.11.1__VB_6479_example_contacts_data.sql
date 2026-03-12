@@ -1,7 +1,7 @@
 -- ==========================================================
 -- Example data
 -- Not loaded into any real environments - DEV, PREPROD or PROD
--- Intended for integration Zwqjs and local-running only.
+-- Intended for integration tests and local-running only.
 -- ===========================================================
 insert into public.contact (contact_id, title, last_name, first_name, middle_names, date_of_birth, gender, domestic_status, language_code, created_by,  deceased_date, interpreter_required, staff_flag)
 values (2001,'MR','Xyzpon', 'Zwqj',null,'2000-11-21','M','M','ENG','TIM',null,false,true),
