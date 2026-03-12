@@ -28,12 +28,12 @@ class SearchContactsPaginationIntegrationTest : SecureAPIIntegrationTestBase() {
   @Test
   fun `when contacts search with results sorted by last name ascending then all results are returned in correct order`() {
     // test to check fix for VB-6479
-    // 50 records have been added with lastName starting with ABCD and firstName as Test to replicate live scenario
+    // 50 records have been added with lastName starting with Xyzp and firstName as Zwqj to replicate live scenario
     // starting from contact ID 2001 to 2050
     // the asserts check that all Ids starting from 2001 to 2050 are being returned which was not the case before the fix
     val sortValues = listOf("lastName,asc")
 
-    // assert that all Ids from 2001 t0 2050 are there
+    // assert that all Ids from 2001 to 2050 are there
     assertPagedData(sortValues)
     val contactLastNames = getLastNames(sortValues)
     val sortedContactLastNames = contactLastNames.sorted()
@@ -81,8 +81,8 @@ class SearchContactsPaginationIntegrationTest : SecureAPIIntegrationTestBase() {
   private fun getContactSearchUrl(pageNumber: Int? = 0, sortValues: List<String>): URI {
     val uri = UriComponentsBuilder.fromPath("contact/search")
       .queryParam("searchType", "PARTIAL")
-      .queryParam("lastName", "ABCD")
-      .queryParam("firstName", "Test")
+      .queryParam("lastName", "Xyzp")
+      .queryParam("firstName", "Zwqj")
       .queryParam("page", pageNumber)
       .queryParam("sort", sortValues)
       .build()
