@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPII
 import uk.gov.justice.digital.hmpps.personalrelationships.util.StubUser
 import java.net.URI
 import java.time.LocalDate
-import kotlin.collections.toList
 
 class SearchContactsPaginationIntegrationTest : SecureAPIIntegrationTestBase() {
 
