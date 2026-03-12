@@ -44,10 +44,16 @@ class ContactSearchService(
     validateRequest(request)
 
     // force adding contactId sort to the pageable as without it same ID is encountered across multiple pages.
+    // only append the contactId sort if it (or its alias "id") is not already present
+    val sortWithId = if (pageable.sort.getOrderFor("contactId") == null && pageable.sort.getOrderFor("id") == null) {
+      pageable.sort.and(Sort.by("contactId").ascending())
+    } else {
+      pageable.sort
+    }
     val pageableWithIdSort = PageRequest.of(
       pageable.pageNumber,
       pageable.pageSize,
-      pageable.sort.and(Sort.by("contactId").ascending()),
+      sortWithId,
     )
 
     val pageOfContactIds = getPageOfContactIds(request, pageableWithIdSort)
