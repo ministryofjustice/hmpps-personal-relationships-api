@@ -256,7 +256,7 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
   }
 
   fun trackDeleteContactRestrictionEvent(syncContactRestriction: SyncContactRestriction, source: Source, user: User) {
-    val event = ContactRestrictionCustomEvent(syncContactRestriction.contactId, syncContactRestriction, EventActionType.UPDATE, source, user)
+    val event = ContactRestrictionCustomEvent(syncContactRestriction.contactId, syncContactRestriction, EventActionType.DELETE, source, user)
     telemetryService.track(event)
   }
 

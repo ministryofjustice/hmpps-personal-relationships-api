@@ -24,8 +24,8 @@ class TelemetryPrisonerCustomEventService(private val telemetryService: Telemetr
     telemetryService.track(event)
   }
 
-  fun trackCreatePrisonerDomesticStatusEvent(prisonerNumber: String, prisonerDomesticStaticId: Long, source: Source, user: User) {
-    val event = PrisonerDomesticStatusCustomEvent(prisonerNumber, prisonerDomesticStaticId, EventActionType.CREATE, source, user)
+  fun trackCreatePrisonerDomesticStatusEvent(prisonerNumber: String, prisonerDomesticStatusId: Long, source: Source, user: User) {
+    val event = PrisonerDomesticStatusCustomEvent(prisonerNumber, prisonerDomesticStatusId, EventActionType.CREATE, source, user)
     telemetryService.track(event)
   }
 

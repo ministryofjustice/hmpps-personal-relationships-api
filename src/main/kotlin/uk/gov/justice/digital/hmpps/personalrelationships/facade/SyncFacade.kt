@@ -197,7 +197,7 @@ class SyncFacade(
       )
     }
     .also {
-      telemetryContactCustomEventService.trackCreateContactEmailEvent(it, source = Source.NOMIS, user = userOrDefault())
+      telemetryContactCustomEventService.trackCreateContactEmailEvent(it, source = Source.NOMIS, user = userOrDefault(request.createdBy))
     }
 
   fun updateContactEmail(contactEmailId: Long, request: SyncUpdateContactEmailRequest) = syncContactEmailService.updateContactEmail(contactEmailId, request)
@@ -211,7 +211,7 @@ class SyncFacade(
       )
     }
     .also {
-      telemetryContactCustomEventService.trackUpdateContactEmailEvent(it, source = Source.NOMIS, user = userOrDefault())
+      telemetryContactCustomEventService.trackUpdateContactEmailEvent(it, source = Source.NOMIS, user = userOrDefault(request.updatedBy))
     }
 
   fun deleteContactEmail(contactEmailId: Long) = syncContactEmailService.deleteContactEmail(contactEmailId)
@@ -245,7 +245,7 @@ class SyncFacade(
       )
     }
     .also {
-      telemetryContactCustomEventService.trackCreateContactIdentityEvent(it, source = Source.NOMIS, user = userOrDefault())
+      telemetryContactCustomEventService.trackCreateContactIdentityEvent(it, source = Source.NOMIS, user = userOrDefault(request.createdBy))
     }
 
   fun updateContactIdentity(contactIdentityId: Long, request: SyncUpdateContactIdentityRequest) = syncContactIdentityService.updateContactIdentity(contactIdentityId, request)
@@ -259,7 +259,7 @@ class SyncFacade(
       )
     }
     .also {
-      telemetryContactCustomEventService.trackUpdateContactIdentityEvent(it, source = Source.NOMIS, user = userOrDefault())
+      telemetryContactCustomEventService.trackUpdateContactIdentityEvent(it, source = Source.NOMIS, user = userOrDefault(request.updatedBy))
     }
 
   fun deleteContactIdentity(contactIdentityId: Long) = syncContactIdentityService.deleteContactIdentity(contactIdentityId)
@@ -293,7 +293,7 @@ class SyncFacade(
       )
     }
     .also {
-      telemetryContactCustomEventService.trackCreateContactRestrictionEvent(it, source = Source.NOMIS, user = userOrDefault())
+      telemetryContactCustomEventService.trackCreateContactRestrictionEvent(it, source = Source.NOMIS, user = userOrDefault(request.createdBy))
     }
 
   fun updateContactRestriction(contactRestrictionId: Long, request: SyncUpdateContactRestrictionRequest) = syncContactRestrictionService.updateContactRestriction(contactRestrictionId, request)
@@ -307,7 +307,7 @@ class SyncFacade(
       )
     }
     .also {
-      telemetryContactCustomEventService.trackUpdateContactRestrictionEvent(it, source = Source.NOMIS, user = userOrDefault())
+      telemetryContactCustomEventService.trackUpdateContactRestrictionEvent(it, source = Source.NOMIS, user = userOrDefault(request.updatedBy))
     }
 
   fun deleteContactRestriction(contactRestrictionId: Long) = syncContactRestrictionService.deleteContactRestriction(contactRestrictionId)
@@ -341,7 +341,7 @@ class SyncFacade(
       )
     }
     .also {
-      telemetryContactCustomEventService.trackCreateContactAddressEvent(it, source = Source.NOMIS, user = userOrDefault())
+      telemetryContactCustomEventService.trackCreateContactAddressEvent(it, source = Source.NOMIS, user = userOrDefault(request.createdBy))
     }
 
   fun updateContactAddress(contactAddressId: Long, request: SyncUpdateContactAddressRequest) = syncContactAddressService.updateContactAddress(contactAddressId, request)
@@ -355,7 +355,7 @@ class SyncFacade(
       )
     }
     .also {
-      telemetryContactCustomEventService.trackUpdateContactAddressEvent(it, source = Source.NOMIS, user = userOrDefault())
+      telemetryContactCustomEventService.trackUpdateContactAddressEvent(it, source = Source.NOMIS, user = userOrDefault(request.updatedBy))
     }
 
   fun deleteContactAddress(contactAddressId: Long) = syncContactAddressService.deleteContactAddress(contactAddressId)
@@ -389,7 +389,7 @@ class SyncFacade(
       )
     }
     .also {
-      telemetryContactCustomEventService.trackCreateContactAddressPhoneEvent(it, source = Source.NOMIS, user = userOrDefault())
+      telemetryContactCustomEventService.trackCreateContactAddressPhoneEvent(it, source = Source.NOMIS, user = userOrDefault(request.createdBy))
     }
 
   fun updateContactAddressPhone(contactAddressPhoneId: Long, request: SyncUpdateContactAddressPhoneRequest) = syncContactAddressPhoneService.updateContactAddressPhone(contactAddressPhoneId, request)
@@ -404,7 +404,7 @@ class SyncFacade(
       )
     }
     .also {
-      telemetryContactCustomEventService.trackUpdateContactAddressPhoneEvent(it, source = Source.NOMIS, user = userOrDefault())
+      telemetryContactCustomEventService.trackUpdateContactAddressPhoneEvent(it, source = Source.NOMIS, user = userOrDefault(request.updatedBy))
     }
 
   fun deleteContactAddressPhone(contactAddressPhoneId: Long) = syncContactAddressPhoneService.deleteContactAddressPhone(contactAddressPhoneId)
@@ -440,7 +440,7 @@ class SyncFacade(
       )
     }
     .also {
-      telemetryContactCustomEventService.trackCreatePrisonerContactEvent(it, source = Source.NOMIS, user = userOrDefault())
+      telemetryContactCustomEventService.trackCreatePrisonerContactEvent(it, source = Source.NOMIS, user = userOrDefault(request.createdBy))
     }
 
   fun updatePrisonerContact(prisonerContactId: Long, request: SyncUpdatePrisonerContactRequest) = syncPrisonerContactService.updatePrisonerContact(prisonerContactId, request)
@@ -455,7 +455,7 @@ class SyncFacade(
       )
     }
     .also {
-      telemetryContactCustomEventService.trackUpdatePrisonerContactEvent(it, source = Source.NOMIS, user = userOrDefault())
+      telemetryContactCustomEventService.trackUpdatePrisonerContactEvent(it, source = Source.NOMIS, user = userOrDefault(request.updatedBy))
     }
 
   fun deletePrisonerContact(prisonerContactId: Long) = syncPrisonerContactService.deletePrisonerContact(prisonerContactId)
@@ -491,7 +491,7 @@ class SyncFacade(
       )
     }
     .also {
-      telemetryContactCustomEventService.trackCreatePrisonerContactRestrictionEvent(it, source = Source.NOMIS, user = userOrDefault())
+      telemetryContactCustomEventService.trackCreatePrisonerContactRestrictionEvent(it, source = Source.NOMIS, user = userOrDefault(request.createdBy))
     }
 
   fun updatePrisonerContactRestriction(prisonerContactRestrictionId: Long, request: SyncUpdatePrisonerContactRestrictionRequest) = syncPrisonerContactRestrictionService.updatePrisonerContactRestriction(prisonerContactRestrictionId, request)
@@ -506,7 +506,7 @@ class SyncFacade(
       )
     }
     .also {
-      telemetryContactCustomEventService.trackUpdatePrisonerContactRestrictionEvent(it, source = Source.NOMIS, user = userOrDefault())
+      telemetryContactCustomEventService.trackUpdatePrisonerContactRestrictionEvent(it, source = Source.NOMIS, user = userOrDefault(request.updatedBy))
     }
 
   fun deletePrisonerContactRestriction(prisonerContactRestrictionId: Long) = syncPrisonerContactRestrictionService.deletePrisonerContactRestriction(prisonerContactRestrictionId)
@@ -541,7 +541,7 @@ class SyncFacade(
       )
     }
     .also {
-      telemetryContactCustomEventService.trackCreateEmploymentEvent(it, source = Source.NOMIS, user = userOrDefault())
+      telemetryContactCustomEventService.trackCreateEmploymentEvent(it, source = Source.NOMIS, user = userOrDefault(request.createdBy))
     }
 
   fun updateEmployment(employmentId: Long, request: SyncUpdateEmploymentRequest) = syncEmploymentService.updateEmployment(employmentId, request)
@@ -555,7 +555,7 @@ class SyncFacade(
       )
     }
     .also {
-      telemetryContactCustomEventService.trackUpdateEmploymentEvent(it, source = Source.NOMIS, user = userOrDefault())
+      telemetryContactCustomEventService.trackUpdateEmploymentEvent(it, source = Source.NOMIS, user = userOrDefault(request.updatedBy))
     }
 
   fun deleteEmployment(employmentId: Long) = syncEmploymentService.deleteEmployment(employmentId)

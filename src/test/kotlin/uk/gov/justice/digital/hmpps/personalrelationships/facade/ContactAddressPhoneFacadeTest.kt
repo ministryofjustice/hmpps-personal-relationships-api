@@ -4,7 +4,6 @@ import jakarta.persistence.EntityNotFoundException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.mockito.Mockito
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
@@ -25,7 +24,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.Tele
 class ContactAddressPhoneFacadeTest {
   private val addressPhoneService: ContactAddressPhoneService = mock()
   private val eventsService: OutboundEventsService = mock()
-  private val telemetryContactCustomEventService: TelemetryContactCustomEventService = Mockito.mock()
+  private val telemetryContactCustomEventService: TelemetryContactCustomEventService = mock()
 
   private val facade = ContactAddressPhoneFacade(addressPhoneService, eventsService, telemetryContactCustomEventService)
 

@@ -45,7 +45,7 @@ class PrisonerRestrictionSyncFacade(
       user = userUtil.userOrDefault(request.createdBy),
     )
   }.also {
-    telemetryPrisonerCustomEventService.trackCreatePrisonerRestrictionEvent(it.prisonerNumber, it, source = Source.NOMIS, user = userUtil.userOrDefault())
+    telemetryPrisonerCustomEventService.trackCreatePrisonerRestrictionEvent(it.prisonerNumber, it, source = Source.NOMIS, user = userUtil.userOrDefault(request.createdBy))
   }
 
   fun updatePrisonerRestriction(
@@ -61,6 +61,6 @@ class PrisonerRestrictionSyncFacade(
     )
   }
     .also {
-      telemetryPrisonerCustomEventService.trackUpdatePrisonerRestrictionEvent(it.prisonerNumber, it, source = Source.NOMIS, user = userUtil.userOrDefault())
+      telemetryPrisonerCustomEventService.trackUpdatePrisonerRestrictionEvent(it.prisonerNumber, it, source = Source.NOMIS, user = userUtil.userOrDefault(request.updatedBy))
     }
 }
