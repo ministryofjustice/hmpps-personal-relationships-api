@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.ContactService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
-import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryCustomEventService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 
 @Service
 class ContactFacade(
@@ -32,13 +32,14 @@ class ContactFacade(
   private val contactPatchService: ContactPatchService,
   private val contactService: ContactService,
   private val contactSearchService: ContactSearchService,
-  private val telemetryCustomEventService: TelemetryCustomEventService,
+  private val telemetryContactCustomEventService: TelemetryContactCustomEventService,
 ) {
   companion object {
     private val logger = LoggerFactory.getLogger(this::class.java)
   }
 
   fun createContact(request: CreateContactRequest, user: User): ContactCreationResult {
+    logger.info("createContact called, user: $user")
     val contact = contactService.createContact(request, user)
       .also { creationResult ->
         outboundEventsService.send(
@@ -111,13 +112,15 @@ class ContactFacade(
             user = user,
           )
         }
+      }.also { contactCreationResult ->
+        telemetryContactCustomEventService.trackCreateContactEvent(contactCreationResult, Source.DPS, user)
       }
 
     return contact
   }
 
   fun addContactRelationship(request: AddContactRelationshipRequest, user: User): PrisonerContactRelationshipDetails {
-    logger.info("addContactRelationship called, request: $request, user: $user")
+    logger.info("addContactRelationship called, user: $user")
     val createdRelationship = contactService.addContactRelationship(request, user)
     outboundEventsService.send(
       outboundEvent = OutboundEvent.PRISONER_CONTACT_CREATED,
@@ -126,22 +129,28 @@ class ContactFacade(
       noms = request.relationship.prisonerNumber,
       user = user,
     ).also {
-      telemetryCustomEventService.trackCreatePrisonerContactCustomEvent(createdRelationship, Source.DPS, user)
+      telemetryContactCustomEventService.trackCreatePrisonerContactEvent(createdRelationship, Source.DPS, user)
     }
 
     return createdRelationship
   }
 
-  fun patch(id: Long, request: PatchContactRequest, user: User): PatchContactResponse = contactPatchService.patch(id, request, user)
-    .also {
-      logger.info("Send patch domain event to {} {} ", OutboundEvent.CONTACT_UPDATED, id)
-      outboundEventsService.send(
-        outboundEvent = OutboundEvent.CONTACT_UPDATED,
-        identifier = id,
-        contactId = id,
-        user = user,
-      )
-    }
+  fun patch(id: Long, request: PatchContactRequest, user: User): PatchContactResponse {
+    logger.info("patch contact called, user: $user")
+    return contactPatchService.patch(id, request, user)
+      .also {
+        logger.info("Send patch domain event to {} {} ", OutboundEvent.CONTACT_UPDATED, id)
+        outboundEventsService.send(
+          outboundEvent = OutboundEvent.CONTACT_UPDATED,
+          identifier = id,
+          contactId = id,
+          user = user,
+        )
+      }
+      .also {
+        telemetryContactCustomEventService.trackUpdateContactEvent(it, Source.DPS, user)
+      }
+  }
 
   fun getContact(id: Long): ContactDetails? = contactService.getContact(id)
 
@@ -149,9 +158,13 @@ class ContactFacade(
 
   fun getContactHistory(contactId: Long): List<ContactAuditEntry>? = contactService.getContactHistory(contactId)
 
-  fun searchContacts(pageable: Pageable, request: ContactSearchRequest): PagedModel<ContactSearchResultItem> = PagedModel(contactSearchService.searchContacts(request, pageable))
+  fun searchContacts(pageable: Pageable, request: ContactSearchRequest): PagedModel<ContactSearchResultItem> {
+    logger.info("searchContacts called")
+    return PagedModel(contactSearchService.searchContacts(request, pageable))
+  }
 
   fun patchRelationship(prisonerContactId: Long, request: PatchRelationshipRequest, user: User) {
+    logger.info("patchRelationship called, prisonerContactId:$prisonerContactId, user: $user")
     contactService.updateContactRelationship(prisonerContactId, request, user)
       .also {
         outboundEventsService.send(
@@ -162,9 +175,13 @@ class ContactFacade(
           user = user,
         )
       }
+      .also {
+        telemetryContactCustomEventService.trackUpdatePrisonerContactEvent(it, Source.DPS, user)
+      }
   }
 
   fun deleteContactRelationship(prisonerContactId: Long, user: User) {
+    logger.info("deleteContactRelationship called, prisonerContactId:$prisonerContactId, user: $user")
     val deletedResponse = contactService.deleteContactRelationship(prisonerContactId, user)
     deletedResponse.ids.let {
       outboundEventsService.send(
@@ -175,6 +192,8 @@ class ContactFacade(
         user = user,
       )
     }
+    telemetryContactCustomEventService.trackDeletePrisonerContactEvent(deletedResponse.ids, Source.DPS, user)
+
     if (deletedResponse.wasUpdated) {
       outboundEventsService.send(
         outboundEvent = OutboundEvent.CONTACT_UPDATED,
@@ -188,7 +207,12 @@ class ContactFacade(
 
   fun assessIfRelationshipCanBeDeleted(prisonerContactId: Long) = contactService.assessIfRelationshipCanBeDeleted(prisonerContactId)
 
-  fun removeInternalOfficialDateOfBirth() = contactService.removeInternalOfficialContactsDateOfBirth().also { sendEventsForContactsUpdated(it) }
+  fun removeInternalOfficialDateOfBirth(): List<Long> {
+    logger.info("removeInternalOfficialDateOfBirth called")
+    return contactService.removeInternalOfficialContactsDateOfBirth().also {
+      sendEventsForContactsUpdated(it)
+    }
+  }
 
   private fun sendEventsForContactsUpdated(listOfContactIds: List<Long>) = listOfContactIds.map { updated ->
     outboundEventsService.send(
@@ -200,8 +224,15 @@ class ContactFacade(
     )
   }
 
-  fun approveRelationships(createdByList: List<String>, daysAgo: Long) = contactService.approveRelationships(createdByList, daysAgo).also {
-    sendEventsForRelationshipsUpdated(it)
+  fun approveRelationships(createdByList: List<String>, daysAgo: Long): List<RelationshipsApproved> {
+    logger.info("approveRelationships called, createdByList:$createdByList daysAgo:$daysAgo")
+    return contactService.approveRelationships(createdByList, daysAgo).also {
+      sendEventsForRelationshipsUpdated(it)
+    }.also { relationshipsApprovedLists ->
+      relationshipsApprovedLists.forEach {
+        telemetryContactCustomEventService.trackUpdatePrisonerContactEvent(it, source = Source.DPS, user = User.SYS_USER)
+      }
+    }
   }
 
   private fun sendEventsForRelationshipsUpdated(approved: List<RelationshipsApproved>) = approved.map { rel ->

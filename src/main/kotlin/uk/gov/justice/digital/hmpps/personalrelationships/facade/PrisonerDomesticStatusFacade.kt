@@ -8,11 +8,13 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.PrisonerDomest
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryPrisonerCustomEventService
 
 @Service
 class PrisonerDomesticStatusFacade(
   private val prisonerDomesticStatusService: PrisonerDomesticStatusService,
   private val outboundEventsService: OutboundEventsService,
+  private val telemetryPrisonerCustomEventService: TelemetryPrisonerCustomEventService,
 ) {
   fun getDomesticStatus(prisonerNumber: String): PrisonerDomesticStatusResponse = prisonerDomesticStatusService.getDomesticStatus(prisonerNumber)
 
@@ -29,5 +31,8 @@ class PrisonerDomesticStatusFacade(
         source = Source.DPS,
         user = user,
       )
+    }
+    .also {
+      telemetryPrisonerCustomEventService.trackCreatePrisonerDomesticStatusEvent(prisonerNumber, it, source = Source.DPS, user = user)
     }
 }

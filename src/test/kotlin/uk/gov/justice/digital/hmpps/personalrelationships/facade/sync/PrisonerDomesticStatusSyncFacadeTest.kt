@@ -17,13 +17,15 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Outboun
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncPrisonerDomesticStatusService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryPrisonerCustomEventService
 import java.time.LocalDateTime
 
 class PrisonerDomesticStatusSyncFacadeTest {
 
   private val syncDomesticStatusService: SyncPrisonerDomesticStatusService = mock()
   private val outboundEventsService: OutboundEventsService = mock()
-  private val facade = PrisonerDomesticStatusSyncFacade(syncDomesticStatusService, outboundEventsService)
+  private val telemetryPrisonerCustomEventService: TelemetryPrisonerCustomEventService = mock()
+  private val facade = PrisonerDomesticStatusSyncFacade(syncDomesticStatusService, outboundEventsService, telemetryPrisonerCustomEventService)
 
   @Nested
   inner class GetDomesticStatusByPrisonerNumber {

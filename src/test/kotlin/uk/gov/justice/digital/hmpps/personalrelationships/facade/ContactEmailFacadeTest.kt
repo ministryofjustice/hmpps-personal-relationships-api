@@ -17,12 +17,14 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.ContactEmailSe
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 
 class ContactEmailFacadeTest {
 
   private val emailService: ContactEmailService = mock()
   private val eventsService: OutboundEventsService = mock()
-  private val facade = ContactEmailFacade(emailService, eventsService)
+  private val telemetryContactCustomEventService: TelemetryContactCustomEventService = mock()
+  private val facade = ContactEmailFacade(emailService, eventsService, telemetryContactCustomEventService)
 
   private val contactId = 11L
   private val contactEmailId = 99L

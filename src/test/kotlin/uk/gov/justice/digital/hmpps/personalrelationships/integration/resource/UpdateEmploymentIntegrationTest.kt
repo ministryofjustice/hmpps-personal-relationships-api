@@ -6,12 +6,17 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.any
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.employment.CreateEmploymentRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.employment.UpdateEmploymentRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.EmploymentDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.EmploymentInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
@@ -134,6 +139,19 @@ class UpdateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
       event = OutboundEvent.EMPLOYMENT_UPDATED,
       additionalInfo = EmploymentInfo(updated.employmentId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
+    )
+
+    verify(telemetryContactCustomEventService, times(1)).trackUpdateEmploymentEvent(any<EmploymentDetails>(), any<Source>(), any<User>())
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-employment-updated",
+      mapOf(
+        "description" to "A contact employment has been updated",
+        "source" to "DPS",
+        "username" to "updated",
+        "active_caseload_id" to "BXI",
+        "contactId" to updated.contactId.toString(),
+      ),
+      null,
     )
   }
 

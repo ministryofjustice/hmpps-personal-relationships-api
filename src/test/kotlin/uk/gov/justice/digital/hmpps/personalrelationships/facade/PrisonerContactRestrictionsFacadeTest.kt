@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.RestrictionsSe
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -23,7 +24,8 @@ class PrisonerContactRestrictionsFacadeTest {
 
   private val restrictionService: RestrictionsService = mock()
   private val outboundEventsService: OutboundEventsService = mock()
-  private val facade = PrisonerContactRestrictionsFacade(restrictionService, outboundEventsService)
+  private val telemetryContactCustomEventService: TelemetryContactCustomEventService = mock()
+  private val facade = PrisonerContactRestrictionsFacade(restrictionService, outboundEventsService, telemetryContactCustomEventService)
 
   private val prisonerNumber = "A1234BC"
   private val contactId: Long = 77

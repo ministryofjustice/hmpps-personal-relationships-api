@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.PrisonerDomest
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryPrisonerCustomEventService
 
 @ExtendWith(MockitoExtension::class)
 class PrisonerDomesticStatusFacadeTest {
@@ -29,6 +30,9 @@ class PrisonerDomesticStatusFacadeTest {
 
   @Mock
   private lateinit var outboundEventsService: OutboundEventsService
+
+  @Mock
+  private lateinit var telemetryPrisonerCustomEventService: TelemetryPrisonerCustomEventService
 
   @InjectMocks
   private lateinit var prisonerDomesticStatusFacade: PrisonerDomesticStatusFacade

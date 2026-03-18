@@ -6,11 +6,13 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Outboun
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.PrisonerMergeService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryPrisonerCustomEventService
 
 @Service
 class PrisonerMergeFacade(
   private val prisonerMergeService: PrisonerMergeService,
   private val outboundEventsService: OutboundEventsService,
+  private val telemetryPrisonerCustomEventService: TelemetryPrisonerCustomEventService,
 ) {
 
   fun merge(
@@ -35,6 +37,11 @@ class PrisonerMergeFacade(
           )
         }
       }
+      .also {
+        if (it.wasCreated) {
+          telemetryPrisonerCustomEventService.trackCreatePrisonerNumberOfChildrenEvent(keepingPrisonerNumber, it.id, source = Source.DPS, user = User.SYS_USER)
+        }
+      }
   }
 
   private fun handlePrisonerDomesticStatus(keepingPrisonerNumber: String, removedPrisonerNo: String) {
@@ -48,6 +55,11 @@ class PrisonerMergeFacade(
             source = Source.DPS,
             user = User.SYS_USER,
           )
+        }
+      }
+      .also {
+        if (it.wasCreated) {
+          telemetryPrisonerCustomEventService.trackCreatePrisonerDomesticStatusEvent(keepingPrisonerNumber, it.id, source = Source.DPS, user = User.SYS_USER)
         }
       }
   }

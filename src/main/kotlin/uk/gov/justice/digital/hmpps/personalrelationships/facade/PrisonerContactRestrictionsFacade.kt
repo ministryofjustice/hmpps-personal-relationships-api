@@ -10,11 +10,14 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.response.Prisone
 import uk.gov.justice.digital.hmpps.personalrelationships.service.RestrictionsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 
 @Service
 class PrisonerContactRestrictionsFacade(
   private val restrictionsService: RestrictionsService,
   private val outboundEventsService: OutboundEventsService,
+  private val telemetryContactCustomEventService: TelemetryContactCustomEventService,
 ) {
   fun getPrisonerContactRestrictions(prisonerContactId: Long): PrisonerContactRestrictionsResponse = restrictionsService.getPrisonerContactRestrictions(prisonerContactId)
 
@@ -32,6 +35,8 @@ class PrisonerContactRestrictionsFacade(
       noms = it.prisonerNumber,
       user = user,
     )
+  }.also {
+    telemetryContactCustomEventService.trackCreatePrisonerContactRestrictionEvent(it, source = Source.DPS, user = user)
   }
 
   fun updatePrisonerContactRestriction(
@@ -47,5 +52,7 @@ class PrisonerContactRestrictionsFacade(
       noms = it.prisonerNumber,
       user = user,
     )
+  }.also {
+    telemetryContactCustomEventService.trackUpdatePrisonerContactRestrictionEvent(it, source = Source.DPS, user = user)
   }
 }

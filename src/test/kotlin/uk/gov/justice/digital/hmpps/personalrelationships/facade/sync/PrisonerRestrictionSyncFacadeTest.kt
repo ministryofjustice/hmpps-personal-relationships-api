@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Outboun
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncPrisonerRestrictionsService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryPrisonerCustomEventService
 import uk.gov.justice.digital.hmpps.personalrelationships.util.UserUtil
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -23,11 +24,12 @@ class PrisonerRestrictionSyncFacadeTest {
   private val prisonerRestrictionsService: SyncPrisonerRestrictionsService = mock()
   private val outboundEventsService: OutboundEventsService = mock()
   private val userUtil: UserUtil = mock()
+  private val telemetryPrisonerCustomEventService: TelemetryPrisonerCustomEventService = mock()
   private lateinit var facade: PrisonerRestrictionSyncFacade
 
   @BeforeEach
   fun setUp() {
-    facade = PrisonerRestrictionSyncFacade(prisonerRestrictionsService, outboundEventsService, userUtil)
+    facade = PrisonerRestrictionSyncFacade(prisonerRestrictionsService, outboundEventsService, userUtil, telemetryPrisonerCustomEventService)
   }
 
   @Test

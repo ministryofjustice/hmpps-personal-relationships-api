@@ -8,14 +8,19 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.any
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.CreatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.UpdatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PrisonerContactRestrictionInfo
@@ -233,6 +238,20 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       additionalInfo = PrisonerContactRestrictionInfo(updated.prisonerContactRestrictionId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
     )
+
+    verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactRestrictionEvent(any<PrisonerContactRestrictionDetails>(), any<Source>(), any<User>())
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-contact-restriction-updated",
+      mapOf(
+        "description" to "A prisoner contact restriction has been updated",
+        "source" to "DPS",
+        "username" to "updated",
+        "active_caseload_id" to "BXI",
+        "contactId" to updated.contactId.toString(),
+        "restrictionType" to "CCTV",
+      ),
+      null,
+    )
   }
 
   @ParameterizedTest
@@ -274,6 +293,20 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
       additionalInfo = PrisonerContactRestrictionInfo(updated.prisonerContactRestrictionId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
+    )
+
+    verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactRestrictionEvent(any<PrisonerContactRestrictionDetails>(), any<Source>(), any<User>())
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-contact-restriction-updated",
+      mapOf(
+        "description" to "A prisoner contact restriction has been updated",
+        "source" to "DPS",
+        "username" to "updated",
+        "active_caseload_id" to "BXI",
+        "contactId" to updated.contactId.toString(),
+        "restrictionType" to "CCTV",
+      ),
+      null,
     )
   }
 

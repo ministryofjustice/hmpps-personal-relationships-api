@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 
 @Service
 class TelemetryService(private val telemetryClient: TelemetryClient) {
@@ -23,12 +22,3 @@ abstract class MetricTelemetryEvent(eventType: String) : TelemetryEvent(eventTyp
 }
 
 abstract class StandardTelemetryEvent(eventType: String) : TelemetryEvent(eventType)
-
-abstract class CustomTelemetryEvent(val telemetryCustomEventType: TelemetryCustomEventType, val source: String, val user: User) : StandardTelemetryEvent(telemetryCustomEventType.eventName) {
-  fun additionalProperties(): Map<String, String> = mapOf(
-    "description" to telemetryCustomEventType.description,
-    "source" to source,
-    "username" to user.username,
-    "active_caseload_id" to user.activeCaseLoadId.toString(),
-  )
-}

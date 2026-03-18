@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Outboun
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncPrisonerRestrictionsService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryPrisonerCustomEventService
 import uk.gov.justice.digital.hmpps.personalrelationships.util.UserUtil
 
 @Component
@@ -15,6 +16,7 @@ class PrisonerRestrictionSyncFacade(
   private val prisonerRestrictionService: SyncPrisonerRestrictionsService,
   private val outboundEventsService: OutboundEventsService,
   private val userUtil: UserUtil,
+  private val telemetryPrisonerCustomEventService: TelemetryPrisonerCustomEventService,
 ) {
   fun getPrisonerRestrictionById(prisonerRestrictionId: Long) = prisonerRestrictionService.getPrisonerRestrictionById(prisonerRestrictionId)
 
@@ -29,6 +31,9 @@ class PrisonerRestrictionSyncFacade(
           user = User.SYS_USER,
         )
       }
+      .also {
+        telemetryPrisonerCustomEventService.trackDeletePrisonerRestrictionEvent(prisonerNumber = it.prisonerNumber, prisonerRestrictionId = prisonerRestrictionId, source = Source.NOMIS, user = User.SYS_USER)
+      }
   }
 
   fun createPrisonerRestriction(request: SyncCreatePrisonerRestrictionRequest) = prisonerRestrictionService.createPrisonerRestriction(request).also {
@@ -39,6 +44,8 @@ class PrisonerRestrictionSyncFacade(
       source = Source.NOMIS,
       user = userUtil.userOrDefault(request.createdBy),
     )
+  }.also {
+    telemetryPrisonerCustomEventService.trackCreatePrisonerRestrictionEvent(it.prisonerNumber, it, source = Source.NOMIS, user = userUtil.userOrDefault())
   }
 
   fun updatePrisonerRestriction(
@@ -53,4 +60,7 @@ class PrisonerRestrictionSyncFacade(
       user = userUtil.userOrDefault(request.updatedBy),
     )
   }
+    .also {
+      telemetryPrisonerCustomEventService.trackUpdatePrisonerRestrictionEvent(it.prisonerNumber, it, source = Source.NOMIS, user = userUtil.userOrDefault())
+    }
 }
