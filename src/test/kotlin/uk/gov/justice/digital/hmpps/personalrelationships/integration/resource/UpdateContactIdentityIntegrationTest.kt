@@ -190,6 +190,35 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
+  fun `should not update the identity if another document exists with same type and value`() {
+    val documentToUpdate = testAPIClient.createAContactIdentity(
+      savedContactId,
+      CreateIdentityRequest(
+        identityType = "PASS",
+        identityValue = "9887676",
+        issuingAuthority = null,
+      ),
+    )
+    val request = aMinimalRequest()
+
+    val errors = webTestClient.put()
+      .uri("/contact/$savedContactId/identity/${documentToUpdate.contactIdentityId}")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisationUsingCurrentUser())
+      .bodyValue(request)
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .expectHeader().contentType(MediaType.APPLICATION_JSON)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(errors.userMessage).isEqualTo("Contact already has an identity document matching type \"DL\" and value \"DL123456789\"")
+    stubEvents.assertHasNoEvents(OutboundEvent.CONTACT_IDENTITY_UPDATED)
+  }
+
+  @Test
   fun `should update the identity with minimal fields`() {
     val request = UpdateIdentityRequest(
       identityType = "PASS",
