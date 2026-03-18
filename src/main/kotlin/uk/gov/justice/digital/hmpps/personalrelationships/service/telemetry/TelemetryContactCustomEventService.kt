@@ -374,7 +374,7 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     telemetryService.track(event)
   }
 
-  fun trackDeleteEmploymentCustomEvent(contactId: Long, employmentId: Long, source: Source, user: User) {
+  fun trackDeleteEmploymentEvent(contactId: Long, employmentId: Long, source: Source, user: User) {
     val event = ContactEmploymentCustomEvent(contactId, employmentId, EventActionType.DELETE, source, user)
     telemetryService.track(event)
   }

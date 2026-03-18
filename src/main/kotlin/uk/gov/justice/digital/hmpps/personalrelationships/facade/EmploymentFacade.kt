@@ -46,7 +46,7 @@ class EmploymentFacade(
     employmentService.deleteEmployment(contactId, employmentId).also {
       outboundEventsService.send(OutboundEvent.EMPLOYMENT_DELETED, employmentId, contactId = contactId, source = Source.DPS, user = user)
     }.also {
-      telemetryContactCustomEventService.trackDeleteEmploymentCustomEvent(contactId, employmentId, source = Source.DPS, user = user)
+      telemetryContactCustomEventService.trackDeleteEmploymentEvent(contactId, employmentId, source = Source.DPS, user = user)
     }
   }
 

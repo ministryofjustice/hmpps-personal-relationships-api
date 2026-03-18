@@ -19,8 +19,6 @@ class PrisonerNumberOfChildrenCustomEvent private constructor(
   val eventSource: Source,
   val eventUser: User,
 ) : PrisonerCustomTelemetryEvent(prisonerNumber, telemetryCustomEventType = getEvent(eventActionType), source = eventSource.name, user = eventUser) {
-  override fun properties(): Map<String, String> = super.properties() + customProperties()
-
   override fun customProperties(): Map<String, String> = emptyMap()
 
   companion object {

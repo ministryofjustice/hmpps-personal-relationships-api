@@ -39,7 +39,7 @@ class ContactFacade(
   }
 
   fun createContact(request: CreateContactRequest, user: User): ContactCreationResult {
-    logger.info("createContact called, user: $user")
+    logger.debug("createContact called, user: {}", user)
     val contact = contactService.createContact(request, user)
       .also { creationResult ->
         outboundEventsService.send(
@@ -120,7 +120,7 @@ class ContactFacade(
   }
 
   fun addContactRelationship(request: AddContactRelationshipRequest, user: User): PrisonerContactRelationshipDetails {
-    logger.info("addContactRelationship called, user: $user")
+    logger.debug("addContactRelationship called, user: {}", user)
     val createdRelationship = contactService.addContactRelationship(request, user)
     outboundEventsService.send(
       outboundEvent = OutboundEvent.PRISONER_CONTACT_CREATED,
@@ -136,10 +136,10 @@ class ContactFacade(
   }
 
   fun patch(id: Long, request: PatchContactRequest, user: User): PatchContactResponse {
-    logger.info("patch contact called, user: $user")
+    logger.debug("patch contact called, user: {}", user)
     return contactPatchService.patch(id, request, user)
       .also {
-        logger.info("Send patch domain event to {} {} ", OutboundEvent.CONTACT_UPDATED, id)
+        logger.debug("Send patch domain event to {} {} ", OutboundEvent.CONTACT_UPDATED, id)
         outboundEventsService.send(
           outboundEvent = OutboundEvent.CONTACT_UPDATED,
           identifier = id,
@@ -159,12 +159,12 @@ class ContactFacade(
   fun getContactHistory(contactId: Long): List<ContactAuditEntry>? = contactService.getContactHistory(contactId)
 
   fun searchContacts(pageable: Pageable, request: ContactSearchRequest): PagedModel<ContactSearchResultItem> {
-    logger.info("searchContacts called")
+    logger.debug("searchContacts called")
     return PagedModel(contactSearchService.searchContacts(request, pageable))
   }
 
   fun patchRelationship(prisonerContactId: Long, request: PatchRelationshipRequest, user: User) {
-    logger.info("patchRelationship called, prisonerContactId:$prisonerContactId, user: $user")
+    logger.debug("patchRelationship called, prisonerContactId:{}, user: {}", prisonerContactId, user)
     contactService.updateContactRelationship(prisonerContactId, request, user)
       .also {
         outboundEventsService.send(
@@ -181,7 +181,7 @@ class ContactFacade(
   }
 
   fun deleteContactRelationship(prisonerContactId: Long, user: User) {
-    logger.info("deleteContactRelationship called, prisonerContactId:$prisonerContactId, user: $user")
+    logger.debug("deleteContactRelationship called, prisonerContactId:{}, user: {}", prisonerContactId, user)
     val deletedResponse = contactService.deleteContactRelationship(prisonerContactId, user)
     deletedResponse.ids.let {
       outboundEventsService.send(
@@ -208,7 +208,7 @@ class ContactFacade(
   fun assessIfRelationshipCanBeDeleted(prisonerContactId: Long) = contactService.assessIfRelationshipCanBeDeleted(prisonerContactId)
 
   fun removeInternalOfficialDateOfBirth(): List<Long> {
-    logger.info("removeInternalOfficialDateOfBirth called")
+    logger.debug("removeInternalOfficialDateOfBirth called")
     return contactService.removeInternalOfficialContactsDateOfBirth().also {
       sendEventsForContactsUpdated(it)
     }
@@ -225,7 +225,7 @@ class ContactFacade(
   }
 
   fun approveRelationships(createdByList: List<String>, daysAgo: Long): List<RelationshipsApproved> {
-    logger.info("approveRelationships called, createdByList:$createdByList daysAgo:$daysAgo")
+    logger.debug("approveRelationships called, createdByList:{} daysAgo:{}", createdByList, daysAgo)
     return contactService.approveRelationships(createdByList, daysAgo).also {
       sendEventsForRelationshipsUpdated(it)
     }.also { relationshipsApprovedLists ->
