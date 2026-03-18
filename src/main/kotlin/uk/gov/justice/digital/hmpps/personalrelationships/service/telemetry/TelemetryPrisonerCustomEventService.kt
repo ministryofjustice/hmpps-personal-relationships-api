@@ -7,9 +7,9 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.response.Prisone
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerDomesticStatusResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerNumberOfChildrenResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerRestriction
-import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.PrisonerDomesticStatusCustomEvent
-import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.PrisonerNumberOfChildrenCustomEvent
-import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.PrisonerRestrictionCustomEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.prisoner.PrisonerDomesticStatusCustomEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.prisoner.PrisonerNumberOfChildrenCustomEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.prisoner.PrisonerRestrictionCustomEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
 
 @Service

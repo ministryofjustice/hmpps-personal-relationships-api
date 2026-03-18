@@ -29,16 +29,16 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.Sy
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncEmployment
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerContact
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerContactRestriction
-import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.ContactAddressCustomEvent
-import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.ContactAddressPhoneCustomEvent
-import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.ContactCustomEvent
-import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.ContactEmailCustomEvent
-import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.ContactEmploymentCustomEvent
-import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.ContactIdentityCustomEvent
-import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.ContactPhoneCustomEvent
-import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.ContactRestrictionCustomEvent
-import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.PrisonerContactCustomEvent
-import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.PrisonerContactRestrictionCustomEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.ContactAddressCustomEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.ContactAddressPhoneCustomEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.ContactCustomEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.ContactEmailCustomEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.ContactEmploymentCustomEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.ContactIdentityCustomEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.ContactPhoneCustomEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.ContactRestrictionCustomEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.PrisonerContactCustomEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.PrisonerContactRestrictionCustomEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
 
 @Service

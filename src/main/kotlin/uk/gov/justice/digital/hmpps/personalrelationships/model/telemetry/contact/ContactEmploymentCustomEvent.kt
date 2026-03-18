@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry
+package uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact
 
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.EmploymentDetails
