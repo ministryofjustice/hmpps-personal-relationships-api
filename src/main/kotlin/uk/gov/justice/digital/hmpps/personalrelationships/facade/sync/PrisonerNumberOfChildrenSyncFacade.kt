@@ -10,11 +10,13 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Outboun
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncPrisonerNumberOfChildrenService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryPrisonerCustomEventService
 
 @Service
 class PrisonerNumberOfChildrenSyncFacade(
   private val syncNumberOfChildrenService: SyncPrisonerNumberOfChildrenService,
   private val outboundEventsService: OutboundEventsService,
+  private val telemetryPrisonerCustomEventService: TelemetryPrisonerCustomEventService,
 ) {
   fun getNumberOfChildrenByPrisonerNumber(prisonerNumber: String): SyncPrisonerNumberOfChildrenResponse = syncNumberOfChildrenService.getNumberOfChildrenByPrisonerNumber(prisonerNumber)
 
@@ -22,10 +24,11 @@ class PrisonerNumberOfChildrenSyncFacade(
     prisonerNumber: String,
     request: SyncUpdatePrisonerNumberOfChildrenRequest,
   ): SyncPrisonerNumberOfChildrenResponse = syncNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, request)
-    .also { response -> hadleEvents(response, prisonerNumber) }
+    .also { response -> handleEvents(response, prisonerNumber) }
+    .also { response -> trackCustomEvent(response, prisonerNumber) }
     .data
 
-  private fun hadleEvents(
+  private fun handleEvents(
     response: SyncPrisonerNumberOfChildrenData,
     prisonerNumber: String,
   ) {
@@ -70,5 +73,16 @@ class PrisonerNumberOfChildrenSyncFacade(
       source = Source.NOMIS,
       user = User.SYS_USER,
     )
+  }
+
+  private fun trackCustomEvent(
+    statusResponse: SyncPrisonerNumberOfChildrenData,
+    prisonerNumber: String,
+  ) {
+    when (statusResponse.status) {
+      Status.CREATED -> telemetryPrisonerCustomEventService.trackCreatePrisonerNumberOfChildrenEvent(prisonerNumber, statusResponse.data, source = Source.NOMIS, user = User.SYS_USER)
+      Status.UPDATED -> telemetryPrisonerCustomEventService.trackUpdatePrisonerNumberOfChildrenEvent(prisonerNumber, statusResponse.data, source = Source.NOMIS, user = User.SYS_USER)
+      else -> {} // No events for unchanged status
+    }
   }
 }

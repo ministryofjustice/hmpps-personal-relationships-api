@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.personalrelationships.integration
 
+import com.microsoft.applicationinsights.TelemetryClient
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -10,6 +11,7 @@ import org.springframework.cache.CacheManager
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.client.organisationsapi.model.OrganisationSummary
@@ -24,6 +26,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.integration.wiremock.O
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.wiremock.OrganisationsApiExtension.Companion.organisationsApiMockServer
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.wiremock.PrisonerSearchApiExtension
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.wiremock.PrisonerSearchApiExtension.Companion.prisonerSearchApiServer
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 import uk.gov.justice.digital.hmpps.personalrelationships.util.StubUser
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
@@ -47,6 +50,12 @@ abstract class IntegrationTestBase {
   private lateinit var cacheManager: CacheManager
 
   protected lateinit var testAPIClient: TestAPIClient
+
+  @MockitoSpyBean
+  lateinit var telemetryContactCustomEventService: TelemetryContactCustomEventService
+
+  @MockitoSpyBean
+  lateinit var telemetryClient: TelemetryClient
 
   @BeforeEach
   fun setupForTestBase() {

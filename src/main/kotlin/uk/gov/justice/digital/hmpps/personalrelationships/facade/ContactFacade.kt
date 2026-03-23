@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.ContactService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 
 @Service
 class ContactFacade(
@@ -31,86 +32,95 @@ class ContactFacade(
   private val contactPatchService: ContactPatchService,
   private val contactService: ContactService,
   private val contactSearchService: ContactSearchService,
+  private val telemetryContactCustomEventService: TelemetryContactCustomEventService,
 ) {
   companion object {
     private val logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun createContact(request: CreateContactRequest, user: User): ContactCreationResult = contactService.createContact(request, user)
-    .also { creationResult ->
-      outboundEventsService.send(
-        outboundEvent = OutboundEvent.CONTACT_CREATED,
-        identifier = creationResult.createdContact.id,
-        contactId = creationResult.createdContact.id,
-        user = user,
-      )
-
-      creationResult.createdRelationship?.let {
+  fun createContact(request: CreateContactRequest, user: User): ContactCreationResult {
+    logger.debug("createContact called, user: {}", user)
+    val contact = contactService.createContact(request, user)
+      .also { creationResult ->
         outboundEventsService.send(
-          outboundEvent = OutboundEvent.PRISONER_CONTACT_CREATED,
-          identifier = it.prisonerContactId,
-          contactId = creationResult.createdContact.id,
-          noms = request.relationship?.prisonerNumber.let { request.relationship!!.prisonerNumber },
-          user = user,
-        )
-      }
-
-      creationResult.createdContact.identities.forEach {
-        outboundEventsService.send(
-          outboundEvent = OutboundEvent.CONTACT_IDENTITY_CREATED,
-          identifier = it.contactIdentityId,
+          outboundEvent = OutboundEvent.CONTACT_CREATED,
+          identifier = creationResult.createdContact.id,
           contactId = creationResult.createdContact.id,
           user = user,
         )
-      }
 
-      creationResult.createdContact.addresses.forEach { createdAddress ->
-        outboundEventsService.send(
-          outboundEvent = OutboundEvent.CONTACT_ADDRESS_CREATED,
-          identifier = createdAddress.contactAddressId,
-          contactId = creationResult.createdContact.id,
-          user = user,
-        )
-        createdAddress.phoneNumbers.forEach {
+        creationResult.createdRelationship?.let {
           outboundEventsService.send(
-            outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
-            identifier = it.contactAddressPhoneId,
-            secondIdentifier = it.contactAddressId,
+            outboundEvent = OutboundEvent.PRISONER_CONTACT_CREATED,
+            identifier = it.prisonerContactId,
+            contactId = creationResult.createdContact.id,
+            noms = request.relationship?.prisonerNumber.let { request.relationship!!.prisonerNumber },
+            user = user,
+          )
+        }
+
+        creationResult.createdContact.identities.forEach {
+          outboundEventsService.send(
+            outboundEvent = OutboundEvent.CONTACT_IDENTITY_CREATED,
+            identifier = it.contactIdentityId,
             contactId = creationResult.createdContact.id,
             user = user,
           )
         }
+
+        creationResult.createdContact.addresses.forEach { createdAddress ->
+          outboundEventsService.send(
+            outboundEvent = OutboundEvent.CONTACT_ADDRESS_CREATED,
+            identifier = createdAddress.contactAddressId,
+            contactId = creationResult.createdContact.id,
+            user = user,
+          )
+          createdAddress.phoneNumbers.forEach {
+            outboundEventsService.send(
+              outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
+              identifier = it.contactAddressPhoneId,
+              secondIdentifier = it.contactAddressId,
+              contactId = creationResult.createdContact.id,
+              user = user,
+            )
+          }
+        }
+
+        creationResult.createdContact.phoneNumbers.forEach {
+          outboundEventsService.send(
+            outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
+            identifier = it.contactPhoneId,
+            contactId = creationResult.createdContact.id,
+            user = user,
+          )
+        }
+
+        creationResult.createdContact.emailAddresses.forEach {
+          outboundEventsService.send(
+            outboundEvent = OutboundEvent.CONTACT_EMAIL_CREATED,
+            identifier = it.contactEmailId,
+            contactId = creationResult.createdContact.id,
+            user = user,
+          )
+        }
+
+        creationResult.createdContact.employments.forEach {
+          outboundEventsService.send(
+            outboundEvent = OutboundEvent.EMPLOYMENT_CREATED,
+            identifier = it.employmentId,
+            contactId = creationResult.createdContact.id,
+            user = user,
+          )
+        }
+      }.also { contactCreationResult ->
+        telemetryContactCustomEventService.trackCreateContactEvent(contactCreationResult, Source.DPS, user)
       }
 
-      creationResult.createdContact.phoneNumbers.forEach {
-        outboundEventsService.send(
-          outboundEvent = OutboundEvent.CONTACT_PHONE_CREATED,
-          identifier = it.contactPhoneId,
-          contactId = creationResult.createdContact.id,
-          user = user,
-        )
-      }
-
-      creationResult.createdContact.emailAddresses.forEach {
-        outboundEventsService.send(
-          outboundEvent = OutboundEvent.CONTACT_EMAIL_CREATED,
-          identifier = it.contactEmailId,
-          contactId = creationResult.createdContact.id,
-          user = user,
-        )
-      }
-
-      creationResult.createdContact.employments.forEach {
-        outboundEventsService.send(
-          outboundEvent = OutboundEvent.EMPLOYMENT_CREATED,
-          identifier = it.employmentId,
-          contactId = creationResult.createdContact.id,
-          user = user,
-        )
-      }
-    }
+    return contact
+  }
 
   fun addContactRelationship(request: AddContactRelationshipRequest, user: User): PrisonerContactRelationshipDetails {
+    logger.debug("addContactRelationship called, user: {}", user)
     val createdRelationship = contactService.addContactRelationship(request, user)
     outboundEventsService.send(
       outboundEvent = OutboundEvent.PRISONER_CONTACT_CREATED,
@@ -118,20 +128,29 @@ class ContactFacade(
       contactId = createdRelationship.contactId,
       noms = request.relationship.prisonerNumber,
       user = user,
-    )
+    ).also {
+      telemetryContactCustomEventService.trackCreatePrisonerContactEvent(createdRelationship, Source.DPS, user)
+    }
+
     return createdRelationship
   }
 
-  fun patch(id: Long, request: PatchContactRequest, user: User): PatchContactResponse = contactPatchService.patch(id, request, user)
-    .also {
-      logger.info("Send patch domain event to {} {} ", OutboundEvent.CONTACT_UPDATED, id)
-      outboundEventsService.send(
-        outboundEvent = OutboundEvent.CONTACT_UPDATED,
-        identifier = id,
-        contactId = id,
-        user = user,
-      )
-    }
+  fun patch(id: Long, request: PatchContactRequest, user: User): PatchContactResponse {
+    logger.debug("patch contact called, user: {}", user)
+    return contactPatchService.patch(id, request, user)
+      .also {
+        logger.debug("Send patch domain event to {} {} ", OutboundEvent.CONTACT_UPDATED, id)
+        outboundEventsService.send(
+          outboundEvent = OutboundEvent.CONTACT_UPDATED,
+          identifier = id,
+          contactId = id,
+          user = user,
+        )
+      }
+      .also {
+        telemetryContactCustomEventService.trackUpdateContactEvent(it, Source.DPS, user)
+      }
+  }
 
   fun getContact(id: Long): ContactDetails? = contactService.getContact(id)
 
@@ -139,9 +158,13 @@ class ContactFacade(
 
   fun getContactHistory(contactId: Long): List<ContactAuditEntry>? = contactService.getContactHistory(contactId)
 
-  fun searchContacts(pageable: Pageable, request: ContactSearchRequest): PagedModel<ContactSearchResultItem> = PagedModel(contactSearchService.searchContacts(request, pageable))
+  fun searchContacts(pageable: Pageable, request: ContactSearchRequest): PagedModel<ContactSearchResultItem> {
+    logger.debug("searchContacts called")
+    return PagedModel(contactSearchService.searchContacts(request, pageable))
+  }
 
   fun patchRelationship(prisonerContactId: Long, request: PatchRelationshipRequest, user: User) {
+    logger.debug("patchRelationship called, prisonerContactId:{}, user: {}", prisonerContactId, user)
     contactService.updateContactRelationship(prisonerContactId, request, user)
       .also {
         outboundEventsService.send(
@@ -152,9 +175,13 @@ class ContactFacade(
           user = user,
         )
       }
+      .also {
+        telemetryContactCustomEventService.trackUpdatePrisonerContactEvent(it, Source.DPS, user)
+      }
   }
 
   fun deleteContactRelationship(prisonerContactId: Long, user: User) {
+    logger.debug("deleteContactRelationship called, prisonerContactId:{}, user: {}", prisonerContactId, user)
     val deletedResponse = contactService.deleteContactRelationship(prisonerContactId, user)
     deletedResponse.ids.let {
       outboundEventsService.send(
@@ -165,6 +192,8 @@ class ContactFacade(
         user = user,
       )
     }
+    telemetryContactCustomEventService.trackDeletePrisonerContactEvent(deletedResponse.ids, Source.DPS, user)
+
     if (deletedResponse.wasUpdated) {
       outboundEventsService.send(
         outboundEvent = OutboundEvent.CONTACT_UPDATED,
@@ -178,7 +207,12 @@ class ContactFacade(
 
   fun assessIfRelationshipCanBeDeleted(prisonerContactId: Long) = contactService.assessIfRelationshipCanBeDeleted(prisonerContactId)
 
-  fun removeInternalOfficialDateOfBirth() = contactService.removeInternalOfficialContactsDateOfBirth().also { sendEventsForContactsUpdated(it) }
+  fun removeInternalOfficialDateOfBirth(): List<Long> {
+    logger.debug("removeInternalOfficialDateOfBirth called")
+    return contactService.removeInternalOfficialContactsDateOfBirth().also {
+      sendEventsForContactsUpdated(it)
+    }
+  }
 
   private fun sendEventsForContactsUpdated(listOfContactIds: List<Long>) = listOfContactIds.map { updated ->
     outboundEventsService.send(
@@ -190,8 +224,15 @@ class ContactFacade(
     )
   }
 
-  fun approveRelationships(createdByList: List<String>, daysAgo: Long) = contactService.approveRelationships(createdByList, daysAgo).also {
-    sendEventsForRelationshipsUpdated(it)
+  fun approveRelationships(createdByList: List<String>, daysAgo: Long): List<RelationshipsApproved> {
+    logger.debug("approveRelationships called, createdByList:{} daysAgo:{}", createdByList, daysAgo)
+    return contactService.approveRelationships(createdByList, daysAgo).also {
+      sendEventsForRelationshipsUpdated(it)
+    }.also { relationshipsApprovedLists ->
+      relationshipsApprovedLists.forEach {
+        telemetryContactCustomEventService.trackUpdatePrisonerContactEvent(it, source = Source.DPS, user = User.SYS_USER)
+      }
+    }
   }
 
   private fun sendEventsForRelationshipsUpdated(approved: List<RelationshipsApproved>) = approved.map { rel ->

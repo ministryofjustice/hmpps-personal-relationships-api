@@ -8,11 +8,14 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.response.Contact
 import uk.gov.justice.digital.hmpps.personalrelationships.service.RestrictionsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 
 @Service
 class ContactGlobalRestrictionsFacade(
   private val restrictionsService: RestrictionsService,
   private val outboundEventsService: OutboundEventsService,
+  private val telemetryContactCustomEventService: TelemetryContactCustomEventService,
 ) {
 
   fun getGlobalRestrictionsForContact(contactId: Long): List<ContactRestrictionDetails> = restrictionsService.getGlobalRestrictionsForContact(contactId)
@@ -28,6 +31,8 @@ class ContactGlobalRestrictionsFacade(
       contactId = contactId,
       user = user,
     )
+  }.also {
+    telemetryContactCustomEventService.trackCreateContactRestrictionEvent(it, source = Source.DPS, user = user)
   }
 
   fun updateContactGlobalRestriction(
@@ -42,5 +47,7 @@ class ContactGlobalRestrictionsFacade(
       contactId = contactId,
       user = user,
     )
+  }.also {
+    telemetryContactCustomEventService.trackUpdateContactRestrictionEvent(it, source = Source.DPS, user = user)
   }
 }

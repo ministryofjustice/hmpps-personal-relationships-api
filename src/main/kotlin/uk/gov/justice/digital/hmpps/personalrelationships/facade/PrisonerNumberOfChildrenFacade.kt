@@ -8,11 +8,13 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.PrisonerNumber
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryPrisonerCustomEventService
 
 @Service
 class PrisonerNumberOfChildrenFacade(
   private val prisonerNumberOfChildrenService: PrisonerNumberOfChildrenService,
   private val outboundEventsService: OutboundEventsService,
+  private val telemetryPrisonerCustomEventService: TelemetryPrisonerCustomEventService,
 ) {
   fun getNumberOfChildren(prisonerNumber: String): PrisonerNumberOfChildrenResponse = prisonerNumberOfChildrenService.getNumberOfChildren(prisonerNumber)
 
@@ -29,5 +31,8 @@ class PrisonerNumberOfChildrenFacade(
         source = Source.DPS,
         user = user,
       )
+    }
+    .also {
+      telemetryPrisonerCustomEventService.trackCreatePrisonerNumberOfChildrenEvent(prisonerNumber, it, source = Source.DPS, user = user)
     }
 }

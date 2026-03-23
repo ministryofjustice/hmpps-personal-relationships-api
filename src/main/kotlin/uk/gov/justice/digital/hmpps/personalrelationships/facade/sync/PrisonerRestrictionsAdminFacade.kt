@@ -11,11 +11,13 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Outboun
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.PrisonerRestrictionsAdminService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryPrisonerCustomEventService
 
 @Service
 class PrisonerRestrictionsAdminFacade(
   private val restrictionsAdminService: PrisonerRestrictionsAdminService,
   private val outboundEventsService: OutboundEventsService,
+  private val telemetryPrisonerCustomEventService: TelemetryPrisonerCustomEventService,
 ) {
 
   fun merge(request: MergePrisonerRestrictionsRequest): ChangedRestrictionsResponse {
@@ -45,7 +47,9 @@ class PrisonerRestrictionsAdminFacade(
       }
     }
 
-    return response
+    return response.also {
+      trackCustomEvent(request.keepingPrisonerNumber, it)
+    }
   }
 
   fun reset(request: ResetPrisonerRestrictionsRequest): ChangedRestrictionsResponse {
@@ -75,8 +79,22 @@ class PrisonerRestrictionsAdminFacade(
       }
     }
 
-    return response
+    return response.also {
+      trackCustomEvent(request.prisonerNumber, it)
+    }
   }
 
   fun getAllRestrictionIds(pageable: Pageable) = PagedModel(restrictionsAdminService.getAllRestrictionIds(pageable))
+
+  private fun trackCustomEvent(prisonerNumber: String, response: ChangedRestrictionsResponse) {
+    if (response.hasChanged) {
+      response.createdRestrictions.forEach {
+        telemetryPrisonerCustomEventService.trackCreatePrisonerRestrictionEvent(prisonerNumber, prisonerRestrictionId = it, source = Source.NOMIS, user = User.SYS_USER)
+      }
+
+      response.deletedRestrictions.forEach {
+        telemetryPrisonerCustomEventService.trackDeletePrisonerRestrictionEvent(prisonerNumber, prisonerRestrictionId = it, source = Source.NOMIS, user = User.SYS_USER)
+      }
+    }
+  }
 }

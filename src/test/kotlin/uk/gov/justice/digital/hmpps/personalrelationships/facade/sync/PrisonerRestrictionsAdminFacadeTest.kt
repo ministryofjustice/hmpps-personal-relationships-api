@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Outboun
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.PrisonerRestrictionsAdminService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryPrisonerCustomEventService
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -30,7 +31,8 @@ class PrisonerRestrictionsAdminFacadeTest {
   }
   private val mergeService = mock<PrisonerRestrictionsAdminService>()
   private val outboundEventsService = mock<OutboundEventsService>()
-  private val facade = PrisonerRestrictionsAdminFacade(mergeService, outboundEventsService)
+  private val telemetryPrisonerCustomEventService = mock<TelemetryPrisonerCustomEventService>()
+  private val facade = PrisonerRestrictionsAdminFacade(mergeService, outboundEventsService, telemetryPrisonerCustomEventService)
 
   @Nested
   inner class MergeRestrictions {

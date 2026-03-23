@@ -19,12 +19,14 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.ContactIdentit
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 
 class ContactIdentityFacadeTest {
 
   private val identityService: ContactIdentityService = mock()
   private val eventsService: OutboundEventsService = mock()
-  private val facade = ContactIdentityFacade(identityService, eventsService)
+  private val telemetryContactCustomEventService: TelemetryContactCustomEventService = mock()
+  private val facade = ContactIdentityFacade(identityService, eventsService, telemetryContactCustomEventService)
 
   private val contactId = 11L
   private val contactIdentityId = 99L

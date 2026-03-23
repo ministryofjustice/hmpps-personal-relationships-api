@@ -10,11 +10,13 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Outboun
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncPrisonerDomesticStatusService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryPrisonerCustomEventService
 
 @Service
 class PrisonerDomesticStatusSyncFacade(
   private val syncDomesticStatusService: SyncPrisonerDomesticStatusService,
   private val outboundEventsService: OutboundEventsService,
+  private val telemetryPrisonerCustomEventService: TelemetryPrisonerCustomEventService,
 ) {
   fun getDomesticStatusByPrisonerNumber(prisonerNumber: String): SyncPrisonerDomesticStatusResponse = syncDomesticStatusService.getDomesticStatusByPrisonerNumber(prisonerNumber)
 
@@ -24,6 +26,7 @@ class PrisonerDomesticStatusSyncFacade(
   ): SyncPrisonerDomesticStatusResponse = syncDomesticStatusService
     .createOrUpdateDomesticStatus(prisonerNumber, request)
     .also { response -> handleStatusEvents(response, prisonerNumber) }
+    .also { response -> trackCustomEvent(response, prisonerNumber) }
     .data
 
   private fun handleStatusEvents(
@@ -71,5 +74,16 @@ class PrisonerDomesticStatusSyncFacade(
       source = Source.NOMIS,
       user = User.SYS_USER,
     )
+  }
+
+  private fun trackCustomEvent(
+    statusResponse: SyncPrisonerDomesticStatusResponseData,
+    prisonerNumber: String,
+  ) {
+    when (statusResponse.status) {
+      Status.CREATED -> telemetryPrisonerCustomEventService.trackCreatePrisonerDomesticStatusEvent(prisonerNumber, statusResponse.data, source = Source.NOMIS, user = User.SYS_USER)
+      Status.UPDATED -> telemetryPrisonerCustomEventService.trackUpdatePrisonerDomesticStatusEvent(prisonerNumber, statusResponse.data, source = Source.NOMIS, user = User.SYS_USER)
+      else -> {} // No events for unchanged status
+    }
   }
 }

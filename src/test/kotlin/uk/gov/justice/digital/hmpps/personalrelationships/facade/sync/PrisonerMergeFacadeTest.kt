@@ -12,11 +12,13 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Outboun
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.MergeResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.PrisonerMergeService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryPrisonerCustomEventService
 
 class PrisonerMergeFacadeTest {
   private val mergeService = mock<PrisonerMergeService>()
   private val outboundEventsService = mock<OutboundEventsService>()
-  private val facade = PrisonerMergeFacade(mergeService, outboundEventsService)
+  private val telemetryPrisonerCustomEventService = mock<TelemetryPrisonerCustomEventService>()
+  private val facade = PrisonerMergeFacade(mergeService, outboundEventsService, telemetryPrisonerCustomEventService)
 
   @Nested
   inner class Merge {
