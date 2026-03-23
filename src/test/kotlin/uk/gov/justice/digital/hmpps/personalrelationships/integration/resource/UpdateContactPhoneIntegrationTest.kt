@@ -8,12 +8,16 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.phone.CreatePhoneRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.phone.UpdatePhoneRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactPhoneDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.ContactPhoneInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
@@ -222,6 +226,8 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(savedContactId),
     )
+
+    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
   }
 
   @ParameterizedTest
@@ -251,6 +257,8 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
+
+    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
   }
 
   companion object {
@@ -267,6 +275,22 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
     private fun aMinimalRequest() = UpdatePhoneRequest(
       phoneType = "MOB",
       phoneNumber = "+44777777777 (0123)",
+    )
+  }
+
+  private fun assertCustomEvent(contactPhoneDetails: ContactPhoneDetails, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackUpdateContactPhoneEvent(contactPhoneDetails, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-phone-updated",
+      mapOf(
+        "description" to "A contact phone has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contactId" to contactPhoneDetails.contactId.toString(),
+        "contact_phone_id" to contactPhoneDetails.contactPhoneId.toString(),
+      ),
+      null,
     )
   }
 }

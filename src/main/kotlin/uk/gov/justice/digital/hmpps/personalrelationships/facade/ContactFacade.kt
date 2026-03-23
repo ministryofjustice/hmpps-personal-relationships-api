@@ -211,6 +211,10 @@ class ContactFacade(
     logger.debug("removeInternalOfficialDateOfBirth called")
     return contactService.removeInternalOfficialContactsDateOfBirth().also {
       sendEventsForContactsUpdated(it)
+    }.also {
+      it.forEach { contactId ->
+        telemetryContactCustomEventService.trackUpdateContactEvent(contactId, Source.DPS, User.SYS_USER)
+      }
     }
   }
 

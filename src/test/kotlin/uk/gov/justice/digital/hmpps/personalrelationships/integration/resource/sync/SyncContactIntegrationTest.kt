@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.personalrelationships.integration.resource.
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
@@ -167,6 +169,8 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactInfo(contact.id, Source.NOMIS, "JD000001", "KMI"),
       personReference = PersonReference(dpsContactId = contact.id),
     )
+
+    assertCustomCreatedEvent(contact, Source.NOMIS, User("JD000001", "KMI"))
   }
 
   @Test
@@ -227,6 +231,8 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactInfo(contact.id, Source.NOMIS, "UPDATE", "BXI"),
       personReference = PersonReference(dpsContactId = contact.id),
     )
+
+    assertCustomUpdatedEvent(updatedContact, Source.NOMIS, User("UPDATE", "BXI"))
   }
 
   @Test
@@ -259,6 +265,54 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
       event = OutboundEvent.CONTACT_DELETED,
       additionalInfo = ContactInfo(contact.id, Source.NOMIS, User.SYS_USER.username, null),
       personReference = PersonReference(dpsContactId = contact.id),
+    )
+
+    assertCustomDeletedEvent(contact.id, Source.NOMIS, User("SYS"))
+  }
+
+  private fun assertCustomCreatedEvent(syncContact: SyncContact, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreateContactEvent(syncContact, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-created",
+      mapOf(
+        "description" to "A contact has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to syncContact.id.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomUpdatedEvent(syncContact: SyncContact, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackUpdateContactEvent(syncContact, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-updated",
+      mapOf(
+        "description" to "A contact has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to syncContact.id.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomDeletedEvent(contactId: Long, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackDeleteContactEvent(contactId, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-deleted",
+      mapOf(
+        "description" to "A contact has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to contactId.toString(),
+      ),
+      null,
     )
   }
 

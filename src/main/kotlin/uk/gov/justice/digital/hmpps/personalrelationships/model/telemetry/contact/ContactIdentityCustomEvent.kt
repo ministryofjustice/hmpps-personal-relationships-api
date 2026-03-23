@@ -20,7 +20,7 @@ class ContactIdentityCustomEvent private constructor(
   val eventSource: Source,
   val eventUser: User,
 ) : ContactCustomTelemetryEvent(contactId, getEvent(eventActionType), eventSource.name, eventUser) {
-  override fun customProperties(): Map<String, String> = emptyMap()
+  override fun customProperties(): Map<String, String> = mapOf("contact_identity_id" to contactIdentityCustomProperties.contactIdentityId.toString())
 
   companion object {
     fun getEvent(eventActionType: EventActionType): TelemetryCustomEventType = when (eventActionType) {

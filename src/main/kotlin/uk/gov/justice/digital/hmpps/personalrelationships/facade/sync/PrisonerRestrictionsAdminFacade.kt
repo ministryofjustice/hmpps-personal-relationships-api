@@ -48,7 +48,7 @@ class PrisonerRestrictionsAdminFacade(
     }
 
     return response.also {
-      trackCustomEvent(request.keepingPrisonerNumber, it)
+      trackMergeCustomEvent(request.keepingPrisonerNumber, request.removingPrisonerNumber, it)
     }
   }
 
@@ -80,13 +80,25 @@ class PrisonerRestrictionsAdminFacade(
     }
 
     return response.also {
-      trackCustomEvent(request.prisonerNumber, it)
+      trackResetCustomEvent(request.prisonerNumber, it)
     }
   }
 
   fun getAllRestrictionIds(pageable: Pageable) = PagedModel(restrictionsAdminService.getAllRestrictionIds(pageable))
 
-  private fun trackCustomEvent(prisonerNumber: String, response: ChangedRestrictionsResponse) {
+  private fun trackMergeCustomEvent(keepingPrisonerNumber: String, removingPrisonerNumber: String, response: ChangedRestrictionsResponse) {
+    if (response.hasChanged) {
+      response.createdRestrictions.forEach {
+        telemetryPrisonerCustomEventService.trackCreatePrisonerRestrictionEvent(keepingPrisonerNumber, prisonerRestrictionId = it, source = Source.NOMIS, user = User.SYS_USER)
+      }
+
+      response.deletedRestrictions.forEach {
+        telemetryPrisonerCustomEventService.trackDeletePrisonerRestrictionEvent(removingPrisonerNumber, prisonerRestrictionId = it, source = Source.NOMIS, user = User.SYS_USER)
+      }
+    }
+  }
+
+  private fun trackResetCustomEvent(prisonerNumber: String, response: ChangedRestrictionsResponse) {
     if (response.hasChanged) {
       response.createdRestrictions.forEach {
         telemetryPrisonerCustomEventService.trackCreatePrisonerRestrictionEvent(prisonerNumber, prisonerRestrictionId = it, source = Source.NOMIS, user = User.SYS_USER)

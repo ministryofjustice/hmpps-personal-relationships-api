@@ -3,10 +3,13 @@ package uk.gov.justice.digital.hmpps.personalrelationships.integration.resource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactRelationship
@@ -97,6 +100,8 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
       additionalInfo = PrisonerContactInfo(savedPrisonerContactId, Source.DPS, "deleted", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumber),
     )
+
+    assertCustomEvent(savedContactId, savedPrisonerContactId, prisonerNumber, Source.DPS, User("deleted", "BXI"))
   }
 
   @Test
@@ -235,6 +240,23 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
           isApprovedVisitor = false,
         ),
       ),
+    )
+  }
+
+  private fun assertCustomEvent(contactId: Long, contactPrisonerId: Long, prisonerNumber: String, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactEvent(contactId, contactPrisonerId, prisonerNumber, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-contact-deleted",
+      mapOf(
+        "description" to "A prisoner contact has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contactId" to contactId.toString(),
+        "prisoner_number" to prisonerNumber,
+        "prisoner_contact_id" to contactPrisonerId.toString(),
+      ),
+      null,
     )
   }
 }

@@ -4,9 +4,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncCreatePrisonerContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncUpdatePrisonerContactRequest
@@ -181,6 +184,8 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         additionalInfo = PrisonerContactInfo(prisonerContact.id, Source.NOMIS, "adminUser", "KMI"),
         personReference = PersonReference(dpsContactId = prisonerContact.contactId, nomsNumber = prisonerContact.prisonerNumber),
       )
+
+      assertCustomCreatedEvent(prisonerContact, Source.NOMIS, User("adminUser", "KMI"))
     }
 
     @Test
@@ -254,6 +259,8 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", "BXI"),
         personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
       )
+
+      assertCustomUpdatedEvent(updatedPrisonerContact, Source.NOMIS, User("UpdatedUser", "BXI"))
     }
 
     @Test
@@ -291,6 +298,8 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         additionalInfo = PrisonerContactInfo(prisonerContact.id, Source.NOMIS, "SYS", null),
         personReference = PersonReference(dpsContactId = prisonerContact.contactId, nomsNumber = prisonerContact.prisonerNumber),
       )
+
+      assertCustomDeletedEvent(prisonerContact, Source.NOMIS, User("SYS"))
     }
 
     @Test
@@ -374,5 +383,58 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       createdBy = "adminUser",
       createdTime = LocalDateTime.now(),
     )
+
+    private fun assertCustomCreatedEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
+      verify(telemetryContactCustomEventService, times(1)).trackCreatePrisonerContactEvent(syncPrisonerContact, source, user)
+
+      verify(telemetryClient, times(1)).trackEvent(
+        "prisoner-contact-created",
+        mapOf(
+          "description" to "A prisoner contact has been created",
+          "source" to source.name,
+          "username" to user.username,
+          "contactId" to syncPrisonerContact.contactId.toString(),
+          "active_caseload_id" to user.activeCaseLoadId,
+          "prisoner_contact_id" to syncPrisonerContact.id.toString(),
+          "prisoner_number" to syncPrisonerContact.prisonerNumber,
+        ),
+        null,
+      )
+    }
+
+    private fun assertCustomUpdatedEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
+      verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactEvent(syncPrisonerContact, source, user)
+
+      verify(telemetryClient, times(1)).trackEvent(
+        "prisoner-contact-updated",
+        mapOf(
+          "description" to "A prisoner contact has been updated",
+          "source" to source.name,
+          "username" to user.username,
+          "contactId" to syncPrisonerContact.contactId.toString(),
+          "active_caseload_id" to user.activeCaseLoadId,
+          "prisoner_contact_id" to syncPrisonerContact.id.toString(),
+          "prisoner_number" to syncPrisonerContact.prisonerNumber,
+        ),
+        null,
+      )
+    }
+
+    private fun assertCustomDeletedEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
+      verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactEvent(syncPrisonerContact, source, user)
+
+      verify(telemetryClient, times(1)).trackEvent(
+        "prisoner-contact-deleted",
+        mapOf(
+          "description" to "A prisoner contact has been deleted",
+          "source" to source.name,
+          "username" to user.username,
+          "contactId" to syncPrisonerContact.contactId.toString(),
+          "prisoner_contact_id" to syncPrisonerContact.id.toString(),
+          "prisoner_number" to syncPrisonerContact.prisonerNumber,
+        ),
+        null,
+      )
+    }
   }
 }

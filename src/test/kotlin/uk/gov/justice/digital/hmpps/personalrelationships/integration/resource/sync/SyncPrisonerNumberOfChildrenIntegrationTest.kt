@@ -6,8 +6,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncUpdatePrisonerNumberOfChildrenRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerNumberOfChildrenResponse
@@ -175,6 +178,8 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
 
+    assertCustomCreatedEvent(prisonerNumber, response, Source.NOMIS, User(username = "SYS"))
+
     // Verify database state
     val savedNumberOfChildren = webTestClient.get()
       .uri("/sync/$prisonerNumber/number-of-children")
@@ -277,6 +282,8 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
       additionalInfo = PrisonerNumberOfChildren(numberOfChildren.id, Source.NOMIS, "SYS", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
+
+    assertCustomUpdatedEvent(prisonerNumber, response!!, Source.NOMIS, User(username = "SYS"))
   }
 
   @Test
@@ -435,6 +442,38 @@ class SyncPrisonerNumberOfChildrenIntegrationTest : PostgresIntegrationTestBase(
     assertThat(numberOfChildrenResponse.createdBy).isEqualTo("user")
     assertThat(numberOfChildrenResponse.createdTime).isNotNull
     assertThat(numberOfChildrenResponse.active).isTrue
+  }
+
+  private fun assertCustomCreatedEvent(prisonerNumber: String, syncPrisonerNumberOfChildren: SyncPrisonerNumberOfChildrenResponse, source: Source, user: User) {
+    verify(telemetryPrisonerCustomEventService, times(1)).trackCreatePrisonerNumberOfChildrenEvent(prisonerNumber, syncPrisonerNumberOfChildren, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-number-of-children-created",
+      mapOf(
+        "description" to "A number of children record has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "prisoner_number" to prisonerNumber,
+        "prisoner_number_of_children_id" to syncPrisonerNumberOfChildren.id.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomUpdatedEvent(prisonerNumber: String, syncPrisonerNumberOfChildren: SyncPrisonerNumberOfChildrenResponse, source: Source, user: User) {
+    verify(telemetryPrisonerCustomEventService, times(1)).trackUpdatePrisonerNumberOfChildrenEvent(prisonerNumber, syncPrisonerNumberOfChildren, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-number-of-children-updated",
+      mapOf(
+        "description" to "A number of children record has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "prisoner_number" to prisonerNumber,
+        "prisoner_number_of_children_id" to syncPrisonerNumberOfChildren.id.toString(),
+      ),
+      null,
+    )
   }
 
   private fun aMinimalRequest() = SyncUpdatePrisonerNumberOfChildrenRequest(

@@ -3,8 +3,11 @@ package uk.gov.justice.digital.hmpps.personalrelationships.integration.resource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.helpers.prisoner
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateOrUpdatePrisonerNumberOfChildrenRequest
@@ -70,6 +73,8 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
       additionalInfo = PrisonerNumberOfChildren(response!!.id, Source.DPS, "read_write_user", "BXI"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
+
+    assertCustomEvent(prisonerNumber, response, Source.DPS, User("read_write_user", "BXI"))
   }
 
   @Test
@@ -153,6 +158,8 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
       additionalInfo = PrisonerNumberOfChildren(response.id, Source.DPS, "read_write_user", "BXI"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
+
+    assertCustomEvent(prisonerNumber, updateResponse, Source.DPS, User("read_write_user", "BXI"))
   }
 
   @Test
@@ -195,6 +202,22 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
       .isEqualTo("Validation failure(s): numberOfChildren must be greater than or equal to 0")
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
+    )
+  }
+
+  private fun assertCustomEvent(prisonerNumber: String, prisonerNumberOfChildrenResponse: PrisonerNumberOfChildrenResponse, source: Source, user: User) {
+    verify(telemetryPrisonerCustomEventService, times(1)).trackCreatePrisonerNumberOfChildrenEvent(prisonerNumber, prisonerNumberOfChildrenResponse, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-number-of-children-created",
+      mapOf(
+        "description" to "A number of children record has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "prisoner_number" to prisonerNumber,
+        "prisoner_number_of_children_id" to prisonerNumberOfChildrenResponse.id.toString(),
+      ),
+      null,
     )
   }
 

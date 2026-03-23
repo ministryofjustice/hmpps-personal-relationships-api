@@ -5,8 +5,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.any
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncCreateContactEmailRequest
@@ -154,6 +158,8 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactEmailInfo(contactEmail.contactEmailId, Source.NOMIS, "CREATE", "KMI"),
       personReference = PersonReference(dpsContactId = contactEmail.contactId),
     )
+
+    assertCustomCreatedEvent(contactEmail, Source.NOMIS, User("CREATE", "KMI"))
   }
 
   @Test
@@ -205,6 +211,8 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactEmailInfo(contactEmail.contactEmailId, Source.NOMIS, "UPDATE", "BXI"),
       personReference = PersonReference(dpsContactId = contactEmail.contactId),
     )
+
+    assertCustomUpdatedEvent(updatedEmail, Source.NOMIS, User("UPDATE", "BXI"))
   }
 
   @Test
@@ -231,6 +239,8 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactEmailInfo(contactEmailId, Source.NOMIS, "SYS", null),
       personReference = PersonReference(dpsContactId = 3),
     )
+
+    assertCustomDeletedEvent(3, contactEmailId, Source.NOMIS, User("SYS"))
   }
 
   private fun updateContactEmailRequest(contactId: Long) = SyncUpdateContactEmailRequest(
@@ -250,4 +260,53 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
     lastName = "last",
     firstName = "first",
   )
+
+  private fun assertCustomCreatedEvent(syncContactEmail: SyncContactEmail, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreateContactEmailEvent(syncContactEmail, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-email-created",
+      mapOf(
+        "description" to "A contact email has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to syncContactEmail.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_email_id" to syncContactEmail.contactEmailId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomUpdatedEvent(syncContactEmail: SyncContactEmail, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackUpdateContactEmailEvent(syncContactEmail, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-email-updated",
+      mapOf(
+        "description" to "A contact email has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to syncContactEmail.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_email_id" to syncContactEmail.contactEmailId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomDeletedEvent(contactId: Long, contactEmailId: Long, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackDeleteContactEmailEvent(any<SyncContactEmail>(), any<Source>(), any<User>())
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-email-deleted",
+      mapOf(
+        "description" to "A contact email has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to contactId.toString(),
+        "contact_email_id" to contactEmailId.toString(),
+      ),
+      null,
+    )
+  }
 }

@@ -15,12 +15,12 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.Tele
 
 class ContactEmploymentCustomEvent private constructor(
   override val contactId: Long,
-  private val contactEmploymentCustomProperties: ContactEmploymentCustomProperties?,
+  private val contactEmploymentCustomProperties: ContactEmploymentCustomProperties,
   val eventActionType: EventActionType,
   val eventSource: Source,
   val eventUser: User,
 ) : ContactCustomTelemetryEvent(contactId, getEvent(eventActionType), eventSource.name, eventUser) {
-  override fun customProperties(): Map<String, String> = emptyMap()
+  override fun customProperties(): Map<String, String> = mapOf("contact_employment_id" to contactEmploymentCustomProperties.contactEmploymentId.toString())
 
   companion object {
     fun getEvent(eventActionType: EventActionType): TelemetryCustomEventType = when (eventActionType) {

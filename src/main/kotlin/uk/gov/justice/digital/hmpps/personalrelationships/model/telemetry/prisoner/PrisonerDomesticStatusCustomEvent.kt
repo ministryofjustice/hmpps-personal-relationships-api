@@ -19,7 +19,7 @@ class PrisonerDomesticStatusCustomEvent private constructor(
   val eventSource: Source,
   val eventUser: User,
 ) : PrisonerCustomTelemetryEvent(prisonerNumber, telemetryCustomEventType = getEvent(eventActionType), source = eventSource.name, user = eventUser) {
-  override fun customProperties(): Map<String, String> = emptyMap()
+  override fun customProperties(): Map<String, String> = mapOf("prisoner_domestic_status_id" to prisonerDomesticStatusCustomProperties.prisonerDomesticStatusId.toString())
 
   companion object {
     fun getEvent(eventActionType: EventActionType): TelemetryCustomEventType = when (eventActionType) {

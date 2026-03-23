@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
@@ -55,6 +57,8 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = PrisonerRestrictionInfo(created.prisonerRestrictionId, Source.NOMIS, created.createdBy, null),
       personReference = PersonReference(nomsNumber = created.prisonerNumber),
     )
+
+    assertCustomCreatedEvent(created, Source.NOMIS, User(username = created.createdBy))
   }
 
   @Test
@@ -126,6 +130,8 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = PrisonerRestrictionInfo(created.prisonerRestrictionId, Source.NOMIS, updated.updatedBy!!, null),
       personReference = PersonReference(nomsNumber = created.prisonerNumber),
     )
+
+    assertCustomUpdatedEvent(created, Source.NOMIS, User(username = updated.updatedBy))
   }
 
   @Test
@@ -157,6 +163,7 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
       personReference = PersonReference(nomsNumber = created.prisonerNumber),
     )
 
+    assertCustomDeletedEvent(created.prisonerNumber, created.prisonerRestrictionId, Source.NOMIS, User(username = User.SYS_USER.username))
     webTestClient.get()
       .uri("/sync/prisoner-restriction/${created.prisonerRestrictionId}")
       .headers(setAuthorisationUsingCurrentUser())
@@ -327,6 +334,52 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
       currentTerm = true,
       updatedBy = "JDOE_ADM",
       updatedTime = now,
+    )
+  }
+
+  private fun assertCustomCreatedEvent(syncPrisonerRestriction: SyncPrisonerRestriction, source: Source, user: User) {
+    verify(telemetryPrisonerCustomEventService, times(1)).trackCreatePrisonerRestrictionEvent(syncPrisonerRestriction.prisonerNumber, syncPrisonerRestriction, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-restriction-created",
+      mapOf(
+        "description" to "A prisoner restriction has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "prisoner_number" to syncPrisonerRestriction.prisonerNumber,
+        "prisoner_restriction_id" to syncPrisonerRestriction.prisonerRestrictionId.toString(),
+        "restrictionType" to syncPrisonerRestriction.restrictionType,
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomUpdatedEvent(syncPrisonerRestriction: SyncPrisonerRestriction, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-restriction-updated",
+      mapOf(
+        "description" to "A prisoner restriction has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "prisoner_number" to syncPrisonerRestriction.prisonerNumber,
+        "prisoner_restriction_id" to syncPrisonerRestriction.prisonerRestrictionId.toString(),
+        "restrictionType" to syncPrisonerRestriction.restrictionType,
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomDeletedEvent(prisonerNumber: String, prisonerRestrictionId: Long, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-restriction-deleted",
+      mapOf(
+        "description" to "A prisoner restriction has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "prisoner_number" to prisonerNumber,
+        "prisoner_restriction_id" to prisonerRestrictionId.toString(),
+      ),
+      null,
     )
   }
 }

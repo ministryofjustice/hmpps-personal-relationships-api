@@ -8,11 +8,15 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.CreateContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.ContactRestrictionInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
@@ -166,6 +170,8 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactRestrictionInfo(created.contactRestrictionId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
+
+    assertCustomEvent(created, Source.DPS, User("created", "BXI"))
   }
 
   @ParameterizedTest
@@ -199,6 +205,8 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactRestrictionInfo(created.contactRestrictionId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
+
+    assertCustomEvent(created, Source.DPS, User("created", "BXI"))
   }
 
   companion object {
@@ -212,6 +220,23 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       startDate = LocalDate.of(2020, 1, 1),
       expiryDate = null,
       comments = null,
+    )
+  }
+
+  private fun assertCustomEvent(contactRestrictionDetails: ContactRestrictionDetails, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreateContactRestrictionEvent(contactRestrictionDetails, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-restriction-created",
+      mapOf(
+        "description" to "A contact restriction has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contactId" to contactRestrictionDetails.contactId.toString(),
+        "contact_restriction_id" to contactRestrictionDetails.contactRestrictionId.toString(),
+        "restrictionType" to contactRestrictionDetails.restrictionType,
+      ),
+      null,
     )
   }
 }
