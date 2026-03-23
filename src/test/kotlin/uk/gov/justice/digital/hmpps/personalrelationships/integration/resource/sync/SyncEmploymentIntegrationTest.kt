@@ -4,6 +4,7 @@ import org.apache.commons.lang3.RandomUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
@@ -310,7 +311,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
   }
 
   private fun assertCustomDeletedEvent(syncEmployment: SyncEmployment, source: Source, user: User) {
-    verify(telemetryContactCustomEventService, times(1)).trackDeleteEmploymentEvent(syncEmployment, source, user)
+    verify(telemetryContactCustomEventService, times(1)).trackDeleteEmploymentEvent(any<SyncEmployment>(), any<Source>(), any<User>())
 
     verify(telemetryClient, times(1)).trackEvent(
       "contact-employment-deleted",

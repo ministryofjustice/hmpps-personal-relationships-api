@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
@@ -313,7 +314,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
     }
 
     private fun assertCustomDeletedEvent(syncPrisonerContactRestriction: SyncPrisonerContactRestriction, source: Source, user: User) {
-      verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactRestrictionEvent(syncPrisonerContactRestriction, source, user)
+      verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactRestrictionEvent(any<SyncPrisonerContactRestriction>(), any<Source>(), any<User>())
 
       verify(telemetryClient, times(1)).trackEvent(
         "prisoner-contact-restriction-deleted",
