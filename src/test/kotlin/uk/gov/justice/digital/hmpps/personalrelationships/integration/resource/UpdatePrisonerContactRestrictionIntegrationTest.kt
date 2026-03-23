@@ -282,7 +282,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
     )
 
-    assertCustomEvent(updated, source = Source.DPS, User("updated", "BXI"), "CCTV")
+    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"), "CCTV")
   }
 
   companion object {

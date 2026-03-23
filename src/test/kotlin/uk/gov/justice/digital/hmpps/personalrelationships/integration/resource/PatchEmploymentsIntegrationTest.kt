@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import org.mockito.kotlin.any
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
@@ -347,7 +346,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
   )
 
   private fun assertCustomEvent(updatedEmploymentDetails: EmploymentDetails, source: Source, user: User) {
-    verify(telemetryContactCustomEventService, times(1)).trackCreateEmploymentEvent(any<Long>(), any<Long>(), any<Source>(), any<User>())
+    verify(telemetryContactCustomEventService, times(1)).trackCreateEmploymentEvent(updatedEmploymentDetails.contactId, updatedEmploymentDetails.employmentId, source, user)
     verify(telemetryClient, times(1)).trackEvent(
       "contact-employment-created",
       mapOf(

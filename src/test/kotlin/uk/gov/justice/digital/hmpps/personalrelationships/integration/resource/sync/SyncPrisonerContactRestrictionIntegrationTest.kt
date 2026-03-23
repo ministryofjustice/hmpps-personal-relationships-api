@@ -322,7 +322,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
           "description" to "A prisoner contact restriction has been deleted",
           "source" to source.name,
           "username" to user.username,
-          "contactId" to syncPrisonerContactRestriction.prisonerContactId.toString(),
+          "contactId" to syncPrisonerContactRestriction.contactId.toString(),
           "prisoner_contact_restriction_id" to syncPrisonerContactRestriction.prisonerContactRestrictionId.toString(),
           "restrictionType" to syncPrisonerContactRestriction.restrictionType,
         ),
