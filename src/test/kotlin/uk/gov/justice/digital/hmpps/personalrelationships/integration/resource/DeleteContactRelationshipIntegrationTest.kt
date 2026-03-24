@@ -34,7 +34,6 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
   private val anotherPrisonerNumber = "B1234GH"
   private var savedContactId = 0L
   private var savedPrisonerContactId = 0L
-  private var nextOfKinPrisonerContactId = 1L
 
   override val allowedRoles: Set<String> = setOf("ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW")
 
@@ -106,6 +105,15 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     assertCustomEvent(savedContactId, savedPrisonerContactId, prisonerNumber, Source.DPS, User("deleted", "BXI"))
     verify(telemetryClient, times(0)).trackEvent(
       "contact-next-of-kin-deleted",
+      mapOf(
+        "description" to "A contact next of kin has been deleted",
+        "source" to "DPS",
+        "username" to "deleted",
+        "contactId" to savedContactId.toString(),
+        "active_caseload_id" to "BXI",
+        "prisoner_contact_id" to savedPrisonerContactId.toString(),
+      ),
+      null,
     )
   }
 

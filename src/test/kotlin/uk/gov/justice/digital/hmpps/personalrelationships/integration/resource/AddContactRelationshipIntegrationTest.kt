@@ -252,6 +252,15 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertCustomEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
     verify(telemetryClient, times(0)).trackEvent(
       "contact-next-of-kin-created",
+      mapOf(
+        "description" to "A contact next of kin has been created",
+        "source" to "DPS",
+        "username" to "read_write_user",
+        "contactId" to createdRelationship.contactId.toString(),
+        "active_caseload_id" to "BXI",
+        "prisoner_contact_id" to createdRelationship.prisonerContactId.toString(),
+      ),
+      null,
     )
   }
 

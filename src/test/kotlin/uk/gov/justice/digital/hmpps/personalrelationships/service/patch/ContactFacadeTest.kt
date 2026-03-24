@@ -423,6 +423,8 @@ class ContactFacadeTest {
       val user = aUser("deleted")
       val expectedException = RuntimeException("Boom")
 
+      whenever(contactService.requirePrisonerContactEntity(prisonerContactId)).thenReturn(createPrisonerContactEntity(nextOfKin = false))
+
       whenever(contactService.deleteContactRelationship(prisonerContactId, user)).thenThrow(expectedException)
 
       val exception = assertThrows<RuntimeException> {
