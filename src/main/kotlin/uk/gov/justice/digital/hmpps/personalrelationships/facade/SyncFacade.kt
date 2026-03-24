@@ -46,7 +46,6 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncConta
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncEmploymentService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncPrisonerContactRestrictionService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncPrisonerContactService
-import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.EventActionType
 import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 
 /**
@@ -459,7 +458,7 @@ class SyncFacade(
         )
       }
       .also {
-        val nextOfKinEventType = getNextOfKinEventType(oldPrisonerContactNextOfKin = existingPrisonerContact.nextOfKin, updatedPrisonerContactNextOfKin = it.nextOfKin)
+        val nextOfKinEventType = telemetryContactCustomEventService.getNextOfKinEventType(oldPrisonerContactNextOfKin = existingPrisonerContact.nextOfKin, updatedPrisonerContactNextOfKin = it.nextOfKin)
         telemetryContactCustomEventService.trackUpdatePrisonerContactEvent(it, nextOfKinEventType, source = Source.NOMIS, user = userOrDefault(request.updatedBy))
       }
   }
@@ -703,14 +702,6 @@ class SyncFacade(
       null
     }
     return User(username, userDetails?.activeCaseLoadId)
-  }
-
-  private fun getNextOfKinEventType(oldPrisonerContactNextOfKin: Boolean, updatedPrisonerContactNextOfKin: Boolean): EventActionType? = if (!oldPrisonerContactNextOfKin && updatedPrisonerContactNextOfKin) {
-    EventActionType.CREATE
-  } else if (oldPrisonerContactNextOfKin && !updatedPrisonerContactNextOfKin) {
-    EventActionType.DELETE
-  } else {
-    null
   }
 
   companion object {

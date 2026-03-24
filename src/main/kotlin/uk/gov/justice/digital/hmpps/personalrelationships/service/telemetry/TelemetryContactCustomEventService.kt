@@ -72,12 +72,6 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     contactCreationResult.createdContact.employments.forEach { employmentDetails ->
       trackCreateContactEmploymentEvent(employmentDetails, source, user)
     }
-
-    contactCreationResult.createdRelationship?.let {
-      if (it.isNextOfKin) {
-        trackCreateNextOfKinEvent(contactId = it.contactId, it.prisonerContactId, source, user)
-      }
-    }
   }
 
   fun trackCreateContactEvent(syncContact: SyncContact, source: Source, user: User) {
@@ -438,6 +432,14 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
   fun trackDeleteEmploymentEvent(contactId: Long, employmentId: Long, source: Source, user: User) {
     val event = ContactEmploymentCustomEvent(contactId, employmentId, EventActionType.DELETE, source, user)
     telemetryService.track(event)
+  }
+
+  fun getNextOfKinEventType(oldPrisonerContactNextOfKin: Boolean, updatedPrisonerContactNextOfKin: Boolean): EventActionType? = if (!oldPrisonerContactNextOfKin && updatedPrisonerContactNextOfKin) {
+    EventActionType.CREATE
+  } else if (oldPrisonerContactNextOfKin && !updatedPrisonerContactNextOfKin) {
+    EventActionType.DELETE
+  } else {
+    null
   }
 
   private fun trackCreateNextOfKinEvent(contactId: Long, prisonerContactId: Long, source: Source, user: User) {

@@ -306,7 +306,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
       )
 
-      assertNextOfKinCustomEvent(updatedPrisonerContact, Source.NOMIS, User("UpdatedUser", "BXI"), "created")
+      assertNextOfKinCustomCreatedEvent(updatedPrisonerContact, Source.NOMIS, User("UpdatedUser", "BXI"))
     }
 
     @Test
@@ -352,7 +352,18 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
       )
 
-      assertNextOfKinCustomEvent(updatedPrisonerContact, Source.NOMIS, User("UpdatedUser", "BXI"), "deleted")
+      verify(telemetryClient, times(1)).trackEvent(
+        "contact-next-of-kin-deleted",
+        mapOf(
+          "description" to "A contact next of kin has been deleted",
+          "source" to "NOMIS",
+          "username" to "UpdatedUser",
+          "contactId" to updatedPrisonerContact.contactId.toString(),
+          "active_caseload_id" to "BXI",
+          "prisoner_contact_id" to updatedPrisonerContact.id.toString(),
+        ),
+        null,
+      )
     }
 
     @Test
@@ -362,7 +373,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .headers(setAuthorisationUsingCurrentUser())
-        .bodyValue(createPrisonerContactRequest("A1234BD"))
+        .bodyValue(createPrisonerContactRequest("A1234BD", nextOfKin = true))
         .exchange()
         .expectStatus()
         .isOk
@@ -392,6 +403,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       )
 
       assertCustomDeletedEvent(prisonerContact, Source.NOMIS, User("SYS"))
+      assertNextOfKinCustomDeletedEvent(prisonerContact, Source.NOMIS, User("SYS"))
     }
 
     @Test
@@ -529,15 +541,29 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       )
     }
 
-    private fun assertNextOfKinCustomEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User, type: String) {
+    private fun assertNextOfKinCustomCreatedEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
       verify(telemetryClient, times(1)).trackEvent(
-        "contact-next-of-kin-$type",
+        "contact-next-of-kin-created",
         mapOf(
-          "description" to "A contact next of kin has been $type",
+          "description" to "A contact next of kin has been created",
           "source" to source.name,
           "username" to user.username,
           "contactId" to syncPrisonerContact.contactId.toString(),
           "active_caseload_id" to user.activeCaseLoadId,
+          "prisoner_contact_id" to syncPrisonerContact.id.toString(),
+        ),
+        null,
+      )
+    }
+
+    private fun assertNextOfKinCustomDeletedEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
+      verify(telemetryClient, times(1)).trackEvent(
+        "contact-next-of-kin-deleted",
+        mapOf(
+          "description" to "A contact next of kin has been deleted",
+          "source" to source.name,
+          "username" to user.username,
+          "contactId" to syncPrisonerContact.contactId.toString(),
           "prisoner_contact_id" to syncPrisonerContact.id.toString(),
         ),
         null,

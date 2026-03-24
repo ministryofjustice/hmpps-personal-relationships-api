@@ -186,6 +186,9 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       ),
       personReference = PersonReference(dpsContactId = contact.id, nomsNumber = request.relationship.prisonerNumber),
     )
+
+    assertCustomEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
+    assertNextOfKinCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
   }
 
   @ParameterizedTest
@@ -247,6 +250,9 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
 
     assertCustomEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
+    verify(telemetryClient, times(0)).trackEvent(
+      "contact-next-of-kin-created",
+    )
   }
 
   private fun assertCustomEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
@@ -262,6 +268,21 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "contactId" to contactRelationship.contactId.toString(),
         "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
         "prisoner_number" to contactRelationship.prisonerNumber,
+      ),
+      null,
+    )
+  }
+
+  private fun assertNextOfKinCustomCreatedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-next-of-kin-created",
+      mapOf(
+        "description" to "A contact next of kin has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to contactRelationship.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
       ),
       null,
     )

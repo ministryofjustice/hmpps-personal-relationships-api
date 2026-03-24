@@ -179,7 +179,7 @@ class ContactFacade(
         )
       }
       .also {
-        val nextOfKinEventType = getNextOfKinEventType(oldPrisonerContactNextOfKin = existingPrisonerContact.nextOfKin, updatedPrisonerContactNextOfKin = it.isNextOfKin)
+        val nextOfKinEventType = telemetryContactCustomEventService.getNextOfKinEventType(oldPrisonerContactNextOfKin = existingPrisonerContact.nextOfKin, updatedPrisonerContactNextOfKin = it.isNextOfKin)
         telemetryContactCustomEventService.trackUpdatePrisonerContactEvent(it, nextOfKinEventType, Source.DPS, user)
       }
   }
@@ -254,13 +254,5 @@ class ContactFacade(
       source = Source.DPS,
       user = User.SYS_USER,
     )
-  }
-
-  private fun getNextOfKinEventType(oldPrisonerContactNextOfKin: Boolean, updatedPrisonerContactNextOfKin: Boolean): EventActionType? = if (!oldPrisonerContactNextOfKin && updatedPrisonerContactNextOfKin) {
-    EventActionType.CREATE
-  } else if (oldPrisonerContactNextOfKin && !updatedPrisonerContactNextOfKin) {
-    EventActionType.DELETE
-  } else {
-    null
   }
 }
