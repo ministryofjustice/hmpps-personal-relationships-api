@@ -20,7 +20,11 @@ class ContactRestrictionCustomEvent private constructor(
   eventSource: Source,
   eventUser: User,
 ) : ContactCustomTelemetryEvent(contactId, getEvent(eventActionType), eventSource.name, eventUser) {
-  override fun customProperties(): Map<String, String> = emptyMap()
+  override fun customProperties(): Map<String, String> {
+    val customProperties = mutableMapOf("contact_restriction_id" to contactRestrictionCustomProperties.contactRestrictionId.toString())
+    contactRestrictionCustomProperties.restrictionType?.let { customProperties["restrictionType"] = it }
+    return customProperties.toMap()
+  }
 
   companion object {
     fun getEvent(eventActionType: EventActionType): TelemetryCustomEventType = when (eventActionType) {
@@ -49,7 +53,7 @@ class ContactRestrictionCustomEvent private constructor(
 
 internal class ContactRestrictionCustomProperties(
   val contactRestrictionId: Long,
-  val restriction: String?,
+  val restrictionType: String?,
 ) {
   constructor(syncContactRestriction: SyncContactRestriction) : this(syncContactRestriction.contactRestrictionId, syncContactRestriction.restrictionType)
   constructor(contactRestrictionDetails: ContactRestrictionDetails) : this(contactRestrictionDetails.contactRestrictionId, contactRestrictionDetails.restrictionType)

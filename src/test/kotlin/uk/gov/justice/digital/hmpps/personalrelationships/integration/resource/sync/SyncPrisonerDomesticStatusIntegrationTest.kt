@@ -6,8 +6,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncUpdatePrisonerDomesticStatusRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerDomesticStatusResponse
@@ -188,6 +191,8 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       additionalInfo = PrisonerDomesticStatus(savedDomesticStatus.id, Source.NOMIS, "SYS", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
+
+    assertCustomCreatedEvent(prisonerNumber, response!!, Source.NOMIS, User(username = "SYS"))
   }
 
   @Test
@@ -273,6 +278,8 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
       additionalInfo = PrisonerDomesticStatus(savedDomesticStatus.id, Source.NOMIS, "SYS", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
+
+    assertCustomUpdatedEvent(prisonerNumber, response!!, Source.NOMIS, User(username = "SYS"))
   }
 
   @Test
@@ -432,6 +439,38 @@ class SyncPrisonerDomesticStatusIntegrationTest : PostgresIntegrationTestBase() 
     assertThat(savedDomesticStatus.createdBy).isEqualTo("user")
     assertThat(savedDomesticStatus.createdTime).isNotNull
     assertThat(savedDomesticStatus.active).isTrue
+
+    assertCustomCreatedEvent(prisonerNumber, response!!, Source.NOMIS, User(username = "SYS"))
+  }
+
+  private fun assertCustomCreatedEvent(prisonerNumber: String, syncPrisonerDomesticStatus: SyncPrisonerDomesticStatusResponse, source: Source, user: User) {
+    verify(telemetryPrisonerCustomEventService, times(1)).trackCreatePrisonerDomesticStatusEvent(prisonerNumber, syncPrisonerDomesticStatus, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-domestic-status-created",
+      mapOf(
+        "description" to "A domestic status record has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "prisoner_number" to prisonerNumber,
+        "prisoner_domestic_status_id" to syncPrisonerDomesticStatus.id.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomUpdatedEvent(prisonerNumber: String, syncPrisonerDomesticStatus: SyncPrisonerDomesticStatusResponse, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-domestic-status-updated",
+      mapOf(
+        "description" to "A domestic status record has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "prisoner_number" to prisonerNumber,
+        "prisoner_domestic_status_id" to syncPrisonerDomesticStatus.id.toString(),
+      ),
+      null,
+    )
   }
 
   private fun aMinimalRequest() = SyncUpdatePrisonerDomesticStatusRequest(

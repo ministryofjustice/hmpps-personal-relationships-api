@@ -4,8 +4,12 @@ import org.apache.commons.lang3.RandomUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncCreateEmploymentRequest
@@ -162,6 +166,8 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, "CREATOR", "KMI"),
       personReference = PersonReference(dpsContactId = employment.contactId),
     )
+
+    assertCustomCreatedEvent(employment, Source.NOMIS, User("CREATOR", "KMI"))
   }
 
   @Test
@@ -197,6 +203,8 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, updateEmploymentRequest.updatedBy, "BXI"),
       personReference = PersonReference(dpsContactId = updatedEmployment.contactId),
     )
+
+    assertCustomUpdatedEvent(updatedEmployment, Source.NOMIS, User(updateEmploymentRequest.updatedBy, "BXI"))
   }
 
   @Test
@@ -224,6 +232,8 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, "SYS", null),
       personReference = PersonReference(dpsContactId = employment.contactId),
     )
+
+    assertCustomDeletedEvent(employment, Source.NOMIS, User("SYS"))
   }
 
   private fun updateEmploymentRequest(employment: SyncEmployment) = SyncUpdateEmploymentRequest(
@@ -264,6 +274,56 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
       assertThat(employmentId).isNotNull()
     }
     return employment
+  }
+
+  private fun assertCustomCreatedEvent(syncEmployment: SyncEmployment, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreateEmploymentEvent(syncEmployment, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-employment-created",
+      mapOf(
+        "description" to "A contact employment has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to syncEmployment.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_employment_id" to syncEmployment.employmentId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomUpdatedEvent(syncEmployment: SyncEmployment, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackUpdateEmploymentEvent(syncEmployment, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-employment-updated",
+      mapOf(
+        "description" to "A contact employment has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to syncEmployment.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_employment_id" to syncEmployment.employmentId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomDeletedEvent(syncEmployment: SyncEmployment, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackDeleteEmploymentEvent(any<SyncEmployment>(), any<Source>(), any<User>())
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-employment-deleted",
+      mapOf(
+        "description" to "A contact employment has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to syncEmployment.contactId.toString(),
+        "contact_employment_id" to syncEmployment.employmentId.toString(),
+      ),
+      null,
+    )
   }
 
   private fun createOrganisation(): Long = stubOrganisationSummary(RandomUtils.secure().randomLong(10000, 99999)).organisationId

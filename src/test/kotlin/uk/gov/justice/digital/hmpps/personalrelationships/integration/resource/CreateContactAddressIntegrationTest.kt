@@ -8,8 +8,11 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.CreateContactAddressRequest
@@ -157,6 +160,8 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
+
+    assertCustomCreatedEvent(created, Source.DPS, User("created", "BXI"))
   }
 
   @Test
@@ -189,6 +194,11 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
         additionalInfo = ContactAddressPhoneInfo(it, created.contactAddressId, Source.DPS, "created", "BXI"),
         personReference = PersonReference(dpsContactId = created.contactId),
       )
+    }
+
+    assertCustomCreatedEvent(created, Source.DPS, User("created", "BXI"))
+    created.phoneNumberIds.forEach {
+      assertCustomPhoneAddressEvent(savedContactId, it, Source.DPS, User("created", "BXI"))
     }
   }
 
@@ -232,6 +242,8 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactAddressInfo(created.contactAddressId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
+
+    assertCustomCreatedEvent(created, Source.DPS, User("created", "BXI"))
   }
 
   @Test
@@ -256,6 +268,9 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactAddressInfo(primary.contactAddressId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
+
+    assertCustomCreatedEvent(created, Source.DPS, User("created", "BXI"))
+    assertCustomCreatedEvent(primary, Source.DPS, User("created", "BXI"))
   }
 
   @Test
@@ -276,6 +291,8 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = created.contactId),
     )
     stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_ADDRESS_UPDATED)
+
+    assertCustomCreatedEvent(created, Source.DPS, User("created", "BXI"))
   }
 
   @Test
@@ -300,6 +317,9 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactAddressInfo(mail.contactAddressId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
+
+    assertCustomCreatedEvent(created, Source.DPS, User("created", "BXI"))
+    assertCustomUpdatedEvent(mail, Source.DPS, User("created", "BXI"))
   }
 
   @Test
@@ -320,6 +340,7 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = created.contactId),
     )
     stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_ADDRESS_UPDATED)
+    assertCustomCreatedEvent(created, Source.DPS, User("created", "BXI"))
   }
 
   @Test
@@ -361,6 +382,10 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
       additionalInfo = ContactAddressInfo(other.contactAddressId, Source.DPS, "created", "BXI"),
     )
+
+    assertCustomCreatedEvent(created, Source.DPS, User("created", "BXI"))
+    assertCustomUpdatedEvent(primary, Source.DPS, User("created", "BXI"))
+    assertCustomUpdatedEvent(mail, Source.DPS, User("created", "BXI"))
   }
 
   @Test
@@ -389,6 +414,54 @@ class CreateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       event = OutboundEvent.CONTACT_ADDRESS_UPDATED,
       additionalInfo = ContactAddressInfo(primaryAndMail.contactAddressId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.contactId),
+    )
+
+    assertCustomCreatedEvent(created, Source.DPS, User("created", "BXI"))
+    assertCustomUpdatedEvent(primaryAndMail, Source.DPS, User("created", "BXI"))
+  }
+
+  private fun assertCustomCreatedEvent(contactAddressResponse: ContactAddressResponse, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-address-created",
+      mapOf(
+        "description" to "A contact address has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contactId" to contactAddressResponse.contactId.toString(),
+        "contact_address_id" to contactAddressResponse.contactAddressId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomUpdatedEvent(contactAddressResponse: ContactAddressResponse, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-address-updated",
+      mapOf(
+        "description" to "A contact address has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contactId" to contactAddressResponse.contactId.toString(),
+        "contact_address_id" to contactAddressResponse.contactAddressId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomPhoneAddressEvent(contactId: Long, contactAddressPhoneId: Long, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-address-phone-created",
+      mapOf(
+        "description" to "A contact address phone has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contactId" to contactId.toString(),
+        "contact_address_phone_id" to contactAddressPhoneId.toString(),
+      ),
+      null,
     )
   }
 

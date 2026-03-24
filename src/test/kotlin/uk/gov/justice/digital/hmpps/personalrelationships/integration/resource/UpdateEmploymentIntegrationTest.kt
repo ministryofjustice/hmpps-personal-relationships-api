@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
-import org.mockito.kotlin.any
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
@@ -141,24 +140,29 @@ class UpdateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
 
-    verify(telemetryContactCustomEventService, times(1)).trackUpdateEmploymentEvent(any<EmploymentDetails>(), any<Source>(), any<User>())
-    verify(telemetryClient, times(1)).trackEvent(
-      "contact-employment-updated",
-      mapOf(
-        "description" to "A contact employment has been updated",
-        "source" to "DPS",
-        "username" to "updated",
-        "active_caseload_id" to "BXI",
-        "contactId" to updated.contactId.toString(),
-      ),
-      null,
-    )
+    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
   }
 
   companion object {
     private fun aMinimalRequest() = UpdateEmploymentRequest(
       organisationId = 666,
       isActive = false,
+    )
+  }
+
+  private fun assertCustomEvent(updatedEmploymentDetails: EmploymentDetails, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackUpdateEmploymentEvent(updatedEmploymentDetails, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-employment-updated",
+      mapOf(
+        "description" to "A contact employment has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contactId" to updatedEmploymentDetails.contactId.toString(),
+        "contact_employment_id" to updatedEmploymentDetails.employmentId.toString(),
+      ),
+      null,
     )
   }
 }

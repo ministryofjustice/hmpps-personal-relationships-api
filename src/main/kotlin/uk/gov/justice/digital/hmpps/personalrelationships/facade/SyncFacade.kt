@@ -595,6 +595,10 @@ class SyncFacade(
       sendEventsForRelationshipsRemoved(it.relationshipsRemoved)
       sendEventsForRelationshipsCreated(request.retainedPrisonerNumber, it.relationshipsCreated)
     }
+    .also {
+      sendCustomEventsForRelationshipsRemoved(it.relationshipsRemoved)
+      sendCustomEventsForRelationshipsCreated(request.retainedPrisonerNumber, it.relationshipsCreated)
+    }
 
   /**
    * Reset - to replace the set of relationships and restrictions for a single prisoner.
@@ -607,6 +611,10 @@ class SyncFacade(
     .also {
       sendEventsForRelationshipsRemoved(it.relationshipsRemoved)
       sendEventsForRelationshipsCreated(request.prisonerNumber, it.relationshipsCreated)
+    }
+    .also {
+      sendCustomEventsForRelationshipsRemoved(it.relationshipsRemoved)
+      sendCustomEventsForRelationshipsCreated(request.prisonerNumber, it.relationshipsCreated)
     }
 
   private fun sendEventsForRelationshipsRemoved(
@@ -633,6 +641,16 @@ class SyncFacade(
     )
   }
 
+  private fun sendCustomEventsForRelationshipsRemoved(
+    relationshipsRemoved: List<PrisonerRelationshipIds>,
+  ) = relationshipsRemoved.map { removed ->
+    removed.prisonerContactRestrictionIds.forEach { prisonerContactRestrictionId ->
+      telemetryContactCustomEventService.trackDeletePrisonerContactRestrictionEvent(removed.contactId, prisonerContactRestrictionId, Source.NOMIS, userOrDefault(null))
+    }
+
+    telemetryContactCustomEventService.trackDeletePrisonerContactEvent(removed.contactId, removed.prisonerContactId, removed.prisonerNumber, Source.NOMIS, userOrDefault(null))
+  }
+
   private fun sendEventsForRelationshipsCreated(
     prisonerNumber: String,
     relationshipsCreated: List<PrisonerContactAndRestrictionIds>,
@@ -656,6 +674,17 @@ class SyncFacade(
       source = Source.NOMIS,
       user = userOrDefault(),
     )
+  }
+
+  private fun sendCustomEventsForRelationshipsCreated(
+    prisonerNumber: String,
+    relationshipsCreated: List<PrisonerContactAndRestrictionIds>,
+  ) = relationshipsCreated.map { created ->
+    created.restrictions.forEach { restriction ->
+      telemetryContactCustomEventService.trackCreatePrisonerContactRestrictionEvent(created.contactId, restriction.dpsId, Source.NOMIS, userOrDefault())
+    }
+
+    telemetryContactCustomEventService.trackCreatePrisonerContactEvent(created.contactId, created.relationship.dpsId, prisonerNumber, Source.NOMIS, userOrDefault())
   }
 
   private fun userOrDefault(username: String? = null): User = username?.let { enrichIfPossible(username) } ?: User.SYS_USER

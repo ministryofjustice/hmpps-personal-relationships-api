@@ -88,6 +88,11 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     telemetryService.track(event)
   }
 
+  fun trackUpdateContactEvent(contactId: Long, source: Source, user: User) {
+    val event = ContactCustomEvent(contactId, EventActionType.UPDATE, source, user)
+    telemetryService.track(event)
+  }
+
   fun trackDeleteContactEvent(contactId: Long, source: Source, user: User) {
     val event = ContactCustomEvent(contactId, EventActionType.DELETE, source, user)
     telemetryService.track(event)
@@ -96,8 +101,8 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
   fun trackCreateContactAddressEvent(createAddressResponse: CreateAddressResponse, source: Source, user: User) {
     val contactId = createAddressResponse.created.contactId
     trackCreateContactAddressEvent(createAddressResponse.created, source, user)
-    createAddressResponse.created.phoneNumberIds.forEach { contactPhoneId ->
-      trackCreateContactPhoneEvent(contactId, contactPhoneId, source, user)
+    createAddressResponse.created.phoneNumberIds.forEach { contactAddressPhoneId ->
+      trackCreateContactAddressPhoneEvent(contactId, contactAddressPhoneId, source, user)
     }
     createAddressResponse.otherUpdatedAddressIds.forEach { otherUpdatedAddressId ->
       trackUpdateContactAddressEvent(contactId, otherUpdatedAddressId, source, user)
@@ -146,6 +151,11 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     telemetryService.track(event)
   }
 
+  fun trackCreatePrisonerContactEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, source: Source, user: User) {
+    val event = PrisonerContactCustomEvent(contactId, prisonerContactId, prisonerNumber, EventActionType.CREATE, source, user)
+    telemetryService.track(event)
+  }
+
   fun trackUpdatePrisonerContactEvent(prisonerContactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
     val event = PrisonerContactCustomEvent(prisonerContactRelationship.contactId, prisonerContactRelationship, EventActionType.UPDATE, source, user)
     telemetryService.track(event)
@@ -167,11 +177,11 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
   }
 
   fun trackDeletePrisonerContactEvent(deletedRelationships: DeletedRelationshipIds, source: Source, user: User) {
-    trackDeletePrisonerContactEvent(deletedRelationships.contactId, deletedRelationships.prisonerNumber, source, user)
+    trackDeletePrisonerContactEvent(deletedRelationships.contactId, deletedRelationships.prisonerContactId, deletedRelationships.prisonerNumber, source, user)
   }
 
-  fun trackDeletePrisonerContactEvent(contactId: Long, prisonerNumber: String, source: Source, user: User) {
-    val event = PrisonerContactCustomEvent(contactId, prisonerNumber, EventActionType.DELETE, source, user)
+  fun trackDeletePrisonerContactEvent(contactId: Long, contactPrisonerId: Long, prisonerNumber: String, source: Source, user: User) {
+    val event = PrisonerContactCustomEvent(contactId, contactPrisonerId, prisonerNumber, EventActionType.DELETE, source, user)
     telemetryService.track(event)
   }
 
@@ -265,6 +275,11 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     telemetryService.track(event)
   }
 
+  fun trackCreatePrisonerContactRestrictionEvent(contactId: Long, prisonerContactRestrictionId: Long, source: Source, user: User) {
+    val event = PrisonerContactRestrictionCustomEvent(contactId, prisonerContactRestrictionId, EventActionType.CREATE, source, user)
+    telemetryService.track(event)
+  }
+
   fun trackCreatePrisonerContactRestrictionEvent(syncPrisonerContactRestriction: SyncPrisonerContactRestriction, source: Source, user: User) {
     val event = PrisonerContactRestrictionCustomEvent(syncPrisonerContactRestriction.contactId, syncPrisonerContactRestriction, EventActionType.CREATE, source, user)
     telemetryService.track(event)
@@ -282,6 +297,11 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
 
   fun trackDeletePrisonerContactRestrictionEvent(syncPrisonerContactRestriction: SyncPrisonerContactRestriction, source: Source, user: User) {
     val event = PrisonerContactRestrictionCustomEvent(syncPrisonerContactRestriction.contactId, syncPrisonerContactRestriction, EventActionType.DELETE, source, user)
+    telemetryService.track(event)
+  }
+
+  fun trackDeletePrisonerContactRestrictionEvent(contactId: Long, contactRestrictionId: Long, source: Source, user: User) {
+    val event = PrisonerContactRestrictionCustomEvent(contactId, contactRestrictionId, EventActionType.DELETE, source, user)
     telemetryService.track(event)
   }
 
@@ -324,11 +344,6 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     telemetryService.track(event)
   }
 
-  fun trackCreateContactPhoneEvent(contactId: Long, contactPhoneId: Long, source: Source, user: User) {
-    val event = ContactPhoneCustomEvent(contactId, contactPhoneId, EventActionType.CREATE, source, user)
-    telemetryService.track(event)
-  }
-
   fun trackUpdateContactPhoneEvent(contactPhone: ContactPhoneDetails, source: Source, user: User) {
     val event = ContactPhoneCustomEvent(contactPhone.contactId, contactPhone, EventActionType.UPDATE, source, user)
     telemetryService.track(event)
@@ -359,6 +374,11 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     telemetryService.track(event)
   }
 
+  fun trackCreateEmploymentEvent(contactId: Long, employmentId: Long, source: Source, user: User) {
+    val event = ContactEmploymentCustomEvent(contactId, employmentId, EventActionType.CREATE, source, user)
+    telemetryService.track(event)
+  }
+
   fun trackUpdateEmploymentEvent(contactEmployment: EmploymentDetails, source: Source, user: User) {
     val event = ContactEmploymentCustomEvent(contactEmployment.contactId, contactEmployment, EventActionType.UPDATE, source, user)
     telemetryService.track(event)
@@ -366,6 +386,11 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
 
   fun trackUpdateEmploymentEvent(syncEmployment: SyncEmployment, source: Source, user: User) {
     val event = ContactEmploymentCustomEvent(syncEmployment.contactId, syncEmployment, EventActionType.UPDATE, source, user)
+    telemetryService.track(event)
+  }
+
+  fun trackUpdateEmploymentEvent(contactId: Long, employmentId: Long, source: Source, user: User) {
+    val event = ContactEmploymentCustomEvent(contactId, employmentId, EventActionType.UPDATE, source, user)
     telemetryService.track(event)
   }
 
@@ -391,6 +416,11 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
 
   private fun trackCreateContactAddressEvent(contactAddressResponse: ContactAddressResponse, source: Source, user: User) {
     val event = ContactAddressCustomEvent(contactAddressResponse.contactId, contactAddressResponse, EventActionType.CREATE, source, user)
+    telemetryService.track(event)
+  }
+
+  private fun trackCreateContactAddressPhoneEvent(contactId: Long, contactAddressPhoneId: Long, source: Source, user: User) {
+    val event = ContactAddressPhoneCustomEvent(contactId, contactAddressPhoneId, EventActionType.CREATE, source, user)
     telemetryService.track(event)
   }
 

@@ -5,8 +5,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.helpers.prisoner
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateOrUpdatePrisonerDomesticStatusRequest
@@ -160,6 +163,8 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
       additionalInfo = PrisonerDomesticStatus(response.id, Source.DPS, "read_write_user", "BXI"),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
+
+    assertCustomEvent(prisonerNumber, updateResponse, Source.DPS, User("read_write_user", "BXI"))
   }
 
   @Test
@@ -224,6 +229,22 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
       .isEqualTo("Entity not found : No reference data found for groupCode: DOMESTIC_STS and code: Q")
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
+    )
+  }
+
+  private fun assertCustomEvent(prisonerNumber: String, prisonerDomesticStatusResponse: PrisonerDomesticStatusResponse, source: Source, user: User) {
+    verify(telemetryPrisonerCustomEventService, times(1)).trackCreatePrisonerDomesticStatusEvent(prisonerNumber, prisonerDomesticStatusResponse, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-domestic-status-created",
+      mapOf(
+        "description" to "A domestic status record has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "prisoner_number" to prisonerNumber,
+        "prisoner_domestic_status_id" to prisonerDomesticStatusResponse.id.toString(),
+      ),
+      null,
     )
   }
 

@@ -21,8 +21,10 @@ class PrisonerContactRestrictionCustomEvent private constructor(
   eventUser: User,
 ) : ContactCustomTelemetryEvent(contactId, getEvent(eventActionType), eventSource.name, eventUser) {
   override fun customProperties(): Map<String, String> {
-    val customProperties = mutableMapOf<String, String>()
-    prisonerContactRestrictionCustomProperties.restrictionType?.let { customProperties["restrictionType"] = it }
+    val customProperties = mutableMapOf("prisoner_contact_restriction_id" to prisonerContactRestrictionCustomProperties.prisonerContactRestrictionId.toString())
+    prisonerContactRestrictionCustomProperties.restrictionType?.let {
+      customProperties["restrictionType"] = it
+    }
     return customProperties.toMap()
   }
 
@@ -49,6 +51,14 @@ class PrisonerContactRestrictionCustomEvent private constructor(
     eventSource: Source,
     eventUser: User,
   ) : this(contactId, PrisonerContactRestrictionCustomProperties(syncPrisonerContactRestriction), eventActionType, eventSource, eventUser)
+
+  constructor(
+    contactId: Long,
+    contactRestrictionId: Long,
+    eventActionType: EventActionType,
+    eventSource: Source,
+    eventUser: User,
+  ) : this(contactId, PrisonerContactRestrictionCustomProperties(contactRestrictionId, null), eventActionType, eventSource, eventUser)
 }
 
 internal class PrisonerContactRestrictionCustomProperties(

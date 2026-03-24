@@ -5,8 +5,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncCreateContactPhoneRequest
@@ -159,6 +162,8 @@ class SyncContactPhoneIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactPhoneInfo(contactPhone.contactPhoneId, Source.NOMIS, "CREATE", "KMI"),
       personReference = PersonReference(dpsContactId = contactPhone.contactId),
     )
+
+    assertCustomCreatedEvent(contactPhone, Source.NOMIS, User("CREATE", "KMI"))
   }
 
   @Test
@@ -213,6 +218,8 @@ class SyncContactPhoneIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactPhoneInfo(contactPhone.contactPhoneId, Source.NOMIS, "UPDATE", "BXI"),
       personReference = PersonReference(dpsContactId = contactPhone.contactId),
     )
+
+    assertCustomUpdatedEvent(updatedPhone, Source.NOMIS, User("UPDATE", "BXI"))
   }
 
   @Test
@@ -239,6 +246,8 @@ class SyncContactPhoneIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactPhoneInfo(contactPhoneId, Source.NOMIS, "SYS", null),
       personReference = PersonReference(dpsContactId = 10),
     )
+
+    assertCustomDeletedEvent(10, contactPhoneId, Source.NOMIS, User("SYS"))
   }
 
   private fun updateContactPhoneRequest(contactId: Long) = SyncUpdateContactPhoneRequest(
@@ -262,4 +271,52 @@ class SyncContactPhoneIntegrationTest : PostgresIntegrationTestBase() {
     lastName = "last",
     firstName = "first",
   )
+
+  private fun assertCustomCreatedEvent(syncContactPhone: SyncContactPhone, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreateContactPhoneEvent(syncContactPhone, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-phone-created",
+      mapOf(
+        "description" to "A contact phone has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to syncContactPhone.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_phone_id" to syncContactPhone.contactPhoneId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomUpdatedEvent(syncContactPhone: SyncContactPhone, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackUpdateContactPhoneEvent(syncContactPhone, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-phone-updated",
+      mapOf(
+        "description" to "A contact phone has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to syncContactPhone.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_phone_id" to syncContactPhone.contactPhoneId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomDeletedEvent(contactId: Long, contactPhoneId: Long, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-phone-deleted",
+      mapOf(
+        "description" to "A contact phone has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to contactId.toString(),
+        "contact_phone_id" to contactPhoneId.toString(),
+      ),
+      null,
+    )
+  }
 }

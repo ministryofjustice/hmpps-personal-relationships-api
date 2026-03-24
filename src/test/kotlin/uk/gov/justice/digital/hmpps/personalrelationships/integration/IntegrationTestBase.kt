@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.integration.wiremock.O
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.wiremock.PrisonerSearchApiExtension
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.wiremock.PrisonerSearchApiExtension.Companion.prisonerSearchApiServer
 import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryPrisonerCustomEventService
 import uk.gov.justice.digital.hmpps.personalrelationships.util.StubUser
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
@@ -53,6 +54,9 @@ abstract class IntegrationTestBase {
 
   @MockitoSpyBean
   lateinit var telemetryContactCustomEventService: TelemetryContactCustomEventService
+
+  @MockitoSpyBean
+  lateinit var telemetryPrisonerCustomEventService: TelemetryPrisonerCustomEventService
 
   @MockitoSpyBean
   lateinit var telemetryClient: TelemetryClient

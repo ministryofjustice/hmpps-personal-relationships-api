@@ -8,14 +8,18 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactDetails
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PrisonerContactInfo
@@ -240,6 +244,26 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "BXI",
       ),
       personReference = PersonReference(dpsContactId = contact.id, nomsNumber = request.relationship.prisonerNumber),
+    )
+
+    assertCustomEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
+  }
+
+  private fun assertCustomEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreatePrisonerContactEvent(contactRelationship, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-contact-created",
+      mapOf(
+        "description" to "A prisoner contact has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contactId" to contactRelationship.contactId.toString(),
+        "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
+        "prisoner_number" to contactRelationship.prisonerNumber,
+      ),
+      null,
     )
   }
 

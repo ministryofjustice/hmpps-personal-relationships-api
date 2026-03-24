@@ -3,8 +3,11 @@ package uk.gov.justice.digital.hmpps.personalrelationships.integration.resource.
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.migrate.DomesticStatusDetailsRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.migrate.MigratePrisonerDomesticStatusRequest
@@ -158,6 +161,9 @@ class PrisonerMergeIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = PrisonerNumberOfChildren(retainedNumberOfChildren.id, Source.DPS, "SYS", null),
       personReference = PersonReference(nomsNumber = KEEP_PRISONER),
     )
+
+    assertCustomPrisonerNumberOfChildrenCreatedEvent(KEEP_PRISONER, retainedNumberOfChildren, Source.DPS, User("SYS"))
+    assertCustomPrisonerDomesticStatusCreatedEvent(KEEP_PRISONER, retainedDomesticStatus, Source.DPS, User("SYS"))
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
@@ -389,6 +395,38 @@ class PrisonerMergeIntegrationTest : PostgresIntegrationTestBase() {
         createdTime = LocalDateTime.now(),
       ),
       history = history,
+    )
+  }
+
+  private fun assertCustomPrisonerNumberOfChildrenCreatedEvent(prisonerNumber: String, syncPrisonerNumberOfChildrenResponse: SyncPrisonerNumberOfChildrenResponse, source: Source, user: User) {
+    verify(telemetryPrisonerCustomEventService, times(1)).trackCreatePrisonerNumberOfChildrenEvent(prisonerNumber, syncPrisonerNumberOfChildrenResponse.id, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-number-of-children-created",
+      mapOf(
+        "description" to "A number of children record has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "prisoner_number" to prisonerNumber,
+        "prisoner_number_of_children_id" to syncPrisonerNumberOfChildrenResponse.id.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomPrisonerDomesticStatusCreatedEvent(prisonerNumber: String, syncPrisonerDomesticStatusResponse: SyncPrisonerDomesticStatusResponse, source: Source, user: User) {
+    verify(telemetryPrisonerCustomEventService, times(1)).trackCreatePrisonerDomesticStatusEvent(prisonerNumber, syncPrisonerDomesticStatusResponse.id, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-domestic-status-created",
+      mapOf(
+        "description" to "A domestic status record has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "prisoner_number" to prisonerNumber,
+        "prisoner_domestic_status_id" to syncPrisonerDomesticStatusResponse.id.toString(),
+      ),
+      null,
     )
   }
 }

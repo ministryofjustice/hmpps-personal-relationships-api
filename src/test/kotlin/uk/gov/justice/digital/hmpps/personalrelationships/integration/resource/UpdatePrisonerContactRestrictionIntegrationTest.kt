@@ -8,7 +8,6 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
-import org.mockito.kotlin.any
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
@@ -239,19 +238,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
     )
 
-    verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactRestrictionEvent(any<PrisonerContactRestrictionDetails>(), any<Source>(), any<User>())
-    verify(telemetryClient, times(1)).trackEvent(
-      "prisoner-contact-restriction-updated",
-      mapOf(
-        "description" to "A prisoner contact restriction has been updated",
-        "source" to "DPS",
-        "username" to "updated",
-        "active_caseload_id" to "BXI",
-        "contactId" to updated.contactId.toString(),
-        "restrictionType" to "CCTV",
-      ),
-      null,
-    )
+    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"), "CCTV")
   }
 
   @ParameterizedTest
@@ -295,19 +282,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
     )
 
-    verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactRestrictionEvent(any<PrisonerContactRestrictionDetails>(), any<Source>(), any<User>())
-    verify(telemetryClient, times(1)).trackEvent(
-      "prisoner-contact-restriction-updated",
-      mapOf(
-        "description" to "A prisoner contact restriction has been updated",
-        "source" to "DPS",
-        "username" to "updated",
-        "active_caseload_id" to "BXI",
-        "contactId" to updated.contactId.toString(),
-        "restrictionType" to "CCTV",
-      ),
-      null,
-    )
+    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"), "CCTV")
   }
 
   companion object {
@@ -321,6 +296,23 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       startDate = LocalDate.of(1990, 1, 1),
       expiryDate = null,
       comments = null,
+    )
+  }
+
+  private fun assertCustomEvent(updatedPrisonerContactRestrictionDetails: PrisonerContactRestrictionDetails, source: Source, user: User, restrictionType: String) {
+    verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactRestrictionEvent(updatedPrisonerContactRestrictionDetails, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-contact-restriction-updated",
+      mapOf(
+        "description" to "A prisoner contact restriction has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contactId" to updatedPrisonerContactRestrictionDetails.contactId.toString(),
+        "restrictionType" to restrictionType,
+        "prisoner_contact_restriction_id" to updatedPrisonerContactRestrictionDetails.prisonerContactRestrictionId.toString(),
+      ),
+      null,
     )
   }
 }

@@ -23,6 +23,7 @@ class PrisonerContactCustomEvent private constructor(
 ) : ContactCustomTelemetryEvent(contactId, telemetryCustomEventType = getEvent(eventActionType), source = eventSource.name, user = eventUser) {
   override fun customProperties(): Map<String, String> {
     val properties = mapOf(
+      "prisoner_contact_id" to prisonerContactCustomProperties.prisonerContactId.toString(),
       "prisoner_number" to prisonerContactCustomProperties.prisonerNumber,
     )
     return properties.toMap()
@@ -62,11 +63,12 @@ class PrisonerContactCustomEvent private constructor(
 
   constructor(
     contactId: Long,
+    contactPrisonerId: Long,
     prisonerNumber: String,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, PrisonerContactCustomProperties(contactId, prisonerNumber), eventActionType, eventSource, eventUser)
+  ) : this(contactId, PrisonerContactCustomProperties(contactPrisonerId, prisonerNumber), eventActionType, eventSource, eventUser)
 }
 
 internal class PrisonerContactCustomProperties(
@@ -74,6 +76,6 @@ internal class PrisonerContactCustomProperties(
   val prisonerNumber: String,
 ) {
   constructor(syncPrisonerContact: SyncPrisonerContact) : this(syncPrisonerContact.id, syncPrisonerContact.prisonerNumber)
-  constructor(prisonerContactRelationship: PrisonerContactRelationshipDetails) : this(prisonerContactRelationship.contactId, prisonerContactRelationship.prisonerNumber)
-  constructor(relationshipApproved: RelationshipsApproved) : this(relationshipApproved.contactId, relationshipApproved.prisonerNumber)
+  constructor(prisonerContactRelationship: PrisonerContactRelationshipDetails) : this(prisonerContactRelationship.prisonerContactId, prisonerContactRelationship.prisonerNumber)
+  constructor(relationshipApproved: RelationshipsApproved) : this(relationshipApproved.prisonerContactId, relationshipApproved.prisonerNumber)
 }

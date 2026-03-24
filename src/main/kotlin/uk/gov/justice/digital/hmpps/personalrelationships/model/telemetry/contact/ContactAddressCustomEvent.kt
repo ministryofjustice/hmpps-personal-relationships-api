@@ -21,7 +21,7 @@ class ContactAddressCustomEvent private constructor(
   eventSource: Source,
   eventUser: User,
 ) : ContactCustomTelemetryEvent(contactId, telemetryCustomEventType = getEvent(eventActionType), source = eventSource.name, user = eventUser) {
-  override fun customProperties(): Map<String, String> = emptyMap()
+  override fun customProperties(): Map<String, String> = mapOf("contact_address_id" to contactAddressCustomProperties.contactAddressId.toString())
 
   companion object {
     fun getEvent(eventActionType: EventActionType): TelemetryCustomEventType = when (eventActionType) {
@@ -64,7 +64,7 @@ class ContactAddressCustomEvent private constructor(
   ) : this(contactId, ContactAddressCustomProperties(contactAddressId), eventActionType, eventSource, eventUser)
 }
 
-internal class ContactAddressCustomProperties(contactAddressId: Long) {
+internal class ContactAddressCustomProperties(val contactAddressId: Long) {
   constructor(syncContactAddress: SyncContactAddress) : this(syncContactAddress.contactAddressId)
   constructor(contactAddressDetails: ContactAddressDetails) : this(contactAddressDetails.contactAddressId)
   constructor(contactAddressResponse: ContactAddressResponse) : this(contactAddressResponse.contactAddressId)

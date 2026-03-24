@@ -8,13 +8,17 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.HttpStatus.CONFLICT
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.email.CreateEmailRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.email.UpdateEmailRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactEmailDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.ContactEmailInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
@@ -208,6 +212,8 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
+
+    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
   }
 
   @Test
@@ -259,6 +265,7 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
+    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
   }
 
   companion object {
@@ -269,6 +276,22 @@ class UpdateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
 
     private fun aMinimalRequest() = UpdateEmailRequest(
       emailAddress = "updated@example.com",
+    )
+  }
+
+  private fun assertCustomEvent(contactEmailDetails: ContactEmailDetails, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackUpdateContactEmailEvent(contactEmailDetails, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-email-updated",
+      mapOf(
+        "description" to "A contact email has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contactId" to contactEmailDetails.contactId.toString(),
+        "contact_email_id" to contactEmailDetails.contactEmailId.toString(),
+      ),
+      null,
     )
   }
 }

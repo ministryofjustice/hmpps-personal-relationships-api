@@ -5,8 +5,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncCreateContactRestrictionRequest
@@ -162,6 +165,8 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactRestrictionInfo(contactRestriction.contactRestrictionId, Source.NOMIS, "CREATE", "KMI"),
       personReference = PersonReference(dpsContactId = contactRestriction.contactId),
     )
+
+    assertCustomCreatedEvent(contactRestriction, Source.NOMIS, User("CREATE", "KMI"))
   }
 
   @Test
@@ -218,6 +223,8 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactRestrictionInfo(updatedRestriction.contactRestrictionId, Source.NOMIS, "UPDATE", "BXI"),
       personReference = PersonReference(dpsContactId = updatedRestriction.contactId),
     )
+
+    assertCustomUpdatedEvent(updatedRestriction, Source.NOMIS, User("UPDATE", "BXI"))
   }
 
   @Test
@@ -244,6 +251,8 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactRestrictionInfo(contactRestrictionId, Source.NOMIS, "SYS", null),
       personReference = PersonReference(dpsContactId = 3),
     )
+
+    assertCustomDeletedEvent(3, contactRestrictionId, Source.NOMIS, User("SYS"))
   }
 
   private fun updateContactRestrictionRequest(contactId: Long) = SyncUpdateContactRestrictionRequest(
@@ -269,4 +278,55 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     lastName = "last",
     firstName = "first",
   )
+
+  private fun assertCustomCreatedEvent(syncContactRestriction: SyncContactRestriction, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreateContactRestrictionEvent(syncContactRestriction, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-restriction-created",
+      mapOf(
+        "description" to "A contact restriction has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to syncContactRestriction.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_restriction_id" to syncContactRestriction.contactRestrictionId.toString(),
+        "restrictionType" to syncContactRestriction.restrictionType,
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomUpdatedEvent(syncContactRestriction: SyncContactRestriction, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackUpdateContactRestrictionEvent(syncContactRestriction, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-restriction-updated",
+      mapOf(
+        "description" to "A contact restriction has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to syncContactRestriction.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_restriction_id" to syncContactRestriction.contactRestrictionId.toString(),
+        "restrictionType" to syncContactRestriction.restrictionType,
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomDeletedEvent(contactId: Long, contactRestrictionId: Long, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-restriction-deleted",
+      mapOf(
+        "description" to "A contact restriction has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to contactId.toString(),
+        "contact_restriction_id" to contactRestrictionId.toString(),
+        "restrictionType" to "CCTV",
+      ),
+      null,
+    )
+  }
 }

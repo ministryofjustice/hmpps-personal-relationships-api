@@ -6,8 +6,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncCreateContactIdentityRequest
@@ -158,6 +161,8 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactIdentityInfo(contactIdentity.contactIdentityId, Source.NOMIS, "CREATE", "KMI"),
       personReference = PersonReference(dpsContactId = contactIdentity.contactId),
     )
+
+    assertCustomCreatedEvent(contactIdentity, Source.NOMIS, User("CREATE", "KMI"))
   }
 
   @ParameterizedTest
@@ -219,6 +224,8 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactIdentityInfo(updatedIdentity.contactIdentityId, Source.NOMIS, "UPDATE", "BXI"),
       personReference = PersonReference(dpsContactId = updatedIdentity.contactId),
     )
+
+    assertCustomUpdatedEvent(updatedIdentity, Source.NOMIS, User("UPDATE", "BXI"))
   }
 
   @Test
@@ -245,6 +252,8 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactIdentityInfo(3, Source.NOMIS, "SYS", null),
       personReference = PersonReference(dpsContactId = 3),
     )
+
+    assertCustomDeletedEvent(3, contactIdentityId, Source.NOMIS, User("SYS"))
   }
 
   private fun updateContactIdentityRequest(contactId: Long, issuingAuthority: String? = "UKBORDER") = SyncUpdateContactIdentityRequest(
@@ -268,4 +277,52 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
     lastName = "last",
     firstName = "first",
   )
+
+  private fun assertCustomCreatedEvent(syncContactIdentity: SyncContactIdentity, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreateContactIdentityEvent(syncContactIdentity, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-identity-created",
+      mapOf(
+        "description" to "A contact identity has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to syncContactIdentity.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_identity_id" to syncContactIdentity.contactIdentityId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomUpdatedEvent(syncContactIdentity: SyncContactIdentity, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackUpdateContactIdentityEvent(syncContactIdentity, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-identity-updated",
+      mapOf(
+        "description" to "A contact identity has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to syncContactIdentity.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_identity_id" to syncContactIdentity.contactIdentityId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomDeletedEvent(contactId: Long, contactIdentityId: Long, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-identity-deleted",
+      mapOf(
+        "description" to "A contact identity has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to contactId.toString(),
+        "contact_identity_id" to contactIdentityId.toString(),
+      ),
+      null,
+    )
+  }
 }

@@ -5,15 +5,19 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.EmploymentEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.employment.Employment
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.employment.PatchEmploymentsRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.employment.PatchEmploymentsUpdateEmployment
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.EmploymentDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.EmploymentRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.EmploymentInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
@@ -228,6 +232,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
       event = OutboundEvent.EMPLOYMENT_UPDATED,
       additionalInfo = EmploymentInfo(employmentToRemainUntouched.employmentId, source = Source.DPS, "updated", "BXI"),
     )
+    assertCustomEvent(newEmployment, Source.DPS, User("updated", "BXI"))
   }
 
   @Test
@@ -339,4 +344,20 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
     updateEmployments = emptyList(),
     deleteEmployments = emptyList(),
   )
+
+  private fun assertCustomEvent(updatedEmploymentDetails: EmploymentDetails, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreateEmploymentEvent(updatedEmploymentDetails.contactId, updatedEmploymentDetails.employmentId, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-employment-created",
+      mapOf(
+        "description" to "A contact employment has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contactId" to updatedEmploymentDetails.contactId.toString(),
+        "contact_employment_id" to updatedEmploymentDetails.employmentId.toString(),
+      ),
+      null,
+    )
+  }
 }

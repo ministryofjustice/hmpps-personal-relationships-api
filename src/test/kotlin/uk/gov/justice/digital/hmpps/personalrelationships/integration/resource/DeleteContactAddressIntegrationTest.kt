@@ -5,11 +5,16 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.any
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.CreateContactAddressRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactAddressResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.ContactAddressInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
@@ -116,6 +121,24 @@ class DeleteContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       event = OutboundEvent.CONTACT_ADDRESS_DELETED,
       additionalInfo = ContactAddressInfo(savedContactAddressId, Source.DPS, "deleted", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
+    )
+
+    assertCustomEvent(savedContactId, savedContactAddressId, Source.DPS, User("deleted", "BXI"))
+  }
+
+  private fun assertCustomEvent(contactId: Long, contactAddressId: Long, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackDeleteContactAddressEvent(any<ContactAddressResponse>(), any<Source>(), any<User>())
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-address-deleted",
+      mapOf(
+        "description" to "A contact address has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contactId" to contactId.toString(),
+        "contact_address_id" to contactAddressId.toString(),
+      ),
+      null,
     )
   }
 }

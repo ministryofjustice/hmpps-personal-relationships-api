@@ -5,8 +5,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.email.CreateEmailRequest
@@ -111,6 +114,24 @@ class DeleteContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
       event = OutboundEvent.CONTACT_EMAIL_DELETED,
       additionalInfo = ContactEmailInfo(savedContactEmailId, Source.DPS, "deleted", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
+    )
+
+    assertCustomEvent(savedContactId, savedContactEmailId, Source.DPS, User("deleted", "BXI"))
+  }
+
+  private fun assertCustomEvent(contactId: Long, contactEmailId: Long, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackDeleteContactEmailEvent(contactId, contactEmailId, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-email-deleted",
+      mapOf(
+        "description" to "A contact email has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contactId" to contactId.toString(),
+        "contact_email_id" to contactEmailId.toString(),
+      ),
+      null,
     )
   }
 }

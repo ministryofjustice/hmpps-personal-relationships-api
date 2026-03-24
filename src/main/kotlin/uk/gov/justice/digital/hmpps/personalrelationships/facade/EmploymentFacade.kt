@@ -23,6 +23,10 @@ class EmploymentFacade(
     result.createdIds.onEach { outboundEventsService.send(OutboundEvent.EMPLOYMENT_CREATED, it, contactId = contactId, source = Source.DPS, user = user) }
     result.updatedIds.onEach { outboundEventsService.send(OutboundEvent.EMPLOYMENT_UPDATED, it, contactId = contactId, source = Source.DPS, user = user) }
     result.deletedIds.onEach { outboundEventsService.send(OutboundEvent.EMPLOYMENT_DELETED, it, contactId = contactId, source = Source.DPS, user = user) }
+  }.also { result ->
+    result.createdIds.forEach { employmentId -> telemetryContactCustomEventService.trackCreateEmploymentEvent(contactId, employmentId, source = Source.DPS, user = user) }
+    result.updatedIds.forEach { employmentId -> telemetryContactCustomEventService.trackUpdateEmploymentEvent(contactId, employmentId, source = Source.DPS, user = user) }
+    result.deletedIds.forEach { employmentId -> telemetryContactCustomEventService.trackDeleteEmploymentEvent(contactId, employmentId, source = Source.DPS, user = user) }
   }.employmentsAfterUpdate
 
   fun createEmployment(contactId: Long, request: CreateEmploymentRequest, user: User): EmploymentDetails = employmentService.createEmployment(

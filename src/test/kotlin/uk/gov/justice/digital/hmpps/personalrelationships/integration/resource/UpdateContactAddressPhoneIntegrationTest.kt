@@ -8,13 +8,17 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.phone.CreateContactAddressPhoneRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.phone.UpdateContactAddressPhoneRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.ContactAddressPhoneInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
@@ -248,6 +252,8 @@ class UpdateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
       additionalInfo = ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(savedContactId),
     )
+
+    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
   }
 
   companion object {
@@ -265,6 +271,22 @@ class UpdateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
       phoneType = "MOB",
       phoneNumber = "+44777777777 (0123)",
       extNumber = "2",
+    )
+  }
+
+  private fun assertCustomEvent(contactAddressPhoneDetails: ContactAddressPhoneDetails, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackUpdateContactAddressPhoneEvent(contactAddressPhoneDetails, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-address-phone-updated",
+      mapOf(
+        "description" to "A contact address phone has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contactId" to contactAddressPhoneDetails.contactId.toString(),
+        "contact_address_phone_id" to contactAddressPhoneDetails.contactAddressPhoneId.toString(),
+      ),
+      null,
     )
   }
 }
