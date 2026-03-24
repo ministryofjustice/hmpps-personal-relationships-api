@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.Syn
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncUpdatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.PrisonerContactAndRestrictionIds
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.PrisonerRelationshipIds
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerContact
 import uk.gov.justice.digital.hmpps.personalrelationships.service.ManageUsersService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
@@ -45,6 +46,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncConta
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncEmploymentService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncPrisonerContactRestrictionService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncPrisonerContactService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.EventActionType
 import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 
 /**
@@ -443,20 +445,24 @@ class SyncFacade(
       telemetryContactCustomEventService.trackCreatePrisonerContactEvent(it, source = Source.NOMIS, user = userOrDefault(request.createdBy))
     }
 
-  fun updatePrisonerContact(prisonerContactId: Long, request: SyncUpdatePrisonerContactRequest) = syncPrisonerContactService.updatePrisonerContact(prisonerContactId, request)
-    .also {
-      outboundEventsService.send(
-        outboundEvent = OutboundEvent.PRISONER_CONTACT_UPDATED,
-        identifier = it.id,
-        contactId = it.contactId,
-        noms = it.prisonerNumber,
-        source = Source.NOMIS,
-        user = userOrDefault(request.updatedBy),
-      )
-    }
-    .also {
-      telemetryContactCustomEventService.trackUpdatePrisonerContactEvent(it, source = Source.NOMIS, user = userOrDefault(request.updatedBy))
-    }
+  fun updatePrisonerContact(prisonerContactId: Long, request: SyncUpdatePrisonerContactRequest): SyncPrisonerContact {
+    val existingPrisonerContact = syncPrisonerContactService.getPrisonerContactById(prisonerContactId)
+    return syncPrisonerContactService.updatePrisonerContact(prisonerContactId, request)
+      .also {
+        outboundEventsService.send(
+          outboundEvent = OutboundEvent.PRISONER_CONTACT_UPDATED,
+          identifier = it.id,
+          contactId = it.contactId,
+          noms = it.prisonerNumber,
+          source = Source.NOMIS,
+          user = userOrDefault(request.updatedBy),
+        )
+      }
+      .also {
+        val nextOfKinEventType = getNextOfKinEventType(oldPrisonerContactNextOfKin = existingPrisonerContact.nextOfKin, updatedPrisonerContactNextOfKin = it.nextOfKin)
+        telemetryContactCustomEventService.trackUpdatePrisonerContactEvent(it, nextOfKinEventType, source = Source.NOMIS, user = userOrDefault(request.updatedBy))
+      }
+  }
 
   fun deletePrisonerContact(prisonerContactId: Long) = syncPrisonerContactService.deletePrisonerContact(prisonerContactId)
     .also {
@@ -697,6 +703,14 @@ class SyncFacade(
       null
     }
     return User(username, userDetails?.activeCaseLoadId)
+  }
+
+  private fun getNextOfKinEventType(oldPrisonerContactNextOfKin: Boolean, updatedPrisonerContactNextOfKin: Boolean): EventActionType? = if (!oldPrisonerContactNextOfKin && updatedPrisonerContactNextOfKin) {
+    EventActionType.CREATE
+  } else if (oldPrisonerContactNextOfKin && !updatedPrisonerContactNextOfKin) {
+    EventActionType.DELETE
+  } else {
+    null
   }
 
   companion object {

@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.ContactService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.EventActionType
 import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 
 @Service
@@ -165,6 +166,8 @@ class ContactFacade(
 
   fun patchRelationship(prisonerContactId: Long, request: PatchRelationshipRequest, user: User) {
     logger.debug("patchRelationship called, prisonerContactId:{}, user: {}", prisonerContactId, user)
+    val existingPrisonerContact = contactService.requirePrisonerContactEntity(prisonerContactId)
+
     contactService.updateContactRelationship(prisonerContactId, request, user)
       .also {
         outboundEventsService.send(
@@ -176,12 +179,14 @@ class ContactFacade(
         )
       }
       .also {
-        telemetryContactCustomEventService.trackUpdatePrisonerContactEvent(it, Source.DPS, user)
+        val nextOfKinEventType = getNextOfKinEventType(oldPrisonerContactNextOfKin = existingPrisonerContact.nextOfKin, updatedPrisonerContactNextOfKin = it.isNextOfKin)
+        telemetryContactCustomEventService.trackUpdatePrisonerContactEvent(it, nextOfKinEventType, Source.DPS, user)
       }
   }
 
   fun deleteContactRelationship(prisonerContactId: Long, user: User) {
     logger.debug("deleteContactRelationship called, prisonerContactId:{}, user: {}", prisonerContactId, user)
+    val existingPrisonerContact = contactService.requirePrisonerContactEntity(prisonerContactId)
     val deletedResponse = contactService.deleteContactRelationship(prisonerContactId, user)
     deletedResponse.ids.let {
       outboundEventsService.send(
@@ -192,7 +197,8 @@ class ContactFacade(
         user = user,
       )
     }
-    telemetryContactCustomEventService.trackDeletePrisonerContactEvent(deletedResponse.ids, Source.DPS, user)
+    val nextOfKinEventType = if (existingPrisonerContact.nextOfKin) EventActionType.DELETE else null
+    telemetryContactCustomEventService.trackDeletePrisonerContactEvent(deletedResponse.ids, nextOfKinEventType, Source.DPS, user)
 
     if (deletedResponse.wasUpdated) {
       outboundEventsService.send(
@@ -248,5 +254,13 @@ class ContactFacade(
       source = Source.DPS,
       user = User.SYS_USER,
     )
+  }
+
+  private fun getNextOfKinEventType(oldPrisonerContactNextOfKin: Boolean, updatedPrisonerContactNextOfKin: Boolean): EventActionType? = if (!oldPrisonerContactNextOfKin && updatedPrisonerContactNextOfKin) {
+    EventActionType.CREATE
+  } else if (oldPrisonerContactNextOfKin && !updatedPrisonerContactNextOfKin) {
+    EventActionType.DELETE
+  } else {
+    null
   }
 }

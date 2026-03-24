@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.openapitools.jackson.nullable.JsonNullable
@@ -31,6 +32,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Outboun
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PrisonerContactInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.EventActionType
 import uk.gov.justice.digital.hmpps.personalrelationships.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
@@ -251,6 +253,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     updatedPrisonerContacts.forEach {
       assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertNextOfKinCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
     }
   }
 
@@ -520,7 +523,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   private fun assertCustomEvent(updatedPrisonerContact: PrisonerContactSummary, source: Source, user: User) {
-    verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactEvent(any<PrisonerContactRelationshipDetails>(), any<Source>(), any<User>())
+    verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactEvent(any<PrisonerContactRelationshipDetails>(), anyOrNull<EventActionType>(), any<Source>(), any<User>())
     verify(telemetryClient, times(1)).trackEvent(
       "prisoner-contact-updated",
       mapOf(
@@ -530,6 +533,21 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "active_caseload_id" to user.activeCaseLoadId,
         "contactId" to updatedPrisonerContact.contactId.toString(),
         "prisoner_number" to updatedPrisonerContact.prisonerNumber,
+        "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertNextOfKinCustomEvent(updatedPrisonerContact: PrisonerContactSummary, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-next-of-kin-created",
+      mapOf(
+        "description" to "A contact next of kin has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to updatedPrisonerContact.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
       ),
       null,
