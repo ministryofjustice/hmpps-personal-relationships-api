@@ -435,7 +435,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .headers(setAuthorisationUsingCurrentUser())
-        .bodyValue(updatePrisonerContactRequest("A9999AB", approvedVisitor = false))
+        .bodyValue(updatePrisonerContactRequest("A9997AB", approvedVisitor = false))
         .exchange()
         .expectStatus()
         .isOk
@@ -520,7 +520,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .headers(setAuthorisationUsingCurrentUser())
-        .bodyValue(createPrisonerContactRequest("A9997AB", emergencyContact = true))
+        .bodyValue(createPrisonerContactRequest("A9995AB", emergencyContact = true))
         .exchange()
         .expectStatus()
         .isOk
@@ -537,7 +537,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .headers(setAuthorisationUsingCurrentUser())
-        .bodyValue(updatePrisonerContactRequest("A9999AB", emergencyContact = false))
+        .bodyValue(updatePrisonerContactRequest("A9995AB", emergencyContact = false))
         .exchange()
         .expectStatus()
         .isOk

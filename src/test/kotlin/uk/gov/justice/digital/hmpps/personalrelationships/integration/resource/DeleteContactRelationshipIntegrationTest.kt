@@ -200,9 +200,9 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         "description" to "A contact next of kin has been deleted",
         "source" to "DPS",
         "username" to "deleted",
-        "contactId" to savedContactId.toString(),
+        "contactId" to result.contactId.toString(),
         "active_caseload_id" to "BXI",
-        "prisoner_contact_id" to savedPrisonerContactId.toString(),
+        "prisoner_contact_id" to result.prisonerContactId.toString(),
       ),
       null,
     )
@@ -213,9 +213,9 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         "description" to "A contact emergency contact has been deleted",
         "source" to "DPS",
         "username" to "deleted",
-        "contactId" to savedContactId.toString(),
+        "contactId" to result.contactId.toString(),
         "active_caseload_id" to "BXI",
-        "prisoner_contact_id" to savedPrisonerContactId.toString(),
+        "prisoner_contact_id" to result.prisonerContactId.toString(),
       ),
       null,
     )
@@ -223,12 +223,12 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     verify(telemetryClient, times(0)).trackEvent(
       "contact-approved-visitor-deleted",
       mapOf(
-        "description" to "A contactapproved visitor has been deleted",
+        "description" to "A contact approved visitor has been deleted",
         "source" to "DPS",
         "username" to "deleted",
-        "contactId" to savedContactId.toString(),
+        "contactId" to result.contactId.toString(),
         "active_caseload_id" to "BXI",
-        "prisoner_contact_id" to savedPrisonerContactId.toString(),
+        "prisoner_contact_id" to result.prisonerContactId.toString(),
       ),
       null,
     )
