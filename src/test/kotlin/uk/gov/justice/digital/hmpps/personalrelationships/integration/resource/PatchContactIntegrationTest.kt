@@ -86,7 +86,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         personReference = PersonReference(dpsContactId = contactId),
       )
 
-      assertCustomEvent(res, 2, "DPS", "read_write_user", "BXI")
+      assertCustomEvent(res, "DPS", "read_write_user", "BXI", 2)
     }
 
     @Test
@@ -123,7 +123,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         personReference = PersonReference(dpsContactId = contactId),
       )
 
-      assertCustomEvent(res, 2, "DPS", "read_write_user", "BXI")
+      assertCustomEvent(res, "DPS", "read_write_user", "BXI", 2)
     }
 
     private fun resetLanguageCode() {
@@ -162,7 +162,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         personReference = PersonReference(dpsContactId = contactId),
       )
 
-      assertCustomEvent(res, 2, "DPS", "read_write_user", "BXI")
+      assertCustomEvent(res, "DPS", "read_write_user", "BXI", 2)
     }
 
     @Test
@@ -254,7 +254,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         personReference = PersonReference(dpsContactId = contactId),
       )
 
-      assertCustomEvent(res, 2, "DPS", "read_write_user", "BXI")
+      assertCustomEvent(res, "DPS", "read_write_user", "BXI", 2)
     }
 
     @Test
@@ -276,7 +276,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         personReference = PersonReference(dpsContactId = contactId),
       )
 
-      assertCustomEvent(res, 2, "DPS", "read_write_user", "BXI")
+      assertCustomEvent(res, "DPS", "read_write_user", "BXI", 2)
     }
 
     @Test
@@ -330,7 +330,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         personReference = PersonReference(dpsContactId = contactId),
       )
 
-      assertCustomEvent(res, 2, "DPS", "read_write_user", "BXI")
+      assertCustomEvent(res, "DPS", "read_write_user", "BXI", 2)
     }
 
     @Test
@@ -431,7 +431,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         personReference = PersonReference(dpsContactId = contactIdThatHasDOB),
       )
 
-      assertCustomEvent(res, 1, "DPS", "read_write_user", "BXI")
+      assertCustomEvent(res, "DPS", "read_write_user", "BXI", 1)
     }
 
     @Test
@@ -451,7 +451,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         personReference = PersonReference(dpsContactId = contactIdThatHasDOB),
       )
 
-      assertCustomEvent(res, 1, "DPS", "read_write_user", "BXI")
+      assertCustomEvent(res, "DPS", "read_write_user", "BXI", 1)
     }
   }
 
@@ -759,9 +759,9 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
     }
   }
 
-  private fun assertCustomEvent(patchContactResponse: PatchContactResponse, times: Int = 1, source: String, userName: String, activeCaseloadId: String) {
-    verify(telemetryContactCustomEventService, times(times)).trackUpdateContactEvent(any<PatchContactResponse>(), any<Source>(), any<User>())
-    verify(telemetryClient, times(times)).trackEvent(
+  private fun assertCustomEvent(patchContactResponse: PatchContactResponse, source: String, userName: String, activeCaseloadId: String, expectedInvocations: Int = 1) {
+    verify(telemetryContactCustomEventService, times(expectedInvocations)).trackUpdateContactEvent(any<PatchContactResponse>(), any<Source>(), any<User>())
+    verify(telemetryClient, times(expectedInvocations)).trackEvent(
       "contact-updated",
       mapOf(
         "description" to "A contact has been updated",

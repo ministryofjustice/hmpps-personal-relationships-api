@@ -190,9 +190,9 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     assertCustomEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
     // next of kin, emergency contact and approved visitor are true so an event needs to be created for each
-    assertNextOfKinCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), times = 1)
-    assertApprovedVisitorCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), times = 1)
-    assertEmergencyContactCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), times = 1)
+    assertNextOfKinCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 1)
+    assertApprovedVisitorCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 1)
+    assertEmergencyContactCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 1)
   }
 
   @Test
@@ -232,9 +232,9 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
 
     assertCustomEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
-    assertNextOfKinCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), times = 0)
-    assertApprovedVisitorCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), times = 0)
-    assertEmergencyContactCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), times = 0)
+    assertNextOfKinCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 0)
+    assertApprovedVisitorCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 0)
+    assertEmergencyContactCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 0)
   }
 
   @ParameterizedTest
@@ -296,9 +296,9 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
 
     assertCustomEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
-    assertNextOfKinCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), times = 0)
-    assertApprovedVisitorCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), times = 1)
-    assertEmergencyContactCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), times = 1)
+    assertNextOfKinCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 0)
+    assertApprovedVisitorCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 1)
+    assertEmergencyContactCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 1)
   }
 
   private fun assertCustomEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
@@ -319,8 +319,8 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
   }
 
-  private fun assertNextOfKinCustomCreatedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User, times: Int = 1) {
-    verify(telemetryClient, times(times)).trackEvent(
+  private fun assertNextOfKinCustomCreatedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User, expectedInvocations: Int = 1) {
+    verify(telemetryClient, times(expectedInvocations)).trackEvent(
       "contact-next-of-kin-created",
       mapOf(
         "description" to "A contact next of kin has been created",
@@ -334,8 +334,8 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
   }
 
-  private fun assertEmergencyContactCustomCreatedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User, times: Int = 1) {
-    verify(telemetryClient, times(times)).trackEvent(
+  private fun assertEmergencyContactCustomCreatedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User, expectedInvocations: Int = 1) {
+    verify(telemetryClient, times(expectedInvocations)).trackEvent(
       "contact-emergency-contact-created",
       mapOf(
         "description" to "A contact emergency contact has been created",
@@ -349,8 +349,8 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
   }
 
-  private fun assertApprovedVisitorCustomCreatedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User, times: Int = 1) {
-    verify(telemetryClient, times(times)).trackEvent(
+  private fun assertApprovedVisitorCustomCreatedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User, expectedInvocations: Int = 1) {
+    verify(telemetryClient, times(expectedInvocations)).trackEvent(
       "contact-approved-visitor-created",
       mapOf(
         "description" to "A contact approved visitor has been created",

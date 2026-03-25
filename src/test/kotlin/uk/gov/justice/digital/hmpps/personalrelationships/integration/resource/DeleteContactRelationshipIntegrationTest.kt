@@ -390,8 +390,8 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     )
   }
 
-  private fun assertNextOfKinCustomDeletedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User, times: Int = 1) {
-    verify(telemetryClient, times(times)).trackEvent(
+  private fun assertNextOfKinCustomDeletedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User, expectedInvocations: Int = 1) {
+    verify(telemetryClient, times(expectedInvocations)).trackEvent(
       "contact-next-of-kin-deleted",
       mapOf(
         "description" to "A contact next of kin has been deleted",
