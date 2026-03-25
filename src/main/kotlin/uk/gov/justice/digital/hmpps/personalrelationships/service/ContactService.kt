@@ -420,6 +420,9 @@ class ContactService(
     return RelationshipDeletePlan(shouldRemoveDob, hasRestrictions)
   }
 
+  fun requirePrisonerContactEntity(prisonerContactId: Long): PrisonerContactEntity = prisonerContactRepository.findById(prisonerContactId)
+    .orElseThrow { EntityNotFoundException("Prisoner contact with prisoner contact ID $prisonerContactId not found") }
+
   private fun hasPrisonerContactRestrictions(prisonerContactId: Long) = prisonerContactRestrictionRepository.findAllByPrisonerContactId(prisonerContactId).isNotEmpty()
 
   private fun isDobExists(contactId: Long): Boolean {
@@ -443,9 +446,6 @@ class ContactService(
     unsupportedNextOfKin(request)
     unsupportedRelationshipActive(request)
   }
-
-  private fun requirePrisonerContactEntity(prisonerContactId: Long): PrisonerContactEntity = prisonerContactRepository.findById(prisonerContactId)
-    .orElseThrow { EntityNotFoundException("Prisoner contact with prisoner contact ID $prisonerContactId not found") }
 
   private fun PrisonerContactEntity.applyUpdate(
     request: PatchRelationshipRequest,

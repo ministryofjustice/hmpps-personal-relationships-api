@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactR
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.CreateContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.CreatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.RelationshipDeletePlan
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.DeletedPrisonerContactRepository
@@ -102,6 +103,38 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     )
 
     assertCustomEvent(savedContactId, savedPrisonerContactId, prisonerNumber, Source.DPS, User("deleted", "BXI"))
+    verify(telemetryClient, times(0)).trackEvent(
+      "contact-next-of-kin-deleted",
+      mapOf(
+        "description" to "A contact next of kin has been deleted",
+        "source" to "DPS",
+        "username" to "deleted",
+        "contactId" to savedContactId.toString(),
+        "active_caseload_id" to "BXI",
+        "prisoner_contact_id" to savedPrisonerContactId.toString(),
+      ),
+      null,
+    )
+  }
+
+  @Test
+  fun `should delete the relationship between prisoner and contact with next of kin as true and generate a next of kin deleted event`() {
+    val result = testAPIClient.addAContactRelationship(
+      AddContactRelationshipRequest(
+        savedContactId,
+        ContactRelationship(
+          prisonerNumber = anotherPrisonerNumber,
+          relationshipTypeCode = "S",
+          relationshipToPrisonerCode = "FRI",
+          isEmergencyContact = false,
+          isNextOfKin = true,
+          isApprovedVisitor = false,
+        ),
+      ),
+    )
+
+    testAPIClient.deletePrisonerContact(result.prisonerContactId)
+    assertNextOfKinCustomDeletedEvent(result, Source.DPS, User("deleted", "BXI"))
   }
 
   @Test
@@ -255,6 +288,21 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         "contactId" to contactId.toString(),
         "prisoner_number" to prisonerNumber,
         "prisoner_contact_id" to contactPrisonerId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertNextOfKinCustomDeletedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-next-of-kin-deleted",
+      mapOf(
+        "description" to "A contact next of kin has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to contactRelationship.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
       ),
       null,
     )

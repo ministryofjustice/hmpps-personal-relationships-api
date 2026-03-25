@@ -827,7 +827,7 @@ class SyncFacadeTest {
 
       whenever(syncPrisonerContactService.updatePrisonerContact(any(), any())).thenReturn(response)
       whenever(outboundEventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
-
+      whenever(syncPrisonerContactService.getPrisonerContactById(3L)).thenReturn(response)
       val result = facade.updatePrisonerContact(3L, request)
 
       verify(syncPrisonerContactService).updatePrisonerContact(3L, request)

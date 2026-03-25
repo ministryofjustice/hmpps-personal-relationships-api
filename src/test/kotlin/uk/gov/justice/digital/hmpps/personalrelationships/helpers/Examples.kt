@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactIdentity
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactPhoneDetailsEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactRestrictionDetailsEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.EmploymentEntity
+import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerContactRestrictionDetailsEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.Address
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.CreateContactAddressRequest
@@ -711,6 +712,36 @@ fun createOrganisationSummary(
   countryDescription,
   businessPhoneNumber,
   businessPhoneNumberExtension,
+)
+
+fun createPrisonerContactEntity(
+  prisonerContactId: Long = 123,
+  contactId: Long = 999,
+  prisonerNumber: String = "A1234BC",
+  relationshipType: String = "S",
+  relationshipToPrisoner: String = "SIS",
+  nextOfKin: Boolean = false,
+  emergencyContact: Boolean = false,
+  comments: String? = null,
+  active: Boolean = true,
+  approvedVisitor: Boolean = false,
+  currentTerm: Boolean = false,
+  createdBy: String = "USER1",
+  createdTime: LocalDateTime = LocalDateTime.now(),
+): PrisonerContactEntity = PrisonerContactEntity(
+  prisonerContactId = prisonerContactId,
+  contactId = contactId,
+  prisonerNumber = prisonerNumber,
+  relationshipType = relationshipType,
+  relationshipToPrisoner = relationshipToPrisoner,
+  nextOfKin = nextOfKin,
+  emergencyContact = emergencyContact,
+  comments = comments,
+  active = active,
+  approvedVisitor = approvedVisitor,
+  currentTerm = currentTerm,
+  createdBy = createdBy,
+  createdTime = createdTime,
 )
 
 fun aUser(username: String = "USER1", activeCaseLoadId: String? = null): User = User(username, activeCaseLoadId)

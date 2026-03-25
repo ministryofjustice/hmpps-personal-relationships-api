@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contac
 import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.ContactEmailCustomEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.ContactEmploymentCustomEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.ContactIdentityCustomEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.ContactNextOfKinCustomEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.ContactPhoneCustomEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.ContactRestrictionCustomEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.contact.PrisonerContactCustomEvent
@@ -143,11 +144,19 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
 
   fun trackCreatePrisonerContactEvent(prisonerContactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
     val event = PrisonerContactCustomEvent(contactId = prisonerContactRelationship.contactId, prisonerContactRelationship, EventActionType.CREATE, source, user)
+    if (prisonerContactRelationship.isNextOfKin) {
+      trackCreateNextOfKinEvent(contactId = prisonerContactRelationship.contactId, prisonerContactId = prisonerContactRelationship.prisonerContactId, source = source, user = user)
+    }
+
     telemetryService.track(event)
   }
 
   fun trackCreatePrisonerContactEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
     val event = PrisonerContactCustomEvent(contactId = syncPrisonerContact.contactId, syncPrisonerContact, EventActionType.CREATE, source, user)
+    if (syncPrisonerContact.nextOfKin) {
+      trackCreateNextOfKinEvent(contactId = syncPrisonerContact.contactId, prisonerContactId = syncPrisonerContact.id, source = source, user = user)
+    }
+
     telemetryService.track(event)
   }
 
@@ -156,9 +165,16 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     telemetryService.track(event)
   }
 
-  fun trackUpdatePrisonerContactEvent(prisonerContactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
+  fun trackUpdatePrisonerContactEvent(prisonerContactRelationship: PrisonerContactRelationshipDetails, nextOfKinEventActionType: EventActionType?, source: Source, user: User) {
     val event = PrisonerContactCustomEvent(prisonerContactRelationship.contactId, prisonerContactRelationship, EventActionType.UPDATE, source, user)
     telemetryService.track(event)
+    nextOfKinEventActionType?.let { actionType ->
+      when (actionType) {
+        EventActionType.CREATE -> trackCreateNextOfKinEvent(contactId = prisonerContactRelationship.contactId, prisonerContactId = prisonerContactRelationship.prisonerContactId, source = source, user = user)
+        EventActionType.UPDATE -> {} // do nothing
+        EventActionType.DELETE -> trackDeleteNextOfKinEvent(contactId = prisonerContactRelationship.contactId, prisonerContactId = prisonerContactRelationship.prisonerContactId, source = source, user = user)
+      }
+    }
   }
 
   fun trackUpdatePrisonerContactEvent(relationshipApproved: RelationshipsApproved, source: Source, user: User) {
@@ -166,18 +182,32 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     telemetryService.track(event)
   }
 
-  fun trackUpdatePrisonerContactEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
+  fun trackUpdatePrisonerContactEvent(syncPrisonerContact: SyncPrisonerContact, nextOfKinEventActionType: EventActionType?, source: Source, user: User) {
     val event = PrisonerContactCustomEvent(contactId = syncPrisonerContact.contactId, syncPrisonerContact, EventActionType.UPDATE, source, user)
+    nextOfKinEventActionType?.let { actionType ->
+      when (actionType) {
+        EventActionType.CREATE -> trackCreateNextOfKinEvent(contactId = syncPrisonerContact.contactId, prisonerContactId = syncPrisonerContact.id, source = source, user = user)
+        EventActionType.UPDATE -> {} // do nothing
+        EventActionType.DELETE -> trackDeleteNextOfKinEvent(contactId = syncPrisonerContact.contactId, prisonerContactId = syncPrisonerContact.id, source = source, user = user)
+      }
+    }
     telemetryService.track(event)
   }
 
   fun trackDeletePrisonerContactEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
     val event = PrisonerContactCustomEvent(contactId = syncPrisonerContact.contactId, syncPrisonerContact, EventActionType.DELETE, source, user)
+    if (syncPrisonerContact.nextOfKin) {
+      trackDeleteNextOfKinEvent(contactId = syncPrisonerContact.contactId, prisonerContactId = syncPrisonerContact.id, source = source, user = user)
+    }
+
     telemetryService.track(event)
   }
 
-  fun trackDeletePrisonerContactEvent(deletedRelationships: DeletedRelationshipIds, source: Source, user: User) {
+  fun trackDeletePrisonerContactEvent(deletedRelationships: DeletedRelationshipIds, nextOfKinEventType: EventActionType?, source: Source, user: User) {
     trackDeletePrisonerContactEvent(deletedRelationships.contactId, deletedRelationships.prisonerContactId, deletedRelationships.prisonerNumber, source, user)
+    if (nextOfKinEventType != null && nextOfKinEventType == EventActionType.DELETE) {
+      trackDeleteNextOfKinEvent(contactId = deletedRelationships.contactId, prisonerContactId = deletedRelationships.prisonerContactId, source = source, user = user)
+    }
   }
 
   fun trackDeletePrisonerContactEvent(contactId: Long, contactPrisonerId: Long, prisonerNumber: String, source: Source, user: User) {
@@ -401,6 +431,24 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
 
   fun trackDeleteEmploymentEvent(contactId: Long, employmentId: Long, source: Source, user: User) {
     val event = ContactEmploymentCustomEvent(contactId, employmentId, EventActionType.DELETE, source, user)
+    telemetryService.track(event)
+  }
+
+  fun getNextOfKinEventType(oldPrisonerContactNextOfKin: Boolean, updatedPrisonerContactNextOfKin: Boolean): EventActionType? = if (!oldPrisonerContactNextOfKin && updatedPrisonerContactNextOfKin) {
+    EventActionType.CREATE
+  } else if (oldPrisonerContactNextOfKin && !updatedPrisonerContactNextOfKin) {
+    EventActionType.DELETE
+  } else {
+    null
+  }
+
+  private fun trackCreateNextOfKinEvent(contactId: Long, prisonerContactId: Long, source: Source, user: User) {
+    val event = ContactNextOfKinCustomEvent(contactId, prisonerContactId, EventActionType.CREATE, source, user)
+    telemetryService.track(event)
+  }
+
+  private fun trackDeleteNextOfKinEvent(contactId: Long, prisonerContactId: Long, source: Source, user: User) {
+    val event = ContactNextOfKinCustomEvent(contactId, prisonerContactId, EventActionType.DELETE, source, user)
     telemetryService.track(event)
   }
 

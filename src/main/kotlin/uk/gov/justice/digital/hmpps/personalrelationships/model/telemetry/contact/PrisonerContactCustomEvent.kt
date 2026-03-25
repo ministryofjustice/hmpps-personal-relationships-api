@@ -63,12 +63,12 @@ class PrisonerContactCustomEvent private constructor(
 
   constructor(
     contactId: Long,
-    contactPrisonerId: Long,
+    prisonerContactId: Long,
     prisonerNumber: String,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, PrisonerContactCustomProperties(contactPrisonerId, prisonerNumber), eventActionType, eventSource, eventUser)
+  ) : this(contactId, PrisonerContactCustomProperties(prisonerContactId, prisonerNumber), eventActionType, eventSource, eventUser)
 }
 
 internal class PrisonerContactCustomProperties(

@@ -265,13 +265,115 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
     }
 
     @Test
+    fun `when contact exists but next of kin is false and update changes next of kin to true then a create next of kin event is sent`() {
+      val prisonerContact = webTestClient.post()
+        .uri("/sync/prisoner-contact")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .bodyValue(createPrisonerContactRequest(prisonerNumber = "A1234AB", nextOfKin = false))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody(SyncPrisonerContact::class.java)
+        .returnResult().responseBody!!
+
+      with(prisonerContact) {
+        assertThat(nextOfKin).isFalse
+      }
+
+      val updatedPrisonerContact = webTestClient.put()
+        .uri("/sync/prisoner-contact/{prisonerContactId}", prisonerContact.id)
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .bodyValue(updatePrisonerContactRequest(prisonerNumber = "A1234AB", nextOfKin = true))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody(SyncPrisonerContact::class.java)
+        .returnResult().responseBody!!
+
+      // Check the updated copy
+      with(updatedPrisonerContact) {
+        assertThat(nextOfKin).isTrue
+      }
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.PRISONER_CONTACT_UPDATED,
+        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", "BXI"),
+        personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
+      )
+
+      assertNextOfKinCustomCreatedEvent(updatedPrisonerContact, Source.NOMIS, User("UpdatedUser", "BXI"))
+    }
+
+    @Test
+    fun `when contact exists but next of kin is true and update changes next of kin to false then a delete next of kin event is sent`() {
+      val prisonerContact = webTestClient.post()
+        .uri("/sync/prisoner-contact")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .bodyValue(createPrisonerContactRequest("A9999AB", nextOfKin = true))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody(SyncPrisonerContact::class.java)
+        .returnResult().responseBody!!
+
+      with(prisonerContact) {
+        assertThat(nextOfKin).isTrue
+      }
+
+      val updatedPrisonerContact = webTestClient.put()
+        .uri("/sync/prisoner-contact/{prisonerContactId}", prisonerContact.id)
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .bodyValue(updatePrisonerContactRequest("A9999AB", nextOfKin = false))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody(SyncPrisonerContact::class.java)
+        .returnResult().responseBody!!
+
+      // Check the updated copy
+      with(updatedPrisonerContact) {
+        assertThat(nextOfKin).isFalse
+      }
+
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.PRISONER_CONTACT_UPDATED,
+        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", "BXI"),
+        personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
+      )
+
+      verify(telemetryClient, times(1)).trackEvent(
+        "contact-next-of-kin-deleted",
+        mapOf(
+          "description" to "A contact next of kin has been deleted",
+          "source" to "NOMIS",
+          "username" to "UpdatedUser",
+          "contactId" to updatedPrisonerContact.contactId.toString(),
+          "active_caseload_id" to "BXI",
+          "prisoner_contact_id" to updatedPrisonerContact.id.toString(),
+        ),
+        null,
+      )
+    }
+
+    @Test
     fun `should delete an existing prisoner contact`() {
       val prisonerContact = webTestClient.post()
         .uri("/sync/prisoner-contact")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .headers(setAuthorisationUsingCurrentUser())
-        .bodyValue(createPrisonerContactRequest("A1234BD"))
+        .bodyValue(createPrisonerContactRequest("A1234BD", nextOfKin = true))
         .exchange()
         .expectStatus()
         .isOk
@@ -301,6 +403,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       )
 
       assertCustomDeletedEvent(prisonerContact, Source.NOMIS, User("SYS"))
+      assertNextOfKinCustomDeletedEvent(prisonerContact, Source.NOMIS, User("SYS"))
     }
 
     @Test
@@ -351,12 +454,12 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .isOk
     }
 
-    private fun updatePrisonerContactRequest(prisonerNumber: String = "A1234BC") = SyncUpdatePrisonerContactRequest(
+    private fun updatePrisonerContactRequest(prisonerNumber: String = "A1234BC", nextOfKin: Boolean = true) = SyncUpdatePrisonerContactRequest(
       contactId = 1L,
       prisonerNumber = prisonerNumber,
       contactType = "O",
       relationshipType = "LAW",
-      nextOfKin = true,
+      nextOfKin = nextOfKin,
       emergencyContact = false,
       comments = "Updated relationship type to family",
       active = true,
@@ -368,12 +471,12 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       updatedTime = LocalDateTime.now(),
     )
 
-    private fun createPrisonerContactRequest(prisonerNumber: String = "A1234BC") = SyncCreatePrisonerContactRequest(
+    private fun createPrisonerContactRequest(prisonerNumber: String = "A1234BC", nextOfKin: Boolean = true) = SyncCreatePrisonerContactRequest(
       contactId = 1L,
       prisonerNumber = prisonerNumber,
       contactType = "S",
       relationshipType = "FRI",
-      nextOfKin = true,
+      nextOfKin = nextOfKin,
       emergencyContact = false,
       comments = "Create relationship",
       active = true,
@@ -404,7 +507,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
     }
 
     private fun assertCustomUpdatedEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
-      verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactEvent(syncPrisonerContact, source, user)
+      verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactEvent(syncPrisonerContact, null, source, user)
 
       verify(telemetryClient, times(1)).trackEvent(
         "prisoner-contact-updated",
@@ -433,6 +536,35 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "contactId" to syncPrisonerContact.contactId.toString(),
           "prisoner_contact_id" to syncPrisonerContact.id.toString(),
           "prisoner_number" to syncPrisonerContact.prisonerNumber,
+        ),
+        null,
+      )
+    }
+
+    private fun assertNextOfKinCustomCreatedEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
+      verify(telemetryClient, times(1)).trackEvent(
+        "contact-next-of-kin-created",
+        mapOf(
+          "description" to "A contact next of kin has been created",
+          "source" to source.name,
+          "username" to user.username,
+          "contactId" to syncPrisonerContact.contactId.toString(),
+          "active_caseload_id" to user.activeCaseLoadId,
+          "prisoner_contact_id" to syncPrisonerContact.id.toString(),
+        ),
+        null,
+      )
+    }
+
+    private fun assertNextOfKinCustomDeletedEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
+      verify(telemetryClient, times(1)).trackEvent(
+        "contact-next-of-kin-deleted",
+        mapOf(
+          "description" to "A contact next of kin has been deleted",
+          "source" to source.name,
+          "username" to user.username,
+          "contactId" to syncPrisonerContact.contactId.toString(),
+          "prisoner_contact_id" to syncPrisonerContact.id.toString(),
         ),
         null,
       )
