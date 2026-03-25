@@ -161,7 +161,7 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     telemetryService.track(event)
   }
 
-  fun trackUpdatePrisonerContactEvent(prisonerContactRelationship: PrisonerContactRelationshipDetails, nextOfKinEventActionType: EventActionType?, emergencyContactEventActionType: EventActionType?, approvedVisitorEventActionType: EventActionType?, source: Source, user: User) {
+  fun trackUpdatePrisonerContactEvent(prisonerContactRelationship: PrisonerContactRelationshipDetails, nextOfKinEventActionType: EventActionType?, approvedVisitorEventActionType: EventActionType?, emergencyContactEventActionType: EventActionType?, source: Source, user: User) {
     val event = PrisonerContactCustomEvent(prisonerContactRelationship.contactId, prisonerContactRelationship, EventActionType.UPDATE, source, user)
     telemetryService.track(event)
     trackUpdatePrisonerContactChildEvents(contactId = prisonerContactRelationship.contactId, prisonerContactId = prisonerContactRelationship.prisonerContactId, nextOfKinEventActionType = nextOfKinEventActionType, emergencyContactEventActionType = emergencyContactEventActionType, approvedVisitorEventActionType = approvedVisitorEventActionType, source = source, user = user)
@@ -172,7 +172,7 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     telemetryService.track(event)
   }
 
-  fun trackUpdatePrisonerContactEvent(syncPrisonerContact: SyncPrisonerContact, nextOfKinEventActionType: EventActionType?, emergencyContactEventActionType: EventActionType?, approvedVisitorEventActionType: EventActionType?, source: Source, user: User) {
+  fun trackUpdatePrisonerContactEvent(syncPrisonerContact: SyncPrisonerContact, nextOfKinEventActionType: EventActionType?, approvedVisitorEventActionType: EventActionType?, emergencyContactEventActionType: EventActionType?, source: Source, user: User) {
     val event = PrisonerContactCustomEvent(contactId = syncPrisonerContact.contactId, syncPrisonerContact, EventActionType.UPDATE, source, user)
     telemetryService.track(event)
     trackUpdatePrisonerContactChildEvents(contactId = syncPrisonerContact.contactId, prisonerContactId = syncPrisonerContact.id, nextOfKinEventActionType = nextOfKinEventActionType, emergencyContactEventActionType = emergencyContactEventActionType, approvedVisitorEventActionType = approvedVisitorEventActionType, source = source, user = user)
@@ -539,7 +539,7 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     }
   }
 
-  private fun trackUpdatePrisonerContactChildEvents(contactId: Long, prisonerContactId: Long, nextOfKinEventActionType: EventActionType?, emergencyContactEventActionType: EventActionType?, approvedVisitorEventActionType: EventActionType?, source: Source, user: User) {
+  private fun trackUpdatePrisonerContactChildEvents(contactId: Long, prisonerContactId: Long, nextOfKinEventActionType: EventActionType?, approvedVisitorEventActionType: EventActionType?, emergencyContactEventActionType: EventActionType?, source: Source, user: User) {
     trackNextOfKinEventOnUpdate(nextOfKinEventActionType = nextOfKinEventActionType, contactId = contactId, prisonerContactId = prisonerContactId, source = source, user = user)
     trackEmergencyContactEventOnUpdate(emergencyContactEventActionType = emergencyContactEventActionType, contactId = contactId, prisonerContactId = prisonerContactId, source = source, user = user)
     trackApprovedVisitorEventOnUpdate(approvedVisitorEventActionType = approvedVisitorEventActionType, contactId = contactId, prisonerContactId = prisonerContactId, source = source, user = user)

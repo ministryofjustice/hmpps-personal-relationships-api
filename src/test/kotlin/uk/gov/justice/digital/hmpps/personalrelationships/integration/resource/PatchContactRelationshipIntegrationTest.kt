@@ -245,6 +245,8 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     val updatedPrisonerContacts = testAPIClient.getPrisonerContacts(prisonerNumber).content
     assertThat(updatedPrisonerContacts).hasSize(1)
     assertThat(updatedPrisonerContacts[0].isNextOfKin).isTrue
+    assertThat(updatedPrisonerContacts[0].isApprovedVisitor).isTrue
+    assertThat(updatedPrisonerContacts[0].isEmergencyContact).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
@@ -256,6 +258,8 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     updatedPrisonerContacts.forEach {
       assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
       assertNextOfKinCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertEmergencyContactCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertApprovedVisitorCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
     }
   }
 

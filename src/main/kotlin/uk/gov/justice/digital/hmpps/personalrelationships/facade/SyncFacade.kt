@@ -461,7 +461,7 @@ class SyncFacade(
         val nextOfKinEventType = telemetryContactCustomEventService.getUpdateEventType(oldContactValue = existingPrisonerContact.nextOfKin, updatedContactValue = it.nextOfKin)
         val approvedVisitorEventType = telemetryContactCustomEventService.getUpdateEventType(oldContactValue = existingPrisonerContact.approvedVisitor, updatedContactValue = it.approvedVisitor)
         val emergencyContactEventType = telemetryContactCustomEventService.getUpdateEventType(oldContactValue = existingPrisonerContact.emergencyContact, updatedContactValue = it.emergencyContact)
-        telemetryContactCustomEventService.trackUpdatePrisonerContactEvent(it, nextOfKinEventType, emergencyContactEventType, approvedVisitorEventType, source = Source.NOMIS, user = userOrDefault(request.updatedBy))
+        telemetryContactCustomEventService.trackUpdatePrisonerContactEvent(syncPrisonerContact = it, nextOfKinEventActionType = nextOfKinEventType, emergencyContactEventActionType = emergencyContactEventType, approvedVisitorEventActionType = approvedVisitorEventType, source = Source.NOMIS, user = userOrDefault(request.updatedBy))
       }
   }
 

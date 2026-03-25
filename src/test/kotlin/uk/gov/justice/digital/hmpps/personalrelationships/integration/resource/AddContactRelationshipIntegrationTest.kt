@@ -8,6 +8,10 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.http.HttpStatus
@@ -190,9 +194,9 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     assertCustomEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
     // next of kin, emergency contact and approved visitor are true so an event needs to be created for each
-    assertNextOfKinCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 1)
-    assertApprovedVisitorCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 1)
-    assertEmergencyContactCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 1)
+    assertNextOfKinCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
+    assertApprovedVisitorCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
+    assertEmergencyContactCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
   }
 
   @Test
@@ -232,9 +236,21 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
 
     assertCustomEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
-    assertNextOfKinCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 0)
-    assertApprovedVisitorCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 0)
-    assertEmergencyContactCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 0)
+    verify(telemetryClient, never()).trackEvent(
+      eq("contact-next-of-kin-created"),
+      any<Map<String, String>>(),
+      anyOrNull(),
+    )
+    verify(telemetryClient, never()).trackEvent(
+      eq("contact-emergency-contact-created"),
+      any<Map<String, String>>(),
+      anyOrNull(),
+    )
+    verify(telemetryClient, never()).trackEvent(
+      eq("contact-approved-visitor-created"),
+      any<Map<String, String>>(),
+      anyOrNull(),
+    )
   }
 
   @ParameterizedTest
@@ -296,9 +312,13 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
 
     assertCustomEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
-    assertNextOfKinCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 0)
-    assertApprovedVisitorCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 1)
-    assertEmergencyContactCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"), expectedInvocations = 1)
+    verify(telemetryClient, never()).trackEvent(
+      eq("contact-next-of-kin-created"),
+      any<Map<String, String>>(),
+      anyOrNull(),
+    )
+    assertApprovedVisitorCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
+    assertEmergencyContactCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
   }
 
   private fun assertCustomEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
@@ -319,8 +339,8 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
   }
 
-  private fun assertNextOfKinCustomCreatedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User, expectedInvocations: Int = 1) {
-    verify(telemetryClient, times(expectedInvocations)).trackEvent(
+  private fun assertNextOfKinCustomCreatedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
       "contact-next-of-kin-created",
       mapOf(
         "description" to "A contact next of kin has been created",
@@ -334,8 +354,8 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
   }
 
-  private fun assertEmergencyContactCustomCreatedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User, expectedInvocations: Int = 1) {
-    verify(telemetryClient, times(expectedInvocations)).trackEvent(
+  private fun assertEmergencyContactCustomCreatedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
       "contact-emergency-contact-created",
       mapOf(
         "description" to "A contact emergency contact has been created",
@@ -349,8 +369,8 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
   }
 
-  private fun assertApprovedVisitorCustomCreatedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User, expectedInvocations: Int = 1) {
-    verify(telemetryClient, times(expectedInvocations)).trackEvent(
+  private fun assertApprovedVisitorCustomCreatedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
       "contact-approved-visitor-created",
       mapOf(
         "description" to "A contact approved visitor has been created",
