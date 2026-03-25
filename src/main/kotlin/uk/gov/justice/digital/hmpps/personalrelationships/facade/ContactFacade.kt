@@ -179,8 +179,10 @@ class ContactFacade(
         )
       }
       .also {
-        val nextOfKinEventType = telemetryContactCustomEventService.getNextOfKinEventType(oldPrisonerContactNextOfKin = existingPrisonerContact.nextOfKin, updatedPrisonerContactNextOfKin = it.isNextOfKin)
-        telemetryContactCustomEventService.trackUpdatePrisonerContactEvent(it, nextOfKinEventType, Source.DPS, user)
+        val nextOfKinEventType = telemetryContactCustomEventService.getUpdateEventType(oldContactValue = existingPrisonerContact.nextOfKin, updatedContactValue = it.isNextOfKin)
+        val approvedVisitorEventType = telemetryContactCustomEventService.getUpdateEventType(oldContactValue = existingPrisonerContact.approvedVisitor, updatedContactValue = it.isApprovedVisitor)
+        val emergencyContactEventType = telemetryContactCustomEventService.getUpdateEventType(oldContactValue = existingPrisonerContact.emergencyContact, updatedContactValue = it.isEmergencyContact)
+        telemetryContactCustomEventService.trackUpdatePrisonerContactEvent(prisonerContactRelationship = it, nextOfKinEventActionType = nextOfKinEventType, emergencyContactEventActionType = emergencyContactEventType, approvedVisitorEventActionType = approvedVisitorEventType, source = Source.DPS, user = user)
       }
   }
 
@@ -198,7 +200,10 @@ class ContactFacade(
       )
     }
     val nextOfKinEventType = if (existingPrisonerContact.nextOfKin) EventActionType.DELETE else null
-    telemetryContactCustomEventService.trackDeletePrisonerContactEvent(deletedResponse.ids, nextOfKinEventType, Source.DPS, user)
+    val approvedVisitorEventType = if (existingPrisonerContact.approvedVisitor) EventActionType.DELETE else null
+    val emergencyContactEventType = if (existingPrisonerContact.emergencyContact) EventActionType.DELETE else null
+
+    telemetryContactCustomEventService.trackDeletePrisonerContactEvent(deletedRelationships = deletedResponse.ids, nextOfKinEventActionType = nextOfKinEventType, approvedVisitorEventActionType = approvedVisitorEventType, emergencyContactEventActionType = emergencyContactEventType, source = Source.DPS, user = user)
 
     if (deletedResponse.wasUpdated) {
       outboundEventsService.send(

@@ -367,13 +367,217 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
     }
 
     @Test
+    fun `when contact exists but approved visitor is false and update changes approved visitor to true then a create approved visitor event is sent`() {
+      val prisonerContact = webTestClient.post()
+        .uri("/sync/prisoner-contact")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .bodyValue(createPrisonerContactRequest(prisonerNumber = "A9998AB", approvedVisitor = false))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody(SyncPrisonerContact::class.java)
+        .returnResult().responseBody!!
+
+      with(prisonerContact) {
+        assertThat(approvedVisitor).isFalse
+      }
+
+      val updatedPrisonerContact = webTestClient.put()
+        .uri("/sync/prisoner-contact/{prisonerContactId}", prisonerContact.id)
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .bodyValue(updatePrisonerContactRequest(prisonerNumber = "A9998AB", approvedVisitor = true))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody(SyncPrisonerContact::class.java)
+        .returnResult().responseBody!!
+
+      // Check the updated copy
+      with(updatedPrisonerContact) {
+        assertThat(approvedVisitor).isTrue
+      }
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.PRISONER_CONTACT_UPDATED,
+        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", "BXI"),
+        personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
+      )
+
+      assertApprovedVisitorCustomCreatedEvent(updatedPrisonerContact, Source.NOMIS, User("UpdatedUser", "BXI"))
+    }
+
+    @Test
+    fun `when contact exists but approved visitor is true and update changes approved visitor to false then a delete approved visitor event is sent`() {
+      val prisonerContact = webTestClient.post()
+        .uri("/sync/prisoner-contact")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .bodyValue(createPrisonerContactRequest("A9997AB", approvedVisitor = true))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody(SyncPrisonerContact::class.java)
+        .returnResult().responseBody!!
+
+      with(prisonerContact) {
+        assertThat(approvedVisitor).isTrue
+      }
+
+      val updatedPrisonerContact = webTestClient.put()
+        .uri("/sync/prisoner-contact/{prisonerContactId}", prisonerContact.id)
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .bodyValue(updatePrisonerContactRequest("A9999AB", approvedVisitor = false))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody(SyncPrisonerContact::class.java)
+        .returnResult().responseBody!!
+
+      // Check the updated copy
+      with(updatedPrisonerContact) {
+        assertThat(approvedVisitor).isFalse
+      }
+
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.PRISONER_CONTACT_UPDATED,
+        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", "BXI"),
+        personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
+      )
+
+      verify(telemetryClient, times(1)).trackEvent(
+        "contact-approved-visitor-deleted",
+        mapOf(
+          "description" to "A contact approved visitor has been deleted",
+          "source" to "NOMIS",
+          "username" to "UpdatedUser",
+          "contactId" to updatedPrisonerContact.contactId.toString(),
+          "active_caseload_id" to "BXI",
+          "prisoner_contact_id" to updatedPrisonerContact.id.toString(),
+        ),
+        null,
+      )
+    }
+
+    @Test
+    fun `when contact exists but emergency contact is false and update changes emergency contact to true then a create emergency contact event is sent`() {
+      val prisonerContact = webTestClient.post()
+        .uri("/sync/prisoner-contact")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .bodyValue(createPrisonerContactRequest(prisonerNumber = "A9996AB", emergencyContact = false))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody(SyncPrisonerContact::class.java)
+        .returnResult().responseBody!!
+
+      with(prisonerContact) {
+        assertThat(emergencyContact).isFalse
+      }
+
+      val updatedPrisonerContact = webTestClient.put()
+        .uri("/sync/prisoner-contact/{prisonerContactId}", prisonerContact.id)
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .bodyValue(updatePrisonerContactRequest(prisonerNumber = "A9996AB", emergencyContact = true))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody(SyncPrisonerContact::class.java)
+        .returnResult().responseBody!!
+
+      // Check the updated copy
+      with(updatedPrisonerContact) {
+        assertThat(emergencyContact).isTrue
+      }
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.PRISONER_CONTACT_UPDATED,
+        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", "BXI"),
+        personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
+      )
+
+      assertEmergencyContactCustomCreatedEvent(updatedPrisonerContact, Source.NOMIS, User("UpdatedUser", "BXI"))
+    }
+
+    @Test
+    fun `when contact exists but emergency contact is true and update changes emergency contact to false then a delete emergency contact event is sent`() {
+      val prisonerContact = webTestClient.post()
+        .uri("/sync/prisoner-contact")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .bodyValue(createPrisonerContactRequest("A9997AB", emergencyContact = true))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody(SyncPrisonerContact::class.java)
+        .returnResult().responseBody!!
+
+      with(prisonerContact) {
+        assertThat(emergencyContact).isTrue
+      }
+
+      val updatedPrisonerContact = webTestClient.put()
+        .uri("/sync/prisoner-contact/{prisonerContactId}", prisonerContact.id)
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .headers(setAuthorisationUsingCurrentUser())
+        .bodyValue(updatePrisonerContactRequest("A9999AB", emergencyContact = false))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBody(SyncPrisonerContact::class.java)
+        .returnResult().responseBody!!
+
+      // Check the updated copy
+      with(updatedPrisonerContact) {
+        assertThat(emergencyContact).isFalse
+      }
+
+      stubEvents.assertHasEvent(
+        event = OutboundEvent.PRISONER_CONTACT_UPDATED,
+        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", "BXI"),
+        personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
+      )
+
+      verify(telemetryClient, times(1)).trackEvent(
+        "contact-emergency-contact-deleted",
+        mapOf(
+          "description" to "A contact emergency contact has been deleted",
+          "source" to "NOMIS",
+          "username" to "UpdatedUser",
+          "contactId" to updatedPrisonerContact.contactId.toString(),
+          "active_caseload_id" to "BXI",
+          "prisoner_contact_id" to updatedPrisonerContact.id.toString(),
+        ),
+        null,
+      )
+    }
+
+    @Test
     fun `should delete an existing prisoner contact`() {
       val prisonerContact = webTestClient.post()
         .uri("/sync/prisoner-contact")
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .headers(setAuthorisationUsingCurrentUser())
-        .bodyValue(createPrisonerContactRequest("A1234BD", nextOfKin = true))
+        .bodyValue(createPrisonerContactRequest("A1234BD", nextOfKin = true, approvedVisitor = true, emergencyContact = true))
         .exchange()
         .expectStatus()
         .isOk
@@ -404,6 +608,8 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
 
       assertCustomDeletedEvent(prisonerContact, Source.NOMIS, User("SYS"))
       assertNextOfKinCustomDeletedEvent(prisonerContact, Source.NOMIS, User("SYS"))
+      assertApprovedVisitorCustomDeletedEvent(prisonerContact, Source.NOMIS, User("SYS"))
+      assertEmergencyContactCustomDeletedEvent(prisonerContact, Source.NOMIS, User("SYS"))
     }
 
     @Test
@@ -454,16 +660,16 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .isOk
     }
 
-    private fun updatePrisonerContactRequest(prisonerNumber: String = "A1234BC", nextOfKin: Boolean = true) = SyncUpdatePrisonerContactRequest(
+    private fun updatePrisonerContactRequest(prisonerNumber: String = "A1234BC", nextOfKin: Boolean = true, approvedVisitor: Boolean = true, emergencyContact: Boolean = false) = SyncUpdatePrisonerContactRequest(
       contactId = 1L,
       prisonerNumber = prisonerNumber,
       contactType = "O",
       relationshipType = "LAW",
       nextOfKin = nextOfKin,
-      emergencyContact = false,
+      emergencyContact = emergencyContact,
       comments = "Updated relationship type to family",
       active = true,
-      approvedVisitor = true,
+      approvedVisitor = approvedVisitor,
       currentTerm = true,
       expiryDate = LocalDate.of(2025, 12, 31),
       createdAtPrison = "LONDN",
@@ -471,16 +677,16 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       updatedTime = LocalDateTime.now(),
     )
 
-    private fun createPrisonerContactRequest(prisonerNumber: String = "A1234BC", nextOfKin: Boolean = true) = SyncCreatePrisonerContactRequest(
+    private fun createPrisonerContactRequest(prisonerNumber: String = "A1234BC", nextOfKin: Boolean = true, approvedVisitor: Boolean = true, emergencyContact: Boolean = false) = SyncCreatePrisonerContactRequest(
       contactId = 1L,
       prisonerNumber = prisonerNumber,
       contactType = "S",
       relationshipType = "FRI",
       nextOfKin = nextOfKin,
-      emergencyContact = false,
+      emergencyContact = emergencyContact,
       comments = "Create relationship",
       active = true,
-      approvedVisitor = true,
+      approvedVisitor = approvedVisitor,
       currentTerm = true,
       expiryDate = LocalDate.of(2025, 12, 31),
       createdAtPrison = "LONDN",
@@ -507,7 +713,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
     }
 
     private fun assertCustomUpdatedEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
-      verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactEvent(syncPrisonerContact, null, source, user)
+      verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactEvent(syncPrisonerContact, null, null, null, source, user)
 
       verify(telemetryClient, times(1)).trackEvent(
         "prisoner-contact-updated",
@@ -556,11 +762,69 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       )
     }
 
+    private fun assertApprovedVisitorCustomCreatedEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
+      verify(telemetryClient, times(1)).trackEvent(
+        "contact-approved-visitor-created",
+        mapOf(
+          "description" to "A contact approved visitor has been created",
+          "source" to source.name,
+          "username" to user.username,
+          "contactId" to syncPrisonerContact.contactId.toString(),
+          "active_caseload_id" to user.activeCaseLoadId,
+          "prisoner_contact_id" to syncPrisonerContact.id.toString(),
+        ),
+        null,
+      )
+    }
+
+    private fun assertEmergencyContactCustomCreatedEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
+      verify(telemetryClient, times(1)).trackEvent(
+        "contact-emergency-contact-created",
+        mapOf(
+          "description" to "A contact emergency contact has been created",
+          "source" to source.name,
+          "username" to user.username,
+          "contactId" to syncPrisonerContact.contactId.toString(),
+          "active_caseload_id" to user.activeCaseLoadId,
+          "prisoner_contact_id" to syncPrisonerContact.id.toString(),
+        ),
+        null,
+      )
+    }
+
     private fun assertNextOfKinCustomDeletedEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
       verify(telemetryClient, times(1)).trackEvent(
         "contact-next-of-kin-deleted",
         mapOf(
           "description" to "A contact next of kin has been deleted",
+          "source" to source.name,
+          "username" to user.username,
+          "contactId" to syncPrisonerContact.contactId.toString(),
+          "prisoner_contact_id" to syncPrisonerContact.id.toString(),
+        ),
+        null,
+      )
+    }
+
+    private fun assertApprovedVisitorCustomDeletedEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
+      verify(telemetryClient, times(1)).trackEvent(
+        "contact-approved-visitor-deleted",
+        mapOf(
+          "description" to "A contact approved visitor has been deleted",
+          "source" to source.name,
+          "username" to user.username,
+          "contactId" to syncPrisonerContact.contactId.toString(),
+          "prisoner_contact_id" to syncPrisonerContact.id.toString(),
+        ),
+        null,
+      )
+    }
+
+    private fun assertEmergencyContactCustomDeletedEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
+      verify(telemetryClient, times(1)).trackEvent(
+        "contact-emergency-contact-deleted",
+        mapOf(
+          "description" to "A contact emergency contact has been deleted",
           "source" to source.name,
           "username" to user.username,
           "contactId" to syncPrisonerContact.contactId.toString(),
