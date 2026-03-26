@@ -250,7 +250,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactRestrictionDetails.contactId.toString(),
         "prisoner_contact_restriction_id" to contactRestrictionDetails.prisonerContactRestrictionId.toString(),
-        "restriction_type" to restrictionType,
+        "restriction_code" to restrictionType,
       ),
       null,
     )

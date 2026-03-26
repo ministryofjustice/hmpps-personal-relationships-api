@@ -289,7 +289,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
           "active_caseload_id" to user.activeCaseLoadId,
           "contact_id" to syncPrisonerContactRestriction.contactId.toString(),
           "prisoner_contact_restriction_id" to syncPrisonerContactRestriction.prisonerContactRestrictionId.toString(),
-          "restriction_type" to syncPrisonerContactRestriction.restrictionType,
+          "restriction_code" to syncPrisonerContactRestriction.restrictionType,
         ),
         null,
       )
@@ -307,7 +307,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
           "active_caseload_id" to user.activeCaseLoadId,
           "contact_id" to syncPrisonerContactRestriction.contactId.toString(),
           "prisoner_contact_restriction_id" to syncPrisonerContactRestriction.prisonerContactRestrictionId.toString(),
-          "restriction_type" to syncPrisonerContactRestriction.restrictionType,
+          "restriction_code" to syncPrisonerContactRestriction.restrictionType,
         ),
         null,
       )
@@ -324,7 +324,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
           "username" to user.username,
           "contact_id" to syncPrisonerContactRestriction.contactId.toString(),
           "prisoner_contact_restriction_id" to syncPrisonerContactRestriction.prisonerContactRestrictionId.toString(),
-          "restriction_type" to syncPrisonerContactRestriction.restrictionType,
+          "restriction_code" to syncPrisonerContactRestriction.restrictionType,
         ),
         null,
       )

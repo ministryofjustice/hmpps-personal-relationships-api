@@ -309,7 +309,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
         "username" to user.username,
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to updatedPrisonerContactRestrictionDetails.contactId.toString(),
-        "restriction_type" to restrictionType,
+        "restriction_code" to restrictionType,
         "prisoner_contact_restriction_id" to updatedPrisonerContactRestrictionDetails.prisonerContactRestrictionId.toString(),
       ),
       null,

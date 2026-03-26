@@ -542,6 +542,9 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "contact_id" to updatedPrisonerContact.contactId.toString(),
         "prisoner_number" to updatedPrisonerContact.prisonerNumber,
         "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
+        "group_code" to updatedPrisonerContact.relationshipTypeCode,
+        "relationship_code" to updatedPrisonerContact.relationshipToPrisonerCode,
+        "relationship_status" to "active",
       ),
       null,
     )

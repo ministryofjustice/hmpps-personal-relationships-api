@@ -291,7 +291,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
         "contact_id" to syncContactRestriction.contactId.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_restriction_id" to syncContactRestriction.contactRestrictionId.toString(),
-        "restriction_type" to syncContactRestriction.restrictionType,
+        "restriction_code" to syncContactRestriction.restrictionType,
       ),
       null,
     )
@@ -309,7 +309,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
         "contact_id" to syncContactRestriction.contactId.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_restriction_id" to syncContactRestriction.contactRestrictionId.toString(),
-        "restriction_type" to syncContactRestriction.restrictionType,
+        "restriction_code" to syncContactRestriction.restrictionType,
       ),
       null,
     )
@@ -324,7 +324,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
         "username" to user.username,
         "contact_id" to contactId.toString(),
         "contact_restriction_id" to contactRestrictionId.toString(),
-        "restriction_type" to "CCTV",
+        "restriction_code" to "CCTV",
       ),
       null,
     )
