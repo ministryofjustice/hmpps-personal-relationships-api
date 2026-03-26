@@ -2,11 +2,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.5"
-  id("org.openapi.generator") version "7.20.0"
-  id("io.gatling.gradle") version "3.15.0"
-  kotlin("plugin.spring") version "2.3.10"
-  kotlin("plugin.jpa") version "2.3.10"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.1.0"
+  id("org.openapi.generator") version "7.21.0"
+  id("io.gatling.gradle") version "3.15.0.1"
+  kotlin("plugin.spring") version "2.3.20"
+  kotlin("plugin.jpa") version "2.3.20"
 }
 
 allOpen {
@@ -43,20 +43,20 @@ dependencyCheck {
 dependencies {
   // Spring boot dependencies
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.0.2")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.1.0")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-flyway")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:6.0.1")
-  implementation("io.sentry:sentry-spring-boot-4-starter:8.35.0")
+  implementation("io.sentry:sentry-spring-boot-4-starter:8.37.0")
   implementation("org.springframework.boot:spring-boot-starter-validation")
-  implementation("org.openapitools:jackson-databind-nullable:0.2.9")
+  implementation("org.openapitools:jackson-databind-nullable:0.2.10")
   implementation("org.apache.logging.log4j:log4j-api:2.25.3")
   implementation("io.github.cdimascio:dotenv-kotlin:6.5.1")
 
   // CSV dependencies
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.21.1")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.21.2")
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
@@ -67,12 +67,12 @@ dependencies {
   // OpenAPI
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
 
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.25.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.26.1")
   implementation("org.springframework.boot:spring-boot-jackson2")
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.21.1")
+  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.21.2")
 
   // Test dependencies
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.0.2")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.1.0")
   testImplementation("org.springframework.boot:spring-boot-starter-webclient-test")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
@@ -80,8 +80,8 @@ dependencies {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("org.mockito:mockito-inline:5.2.0")
-  testImplementation("org.testcontainers:testcontainers-postgresql:2.0.3")
-  testImplementation("org.testcontainers:testcontainers-localstack:2.0.3")
+  testImplementation("org.testcontainers:testcontainers-postgresql:2.0.4")
+  testImplementation("org.testcontainers:testcontainers-localstack:2.0.4")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.60.1")
 }

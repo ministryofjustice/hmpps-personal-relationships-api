@@ -19,11 +19,11 @@ spring:
       pool-name: PERSONAL-RELATIONSHIPS-DB-CP
       connection-timeout: 15000
       validation-timeout: 2000
-      maximum-pool-size: 25
-      max-lifetime: 600000
+      maximum-pool-size: 4
+      max-lifetime: 1800000
       leak-detection-threshold: 0
-      minimum-idle: 8
-      keepalive-time: 10000
+      minimum-idle: 3
+      keepalive-time: 300000
 
   jpa:
     open-in-view: false
@@ -139,3 +139,5 @@ sentry:
 contact-search:
   slow-query:
     row-limit: 2000
+
+springdoc.swagger-ui.version: 5.32.1
