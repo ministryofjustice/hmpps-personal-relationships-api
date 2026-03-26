@@ -408,34 +408,4 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
       null,
     )
   }
-
-  private fun assertApprovedVisitorDeletedCustomEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
-    verify(telemetryClient, times(1)).trackEvent(
-      "contact-approved-visitor-deleted",
-      mapOf(
-        "description" to "A contact approved visitor has been deleted",
-        "source" to source.name,
-        "username" to user.username,
-        "contactId" to contactRelationship.contactId.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
-        "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
-      ),
-      null,
-    )
-  }
-
-  private fun assertEmergencyContactDeletedCustomEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
-    verify(telemetryClient, times(1)).trackEvent(
-      "contact-emergency-contact-deleted",
-      mapOf(
-        "description" to "A contact emergency contact has been deleted",
-        "source" to source.name,
-        "username" to user.username,
-        "contactId" to contactRelationship.contactId.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
-        "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
-      ),
-      null,
-    )
-  }
 }
