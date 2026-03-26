@@ -135,7 +135,7 @@ class DeleteContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "active_caseload_id" to user.activeCaseLoadId,
-        "contactId" to contactId.toString(),
+        "contact_id" to contactId.toString(),
         "contact_address_id" to contactAddressId.toString(),
       ),
       null,

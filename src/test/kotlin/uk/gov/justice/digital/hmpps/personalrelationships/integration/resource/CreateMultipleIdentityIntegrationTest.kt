@@ -319,7 +319,7 @@ class CreateMultipleIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "active_caseload_id" to user.activeCaseLoadId,
-        "contactId" to contactIdentityDetails.contactId.toString(),
+        "contact_id" to contactIdentityDetails.contactId.toString(),
         "contact_identity_id" to contactIdentityDetails.contactIdentityId.toString(),
       ),
       null,

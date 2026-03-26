@@ -119,7 +119,7 @@ class CreateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "active_caseload_id" to user.activeCaseLoadId,
-        "contactId" to employmentDetails.contactId.toString(),
+        "contact_id" to employmentDetails.contactId.toString(),
         "contact_employment_id" to employmentDetails.employmentId.toString(),
       ),
       null,

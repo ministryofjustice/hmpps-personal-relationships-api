@@ -10,7 +10,7 @@ abstract class ContactCustomTelemetryEvent(open val contactId: Long, val telemet
       "description" to telemetryCustomEventType.description,
       "source" to source,
       "username" to user.username,
-      "contactId" to contactId.toString(),
+      "contact_id" to contactId.toString(),
     )
 
     if (user.activeCaseLoadId != null) {

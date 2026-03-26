@@ -354,7 +354,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "active_caseload_id" to user.activeCaseLoadId,
-        "contactId" to updatedEmploymentDetails.contactId.toString(),
+        "contact_id" to updatedEmploymentDetails.contactId.toString(),
         "contact_employment_id" to updatedEmploymentDetails.employmentId.toString(),
       ),
       null,

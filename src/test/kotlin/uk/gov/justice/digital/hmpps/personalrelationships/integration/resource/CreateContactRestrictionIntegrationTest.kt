@@ -232,9 +232,9 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "active_caseload_id" to user.activeCaseLoadId,
-        "contactId" to contactRestrictionDetails.contactId.toString(),
+        "contact_id" to contactRestrictionDetails.contactId.toString(),
         "contact_restriction_id" to contactRestrictionDetails.contactRestrictionId.toString(),
-        "restrictionType" to contactRestrictionDetails.restrictionType,
+        "restriction_type" to contactRestrictionDetails.restrictionType,
       ),
       null,
     )
