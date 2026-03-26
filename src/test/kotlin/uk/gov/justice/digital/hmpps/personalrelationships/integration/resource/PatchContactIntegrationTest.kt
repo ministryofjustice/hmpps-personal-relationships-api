@@ -768,7 +768,7 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         "source" to source,
         "username" to userName,
         "active_caseload_id" to activeCaseloadId,
-        "contactId" to patchContactResponse.id.toString(),
+        "contact_id" to patchContactResponse.id.toString(),
       ),
       null,
     )

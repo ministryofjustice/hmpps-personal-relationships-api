@@ -22,10 +22,23 @@ class PrisonerContactCustomEvent private constructor(
   val eventUser: User,
 ) : ContactCustomTelemetryEvent(contactId, telemetryCustomEventType = getEvent(eventActionType), source = eventSource.name, user = eventUser) {
   override fun customProperties(): Map<String, String> {
-    val properties = mapOf(
+    val properties = mutableMapOf(
       "prisoner_contact_id" to prisonerContactCustomProperties.prisonerContactId.toString(),
       "prisoner_number" to prisonerContactCustomProperties.prisonerNumber,
     )
+
+    prisonerContactCustomProperties.relationshipTypeCode?.let {
+      properties["group_code"] = it
+    }
+
+    prisonerContactCustomProperties.relationshipToPrisonerCode?.let {
+      properties["relationship_code"] = it
+    }
+
+    prisonerContactCustomProperties.isRelationshipActive?.let {
+      properties["relationship_status"] = if (it) "active" else "inactive"
+    }
+
     return properties.toMap()
   }
 
@@ -74,8 +87,23 @@ class PrisonerContactCustomEvent private constructor(
 internal class PrisonerContactCustomProperties(
   val prisonerContactId: Long,
   val prisonerNumber: String,
+  val relationshipTypeCode: String? = null,
+  val relationshipToPrisonerCode: String? = null,
+  val isRelationshipActive: Boolean? = null,
 ) {
-  constructor(syncPrisonerContact: SyncPrisonerContact) : this(syncPrisonerContact.id, syncPrisonerContact.prisonerNumber)
-  constructor(prisonerContactRelationship: PrisonerContactRelationshipDetails) : this(prisonerContactRelationship.prisonerContactId, prisonerContactRelationship.prisonerNumber)
+  constructor(syncPrisonerContact: SyncPrisonerContact) : this(
+    prisonerContactId = syncPrisonerContact.id,
+    prisonerNumber = syncPrisonerContact.prisonerNumber,
+    relationshipTypeCode = syncPrisonerContact.contactType,
+    relationshipToPrisonerCode = syncPrisonerContact.relationshipType,
+    isRelationshipActive = syncPrisonerContact.active,
+  )
+  constructor(prisonerContactRelationship: PrisonerContactRelationshipDetails) : this(
+    prisonerContactId = prisonerContactRelationship.prisonerContactId,
+    prisonerNumber = prisonerContactRelationship.prisonerNumber,
+    relationshipTypeCode = prisonerContactRelationship.relationshipTypeCode,
+    relationshipToPrisonerCode = prisonerContactRelationship.relationshipToPrisonerCode,
+    isRelationshipActive = prisonerContactRelationship.isRelationshipActive,
+  )
   constructor(relationshipApproved: RelationshipsApproved) : this(relationshipApproved.prisonerContactId, relationshipApproved.prisonerNumber)
 }

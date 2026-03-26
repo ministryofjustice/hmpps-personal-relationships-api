@@ -348,7 +348,7 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
         "username" to user.username,
         "prisoner_number" to syncPrisonerRestriction.prisonerNumber,
         "prisoner_restriction_id" to syncPrisonerRestriction.prisonerRestrictionId.toString(),
-        "restrictionType" to syncPrisonerRestriction.restrictionType,
+        "restriction_code" to syncPrisonerRestriction.restrictionType,
       ),
       null,
     )
@@ -363,7 +363,7 @@ class SyncPrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase() {
         "username" to user.username,
         "prisoner_number" to syncPrisonerRestriction.prisonerNumber,
         "prisoner_restriction_id" to syncPrisonerRestriction.prisonerRestrictionId.toString(),
-        "restrictionType" to syncPrisonerRestriction.restrictionType,
+        "restriction_code" to syncPrisonerRestriction.restrictionType,
       ),
       null,
     )

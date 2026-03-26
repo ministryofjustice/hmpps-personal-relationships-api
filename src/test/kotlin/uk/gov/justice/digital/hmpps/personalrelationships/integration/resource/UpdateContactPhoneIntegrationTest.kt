@@ -287,7 +287,7 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "active_caseload_id" to user.activeCaseLoadId,
-        "contactId" to contactPhoneDetails.contactId.toString(),
+        "contact_id" to contactPhoneDetails.contactId.toString(),
         "contact_phone_id" to contactPhoneDetails.contactPhoneId.toString(),
       ),
       null,

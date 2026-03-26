@@ -677,7 +677,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "active_caseload_id" to user.activeCaseLoadId,
-        "contactId" to contactDetails.id.toString(),
+        "contact_id" to contactDetails.id.toString(),
       ),
       null,
     )

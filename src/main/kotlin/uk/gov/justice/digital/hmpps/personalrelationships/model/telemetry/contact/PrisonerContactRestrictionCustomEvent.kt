@@ -23,7 +23,7 @@ class PrisonerContactRestrictionCustomEvent private constructor(
   override fun customProperties(): Map<String, String> {
     val customProperties = mutableMapOf("prisoner_contact_restriction_id" to prisonerContactRestrictionCustomProperties.prisonerContactRestrictionId.toString())
     prisonerContactRestrictionCustomProperties.restrictionType?.let {
-      customProperties["restrictionType"] = it
+      customProperties["restriction_code"] = it
     }
     return customProperties.toMap()
   }

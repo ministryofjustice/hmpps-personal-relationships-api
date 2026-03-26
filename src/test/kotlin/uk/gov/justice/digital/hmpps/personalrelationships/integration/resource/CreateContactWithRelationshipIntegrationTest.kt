@@ -295,7 +295,7 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
         "source" to source.name,
         "username" to user.username,
         "active_caseload_id" to user.activeCaseLoadId,
-        "contactId" to contactRelationshipDetails.contactId.toString(),
+        "contact_id" to contactRelationshipDetails.contactId.toString(),
         "prisoner_contact_id" to contactRelationshipDetails.prisonerContactId.toString(),
         "prisoner_number" to contactRelationshipDetails.prisonerNumber,
       ),

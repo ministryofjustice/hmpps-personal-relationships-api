@@ -207,7 +207,7 @@ class CreateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
         "source" to source.name,
         "username" to user.username,
         "active_caseload_id" to user.activeCaseLoadId,
-        "contactId" to contactAddressPhoneDetails.contactId.toString(),
+        "contact_id" to contactAddressPhoneDetails.contactId.toString(),
         "contact_address_phone_id" to contactAddressPhoneDetails.contactAddressPhoneId.toString(),
       ),
       null,
