@@ -152,7 +152,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .headers(setAuthorisationUsingCurrentUser())
-        .bodyValue(createPrisonerContactRequest())
+        .bodyValue(createPrisonerContactRequest(nextOfKin = true, approvedVisitor = true, emergencyContact = true))
         .exchange()
         .expectStatus()
         .isOk
@@ -168,7 +168,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
         assertThat(contactType).isEqualTo("S")
         assertThat(relationshipType).isEqualTo("FRI")
         assertThat(nextOfKin).isTrue
-        assertThat(emergencyContact).isFalse
+        assertThat(emergencyContact).isTrue
         assertThat(comments).isEqualTo("Create relationship")
         assertThat(active).isTrue
         assertThat(approvedVisitor).isTrue
@@ -187,6 +187,9 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       )
 
       assertCustomCreatedEvent(prisonerContact, Source.NOMIS, User("adminUser", "KMI"))
+      assertNextOfKinCustomCreatedEvent(prisonerContact, Source.NOMIS, User("adminUser", "KMI"))
+      assertApprovedVisitorCustomCreatedEvent(prisonerContact, Source.NOMIS, User("adminUser", "KMI"))
+      assertEmergencyContactCustomCreatedEvent(prisonerContact, Source.NOMIS, User("adminUser", "KMI"))
     }
 
     @Test
