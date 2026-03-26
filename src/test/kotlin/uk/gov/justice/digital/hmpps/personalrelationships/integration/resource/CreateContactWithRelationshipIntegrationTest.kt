@@ -298,6 +298,9 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
         "contact_id" to contactRelationshipDetails.contactId.toString(),
         "prisoner_contact_id" to contactRelationshipDetails.prisonerContactId.toString(),
         "prisoner_number" to contactRelationshipDetails.prisonerNumber,
+        "group_code" to contactRelationshipDetails.relationshipTypeCode,
+        "relationship_code" to contactRelationshipDetails.relationshipToPrisonerCode,
+        "relationship_status" to "active",
       ),
       null,
     )

@@ -710,6 +710,9 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "active_caseload_id" to user.activeCaseLoadId,
           "prisoner_contact_id" to syncPrisonerContact.id.toString(),
           "prisoner_number" to syncPrisonerContact.prisonerNumber,
+          "group_code" to syncPrisonerContact.contactType,
+          "relationship_code" to syncPrisonerContact.relationshipType,
+          "relationship_status" to "active",
         ),
         null,
       )

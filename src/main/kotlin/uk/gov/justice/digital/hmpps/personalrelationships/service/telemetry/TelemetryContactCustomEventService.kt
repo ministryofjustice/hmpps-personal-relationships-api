@@ -145,14 +145,22 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
   }
 
   fun trackCreatePrisonerContactEvent(prisonerContactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
+    val event = PrisonerContactCustomEvent(prisonerContactRelationship.contactId, prisonerContactRelationship, EventActionType.CREATE, source, user)
+    telemetryService.track(event)
+
+    // log all child events
     with(prisonerContactRelationship) {
-      trackCreatePrisonerContactEventAndChildEvents(contactId = contactId, prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, isNextOfKin = isNextOfKin, isEmergencyContact = isEmergencyContact, isApprovedVisitor = isApprovedVisitor, source = source, user = user)
+      trackCreatePrisonerContactChildEvents(contactId = contactId, prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, isNextOfKin = isNextOfKin, isEmergencyContact = isEmergencyContact, isApprovedVisitor = isApprovedVisitor, source = source, user = user)
     }
   }
 
   fun trackCreatePrisonerContactEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
+    val event = PrisonerContactCustomEvent(syncPrisonerContact.contactId, syncPrisonerContact, EventActionType.CREATE, source, user)
+    telemetryService.track(event)
+
+    // log all child events
     with(syncPrisonerContact) {
-      trackCreatePrisonerContactEventAndChildEvents(contactId = contactId, prisonerContactId = id, prisonerNumber = prisonerNumber, isNextOfKin = nextOfKin, isEmergencyContact = emergencyContact, isApprovedVisitor = approvedVisitor, source = source, user = user)
+      trackCreatePrisonerContactChildEvents(contactId = contactId, prisonerContactId = id, prisonerNumber = prisonerNumber, isNextOfKin = nextOfKin, isEmergencyContact = emergencyContact, isApprovedVisitor = approvedVisitor, source = source, user = user)
     }
   }
 
@@ -538,8 +546,7 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     telemetryService.track(event)
   }
 
-  private fun trackCreatePrisonerContactEventAndChildEvents(contactId: Long, prisonerContactId: Long, prisonerNumber: String, isNextOfKin: Boolean, isEmergencyContact: Boolean, isApprovedVisitor: Boolean, source: Source, user: User) {
-    trackCreatePrisonerContactEvent(contactId = contactId, prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, source = source, user = user)
+  private fun trackCreatePrisonerContactChildEvents(contactId: Long, prisonerContactId: Long, prisonerNumber: String, isNextOfKin: Boolean, isEmergencyContact: Boolean, isApprovedVisitor: Boolean, source: Source, user: User) {
     if (isNextOfKin) {
       trackCreateNextOfKinEvent(contactId = contactId, prisonerContactId = prisonerContactId, source = source, user = user)
     }

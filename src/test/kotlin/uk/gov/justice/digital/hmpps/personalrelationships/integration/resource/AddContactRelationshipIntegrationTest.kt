@@ -334,6 +334,9 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "contact_id" to contactRelationship.contactId.toString(),
         "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
         "prisoner_number" to contactRelationship.prisonerNumber,
+        "group_code" to contactRelationship.relationshipTypeCode,
+        "relationship_code" to contactRelationship.relationshipToPrisonerCode,
+        "relationship_status" to "active",
       ),
       null,
     )
