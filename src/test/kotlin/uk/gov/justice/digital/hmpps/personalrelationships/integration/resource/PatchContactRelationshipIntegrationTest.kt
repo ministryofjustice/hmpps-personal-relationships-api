@@ -234,6 +234,8 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val updateRequest = PatchRelationshipRequest(
       isNextOfKin = JsonNullable.of(true),
+      isApprovedVisitor = JsonNullable.of(true),
+      isEmergencyContact = JsonNullable.of(true),
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -243,6 +245,8 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     val updatedPrisonerContacts = testAPIClient.getPrisonerContacts(prisonerNumber).content
     assertThat(updatedPrisonerContacts).hasSize(1)
     assertThat(updatedPrisonerContacts[0].isNextOfKin).isTrue
+    assertThat(updatedPrisonerContacts[0].isApprovedVisitor).isTrue
+    assertThat(updatedPrisonerContacts[0].isEmergencyContact).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
@@ -254,6 +258,8 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     updatedPrisonerContacts.forEach {
       assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
       assertNextOfKinCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertEmergencyContactCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertApprovedVisitorCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
     }
   }
 
@@ -284,6 +290,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     updatedPrisonerContacts.forEach {
       assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertApprovedVisitorCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
     }
   }
 
@@ -314,6 +321,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     updatedPrisonerContacts.forEach {
       assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertEmergencyContactCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
     }
   }
 
@@ -523,7 +531,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   private fun assertCustomEvent(updatedPrisonerContact: PrisonerContactSummary, source: Source, user: User) {
-    verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactEvent(any<PrisonerContactRelationshipDetails>(), anyOrNull<EventActionType>(), any<Source>(), any<User>())
+    verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactEvent(any<PrisonerContactRelationshipDetails>(), anyOrNull<EventActionType>(), anyOrNull<EventActionType>(), anyOrNull<EventActionType>(), any<Source>(), any<User>())
     verify(telemetryClient, times(1)).trackEvent(
       "prisoner-contact-updated",
       mapOf(
@@ -544,6 +552,36 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       "contact-next-of-kin-created",
       mapOf(
         "description" to "A contact next of kin has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to updatedPrisonerContact.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertApprovedVisitorCustomEvent(updatedPrisonerContact: PrisonerContactSummary, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-approved-visitor-created",
+      mapOf(
+        "description" to "A contact approved visitor has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to updatedPrisonerContact.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertEmergencyContactCustomEvent(updatedPrisonerContact: PrisonerContactSummary, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-emergency-contact-created",
+      mapOf(
+        "description" to "A contact emergency contact has been created",
         "source" to source.name,
         "username" to user.username,
         "contactId" to updatedPrisonerContact.contactId.toString(),

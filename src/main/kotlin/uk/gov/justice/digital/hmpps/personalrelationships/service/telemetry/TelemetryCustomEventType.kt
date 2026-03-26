@@ -40,4 +40,8 @@ enum class TelemetryCustomEventType(val eventName: String, val description: Stri
   PRISONER_RESTRICTION_DELETED_EVENT("prisoner-restriction-deleted", "A prisoner restriction has been deleted"),
   CONTACT_NEXT_OF_KIN_CREATED_EVENT("contact-next-of-kin-created", "A contact next of kin has been created"),
   CONTACT_NEXT_OF_KIN_DELETED_EVENT("contact-next-of-kin-deleted", "A contact next of kin has been deleted"),
+  CONTACT_APPROVED_VISITOR_CREATED_EVENT("contact-approved-visitor-created", "A contact approved visitor has been created"),
+  CONTACT_APPROVED_VISITOR_DELETED_EVENT("contact-approved-visitor-deleted", "A contact approved visitor has been deleted"),
+  CONTACT_EMERGENCY_CONTACT_CREATED_EVENT("contact-emergency-contact-created", "A contact emergency contact has been created"),
+  CONTACT_EMERGENCY_CONTACT_DELETED_EVENT("contact-emergency-contact-deleted", "A contact emergency contact has been deleted"),
 }
