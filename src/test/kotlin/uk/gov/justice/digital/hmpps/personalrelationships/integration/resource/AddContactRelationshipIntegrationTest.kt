@@ -384,6 +384,36 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
   }
 
+  private fun assertEmergencyContactCustomCreatedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-emergency-contact-created",
+      mapOf(
+        "description" to "A contact emergency contact has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to contactRelationship.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertApprovedVisitorCustomCreatedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-approved-visitor-created",
+      mapOf(
+        "description" to "A contact approved visitor has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contactId" to contactRelationship.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
+      ),
+      null,
+    )
+  }
+
   companion object {
     @JvmStatic
     fun allFieldConstraintViolations(): List<Arguments> {

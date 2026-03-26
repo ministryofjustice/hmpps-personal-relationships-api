@@ -170,6 +170,18 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
   fun trackUpdatePrisonerContactEvent(relationshipApproved: RelationshipsApproved, source: Source, user: User) {
     val event = PrisonerContactCustomEvent(relationshipApproved.contactId, relationshipApproved, EventActionType.UPDATE, source, user)
     telemetryService.track(event)
+
+    if (relationshipApproved.approvedToVisit) {
+      trackUpdatePrisonerContactChildEvents(
+        contactId = relationshipApproved.contactId,
+        prisonerContactId = relationshipApproved.prisonerContactId,
+        nextOfKinEventActionType = null,
+        emergencyContactEventActionType = null,
+        approvedVisitorEventActionType = EventActionType.CREATE,
+        source = source,
+        user = user,
+      )
+    }
   }
 
   fun trackUpdatePrisonerContactEvent(syncPrisonerContact: SyncPrisonerContact, nextOfKinEventActionType: EventActionType?, approvedVisitorEventActionType: EventActionType?, emergencyContactEventActionType: EventActionType?, source: Source, user: User) {
