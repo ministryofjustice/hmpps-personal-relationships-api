@@ -22,7 +22,7 @@ spring:
       maximum-pool-size: 4
       max-lifetime: 1800000
       leak-detection-threshold: 0
-      minimum-idle: 3
+      minimum-idle: 4
       keepalive-time: 300000
 
   jpa:
