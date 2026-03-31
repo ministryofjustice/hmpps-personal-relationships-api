@@ -8,13 +8,17 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.phone.CreateMultiplePhoneNumbersRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.phone.PhoneNumber
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.ContactAddressPhoneInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
@@ -253,6 +257,26 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
       event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
       additionalInfo = ContactAddressPhoneInfo(home!!.contactAddressPhoneId, savedAddressId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
+    )
+
+    created.forEach {
+      assertCustomEvent(it, Source.DPS, user = User("created", "BXI"))
+    }
+  }
+
+  private fun assertCustomEvent(contactAddressPhoneDetails: ContactAddressPhoneDetails, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreateContactAddressPhoneEvent(contactAddressPhoneDetails, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-address-phone-created",
+      mapOf(
+        "description" to "A contact address phone has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_id" to contactAddressPhoneDetails.contactId.toString(),
+        "contact_address_phone_id" to contactAddressPhoneDetails.contactAddressPhoneId.toString(),
+      ),
+      null,
     )
   }
 

@@ -7,8 +7,11 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.CreateIdentityRequest
@@ -205,6 +208,8 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactIdentityInfo(created.contactIdentityId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
+
+    assertCustomEvent(created, Source.DPS, User("created", "BXI"))
   }
 
   @Test
@@ -234,6 +239,22 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
     }
+  }
+
+  private fun assertCustomEvent(contactIdentityDetails: ContactIdentityDetails, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreateContactIdentityEvent(contactIdentityDetails, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-identity-created",
+      mapOf(
+        "description" to "A contact identity has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_id" to contactIdentityDetails.contactId.toString(),
+        "contact_identity_id" to contactIdentityDetails.contactIdentityId.toString(),
+      ),
+      null,
+    )
   }
 
   companion object {

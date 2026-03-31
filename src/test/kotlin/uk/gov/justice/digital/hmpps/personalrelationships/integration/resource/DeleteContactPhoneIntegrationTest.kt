@@ -5,9 +5,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactAddressEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactAddressPhoneEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
@@ -118,6 +121,8 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "deleted", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
+
+    assertCustomEvent(savedContactId, savedContactPhoneId, Source.DPS, User("deleted", "BXI"))
   }
 
   @ParameterizedTest
@@ -177,5 +182,23 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
     assertThat(addressPhoneRepository.findById(addressPhone.contactPhoneId)).isNotPresent
     assertThat(addressRepository.findById(address.contactAddressId)).isPresent
+
+    assertCustomEvent(savedContactId, savedContactPhoneId, Source.DPS, User("deleted", "BXI"))
+  }
+
+  private fun assertCustomEvent(contactId: Long, contactPhoneId: Long, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackDeleteContactPhoneEvent(contactId, contactPhoneId, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-phone-deleted",
+      mapOf(
+        "description" to "A contact phone has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_id" to contactId.toString(),
+        "contact_phone_id" to contactPhoneId.toString(),
+      ),
+      null,
+    )
   }
 }

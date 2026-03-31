@@ -8,9 +8,12 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.HttpStatus.CONFLICT
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.email.CreateEmailRequest
@@ -176,6 +179,8 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactEmailInfo(created.contactEmailId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
+
+    assertCustomEvent(created, Source.DPS, User("created", "BXI"))
   }
 
   private fun assertEqualsExcludingTimestamps(email: ContactEmailDetails, request: CreateEmailRequest) {
@@ -184,6 +189,22 @@ class CreateContactEmailIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
     }
+  }
+
+  private fun assertCustomEvent(contactEmailDetails: ContactEmailDetails, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreateContactEmailEvent(contactEmailDetails, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-email-created",
+      mapOf(
+        "description" to "A contact email has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_id" to contactEmailDetails.contactId.toString(),
+        "contact_email_id" to contactEmailDetails.contactEmailId.toString(),
+      ),
+      null,
+    )
   }
 
   companion object {

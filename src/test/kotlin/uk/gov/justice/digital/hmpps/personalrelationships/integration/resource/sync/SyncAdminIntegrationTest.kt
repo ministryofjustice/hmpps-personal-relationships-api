@@ -4,8 +4,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.context.jdbc.Sql
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.migrate.CodedValue
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.MergePrisonerContactRequest
@@ -341,6 +344,8 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
             nomsNumber = relationship.prisonerNumber,
           ),
         )
+
+        assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, Source.NOMIS, User("SYS", null))
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_DELETED,
@@ -350,6 +355,8 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
           nomsNumber = relationship.prisonerNumber,
         ),
       )
+
+      assertCustomPrisonerContactDeletedEvent(relationship.contactId, relationship.prisonerContactId, relationship.prisonerNumber, Source.NOMIS, User("SYS", null))
     }
 
     relationshipsCreated.map { created ->
@@ -362,6 +369,8 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
             nomsNumber = createdPrisonerNumber,
           ),
         )
+
+        assertCustomPrisonerContactRestrictionCreatedEvent(created.contactId, restriction.dpsId, Source.NOMIS, User("SYS", null))
       }
 
       stubEvents.assertHasEvent(
@@ -372,6 +381,74 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
           nomsNumber = createdPrisonerNumber,
         ),
       )
+
+      assertCustomPrisonerContactCreatedEvent(created.contactId, created.relationship.dpsId, createdPrisonerNumber, Source.NOMIS, User("SYS", null))
     }
+  }
+
+  private fun assertCustomPrisonerContactCreatedEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreatePrisonerContactEvent(contactId, prisonerContactId, prisonerNumber, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-contact-created",
+      mapOf(
+        "description" to "A prisoner contact has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contact_id" to contactId.toString(),
+        "prisoner_contact_id" to prisonerContactId.toString(),
+        "prisoner_number" to prisonerNumber,
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomPrisonerContactRestrictionCreatedEvent(contactId: Long, prisonerContactRestrictionId: Long, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreatePrisonerContactRestrictionEvent(contactId, prisonerContactRestrictionId, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-contact-restriction-created",
+      mapOf(
+        "description" to "A prisoner contact restriction has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contact_id" to contactId.toString(),
+        "prisoner_contact_restriction_id" to prisonerContactRestrictionId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomPrisonerContactRestrictionDeletedEvent(contactId: Long, prisonerContactRestrictionId: Long, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactRestrictionEvent(contactId, prisonerContactRestrictionId, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-contact-restriction-deleted",
+      mapOf(
+        "description" to "A prisoner contact restriction has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "contact_id" to contactId.toString(),
+        "prisoner_contact_restriction_id" to prisonerContactRestrictionId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomPrisonerContactDeletedEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactEvent(contactId, prisonerContactId, prisonerNumber, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-contact-deleted",
+      mapOf(
+        "description" to "A prisoner contact has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "contact_id" to contactId.toString(),
+        "prisoner_contact_id" to prisonerContactId.toString(),
+        "prisoner_number" to prisonerNumber,
+      ),
+      null,
+    )
   }
 }

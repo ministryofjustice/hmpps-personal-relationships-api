@@ -6,12 +6,16 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.employment.CreateEmploymentRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.employment.UpdateEmploymentRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.EmploymentDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.EmploymentInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
@@ -135,12 +139,30 @@ class UpdateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = EmploymentInfo(updated.employmentId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
+
+    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
   }
 
   companion object {
     private fun aMinimalRequest() = UpdateEmploymentRequest(
       organisationId = 666,
       isActive = false,
+    )
+  }
+
+  private fun assertCustomEvent(updatedEmploymentDetails: EmploymentDetails, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackUpdateEmploymentEvent(updatedEmploymentDetails, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-employment-updated",
+      mapOf(
+        "description" to "A contact employment has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_id" to updatedEmploymentDetails.contactId.toString(),
+        "contact_employment_id" to updatedEmploymentDetails.employmentId.toString(),
+      ),
+      null,
     )
   }
 }

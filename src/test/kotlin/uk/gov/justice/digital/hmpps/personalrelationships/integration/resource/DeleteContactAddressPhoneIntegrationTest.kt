@@ -5,12 +5,17 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.any
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.phone.CreateContactAddressPhoneRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.ContactAddressPhoneInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
@@ -121,6 +126,24 @@ class DeleteContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
       event = OutboundEvent.CONTACT_ADDRESS_PHONE_DELETED,
       additionalInfo = ContactAddressPhoneInfo(savedAddressPhoneId, savedAddressId, Source.DPS, "deleted", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
+    )
+
+    assertCustomEvent(savedContactId, savedAddressPhoneId, Source.DPS, User("deleted", "BXI"))
+  }
+
+  private fun assertCustomEvent(contactId: Long, contactAddressPhoneId: Long, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackDeleteContactAddressPhoneEvent(any<ContactAddressPhoneDetails>(), any<Source>(), any<User>())
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-address-phone-deleted",
+      mapOf(
+        "description" to "A contact address phone has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_id" to contactId.toString(),
+        "contact_address_phone_id" to contactAddressPhoneId.toString(),
+      ),
+      null,
     )
   }
 }

@@ -10,17 +10,23 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.EmploymentServ
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 
 @Service
 class EmploymentFacade(
   private val employmentService: EmploymentService,
   private val outboundEventsService: OutboundEventsService,
+  private val telemetryContactCustomEventService: TelemetryContactCustomEventService,
 ) {
 
   fun patchEmployments(contactId: Long, request: PatchEmploymentsRequest, user: User): List<EmploymentDetails> = employmentService.patchEmployments(contactId, request, user).also { result ->
     result.createdIds.onEach { outboundEventsService.send(OutboundEvent.EMPLOYMENT_CREATED, it, contactId = contactId, source = Source.DPS, user = user) }
     result.updatedIds.onEach { outboundEventsService.send(OutboundEvent.EMPLOYMENT_UPDATED, it, contactId = contactId, source = Source.DPS, user = user) }
     result.deletedIds.onEach { outboundEventsService.send(OutboundEvent.EMPLOYMENT_DELETED, it, contactId = contactId, source = Source.DPS, user = user) }
+  }.also { result ->
+    result.createdIds.forEach { employmentId -> telemetryContactCustomEventService.trackCreateEmploymentEvent(contactId, employmentId, source = Source.DPS, user = user) }
+    result.updatedIds.forEach { employmentId -> telemetryContactCustomEventService.trackUpdateEmploymentEvent(contactId, employmentId, source = Source.DPS, user = user) }
+    result.deletedIds.forEach { employmentId -> telemetryContactCustomEventService.trackDeleteEmploymentEvent(contactId, employmentId, source = Source.DPS, user = user) }
   }.employmentsAfterUpdate
 
   fun createEmployment(contactId: Long, request: CreateEmploymentRequest, user: User): EmploymentDetails = employmentService.createEmployment(
@@ -30,15 +36,21 @@ class EmploymentFacade(
     user.username,
   ).also { result ->
     outboundEventsService.send(OutboundEvent.EMPLOYMENT_CREATED, result.employmentId, contactId = contactId, source = Source.DPS, user = user)
+  }.also {
+    telemetryContactCustomEventService.trackCreateEmploymentEvent(it, source = Source.DPS, user = user)
   }
 
   fun updateEmployment(contactId: Long, employmentId: Long, request: UpdateEmploymentRequest, user: User): EmploymentDetails = employmentService.updateEmployment(contactId, employmentId, request, user).also {
     outboundEventsService.send(OutboundEvent.EMPLOYMENT_UPDATED, employmentId, contactId = contactId, source = Source.DPS, user = user)
+  }.also {
+    telemetryContactCustomEventService.trackUpdateEmploymentEvent(it, source = Source.DPS, user = user)
   }
 
   fun deleteEmployment(contactId: Long, employmentId: Long, user: User) {
     employmentService.deleteEmployment(contactId, employmentId).also {
       outboundEventsService.send(OutboundEvent.EMPLOYMENT_DELETED, employmentId, contactId = contactId, source = Source.DPS, user = user)
+    }.also {
+      telemetryContactCustomEventService.trackDeleteEmploymentEvent(contactId, employmentId, source = Source.DPS, user = user)
     }
   }
 

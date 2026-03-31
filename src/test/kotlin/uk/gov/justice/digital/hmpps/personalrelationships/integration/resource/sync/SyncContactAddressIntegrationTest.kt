@@ -5,9 +5,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncCreateContactAddressRequest
@@ -165,6 +168,8 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactAddressInfo(contactAddress.contactAddressId, Source.NOMIS, "CREATE", "KMI"),
       personReference = PersonReference(dpsContactId = contactId),
     )
+
+    assertCustomCreatedEvent(syncContactAddress = contactAddress, source = Source.NOMIS, user = User("CREATE", "KMI"))
   }
 
   @Test
@@ -220,6 +225,8 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactAddressInfo(contactAddress.contactAddressId, Source.NOMIS, "UPDATE", "BXI"),
       personReference = PersonReference(dpsContactId = contactId),
     )
+
+    assertCustomUpdatedEvent(syncContactAddress = updatedAddress, source = Source.NOMIS, user = User("UPDATE", "BXI"))
   }
 
   @Test
@@ -269,6 +276,8 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
       assertThat(createdBy).isEqualTo("CREATE")
       assertThat(createdTime).isNotNull()
     }
+
+    assertCustomUpdatedEvent(syncContactAddress = updatedAddress, source = Source.NOMIS, user = User("UPDATE", "BXI"))
   }
 
   @Test
@@ -290,6 +299,8 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
       additionalInfo = ContactAddressInfo(5, Source.NOMIS, "SYS", null),
       personReference = PersonReference(dpsContactId = 4),
     )
+
+    assertCustomDeletedEvent(contactId = 4, contactAddressId = 5, source = Source.NOMIS, user = User("SYS"))
   }
 
   private fun updateContactAddressRequest(contactId: Long, verified: Boolean = false) = SyncUpdateContactAddressRequest(
@@ -330,4 +341,52 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
     lastName = "last",
     firstName = "first",
   )
+
+  private fun assertCustomCreatedEvent(syncContactAddress: SyncContactAddress, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreateContactAddressEvent(syncContactAddress, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-address-created",
+      mapOf(
+        "description" to "A contact address has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contact_id" to syncContactAddress.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_address_id" to syncContactAddress.contactAddressId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomUpdatedEvent(syncContactAddress: SyncContactAddress, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackUpdateContactAddressEvent(syncContactAddress, source, user)
+
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-address-updated",
+      mapOf(
+        "description" to "A contact address has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "contact_id" to syncContactAddress.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_address_id" to syncContactAddress.contactAddressId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertCustomDeletedEvent(contactId: Long, contactAddressId: Long, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-address-deleted",
+      mapOf(
+        "description" to "A contact address has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "contact_id" to contactId.toString(),
+        "contact_address_id" to contactAddressId.toString(),
+      ),
+      null,
+    )
+  }
 }

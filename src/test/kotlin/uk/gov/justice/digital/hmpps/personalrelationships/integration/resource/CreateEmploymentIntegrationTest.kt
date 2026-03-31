@@ -6,11 +6,15 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.employment.CreateEmploymentRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.EmploymentDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.EmploymentInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
@@ -101,6 +105,24 @@ class CreateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
       event = OutboundEvent.EMPLOYMENT_CREATED,
       additionalInfo = EmploymentInfo(created.employmentId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.contactId),
+    )
+
+    assertCustomEvent(created, Source.DPS, User("created", "BXI"))
+  }
+
+  private fun assertCustomEvent(employmentDetails: EmploymentDetails, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreateEmploymentEvent(employmentDetails, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-employment-created",
+      mapOf(
+        "description" to "A contact employment has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_id" to employmentDetails.contactId.toString(),
+        "contact_employment_id" to employmentDetails.employmentId.toString(),
+      ),
+      null,
     )
   }
 

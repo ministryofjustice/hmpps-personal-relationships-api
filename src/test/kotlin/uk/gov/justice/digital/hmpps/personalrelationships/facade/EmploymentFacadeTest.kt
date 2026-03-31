@@ -16,12 +16,14 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.EmploymentServ
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 
 class EmploymentFacadeTest {
 
   private val employmentService: EmploymentService = mock()
   private val outboundEventsService: OutboundEventsService = mock()
-  private val facade = EmploymentFacade(employmentService, outboundEventsService)
+  private val telemetryContactCustomEventService: TelemetryContactCustomEventService = mock()
+  private val facade = EmploymentFacade(employmentService, outboundEventsService, telemetryContactCustomEventService)
   private val user = aUser()
 
   @Test

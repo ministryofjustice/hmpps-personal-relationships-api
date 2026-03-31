@@ -9,8 +9,11 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
@@ -200,6 +203,8 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
       additionalInfo = PrisonerContactInfo(created.createdRelationship.prisonerContactId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.createdContact.id, nomsNumber = request.relationship!!.prisonerNumber),
     )
+
+    assertCustomEvent(created.createdRelationship, Source.DPS, User("created", "BXI"))
   }
 
   @ParameterizedTest
@@ -238,6 +243,8 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
       additionalInfo = PrisonerContactInfo(created.createdRelationship.prisonerContactId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.createdContact.id, nomsNumber = request.relationship!!.prisonerNumber),
     )
+
+    assertCustomEvent(created.createdRelationship, Source.DPS, User("created", "BXI"))
   }
 
   private fun asserPrisonerContactEquals(
@@ -277,5 +284,25 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
         ),
       )
     }
+  }
+
+  private fun assertCustomEvent(contactRelationshipDetails: PrisonerContactRelationshipDetails, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreatePrisonerContactEvent(contactRelationshipDetails, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-contact-created",
+      mapOf(
+        "description" to "A prisoner contact has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_id" to contactRelationshipDetails.contactId.toString(),
+        "prisoner_contact_id" to contactRelationshipDetails.prisonerContactId.toString(),
+        "prisoner_number" to contactRelationshipDetails.prisonerNumber,
+        "group_code" to contactRelationshipDetails.relationshipTypeCode,
+        "relationship_code" to contactRelationshipDetails.relationshipToPrisonerCode,
+        "relationship_status" to "active",
+      ),
+      null,
+    )
   }
 }

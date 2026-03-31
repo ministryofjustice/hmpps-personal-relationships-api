@@ -4,11 +4,15 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.openapitools.jackson.nullable.JsonNullable
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.util.UriComponentsBuilder
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.PatchContactRequest
@@ -81,6 +85,8 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactId),
       )
+
+      assertCustomEvent(res, "DPS", "read_write_user", "BXI", 2)
     }
 
     @Test
@@ -116,6 +122,8 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactId),
       )
+
+      assertCustomEvent(res, "DPS", "read_write_user", "BXI", 2)
     }
 
     private fun resetLanguageCode() {
@@ -153,6 +161,8 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactId),
       )
+
+      assertCustomEvent(res, "DPS", "read_write_user", "BXI", 2)
     }
 
     @Test
@@ -243,6 +253,8 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactId),
       )
+
+      assertCustomEvent(res, "DPS", "read_write_user", "BXI", 2)
     }
 
     @Test
@@ -263,6 +275,8 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactId),
       )
+
+      assertCustomEvent(res, "DPS", "read_write_user", "BXI", 2)
     }
 
     @Test
@@ -315,6 +329,8 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         additionalInfo = ContactInfo(contactId, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactId),
       )
+
+      assertCustomEvent(res, "DPS", "read_write_user", "BXI", 2)
     }
 
     @Test
@@ -414,6 +430,8 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         additionalInfo = ContactInfo(contactIdThatHasDOB, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactIdThatHasDOB),
       )
+
+      assertCustomEvent(res, "DPS", "read_write_user", "BXI", 1)
     }
 
     @Test
@@ -432,6 +450,8 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         additionalInfo = ContactInfo(contactIdThatHasDOB, Source.DPS, "read_write_user", "BXI"),
         personReference = PersonReference(dpsContactId = contactIdThatHasDOB),
       )
+
+      assertCustomEvent(res, "DPS", "read_write_user", "BXI", 1)
     }
   }
 
@@ -737,5 +757,20 @@ class PatchContactIntegrationTest : SecureAPIIntegrationTestBase() {
         personReference = PersonReference(dpsContactId = contactWithDeceasedDate),
       )
     }
+  }
+
+  private fun assertCustomEvent(patchContactResponse: PatchContactResponse, source: String, userName: String, activeCaseloadId: String, expectedInvocations: Int = 1) {
+    verify(telemetryContactCustomEventService, times(expectedInvocations)).trackUpdateContactEvent(any<PatchContactResponse>(), any<Source>(), any<User>())
+    verify(telemetryClient, times(expectedInvocations)).trackEvent(
+      "contact-updated",
+      mapOf(
+        "description" to "A contact has been updated",
+        "source" to source,
+        "username" to userName,
+        "active_caseload_id" to activeCaseloadId,
+        "contact_id" to patchContactResponse.id.toString(),
+      ),
+      null,
+    )
   }
 }

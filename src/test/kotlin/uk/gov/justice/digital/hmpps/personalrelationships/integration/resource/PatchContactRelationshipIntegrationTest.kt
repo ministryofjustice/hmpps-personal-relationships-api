@@ -9,16 +9,22 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.openapitools.jackson.nullable.JsonNullable
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.PatchRelationshipRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerContactRepository
@@ -26,6 +32,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Outboun
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PrisonerContactInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.EventActionType
 import uk.gov.justice.digital.hmpps.personalrelationships.util.StubUser
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
@@ -140,6 +147,10 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
     contactRepository.deleteById(prisonerContactId)
+
+    updatedPrisonerContacts.forEach {
+      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+    }
   }
 
   @Test
@@ -209,6 +220,10 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
     contactRepository.deleteById(prisonerContact.contactId)
+
+    updatedPrisonerContacts.forEach {
+      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+    }
   }
 
   @Test
@@ -219,6 +234,8 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val updateRequest = PatchRelationshipRequest(
       isNextOfKin = JsonNullable.of(true),
+      isApprovedVisitor = JsonNullable.of(true),
+      isEmergencyContact = JsonNullable.of(true),
     )
 
     val prisonerContactId = prisonerContact.prisonerContactId
@@ -228,6 +245,8 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     val updatedPrisonerContacts = testAPIClient.getPrisonerContacts(prisonerNumber).content
     assertThat(updatedPrisonerContacts).hasSize(1)
     assertThat(updatedPrisonerContacts[0].isNextOfKin).isTrue
+    assertThat(updatedPrisonerContacts[0].isApprovedVisitor).isTrue
+    assertThat(updatedPrisonerContacts[0].isEmergencyContact).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
       additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
@@ -235,6 +254,13 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
     prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
     contactRepository.deleteById(prisonerContact.contactId)
+
+    updatedPrisonerContacts.forEach {
+      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertNextOfKinCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertEmergencyContactCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertApprovedVisitorCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+    }
   }
 
   @Test
@@ -261,6 +287,11 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
     prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
     contactRepository.deleteById(prisonerContact.contactId)
+
+    updatedPrisonerContacts.forEach {
+      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertApprovedVisitorCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+    }
   }
 
   @Test
@@ -287,6 +318,11 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
     prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
     contactRepository.deleteById(prisonerContact.contactId)
+
+    updatedPrisonerContacts.forEach {
+      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertEmergencyContactCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+    }
   }
 
   @Test
@@ -313,6 +349,10 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
     prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
     contactRepository.deleteById(prisonerContact.contactId)
+
+    updatedPrisonerContacts.forEach {
+      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+    }
   }
 
   @Test
@@ -339,6 +379,10 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
     prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
     contactRepository.deleteById(prisonerContact.contactId)
+
+    updatedPrisonerContacts.forEach {
+      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+    }
   }
 
   @Test
@@ -362,6 +406,9 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
     prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
     contactRepository.deleteById(prisonerContact.contactId)
+    updatedPrisonerContacts.forEach {
+      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+    }
   }
 
   @ParameterizedTest
@@ -396,6 +443,10 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     )
     prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
     contactRepository.deleteById(prisonerContact.contactId)
+
+    updatedPrisonerContacts.forEach {
+      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+    }
   }
 
   private fun assertUpdatedPrisonerContactEquals(
@@ -477,5 +528,70 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         ),
       )
     }
+  }
+
+  private fun assertCustomEvent(updatedPrisonerContact: PrisonerContactSummary, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactEvent(any<PrisonerContactRelationshipDetails>(), anyOrNull<EventActionType>(), anyOrNull<EventActionType>(), anyOrNull<EventActionType>(), any<Source>(), any<User>())
+    verify(telemetryClient, times(1)).trackEvent(
+      "prisoner-contact-updated",
+      mapOf(
+        "description" to "A prisoner contact has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_id" to updatedPrisonerContact.contactId.toString(),
+        "prisoner_number" to updatedPrisonerContact.prisonerNumber,
+        "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
+        "group_code" to updatedPrisonerContact.relationshipTypeCode,
+        "relationship_code" to updatedPrisonerContact.relationshipToPrisonerCode,
+        "relationship_status" to "active",
+      ),
+      null,
+    )
+  }
+
+  private fun assertNextOfKinCustomEvent(updatedPrisonerContact: PrisonerContactSummary, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-next-of-kin-created",
+      mapOf(
+        "description" to "A contact next of kin has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contact_id" to updatedPrisonerContact.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertApprovedVisitorCustomEvent(updatedPrisonerContact: PrisonerContactSummary, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-approved-visitor-created",
+      mapOf(
+        "description" to "A contact approved visitor has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contact_id" to updatedPrisonerContact.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun assertEmergencyContactCustomEvent(updatedPrisonerContact: PrisonerContactSummary, source: Source, user: User) {
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-emergency-contact-created",
+      mapOf(
+        "description" to "A contact emergency contact has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "contact_id" to updatedPrisonerContact.contactId.toString(),
+        "active_caseload_id" to user.activeCaseLoadId,
+        "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
+      ),
+      null,
+    )
   }
 }

@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.helpers.createContactE
 import uk.gov.justice.digital.hmpps.personalrelationships.helpers.createContactIdentityDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.helpers.createContactPhoneNumberDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.helpers.createEmploymentDetails
+import uk.gov.justice.digital.hmpps.personalrelationships.helpers.createPrisonerContactEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.helpers.createPrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.model.internal.DeletedRelationshipIds
 import uk.gov.justice.digital.hmpps.personalrelationships.model.internal.DeletedResponse
@@ -40,6 +41,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.ContactService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 import java.time.LocalDateTime
 
 class ContactFacadeTest {
@@ -48,8 +50,9 @@ class ContactFacadeTest {
   private val contactPatchService: ContactPatchService = mock()
   private val contactService: ContactService = mock()
   private val contactSearchService: ContactSearchService = mock()
+  private val telemetryContactCustomEventService: TelemetryContactCustomEventService = mock()
 
-  private val contactFacade = ContactFacade(outboundEventsService, contactPatchService, contactService, contactSearchService)
+  private val contactFacade = ContactFacade(outboundEventsService, contactPatchService, contactService, contactSearchService, telemetryContactCustomEventService)
 
   @Test
   fun `patch should patch contact and send domain event`() {
@@ -355,11 +358,13 @@ class ContactFacadeTest {
     val prisonerNumber = "A1234BC"
     val request = mock(PatchRelationshipRequest::class.java)
     val user = aUser("updated")
+    val expected = createPrisonerContactRelationshipDetails(prisonerContactId, contactId, prisonerNumber)
+    val expectedPrisonerContactEntity = createPrisonerContactEntity(nextOfKin = false)
 
     whenever(contactService.updateContactRelationship(prisonerContactId, request, user)).thenReturn(
-      createPrisonerContactRelationshipDetails(prisonerContactId, contactId, prisonerNumber),
+      expected,
     )
-
+    whenever(contactService.requirePrisonerContactEntity(prisonerContactId)).thenReturn(expectedPrisonerContactEntity)
     contactFacade.patchRelationship(prisonerContactId, request, user)
 
     verify(contactService).updateContactRelationship(prisonerContactId, request, user)
@@ -380,6 +385,7 @@ class ContactFacadeTest {
       val prisonerContactId = 123L
       val prisonerNumber = "A1234BC"
       val user = aUser("deleted")
+      val expectedPrisonerContactEntity = createPrisonerContactEntity(nextOfKin = false)
 
       whenever(contactService.deleteContactRelationship(prisonerContactId, user)).thenReturn(
         DeletedResponse(
@@ -387,6 +393,7 @@ class ContactFacadeTest {
           wasUpdated = true,
         ),
       )
+      whenever(contactService.requirePrisonerContactEntity(prisonerContactId)).thenReturn(expectedPrisonerContactEntity)
 
       contactFacade.deleteContactRelationship(prisonerContactId, user)
 
@@ -415,6 +422,8 @@ class ContactFacadeTest {
       val prisonerNumber = "A1234BC"
       val user = aUser("deleted")
       val expectedException = RuntimeException("Boom")
+
+      whenever(contactService.requirePrisonerContactEntity(prisonerContactId)).thenReturn(createPrisonerContactEntity(nextOfKin = false))
 
       whenever(contactService.deleteContactRelationship(prisonerContactId, user)).thenThrow(expectedException)
 
@@ -447,6 +456,7 @@ class ContactFacadeTest {
       val prisonerContactId = 123L
       val prisonerNumber = "A1234BC"
       val user = aUser("deleted")
+      val expectedPrisonerContactEntity = createPrisonerContactEntity(nextOfKin = false)
 
       whenever(contactService.deleteContactRelationship(prisonerContactId, user)).thenReturn(
         DeletedResponse(
@@ -454,6 +464,7 @@ class ContactFacadeTest {
           wasUpdated = false, // wasUpdated is false
         ),
       )
+      whenever(contactService.requirePrisonerContactEntity(prisonerContactId)).thenReturn(expectedPrisonerContactEntity)
 
       contactFacade.deleteContactRelationship(prisonerContactId, user)
 

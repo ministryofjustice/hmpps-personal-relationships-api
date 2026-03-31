@@ -8,12 +8,16 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.CreateContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.UpdateContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.ContactRestrictionInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
@@ -202,6 +206,8 @@ class UpdateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactRestrictionInfo(updated.contactRestrictionId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
+
+    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"), "CCTV")
   }
 
   @ParameterizedTest
@@ -241,6 +247,8 @@ class UpdateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactRestrictionInfo(updated.contactRestrictionId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
+
+    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"), "CCTV")
   }
 
   companion object {
@@ -254,6 +262,23 @@ class UpdateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
       startDate = LocalDate.of(1990, 1, 1),
       expiryDate = null,
       comments = null,
+    )
+  }
+
+  private fun assertCustomEvent(updatedContactRestrictionDetails: ContactRestrictionDetails, source: Source, user: User, restrictionType: String) {
+    verify(telemetryContactCustomEventService, times(1)).trackUpdateContactRestrictionEvent(updatedContactRestrictionDetails, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-restriction-updated",
+      mapOf(
+        "description" to "A contact restriction has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_id" to updatedContactRestrictionDetails.contactId.toString(),
+        "contact_restriction_id" to updatedContactRestrictionDetails.contactRestrictionId.toString(),
+        "restriction_code" to restrictionType,
+      ),
+      null,
     )
   }
 }

@@ -10,11 +10,14 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.response.Contact
 import uk.gov.justice.digital.hmpps.personalrelationships.service.ContactEmailService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 
 @Service
 class ContactEmailFacade(
   private val contactEmailService: ContactEmailService,
   private val outboundEventsService: OutboundEventsService,
+  private val telemetryContactCustomEventService: TelemetryContactCustomEventService,
 ) {
 
   fun create(contactId: Long, request: CreateEmailRequest, user: User): ContactEmailDetails = contactEmailService.create(contactId, request, user).also {
@@ -24,19 +27,29 @@ class ContactEmailFacade(
       contactId = contactId,
       user = user,
     )
+  }.also {
+    telemetryContactCustomEventService.trackCreateContactEmailEvent(it, source = Source.DPS, user = user)
   }
 
-  fun createMultiple(contactId: Long, request: CreateMultipleEmailsRequest, user: User): List<ContactEmailDetails> = contactEmailService.createMultiple(
-    contactId,
-    user.username,
-    request.emailAddresses,
-  ).onEach {
-    outboundEventsService.send(
-      outboundEvent = OutboundEvent.CONTACT_EMAIL_CREATED,
-      identifier = it.contactEmailId,
-      contactId = contactId,
-      user = user,
-    )
+  fun createMultiple(contactId: Long, request: CreateMultipleEmailsRequest, user: User): List<ContactEmailDetails> {
+    val contactEmailDetails = contactEmailService.createMultiple(
+      contactId,
+      user.username,
+      request.emailAddresses,
+    ).onEach {
+      outboundEventsService.send(
+        outboundEvent = OutboundEvent.CONTACT_EMAIL_CREATED,
+        identifier = it.contactEmailId,
+        contactId = contactId,
+        user = user,
+      )
+    }
+
+    contactEmailDetails.forEach {
+      telemetryContactCustomEventService.trackCreateContactEmailEvent(it, source = Source.DPS, user = user)
+    }
+
+    return contactEmailDetails
   }
 
   fun update(contactId: Long, contactEmailId: Long, request: UpdateEmailRequest, user: User): ContactEmailDetails = contactEmailService.update(contactId, contactEmailId, request, user).also {
@@ -46,6 +59,8 @@ class ContactEmailFacade(
       contactId = contactId,
       user = user,
     )
+  }.also {
+    telemetryContactCustomEventService.trackUpdateContactEmailEvent(it, source = Source.DPS, user = user)
   }
 
   fun delete(contactId: Long, contactEmailId: Long, user: User) {
@@ -56,6 +71,8 @@ class ContactEmailFacade(
         contactId = contactId,
         user = user,
       )
+    }.also {
+      telemetryContactCustomEventService.trackDeleteContactEmailEvent(contactId, contactEmailId, source = Source.DPS, user = user)
     }
   }
 

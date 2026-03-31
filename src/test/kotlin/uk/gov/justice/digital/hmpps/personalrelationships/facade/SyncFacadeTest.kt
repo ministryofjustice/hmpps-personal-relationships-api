@@ -56,6 +56,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncConta
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncEmploymentService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncPrisonerContactRestrictionService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncPrisonerContactService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -74,6 +75,7 @@ class SyncFacadeTest {
   private val syncContactReconciliationService: SyncContactReconciliationService = mock()
   private val outboundEventsService: OutboundEventsService = mock()
   private val manageUsersService: ManageUsersService = mock()
+  private val telemetryContactCustomEventService: TelemetryContactCustomEventService = mock()
 
   private val facade = SyncFacade(
     syncContactService,
@@ -90,6 +92,7 @@ class SyncFacadeTest {
     syncContactReconciliationService,
     outboundEventsService,
     manageUsersService,
+    telemetryContactCustomEventService,
   )
 
   @Nested
@@ -824,7 +827,7 @@ class SyncFacadeTest {
 
       whenever(syncPrisonerContactService.updatePrisonerContact(any(), any())).thenReturn(response)
       whenever(outboundEventsService.send(any(), any(), any(), any(), any(), any(), any())).then {}
-
+      whenever(syncPrisonerContactService.getPrisonerContactById(3L)).thenReturn(response)
       val result = facade.updatePrisonerContact(3L, request)
 
       verify(syncPrisonerContactService).updatePrisonerContact(3L, request)

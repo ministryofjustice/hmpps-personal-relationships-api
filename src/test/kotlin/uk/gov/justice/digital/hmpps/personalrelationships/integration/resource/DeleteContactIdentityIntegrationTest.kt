@@ -3,8 +3,11 @@ package uk.gov.justice.digital.hmpps.personalrelationships.integration.resource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.CreateIdentityRequest
@@ -110,6 +113,24 @@ class DeleteContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       event = OutboundEvent.CONTACT_IDENTITY_DELETED,
       additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "deleted", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
+    )
+
+    assertCustomEvent(savedContactId, savedContactIdentityId, Source.DPS, User("deleted", "BXI"))
+  }
+
+  private fun assertCustomEvent(contactId: Long, contactIdentityId: Long, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackDeleteContactIdentityEvent(contactId, contactIdentityId, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-identity-deleted",
+      mapOf(
+        "description" to "A contact identity has been deleted",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_id" to contactId.toString(),
+        "contact_identity_id" to contactIdentityId.toString(),
+      ),
+      null,
     )
   }
 }

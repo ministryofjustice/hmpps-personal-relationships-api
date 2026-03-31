@@ -18,13 +18,15 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Outboun
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
 import uk.gov.justice.digital.hmpps.personalrelationships.service.sync.SyncPrisonerNumberOfChildrenService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryPrisonerCustomEventService
 import java.time.LocalDateTime
 
 class PrisonerNumberOfChildrenSyncFacadeTest {
 
   private val syncNumberOfChildrenService = mock<SyncPrisonerNumberOfChildrenService>()
   private val outboundEventsService = mock<OutboundEventsService>()
-  private val facade = PrisonerNumberOfChildrenSyncFacade(syncNumberOfChildrenService, outboundEventsService)
+  private val telemetryPrisonerCustomEventService = mock<TelemetryPrisonerCustomEventService>()
+  private val facade = PrisonerNumberOfChildrenSyncFacade(syncNumberOfChildrenService, outboundEventsService, telemetryPrisonerCustomEventService)
 
   @Nested
   inner class GetNumberOfChildrenByPrisonerNumber {

@@ -9,11 +9,14 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.response.Contact
 import uk.gov.justice.digital.hmpps.personalrelationships.service.ContactAddressPhoneService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
+import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.TelemetryContactCustomEventService
 
 @Service
 class ContactAddressPhoneFacade(
   private val contactAddressPhoneService: ContactAddressPhoneService,
   private val outboundEventsService: OutboundEventsService,
+  private val telemetryContactCustomEventService: TelemetryContactCustomEventService,
 ) {
 
   fun create(contactId: Long, contactAddressId: Long, request: CreateContactAddressPhoneRequest, user: User): ContactAddressPhoneDetails = contactAddressPhoneService.create(contactId, contactAddressId, request, user).also {
@@ -24,10 +27,12 @@ class ContactAddressPhoneFacade(
       contactId = contactId,
       user = user,
     )
+  }.also {
+    telemetryContactCustomEventService.trackCreateContactAddressPhoneEvent(it, source = Source.DPS, user = user)
   }
 
   fun createMultiple(contactId: Long, contactAddressId: Long, request: CreateMultiplePhoneNumbersRequest, user: User): List<ContactAddressPhoneDetails> = contactAddressPhoneService.createMultiple(contactId, contactAddressId, request, user).also { created ->
-    created.map {
+    created.forEach {
       outboundEventsService.send(
         outboundEvent = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
         identifier = it.contactAddressPhoneId,
@@ -35,6 +40,10 @@ class ContactAddressPhoneFacade(
         contactId = contactId,
         user = user,
       )
+    }
+
+    created.forEach {
+      telemetryContactCustomEventService.trackCreateContactAddressPhoneEvent(it, source = Source.DPS, user = user)
     }
   }
 
@@ -46,6 +55,8 @@ class ContactAddressPhoneFacade(
       contactId = contactId,
       user = user,
     )
+  }.also {
+    telemetryContactCustomEventService.trackUpdateContactAddressPhoneEvent(it, source = Source.DPS, user = user)
   }
 
   fun delete(contactId: Long, contactAddressPhoneId: Long, user: User) {
@@ -57,6 +68,8 @@ class ContactAddressPhoneFacade(
         contactId = contactId,
         user = user,
       )
+    }.also {
+      telemetryContactCustomEventService.trackDeleteContactAddressPhoneEvent(it, source = Source.DPS, user = user)
     }
   }
 

@@ -8,8 +8,11 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.CreateContactAddressRequest
@@ -174,6 +177,8 @@ class CreateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
       additionalInfo = ContactAddressPhoneInfo(created.contactAddressPhoneId, created.contactAddressId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
+
+    assertCustomEvent(created, Source.DPS, User("created", "BXI"))
   }
 
   private fun assertEqualsExcludingTimestamps(
@@ -191,6 +196,22 @@ class CreateContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
       assertThat(createdBy).isEqualTo("created")
       assertThat(createdTime).isNotNull()
     }
+  }
+
+  private fun assertCustomEvent(contactAddressPhoneDetails: ContactAddressPhoneDetails, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreateContactAddressPhoneEvent(contactAddressPhoneDetails, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-address-phone-created",
+      mapOf(
+        "description" to "A contact address phone has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_id" to contactAddressPhoneDetails.contactId.toString(),
+        "contact_address_phone_id" to contactAddressPhoneDetails.contactAddressPhoneId.toString(),
+      ),
+      null,
+    )
   }
 
   companion object {

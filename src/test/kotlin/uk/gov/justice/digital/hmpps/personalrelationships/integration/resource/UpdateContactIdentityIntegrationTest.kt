@@ -8,12 +8,16 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.CreateIdentityRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.UpdateIdentityRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactIdentityDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.ContactIdentityInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
@@ -246,6 +250,8 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
+
+    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
   }
 
   @ParameterizedTest
@@ -279,6 +285,8 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
+
+    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
   }
 
   companion object {
@@ -295,6 +303,22 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
     private fun aMinimalRequest() = UpdateIdentityRequest(
       identityType = "DL",
       identityValue = "DL123456789",
+    )
+  }
+
+  private fun assertCustomEvent(contactIdentityDetails: ContactIdentityDetails, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackUpdateContactIdentityEvent(contactIdentityDetails, source, user)
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-identity-updated",
+      mapOf(
+        "description" to "A contact identity has been updated",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_id" to contactIdentityDetails.contactId.toString(),
+        "contact_identity_id" to contactIdentityDetails.contactIdentityId.toString(),
+      ),
+      null,
     )
   }
 }

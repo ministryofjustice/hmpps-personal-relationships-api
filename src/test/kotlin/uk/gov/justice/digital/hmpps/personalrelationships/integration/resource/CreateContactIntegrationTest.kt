@@ -8,8 +8,12 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.any
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.Address
@@ -17,6 +21,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.request.email.Em
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.employment.Employment
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.IdentityDocument
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.phone.PhoneNumber
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.ContactAddressInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.ContactAddressPhoneInfo
@@ -202,6 +207,8 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactInfo(contactReturnedOnCreate.id, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = contactReturnedOnCreate.id),
     )
+
+    assertCustomEvent(contactReturnedOnCreate, Source.DPS, User("created", "BXI"))
   }
 
   @Test
@@ -242,6 +249,8 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
         personReference = PersonReference(dpsContactId = contactReturnedOnCreate.id),
       )
     }
+
+    assertCustomEvent(contactReturnedOnCreate, Source.DPS, User("created", "BXI"))
   }
 
   @Test
@@ -374,6 +383,8 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       ),
       personReference = PersonReference(dpsContactId = contactId),
     )
+
+    assertCustomEvent(contactReturned.createdContact, Source.DPS, User("created", "BXI"))
   }
 
   @Test
@@ -462,6 +473,8 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactPhoneInfo(everythingCreated.contactPhoneId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = contactId),
     )
+
+    assertCustomEvent(contactReturned.createdContact, Source.DPS, User("created", "BXI"))
   }
 
   @Test
@@ -518,6 +531,8 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactEmailInfo(secondCreated!!.contactEmailId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = contactId),
     )
+
+    assertCustomEvent(contactReturned.createdContact, Source.DPS, User("created", "BXI"))
   }
 
   @Test
@@ -578,6 +593,8 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = EmploymentInfo(secondCreated.employmentId, Source.DPS, "created", "BXI"),
       personReference = PersonReference(dpsContactId = contactId),
     )
+
+    assertCustomEvent(contactReturned.createdContact, Source.DPS, User("created", "BXI"))
   }
 
   @Test
@@ -631,6 +648,8 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactInfo(contact.id, Source.DPS, "created", "BXI"),
       personReference = PersonReference(contact.id),
     )
+
+    assertCustomEvent(contact, Source.DPS, User("created", "BXI"))
   }
 
   private fun assertContactsAreEqualExcludingTimestamps(contact: ContactDetails, request: CreateContactRequest) {
@@ -647,6 +666,21 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(domesticStatusCode).isEqualTo(request.domesticStatusCode)
       assertThat(genderCode).isEqualTo(request.genderCode)
     }
+  }
+
+  private fun assertCustomEvent(contactDetails: ContactDetails, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreateContactEvent(any<ContactCreationResult>(), any<Source>(), any<User>())
+    verify(telemetryClient, times(1)).trackEvent(
+      "contact-created",
+      mapOf(
+        "description" to "A contact has been created",
+        "source" to source.name,
+        "username" to user.username,
+        "active_caseload_id" to user.activeCaseLoadId,
+        "contact_id" to contactDetails.id.toString(),
+      ),
+      null,
+    )
   }
 
   companion object {
