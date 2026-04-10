@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.personalrelationships.service
 import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerContactSummaryEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.PrisonerContactRelationshipsRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactRelationship
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerCon
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerContactSummaryRepository
 
 @Service
+@Transactional(readOnly = true)
 class PrisonerContactRelationshipService(
   private val prisonerContactSummaryRepository: PrisonerContactSummaryRepository,
   private val prisonerContactRepository: PrisonerContactRepository,
