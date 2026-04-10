@@ -433,6 +433,11 @@ class PrisonerContactController(
           ),
         ],
       ),
+      ApiResponse(
+        responseCode = "400",
+        description = "The request was invalid or empty",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
     ],
   )
   @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__R', 'ROLE_CONTACTS__RW')")

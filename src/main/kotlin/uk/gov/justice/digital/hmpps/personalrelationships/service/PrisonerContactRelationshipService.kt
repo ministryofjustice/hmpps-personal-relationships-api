@@ -49,11 +49,15 @@ class PrisonerContactRelationshipService(
       throw ValidationException("No identifiers were provided in the request")
     }
 
-    val prisonerNumberList = request.identifiers.map { it.prisonerNumber }.toSet().toList()
-    val prisonerRelationships = prisonerContactRepository.getCurrentRelationshipsForPrisoners(prisonerNumberList)
+    // Make sure the requests are unique combinations of prisonerNumber and contactId
+    val uniqueRequests = request.identifiers.distinctBy { listOf(it.prisonerNumber, it.contactId) }
+
+    // Get the relationships for the pairs of prisonerNumber and contactId
+    val prisonerRelationships = prisonerContactRepository.getCurrentRelationshipsForPrisoners(uniqueRequests.map { it.prisonerNumber })
     val prisonerRelationshipMap = prisonerRelationships.groupBy { it.prisonerNumber }
 
-    val responses = request.identifiers.map { outerItem ->
+    // Build the response object
+    val responses = uniqueRequests.map { outerItem ->
       val relationshipsForPrisonerAndContact = prisonerRelationshipMap[outerItem.prisonerNumber]?.filter { innerItem ->
         innerItem.contactId == outerItem.contactId
       } ?: emptyList()
@@ -75,6 +79,7 @@ class PrisonerContactRelationshipService(
         relationships = relationships,
       )
     }
+
     return PrisonerContactRelationshipsResponse(responses)
   }
 

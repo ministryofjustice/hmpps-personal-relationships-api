@@ -29,7 +29,6 @@ import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 class PrisonerContactRelationshipServiceTest {
-
   @Mock
   private lateinit var prisonerContactSummaryRepository: PrisonerContactSummaryRepository
 
@@ -247,6 +246,41 @@ class PrisonerContactRelationshipServiceTest {
     with(response.responses.first()) {
       assertThat(relationships).isEmpty()
     }
+
+    verify(prisonerContactRepository).getCurrentRelationshipsForPrisoners(prisonerList)
+  }
+
+  @Test
+  fun `getSummaryRelationships - should flatten and remove duplicates in the request`() {
+    val prisonerContacts = listOf(
+      createPrisonerContactEntity(
+        prisonerContactId = 1L,
+        contactId = 8L,
+        prisonerNumber = "A1234AA",
+        relationshipType = "S",
+        relationshipToPrisoner = "SIS",
+        approvedVisitor = false,
+        currentTerm = true,
+      ),
+    )
+
+    val request = PrisonerContactRelationshipsRequest(
+      identifiers = listOf(
+        PrisonerAndContactId(prisonerNumber = "A1234AA", contactId = 8L),
+        PrisonerAndContactId(prisonerNumber = "A1234AA", contactId = 8L),
+      ),
+    )
+
+    val prisonerList = request.identifiers.map { it.prisonerNumber }.toSet().toList()
+
+    whenever(
+      prisonerContactRepository.getCurrentRelationshipsForPrisoners(prisonerList),
+    ).thenReturn(prisonerContacts)
+
+    val response = prisonerContactRelationshipService.getSummaryRelationships(request)
+
+    assertThat(response.responses).hasSize(1)
+    assertThat(response.responses[0].relationships).hasSize(1)
 
     verify(prisonerContactRepository).getCurrentRelationshipsForPrisoners(prisonerList)
   }
