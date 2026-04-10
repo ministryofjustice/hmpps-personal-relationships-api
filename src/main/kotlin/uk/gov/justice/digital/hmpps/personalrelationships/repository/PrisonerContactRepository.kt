@@ -70,4 +70,15 @@ interface PrisonerContactRepository : JpaRepository<PrisonerContactEntity, Long>
     """,
   )
   fun getRelationshipsToApprove(createdAfter: LocalDateTime, createdByList: List<String>): List<PrisonerContactEntity>
+
+  @Query(
+    """
+        select pc 
+        from PrisonerContactEntity pc
+        where pc.prisonerNumber in :prisonerNumbers
+          and pc.currentTerm = :currentTerm  
+        order by pc.prisonerNumber  
+    """,
+  )
+  fun getCurrentRelationshipsForPrisoners(prisonerNumbers: List<String>, currentTerm: Boolean = true): List<PrisonerContactEntity>
 }

@@ -29,9 +29,11 @@ import uk.gov.justice.digital.hmpps.personalrelationships.facade.PrisonerContact
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.PatchRelationshipRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.PrisonerContactIdsRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.request.PrisonerContactRelationshipsRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.CreatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.UpdatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactRelationshipDetails
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactRelationshipsResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactsRestrictionsResponse
@@ -78,7 +80,7 @@ class PrisonerContactController(
   @GetMapping(value = ["/{prisonerContactId}"], produces = [MediaType.APPLICATION_JSON_VALUE])
   @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__R', 'ROLE_CONTACTS__RW')")
   fun getPrisonerContactById(
-    @PathVariable("prisonerContactId") @Parameter(
+    @PathVariable @Parameter(
       name = "prisonerContactId",
       description = "The id of the prisoner contact relationship to be returned",
       example = "1L",
@@ -117,7 +119,7 @@ class PrisonerContactController(
   @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__RW')")
   @ResponseStatus(HttpStatus.CREATED)
   fun patchContactRelationship(
-    @PathVariable("prisonerContactId") @Parameter(
+    @PathVariable @Parameter(
       name = "prisonerContactId",
       description = "The id of the prisoner contact",
       example = "123456",
@@ -209,7 +211,7 @@ class PrisonerContactController(
   @GetMapping(value = ["/{prisonerContactId}/restriction"], produces = [MediaType.APPLICATION_JSON_VALUE])
   @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__R', 'ROLE_CONTACTS__RW')")
   fun getPrisonerContactRestrictionsByPrisonerContactId(
-    @PathVariable("prisonerContactId") @Parameter(
+    @PathVariable @Parameter(
       name = "prisonerContactId",
       description = "The id of the prisoner contact",
       example = "1L",
@@ -281,7 +283,7 @@ class PrisonerContactController(
   )
   @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__RW')")
   fun createPrisonerContactRestriction(
-    @PathVariable("prisonerContactId") @Parameter(
+    @PathVariable @Parameter(
       name = "prisonerContactId",
       description = "The id of the prisoner contact relationship",
       example = "123456",
@@ -327,12 +329,12 @@ class PrisonerContactController(
   )
   @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__RW')")
   fun updatePrisonerContactRestriction(
-    @PathVariable("prisonerContactId") @Parameter(
+    @PathVariable @Parameter(
       name = "prisonerContactId",
       description = "The id of the prisoner contact relationship",
       example = "123456",
     ) prisonerContactId: Long,
-    @PathVariable("prisonerContactRestrictionId") @Parameter(
+    @PathVariable @Parameter(
       name = "prisonerContactRestrictionId",
       description = "The id of the  restriction",
       example = "123456",
@@ -368,7 +370,7 @@ class PrisonerContactController(
   @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__RW')")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   fun deleteContactRelationship(
-    @PathVariable("prisonerContactId") @Parameter(
+    @PathVariable @Parameter(
       name = "prisonerContactId",
       description = "The id of the prisoner contact",
       example = "123456",
@@ -406,10 +408,42 @@ class PrisonerContactController(
   @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__RW')")
   @ResponseStatus(HttpStatus.OK)
   fun assessIfRelationshipCanBeDeleted(
-    @PathVariable("prisonerContactId") @Parameter(
+    @PathVariable @Parameter(
       name = "prisonerContactId",
       description = "The id of the prisoner contact",
       example = "123456",
     ) prisonerContactId: Long,
   ): RelationshipDeletePlan = contactFacade.assessIfRelationshipCanBeDeleted(prisonerContactId)
+
+  @PostMapping(value = ["/relationships/summary"], produces = [MediaType.APPLICATION_JSON_VALUE])
+  @Operation(
+    summary = "Relationship summary details for prisoners and contacts",
+    description = "Relationship summary details for a list of prisoner number and contact ID pairs",
+  )
+  @Tag(name = "Prisoner relationships")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "The prisoner and contact relationship summary details",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = PrisonerContactRelationshipsResponse::class),
+          ),
+        ],
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "The request was invalid or empty",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__R', 'ROLE_CONTACTS__RW')")
+  fun postPrisonerContactRelationships(
+    @RequestBody
+    @Parameter(description = "The prisoner number and contact ID pairs to return relationships for", required = true)
+    request: PrisonerContactRelationshipsRequest,
+  ): PrisonerContactRelationshipsResponse = prisonerContactRelationshipService.getSummaryRelationships(request)
 }
