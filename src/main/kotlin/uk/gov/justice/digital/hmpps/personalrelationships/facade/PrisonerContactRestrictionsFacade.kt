@@ -31,6 +31,7 @@ class PrisonerContactRestrictionsFacade(
     outboundEventsService.send(
       outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
       identifier = it.prisonerContactRestrictionId,
+      secondIdentifier = it.prisonerContactId,
       contactId = it.contactId,
       noms = it.prisonerNumber,
       user = user,
@@ -48,6 +49,7 @@ class PrisonerContactRestrictionsFacade(
     outboundEventsService.send(
       outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
       identifier = prisonerContactRestrictionId,
+      secondIdentifier = it.prisonerContactId,
       contactId = it.contactId,
       noms = it.prisonerNumber,
       user = user,

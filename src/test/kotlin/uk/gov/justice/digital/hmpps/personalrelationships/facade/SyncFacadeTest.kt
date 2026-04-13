@@ -930,6 +930,7 @@ class SyncFacadeTest {
         noms = result.prisonerNumber,
         source = Source.NOMIS,
         user = User("CREATOR"),
+        secondIdentifier = result.prisonerContactId,
       )
     }
 
@@ -951,6 +952,7 @@ class SyncFacadeTest {
         noms = result.prisonerNumber,
         source = Source.NOMIS,
         user = User("UPDATER"),
+        secondIdentifier = result.prisonerContactId,
       )
     }
 
@@ -972,6 +974,7 @@ class SyncFacadeTest {
         noms = result.prisonerNumber,
         source = Source.NOMIS,
         user = User.SYS_USER,
+        secondIdentifier = result.prisonerContactId,
       )
     }
 

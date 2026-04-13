@@ -419,15 +419,17 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED) } doReturn true }
     outboundEventsService.send(
       OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
-      1L,
-      1L,
+      identifier = 1L,
+      contactId = 1L,
       "A1234AA",
       user = aUser("restriction_user", "CLI"),
+      secondIdentifier = 11L,
     )
     verify(
       expectedEventType = "contacts-api.prisoner-contact-restriction.created",
       expectedAdditionalInformation = PrisonerContactRestrictionInfo(
         prisonerContactRestrictionId = 1L,
+        prisonerContactId = 11L,
         source = Source.DPS,
         username = "restriction_user",
         activeCaseLoadId = "CLI",
@@ -442,15 +444,17 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED) } doReturn true }
     outboundEventsService.send(
       OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
-      1L,
-      1L,
+      identifier = 1L,
+      contactId = 1L,
       "A1234AA",
       user = aUser("restriction_user"),
+      secondIdentifier = 11L,
     )
     verify(
       expectedEventType = "contacts-api.prisoner-contact-restriction.updated",
       expectedAdditionalInformation = PrisonerContactRestrictionInfo(
         prisonerContactRestrictionId = 1L,
+        prisonerContactId = 11L,
         source = Source.DPS,
         username = "restriction_user",
         activeCaseLoadId = null,
@@ -465,15 +469,17 @@ class OutboundEventsServiceTest {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED) } doReturn true }
     outboundEventsService.send(
       OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED,
-      1L,
-      1L,
+      identifier = 1L,
+      contactId = 1L,
       "A1234AA",
       user = aUser("restriction_user"),
+      secondIdentifier = 11L,
     )
     verify(
       expectedEventType = "contacts-api.prisoner-contact-restriction.deleted",
       expectedAdditionalInformation = PrisonerContactRestrictionInfo(
         prisonerContactRestrictionId = 1L,
+        prisonerContactId = 11L,
         source = Source.DPS,
         username = "restriction_user",
         activeCaseLoadId = null,
