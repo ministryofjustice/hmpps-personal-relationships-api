@@ -418,10 +418,10 @@ class OutboundEventsServiceTest {
   fun `prisoner contact restriction created event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED) } doReturn true }
     outboundEventsService.send(
-      OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
+      outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
       identifier = 1L,
       contactId = 1L,
-      "A1234AA",
+      noms = "A1234AA",
       user = aUser("restriction_user", "CLI"),
       secondIdentifier = 11L,
     )
@@ -443,10 +443,10 @@ class OutboundEventsServiceTest {
   fun `prisoner contact restriction updated event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED) } doReturn true }
     outboundEventsService.send(
-      OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
+      outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
       identifier = 1L,
       contactId = 1L,
-      "A1234AA",
+      noms = "A1234AA",
       user = aUser("restriction_user"),
       secondIdentifier = 11L,
     )
@@ -468,10 +468,10 @@ class OutboundEventsServiceTest {
   fun `prisoner contact resrtiction deleted event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED) } doReturn true }
     outboundEventsService.send(
-      OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED,
+      outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED,
       identifier = 1L,
       contactId = 1L,
-      "A1234AA",
+      noms = "A1234AA",
       user = aUser("restriction_user"),
       secondIdentifier = 11L,
     )

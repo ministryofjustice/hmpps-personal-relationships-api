@@ -338,7 +338,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
       relationship.prisonerContactRestrictionIds.map { restrictionId ->
         stubEvents.assertHasEvent(
           event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED,
-          additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = restrictionId, prisonerContactId = relationship.prisonerContactId, Source.NOMIS, "SYS", null),
+          additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = restrictionId, prisonerContactId = relationship.prisonerContactId, source = Source.NOMIS, username = "SYS", activeCaseLoadId = null),
           personReference = PersonReference(
             dpsContactId = relationship.contactId,
             nomsNumber = relationship.prisonerNumber,
@@ -363,7 +363,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
       created.restrictions.map { restriction ->
         stubEvents.assertHasEvent(
           event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
-          additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = restriction.dpsId, prisonerContactId = created.relationship.dpsId, Source.NOMIS, "SYS", null),
+          additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = restriction.dpsId, prisonerContactId = created.relationship.dpsId, source = Source.NOMIS, username = "SYS", activeCaseLoadId = null),
           personReference = PersonReference(
             dpsContactId = created.contactId,
             nomsNumber = createdPrisonerNumber,
