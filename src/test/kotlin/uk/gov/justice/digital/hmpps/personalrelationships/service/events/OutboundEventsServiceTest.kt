@@ -465,7 +465,7 @@ class OutboundEventsServiceTest {
   }
 
   @Test
-  fun `prisoner contact resrtiction deleted event with id 1 is sent to the events publisher`() {
+  fun `prisoner contact restriction deleted event with id 1 is sent to the events publisher`() {
     featureSwitches.stub { on { isEnabled(OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED) } doReturn true }
     outboundEventsService.send(
       outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED,
