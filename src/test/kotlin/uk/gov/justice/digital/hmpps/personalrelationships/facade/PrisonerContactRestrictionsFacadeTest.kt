@@ -72,6 +72,7 @@ class PrisonerContactRestrictionsFacadeTest {
       noms = prisonerNumber,
       source = Source.DPS,
       user = user,
+      secondIdentifier = prisonerContactId,
     )
   }
 
@@ -135,6 +136,7 @@ class PrisonerContactRestrictionsFacadeTest {
       noms = prisonerNumber,
       source = Source.DPS,
       user = user,
+      secondIdentifier = prisonerContactId,
     )
   }
 

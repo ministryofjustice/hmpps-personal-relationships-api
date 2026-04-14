@@ -168,7 +168,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
-        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS, "admin", "KMI"),
+        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = prisonerContactRestriction.prisonerContactRestrictionId, prisonerContactId = prisonerContactRestriction.prisonerContactId, Source.NOMIS, "admin", "KMI"),
         personReference = PersonReference(dpsContactId = prisonerContactRestriction.contactId, nomsNumber = prisonerContactRestriction.prisonerNumber),
       )
 
@@ -231,7 +231,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
-        additionalInfo = PrisonerContactRestrictionInfo(updatedPrisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS, "UpdatedUser", "BXI"),
+        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = updatedPrisonerContactRestriction.prisonerContactRestrictionId, prisonerContactId = prisonerContactRestriction.prisonerContactId, source = Source.NOMIS, username = "UpdatedUser", activeCaseLoadId = "BXI"),
         personReference = PersonReference(dpsContactId = updatedPrisonerContactRestriction.contactId, nomsNumber = updatedPrisonerContactRestriction.prisonerNumber),
       )
 
@@ -270,7 +270,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .isNotFound
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED,
-        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestriction.prisonerContactRestrictionId, Source.NOMIS, "SYS", null),
+        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = prisonerContactRestriction.prisonerContactRestrictionId, prisonerContactId = prisonerContactRestriction.prisonerContactId, source = Source.NOMIS, username = "SYS", activeCaseLoadId = null),
         personReference = PersonReference(dpsContactId = prisonerContactRestriction.contactId, nomsNumber = prisonerContactRestriction.prisonerNumber),
       )
 

@@ -491,6 +491,7 @@ class SyncFacade(
       outboundEventsService.send(
         outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
         identifier = it.prisonerContactRestrictionId,
+        secondIdentifier = it.prisonerContactId,
         contactId = it.contactId,
         noms = it.prisonerNumber,
         source = Source.NOMIS,
@@ -506,6 +507,7 @@ class SyncFacade(
       outboundEventsService.send(
         outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
         identifier = it.prisonerContactRestrictionId,
+        secondIdentifier = it.prisonerContactId,
         contactId = it.contactId,
         noms = it.prisonerNumber,
         source = Source.NOMIS,
@@ -521,6 +523,7 @@ class SyncFacade(
       outboundEventsService.send(
         outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED,
         identifier = it.prisonerContactRestrictionId,
+        secondIdentifier = it.prisonerContactId,
         contactId = it.contactId,
         noms = it.prisonerNumber,
         source = Source.NOMIS,
@@ -631,6 +634,7 @@ class SyncFacade(
       outboundEventsService.send(
         outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED,
         identifier = prisonerContactRestrictionId,
+        secondIdentifier = removed.prisonerContactId,
         contactId = removed.contactId,
         noms = removed.prisonerNumber,
         source = Source.NOMIS,
@@ -666,6 +670,7 @@ class SyncFacade(
       outboundEventsService.send(
         outboundEvent = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
         identifier = restriction.dpsId,
+        secondIdentifier = created.relationship.dpsId,
         contactId = created.contactId,
         noms = prisonerNumber,
         source = Source.NOMIS,

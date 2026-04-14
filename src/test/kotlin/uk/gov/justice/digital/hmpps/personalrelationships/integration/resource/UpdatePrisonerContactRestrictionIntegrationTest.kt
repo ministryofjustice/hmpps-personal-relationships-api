@@ -234,7 +234,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
-      additionalInfo = PrisonerContactRestrictionInfo(updated.prisonerContactRestrictionId, Source.DPS, "updated", "BXI"),
+      additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = updated.prisonerContactRestrictionId, prisonerContactId = savedPrisonerContactId, Source.DPS, "updated", "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
     )
 
@@ -278,7 +278,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
-      additionalInfo = PrisonerContactRestrictionInfo(updated.prisonerContactRestrictionId, Source.DPS, "updated", "BXI"),
+      additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = updated.prisonerContactRestrictionId, prisonerContactId = savedPrisonerContactId, source = Source.DPS, username = "updated", activeCaseLoadId = "BXI"),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
     )
 

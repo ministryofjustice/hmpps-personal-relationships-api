@@ -124,7 +124,7 @@ class OutboundEventsService(
         -> {
           sendSafely(
             outboundEvent,
-            PrisonerContactRestrictionInfo(identifier, source, user.username, user.activeCaseLoadId),
+            PrisonerContactRestrictionInfo(prisonerContactRestrictionId = identifier, prisonerContactId = secondIdentifier!!, source = source, username = user.username, activeCaseLoadId = user.activeCaseLoadId),
             contactId?.let { PersonReference(dpsContactId = it, nomsNumber = noms) },
           )
         }
