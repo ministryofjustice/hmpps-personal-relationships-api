@@ -17,7 +17,7 @@ class UserRequestContextConfiguration(private val userRequestContextInterceptor:
   override fun addInterceptors(registry: InterceptorRegistry) {
     registry.addInterceptor(userRequestContextInterceptor)
       .addPathPatterns("/contact/**", "/prisoner/**", "/prisoner-contact/**")
-      .excludePathPatterns("/prisoner-contact/restrictions")
+      .excludePathPatterns("/prisoner-contact/restrictions", "/prisoner-contact/relationships/summary")
   }
 }
 

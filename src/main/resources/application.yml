@@ -134,5 +134,3 @@ sentry:
 contact-search:
   slow-query:
     row-limit: 2000
-
-springdoc.swagger-ui.version: 5.32.1
