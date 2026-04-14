@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.personalrelationships.config
 
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ValidationException
 import org.apache.commons.lang3.exception.ExceptionUtils
@@ -21,6 +20,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.resource.NoResourceFoundException
+import tools.jackson.databind.exc.MismatchedInputException
 import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicateEmailException
 import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicateIdentityDocumentException
 import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicatePersonException
@@ -184,17 +184,21 @@ class HmppsContactsApiExceptionHandler {
     ).also { log.info("Request param validation exception: {}", e.message) }
 
   private fun sanitiseMismatchInputException(cause: MismatchedInputException): String {
-    val name = cause.path.fold("") { jsonPath, ref ->
-      val suffix = when {
-        ref.index > -1 -> "[${ref.index}]"
-        else -> ".${ref.fieldName}"
-      }
-      (jsonPath + suffix).removePrefix(".")
-    }
+    val rawPath = cause.pathReference.removePrefix(" through reference chain: ")
+
+    val name = rawPath
+      .replace(Regex("""(?:^|->)[A-Za-z0-9_$.]+(?=\[)"""), "") // remove class names before [...]
+      .replace("->", "")
+      .replace(Regex("""\["([^"]+)"]"""), ".$1") // ["field"] -> .field
+      .replace(Regex("""\[(\d+)]"""), "[$1]") // keep array indexes
+      .removePrefix(".")
+      .trim()
+
     val problem = when (cause.cause) {
       is DateTimeParseException -> "could not be parsed as a date"
       else -> "must not be null"
     }
+
     return "$name $problem"
   }
 
