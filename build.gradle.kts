@@ -19,17 +19,6 @@ allOpen {
 
 configurations
   .matching { !it.name.startsWith("gatling") }
-  .all {
-    resolutionStrategy.eachDependency {
-      if (requested.group == "io.netty" &&
-        !requested.name.startsWith("netty-tcnative")
-      ) {
-        useVersion("4.2.10.Final")
-        because("Fix CVE-2025-67735")
-      }
-    }
-    exclude(group = "tools.jackson.core")
-  }
 
 configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
@@ -48,7 +37,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-flyway")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:6.0.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.3.0")
   implementation("io.sentry:sentry-spring-boot-4-starter:8.37.0")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.openapitools:jackson-databind-nullable:0.2.10")
@@ -56,7 +45,7 @@ dependencies {
   implementation("io.github.cdimascio:dotenv-kotlin:6.5.1")
 
   // CSV dependencies
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.21.2")
+  implementation("tools.jackson.dataformat:jackson-dataformat-csv:3.1.2")
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
@@ -69,7 +58,6 @@ dependencies {
 
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.26.1")
   implementation("org.springframework.boot:spring-boot-jackson2")
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.21.2")
 
   // Test dependencies
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.1.0")

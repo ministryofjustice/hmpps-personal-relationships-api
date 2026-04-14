@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.personalrelationships.config
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.DeserializationFeature
 import io.swagger.v3.core.util.PrimitiveType
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
@@ -14,10 +13,10 @@ import io.swagger.v3.oas.models.tags.Tag
 import jakarta.annotation.PostConstruct
 import org.openapitools.jackson.nullable.JsonNullableModule
 import org.springframework.boot.info.BuildProperties
-import org.springframework.boot.jackson2.autoconfigure.Jackson2ObjectMapperBuilderCustomizer
+import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder
+import tools.jackson.databind.DeserializationFeature
 
 @Configuration
 class OpenApiConfiguration(buildProperties: BuildProperties) {
@@ -114,8 +113,10 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun jsonNullableModule() = JsonNullableModule()
 
   @Bean
-  fun jsonCustomizer(): Jackson2ObjectMapperBuilderCustomizer = Jackson2ObjectMapperBuilderCustomizer { builder: Jackson2ObjectMapperBuilder ->
-    builder.serializationInclusion(JsonInclude.Include.NON_NULL)
-    builder.featuresToEnable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+  fun jsonCustomizer(): JsonMapperBuilderCustomizer = JsonMapperBuilderCustomizer { builder ->
+    builder.changeDefaultPropertyInclusion {
+      JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.NON_NULL)
+    }
+    builder.enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
   }
 }

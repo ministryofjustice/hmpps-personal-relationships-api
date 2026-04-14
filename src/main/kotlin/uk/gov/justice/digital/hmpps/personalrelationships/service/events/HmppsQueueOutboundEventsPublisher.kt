@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.personalrelationships.service.events
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import tools.jackson.databind.ObjectMapper
 import uk.gov.justice.digital.hmpps.personalrelationships.config.Feature
 import uk.gov.justice.digital.hmpps.personalrelationships.config.FeatureSwitches
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
