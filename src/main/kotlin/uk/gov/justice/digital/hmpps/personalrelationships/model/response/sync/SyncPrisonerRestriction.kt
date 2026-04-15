@@ -30,7 +30,7 @@ data class SyncPrisonerRestriction(
   @Schema(description = "True if this restriction applies to the latest or current term in prison, false if a previous term", example = "true")
   val currentTerm: Boolean,
 
-  @Schema(description = "Username of the person who created the record", example = "JSMITH_ADM", nullable = true)
+  @Schema(description = "Username of the person who created the record", example = "JSMITH_ADM")
   val createdBy: String,
 
   @Schema(description = "Timestamp when the record was created", nullable = true)
