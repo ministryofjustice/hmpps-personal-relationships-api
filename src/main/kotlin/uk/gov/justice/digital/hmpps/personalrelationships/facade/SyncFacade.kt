@@ -659,7 +659,7 @@ class SyncFacade(
       telemetryContactCustomEventService.trackDeletePrisonerContactRestrictionEvent(removed.contactId, prisonerContactRestrictionId, Source.NOMIS, userOrDefault(null))
     }
 
-    telemetryContactCustomEventService.trackDeletePrisonerContactEvent(removed.contactId, removed.prisonerContactId, removed.prisonerNumber, Source.NOMIS, userOrDefault(null))
+    telemetryContactCustomEventService.trackDeletePrisonerContactEvent(contactId = removed.contactId, prisonerContactId = removed.prisonerContactId, prisonerNumber = removed.prisonerNumber, relationshipTypeCode = null, relationshipToPrisonerCode = null, activeRelationship = null, source = Source.NOMIS, user = userOrDefault(null))
   }
 
   private fun sendEventsForRelationshipsCreated(

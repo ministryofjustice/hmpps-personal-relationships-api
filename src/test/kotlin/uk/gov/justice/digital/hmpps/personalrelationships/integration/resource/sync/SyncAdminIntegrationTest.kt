@@ -436,7 +436,16 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
   }
 
   private fun assertCustomPrisonerContactDeletedEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, source: Source, user: User) {
-    verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactEvent(contactId, prisonerContactId, prisonerNumber, source, user)
+    verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactEvent(
+      contactId = contactId,
+      prisonerContactId = prisonerContactId,
+      prisonerNumber = prisonerNumber,
+      relationshipTypeCode = null,
+      relationshipToPrisonerCode = null,
+      activeRelationship = null,
+      source = source,
+      user = user,
+    )
 
     verify(telemetryClient, times(1)).trackEvent(
       "prisoner-contact-deleted",
