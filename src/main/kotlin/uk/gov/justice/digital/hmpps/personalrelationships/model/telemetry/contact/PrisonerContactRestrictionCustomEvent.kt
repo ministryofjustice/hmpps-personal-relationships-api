@@ -21,7 +21,11 @@ class PrisonerContactRestrictionCustomEvent private constructor(
   eventUser: User,
 ) : ContactCustomTelemetryEvent(contactId, getEvent(eventActionType), eventSource.name, eventUser) {
   override fun customProperties(): Map<String, String> {
-    val customProperties = mutableMapOf("prisoner_contact_restriction_id" to prisonerContactRestrictionCustomProperties.prisonerContactRestrictionId.toString())
+    val customProperties = mutableMapOf(
+      "prisoner_contact_restriction_id" to prisonerContactRestrictionCustomProperties.prisonerContactRestrictionId.toString(),
+      "prisoner_number" to prisonerContactRestrictionCustomProperties.prisonerNumber,
+    )
+
     prisonerContactRestrictionCustomProperties.restrictionType?.let {
       customProperties["restriction_code"] = it
     }
@@ -55,16 +59,18 @@ class PrisonerContactRestrictionCustomEvent private constructor(
   constructor(
     contactId: Long,
     contactRestrictionId: Long,
+    prisonerNumber: String,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, PrisonerContactRestrictionCustomProperties(contactRestrictionId, null), eventActionType, eventSource, eventUser)
+  ) : this(contactId, PrisonerContactRestrictionCustomProperties(prisonerContactRestrictionId = contactRestrictionId, prisonerNumber = prisonerNumber, restrictionType = null), eventActionType, eventSource, eventUser)
 }
 
 internal class PrisonerContactRestrictionCustomProperties(
   val prisonerContactRestrictionId: Long,
+  val prisonerNumber: String,
   val restrictionType: String?,
 ) {
-  constructor(syncPrisonerContactRestriction: SyncPrisonerContactRestriction) : this(syncPrisonerContactRestriction.prisonerContactRestrictionId, syncPrisonerContactRestriction.restrictionType)
-  constructor(prisonerContactRestrictionDetails: PrisonerContactRestrictionDetails) : this(prisonerContactRestrictionDetails.prisonerContactRestrictionId, prisonerContactRestrictionDetails.restrictionType)
+  constructor(syncPrisonerContactRestriction: SyncPrisonerContactRestriction) : this(prisonerContactRestrictionId = syncPrisonerContactRestriction.prisonerContactRestrictionId, prisonerNumber = syncPrisonerContactRestriction.prisonerNumber, restrictionType = syncPrisonerContactRestriction.restrictionType)
+  constructor(prisonerContactRestrictionDetails: PrisonerContactRestrictionDetails) : this(prisonerContactRestrictionId = prisonerContactRestrictionDetails.prisonerContactRestrictionId, prisonerNumber = prisonerContactRestrictionDetails.prisonerNumber, restrictionType = prisonerContactRestrictionDetails.restrictionType)
 }

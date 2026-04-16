@@ -364,6 +364,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "contact_id" to updatedPrisonerContact.contactId.toString(),
           "active_caseload_id" to "BXI",
           "prisoner_contact_id" to updatedPrisonerContact.id.toString(),
+          "prisoner_number" to updatedPrisonerContact.prisonerNumber,
         ),
         null,
       )
@@ -466,6 +467,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "contact_id" to updatedPrisonerContact.contactId.toString(),
           "active_caseload_id" to "BXI",
           "prisoner_contact_id" to updatedPrisonerContact.id.toString(),
+          "prisoner_number" to updatedPrisonerContact.prisonerNumber,
         ),
         null,
       )
@@ -568,6 +570,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "contact_id" to updatedPrisonerContact.contactId.toString(),
           "active_caseload_id" to "BXI",
           "prisoner_contact_id" to updatedPrisonerContact.id.toString(),
+          "prisoner_number" to updatedPrisonerContact.prisonerNumber,
         ),
         null,
       )
@@ -770,6 +773,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "contact_id" to syncPrisonerContact.contactId.toString(),
           "active_caseload_id" to user.activeCaseLoadId,
           "prisoner_contact_id" to syncPrisonerContact.id.toString(),
+          "prisoner_number" to syncPrisonerContact.prisonerNumber,
         ),
         null,
       )
@@ -785,6 +789,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "contact_id" to syncPrisonerContact.contactId.toString(),
           "active_caseload_id" to user.activeCaseLoadId,
           "prisoner_contact_id" to syncPrisonerContact.id.toString(),
+          "prisoner_number" to syncPrisonerContact.prisonerNumber,
         ),
         null,
       )
@@ -800,6 +805,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "contact_id" to syncPrisonerContact.contactId.toString(),
           "active_caseload_id" to user.activeCaseLoadId,
           "prisoner_contact_id" to syncPrisonerContact.id.toString(),
+          "prisoner_number" to syncPrisonerContact.prisonerNumber,
         ),
         null,
       )
@@ -814,6 +820,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "username" to user.username,
           "contact_id" to syncPrisonerContact.contactId.toString(),
           "prisoner_contact_id" to syncPrisonerContact.id.toString(),
+          "prisoner_number" to syncPrisonerContact.prisonerNumber,
         ),
         null,
       )
@@ -828,6 +835,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "username" to user.username,
           "contact_id" to syncPrisonerContact.contactId.toString(),
           "prisoner_contact_id" to syncPrisonerContact.id.toString(),
+          "prisoner_number" to syncPrisonerContact.prisonerNumber,
         ),
         null,
       )
@@ -842,6 +850,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "username" to user.username,
           "contact_id" to syncPrisonerContact.contactId.toString(),
           "prisoner_contact_id" to syncPrisonerContact.id.toString(),
+          "prisoner_number" to syncPrisonerContact.prisonerNumber,
         ),
         null,
       )

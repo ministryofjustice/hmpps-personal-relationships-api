@@ -311,6 +311,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
         "contact_id" to updatedPrisonerContactRestrictionDetails.contactId.toString(),
         "restriction_code" to restrictionType,
         "prisoner_contact_restriction_id" to updatedPrisonerContactRestrictionDetails.prisonerContactRestrictionId.toString(),
+        "prisoner_number" to updatedPrisonerContactRestrictionDetails.prisonerNumber,
       ),
       null,
     )
