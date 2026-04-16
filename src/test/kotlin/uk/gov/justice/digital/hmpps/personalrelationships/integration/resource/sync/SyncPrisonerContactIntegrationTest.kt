@@ -740,6 +740,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
     }
 
     private fun assertCustomDeletedEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
+      val relationshipStatusString = if (syncPrisonerContact.active) "active" else "inactive"
       verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactEvent(any<SyncPrisonerContact>(), any<Source>(), any<User>())
 
       verify(telemetryClient, times(1)).trackEvent(
@@ -751,6 +752,9 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "contact_id" to syncPrisonerContact.contactId.toString(),
           "prisoner_contact_id" to syncPrisonerContact.id.toString(),
           "prisoner_number" to syncPrisonerContact.prisonerNumber,
+          "group_code" to syncPrisonerContact.contactType,
+          "relationship_code" to syncPrisonerContact.relationshipType,
+          "relationship_status" to relationshipStatusString,
         ),
         null,
       )

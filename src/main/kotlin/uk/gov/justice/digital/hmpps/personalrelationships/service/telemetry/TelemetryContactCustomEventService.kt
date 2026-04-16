@@ -244,7 +244,18 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
   }
 
   fun trackDeletePrisonerContactEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, relationshipTypeCode: String?, relationshipToPrisonerCode: String?, activeRelationship: Boolean?, source: Source, user: User) {
-    val event = PrisonerContactCustomEvent(contactId = contactId, prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, relationshipTypeCode = relationshipTypeCode, relationshipToPrisonerCode = relationshipToPrisonerCode, activeRelationship = activeRelationship, eventActionType = EventActionType.DELETE, eventSource = source, eventUser = user)
+    val event = PrisonerContactCustomEvent(
+      contactId = contactId,
+      prisonerContactId = prisonerContactId,
+      prisonerNumber = prisonerNumber,
+      relationshipTypeCode = relationshipTypeCode,
+      relationshipToPrisonerCode = relationshipToPrisonerCode,
+      activeRelationship = activeRelationship,
+      eventActionType = EventActionType.DELETE,
+      eventSource = source,
+      eventUser = user,
+    )
+
     telemetryService.track(event)
   }
 
