@@ -290,6 +290,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
           "contact_id" to syncPrisonerContactRestriction.contactId.toString(),
           "prisoner_contact_restriction_id" to syncPrisonerContactRestriction.prisonerContactRestrictionId.toString(),
           "restriction_code" to syncPrisonerContactRestriction.restrictionType,
+          "prisoner_number" to syncPrisonerContactRestriction.prisonerNumber,
         ),
         null,
       )
@@ -308,6 +309,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
           "contact_id" to syncPrisonerContactRestriction.contactId.toString(),
           "prisoner_contact_restriction_id" to syncPrisonerContactRestriction.prisonerContactRestrictionId.toString(),
           "restriction_code" to syncPrisonerContactRestriction.restrictionType,
+          "prisoner_number" to syncPrisonerContactRestriction.prisonerNumber,
         ),
         null,
       )
@@ -325,6 +327,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
           "contact_id" to syncPrisonerContactRestriction.contactId.toString(),
           "prisoner_contact_restriction_id" to syncPrisonerContactRestriction.prisonerContactRestrictionId.toString(),
           "restriction_code" to syncPrisonerContactRestriction.restrictionType,
+          "prisoner_number" to syncPrisonerContactRestriction.prisonerNumber,
         ),
         null,
       )

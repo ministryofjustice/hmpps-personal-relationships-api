@@ -251,6 +251,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
         "contact_id" to contactRestrictionDetails.contactId.toString(),
         "prisoner_contact_restriction_id" to contactRestrictionDetails.prisonerContactRestrictionId.toString(),
         "restriction_code" to restrictionType,
+        "prisoner_number" to contactRestrictionDetails.prisonerNumber,
       ),
       null,
     )

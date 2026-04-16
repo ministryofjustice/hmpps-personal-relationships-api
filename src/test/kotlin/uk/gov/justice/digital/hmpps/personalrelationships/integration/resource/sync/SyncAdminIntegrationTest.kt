@@ -414,6 +414,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         "username" to user.username,
         "contact_id" to contactId.toString(),
         "prisoner_contact_restriction_id" to prisonerContactRestrictionId.toString(),
+        "prisoner_number" to prisonerNumber,
       ),
       null,
     )
@@ -430,6 +431,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         "username" to user.username,
         "contact_id" to contactId.toString(),
         "prisoner_contact_restriction_id" to prisonerContactRestrictionId.toString(),
+        "prisoner_number" to prisonerNumber,
       ),
       null,
     )
