@@ -106,7 +106,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumber),
     )
 
-    assertCustomEvent(savedContactId, savedPrisonerContactId, prisonerNumber, Source.DPS, User("deleted", "BXI"))
+    assertCustomEvent(contactId = savedContactId, contactPrisonerId = savedPrisonerContactId, prisonerNumber = prisonerNumber, groupCode = "S", relationshipCode = "FRI", relationshipStatus = true, source = Source.DPS, user = User("deleted", "BXI"))
     verify(telemetryClient, never()).trackEvent(
       eq("contact-next-of-kin-deleted"),
       any<Map<String, String>>(),
@@ -347,8 +347,9 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     )
   }
 
-  private fun assertCustomEvent(contactId: Long, contactPrisonerId: Long, prisonerNumber: String, source: Source, user: User) {
-    verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactEvent(contactId, contactPrisonerId, prisonerNumber, source, user)
+  private fun assertCustomEvent(contactId: Long, contactPrisonerId: Long, prisonerNumber: String, groupCode: String, relationshipCode: String, relationshipStatus: Boolean, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactEvent(contactId, contactPrisonerId, prisonerNumber, groupCode, relationshipCode, relationshipStatus, source, user)
+    val relationshipStatusString = if (relationshipStatus) "active" else "inactive"
     verify(telemetryClient, times(1)).trackEvent(
       "prisoner-contact-deleted",
       mapOf(
@@ -359,6 +360,9 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         "contact_id" to contactId.toString(),
         "prisoner_number" to prisonerNumber,
         "prisoner_contact_id" to contactPrisonerId.toString(),
+        "group_code" to groupCode,
+        "relationship_code" to relationshipCode,
+        "relationship_status" to relationshipStatusString,
       ),
       null,
     )

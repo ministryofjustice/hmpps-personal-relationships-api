@@ -203,7 +203,7 @@ class ContactFacade(
     val approvedVisitorEventType = if (existingPrisonerContact.approvedVisitor) EventActionType.DELETE else null
     val emergencyContactEventType = if (existingPrisonerContact.emergencyContact) EventActionType.DELETE else null
 
-    telemetryContactCustomEventService.trackDeletePrisonerContactEvent(deletedRelationships = deletedResponse.ids, nextOfKinEventActionType = nextOfKinEventType, approvedVisitorEventActionType = approvedVisitorEventType, emergencyContactEventActionType = emergencyContactEventType, source = Source.DPS, user = user)
+    telemetryContactCustomEventService.trackDeletePrisonerContactEvent(deletedRelationships = deletedResponse.ids, relationshipTypeCode = existingPrisonerContact.relationshipType, relationshipToPrisonerCode = existingPrisonerContact.relationshipToPrisoner, activeRelationship = existingPrisonerContact.active, nextOfKinEventActionType = nextOfKinEventType, approvedVisitorEventActionType = approvedVisitorEventType, emergencyContactEventActionType = emergencyContactEventType, source = Source.DPS, user = user)
 
     if (deletedResponse.wasUpdated) {
       outboundEventsService.send(

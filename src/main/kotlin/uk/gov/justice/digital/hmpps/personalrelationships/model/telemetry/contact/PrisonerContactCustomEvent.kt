@@ -78,10 +78,13 @@ class PrisonerContactCustomEvent private constructor(
     contactId: Long,
     prisonerContactId: Long,
     prisonerNumber: String,
+    relationshipTypeCode: String? = null,
+    relationshipToPrisonerCode: String? = null,
+    activeRelationship: Boolean? = null,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, PrisonerContactCustomProperties(prisonerContactId, prisonerNumber), eventActionType, eventSource, eventUser)
+  ) : this(contactId, PrisonerContactCustomProperties(prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, relationshipTypeCode = relationshipTypeCode, relationshipToPrisonerCode = relationshipToPrisonerCode, isRelationshipActive = activeRelationship), eventActionType, eventSource, eventUser)
 }
 
 internal class PrisonerContactCustomProperties(
