@@ -560,6 +560,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "contact_id" to updatedPrisonerContact.contactId.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
+        "prisoner_number" to updatedPrisonerContact.prisonerNumber,
       ),
       null,
     )
@@ -575,6 +576,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "contact_id" to updatedPrisonerContact.contactId.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
+        "prisoner_number" to updatedPrisonerContact.prisonerNumber,
       ),
       null,
     )
@@ -590,6 +592,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "contact_id" to updatedPrisonerContact.contactId.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
+        "prisoner_number" to updatedPrisonerContact.prisonerNumber,
       ),
       null,
     )

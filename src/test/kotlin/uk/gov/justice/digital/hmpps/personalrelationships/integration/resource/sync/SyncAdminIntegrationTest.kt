@@ -345,7 +345,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
           ),
         )
 
-        assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, Source.NOMIS, User("SYS", null))
+        assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, createdPrisonerNumber, Source.NOMIS, User("SYS", null))
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_DELETED,
@@ -370,7 +370,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
           ),
         )
 
-        assertCustomPrisonerContactRestrictionCreatedEvent(created.contactId, restriction.dpsId, Source.NOMIS, User("SYS", null))
+        assertCustomPrisonerContactRestrictionCreatedEvent(created.contactId, restriction.dpsId, createdPrisonerNumber, Source.NOMIS, User("SYS", null))
       }
 
       stubEvents.assertHasEvent(
@@ -403,8 +403,8 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
     )
   }
 
-  private fun assertCustomPrisonerContactRestrictionCreatedEvent(contactId: Long, prisonerContactRestrictionId: Long, source: Source, user: User) {
-    verify(telemetryContactCustomEventService, times(1)).trackCreatePrisonerContactRestrictionEvent(contactId, prisonerContactRestrictionId, source, user)
+  private fun assertCustomPrisonerContactRestrictionCreatedEvent(contactId: Long, prisonerContactRestrictionId: Long, prisonerNumber: String, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackCreatePrisonerContactRestrictionEvent(contactId, prisonerContactRestrictionId, prisonerNumber, source, user)
 
     verify(telemetryClient, times(1)).trackEvent(
       "prisoner-contact-restriction-created",
@@ -419,8 +419,8 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
     )
   }
 
-  private fun assertCustomPrisonerContactRestrictionDeletedEvent(contactId: Long, prisonerContactRestrictionId: Long, source: Source, user: User) {
-    verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactRestrictionEvent(contactId, prisonerContactRestrictionId, source, user)
+  private fun assertCustomPrisonerContactRestrictionDeletedEvent(contactId: Long, prisonerContactRestrictionId: Long, prisonerNumber: String, source: Source, user: User) {
+    verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactRestrictionEvent(contactId, prisonerContactRestrictionId, prisonerNumber, source, user)
 
     verify(telemetryClient, times(1)).trackEvent(
       "prisoner-contact-restriction-deleted",

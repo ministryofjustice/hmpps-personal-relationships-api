@@ -388,6 +388,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         "contact_id" to contactRelationship.contactId.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
+        "prisoner_number" to contactRelationship.prisonerNumber,
       ),
       null,
     )
@@ -403,6 +404,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         "contact_id" to contactRelationship.contactId.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
+        "prisoner_number" to contactRelationship.prisonerNumber,
       ),
       null,
     )
@@ -418,6 +420,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         "contact_id" to contactRelationship.contactId.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
+        "prisoner_number" to contactRelationship.prisonerNumber,
       ),
       null,
     )

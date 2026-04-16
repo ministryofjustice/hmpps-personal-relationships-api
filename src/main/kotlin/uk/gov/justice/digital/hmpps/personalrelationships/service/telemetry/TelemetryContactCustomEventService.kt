@@ -172,7 +172,7 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
   fun trackUpdatePrisonerContactEvent(prisonerContactRelationship: PrisonerContactRelationshipDetails, nextOfKinEventActionType: EventActionType?, approvedVisitorEventActionType: EventActionType?, emergencyContactEventActionType: EventActionType?, source: Source, user: User) {
     val event = PrisonerContactCustomEvent(prisonerContactRelationship.contactId, prisonerContactRelationship, EventActionType.UPDATE, source, user)
     telemetryService.track(event)
-    trackUpdatePrisonerContactChildEvents(contactId = prisonerContactRelationship.contactId, prisonerContactId = prisonerContactRelationship.prisonerContactId, nextOfKinEventActionType = nextOfKinEventActionType, emergencyContactEventActionType = emergencyContactEventActionType, approvedVisitorEventActionType = approvedVisitorEventActionType, source = source, user = user)
+    trackUpdatePrisonerContactChildEvents(contactId = prisonerContactRelationship.contactId, prisonerContactId = prisonerContactRelationship.prisonerContactId, prisonerNumber = prisonerContactRelationship.prisonerNumber, nextOfKinEventActionType = nextOfKinEventActionType, emergencyContactEventActionType = emergencyContactEventActionType, approvedVisitorEventActionType = approvedVisitorEventActionType, source = source, user = user)
   }
 
   fun trackUpdatePrisonerContactEvent(relationshipApproved: RelationshipsApproved, source: Source, user: User) {
@@ -183,6 +183,7 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
       trackUpdatePrisonerContactChildEvents(
         contactId = relationshipApproved.contactId,
         prisonerContactId = relationshipApproved.prisonerContactId,
+        prisonerNumber = relationshipApproved.prisonerNumber,
         nextOfKinEventActionType = null,
         emergencyContactEventActionType = null,
         approvedVisitorEventActionType = EventActionType.CREATE,
@@ -195,7 +196,7 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
   fun trackUpdatePrisonerContactEvent(syncPrisonerContact: SyncPrisonerContact, nextOfKinEventActionType: EventActionType?, approvedVisitorEventActionType: EventActionType?, emergencyContactEventActionType: EventActionType?, source: Source, user: User) {
     val event = PrisonerContactCustomEvent(contactId = syncPrisonerContact.contactId, syncPrisonerContact, EventActionType.UPDATE, source, user)
     telemetryService.track(event)
-    trackUpdatePrisonerContactChildEvents(contactId = syncPrisonerContact.contactId, prisonerContactId = syncPrisonerContact.id, nextOfKinEventActionType = nextOfKinEventActionType, emergencyContactEventActionType = emergencyContactEventActionType, approvedVisitorEventActionType = approvedVisitorEventActionType, source = source, user = user)
+    trackUpdatePrisonerContactChildEvents(contactId = syncPrisonerContact.contactId, prisonerContactId = syncPrisonerContact.id, prisonerNumber = syncPrisonerContact.prisonerNumber, nextOfKinEventActionType = nextOfKinEventActionType, emergencyContactEventActionType = emergencyContactEventActionType, approvedVisitorEventActionType = approvedVisitorEventActionType, source = source, user = user)
   }
 
   fun trackDeletePrisonerContactEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
@@ -211,13 +212,13 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     )
 
     if (syncPrisonerContact.nextOfKin) {
-      trackDeleteNextOfKinEvent(contactId = syncPrisonerContact.contactId, prisonerContactId = syncPrisonerContact.id, source = source, user = user)
+      trackDeleteNextOfKinEvent(contactId = syncPrisonerContact.contactId, prisonerContactId = syncPrisonerContact.id, prisonerNumber = syncPrisonerContact.prisonerNumber, source = source, user = user)
     }
     if (syncPrisonerContact.approvedVisitor) {
-      trackDeleteApprovedVisitorEvent(contactId = syncPrisonerContact.contactId, prisonerContactId = syncPrisonerContact.id, source = source, user = user)
+      trackDeleteApprovedVisitorEvent(contactId = syncPrisonerContact.contactId, prisonerContactId = syncPrisonerContact.id, prisonerNumber = syncPrisonerContact.prisonerNumber, source = source, user = user)
     }
     if (syncPrisonerContact.emergencyContact) {
-      trackDeleteEmergencyContactEvent(contactId = syncPrisonerContact.contactId, prisonerContactId = syncPrisonerContact.id, source = source, user = user)
+      trackDeleteEmergencyContactEvent(contactId = syncPrisonerContact.contactId, prisonerContactId = syncPrisonerContact.id, prisonerNumber = syncPrisonerContact.prisonerNumber, source = source, user = user)
     }
   }
 
@@ -233,13 +234,13 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
       user = user,
     )
     if (nextOfKinEventActionType != null && nextOfKinEventActionType == EventActionType.DELETE) {
-      trackDeleteNextOfKinEvent(contactId = deletedRelationships.contactId, prisonerContactId = deletedRelationships.prisonerContactId, source = source, user = user)
+      trackDeleteNextOfKinEvent(contactId = deletedRelationships.contactId, prisonerContactId = deletedRelationships.prisonerContactId, prisonerNumber = deletedRelationships.prisonerNumber, source = source, user = user)
     }
     if (approvedVisitorEventActionType != null && approvedVisitorEventActionType == EventActionType.DELETE) {
-      trackDeleteApprovedVisitorEvent(contactId = deletedRelationships.contactId, prisonerContactId = deletedRelationships.prisonerContactId, source = source, user = user)
+      trackDeleteApprovedVisitorEvent(contactId = deletedRelationships.contactId, prisonerContactId = deletedRelationships.prisonerContactId, prisonerNumber = deletedRelationships.prisonerNumber, source = source, user = user)
     }
     if (emergencyContactEventActionType != null && emergencyContactEventActionType == EventActionType.DELETE) {
-      trackDeleteEmergencyContactEvent(contactId = deletedRelationships.contactId, prisonerContactId = deletedRelationships.prisonerContactId, source = source, user = user)
+      trackDeleteEmergencyContactEvent(contactId = deletedRelationships.contactId, prisonerContactId = deletedRelationships.prisonerContactId, prisonerNumber = deletedRelationships.prisonerNumber, source = source, user = user)
     }
   }
 
@@ -349,8 +350,8 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     telemetryService.track(event)
   }
 
-  fun trackCreatePrisonerContactRestrictionEvent(contactId: Long, prisonerContactRestrictionId: Long, source: Source, user: User) {
-    val event = PrisonerContactRestrictionCustomEvent(contactId, prisonerContactRestrictionId, EventActionType.CREATE, source, user)
+  fun trackCreatePrisonerContactRestrictionEvent(contactId: Long, prisonerContactRestrictionId: Long, prisonerNumber: String, source: Source, user: User) {
+    val event = PrisonerContactRestrictionCustomEvent(contactId = contactId, contactRestrictionId = prisonerContactRestrictionId, prisonerNumber = prisonerNumber, eventActionType = EventActionType.CREATE, eventSource = source, eventUser = user)
     telemetryService.track(event)
   }
 
@@ -374,8 +375,8 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     telemetryService.track(event)
   }
 
-  fun trackDeletePrisonerContactRestrictionEvent(contactId: Long, contactRestrictionId: Long, source: Source, user: User) {
-    val event = PrisonerContactRestrictionCustomEvent(contactId, contactRestrictionId, EventActionType.DELETE, source, user)
+  fun trackDeletePrisonerContactRestrictionEvent(contactId: Long, contactRestrictionId: Long, prisonerNumber: String, source: Source, user: User) {
+    val event = PrisonerContactRestrictionCustomEvent(contactId = contactId, contactRestrictionId = contactRestrictionId, prisonerNumber = prisonerNumber, eventActionType = EventActionType.DELETE, eventSource = source, eventUser = user)
     telemetryService.track(event)
   }
 
@@ -478,32 +479,32 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     telemetryService.track(event)
   }
 
-  private fun trackNextOfKinEventOnUpdate(nextOfKinEventActionType: EventActionType?, contactId: Long, prisonerContactId: Long, source: Source, user: User) {
+  private fun trackNextOfKinEventOnUpdate(nextOfKinEventActionType: EventActionType?, contactId: Long, prisonerContactId: Long, prisonerNumber: String, source: Source, user: User) {
     nextOfKinEventActionType?.let { actionType ->
       when (actionType) {
-        EventActionType.CREATE -> trackCreateNextOfKinEvent(contactId = contactId, prisonerContactId = prisonerContactId, source = source, user = user)
+        EventActionType.CREATE -> trackCreateNextOfKinEvent(contactId = contactId, prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, source = source, user = user)
         EventActionType.UPDATE -> {} // do nothing
-        EventActionType.DELETE -> trackDeleteNextOfKinEvent(contactId = contactId, prisonerContactId = prisonerContactId, source = source, user = user)
+        EventActionType.DELETE -> trackDeleteNextOfKinEvent(contactId = contactId, prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, source = source, user = user)
       }
     }
   }
 
-  private fun trackEmergencyContactEventOnUpdate(emergencyContactEventActionType: EventActionType?, contactId: Long, prisonerContactId: Long, source: Source, user: User) {
+  private fun trackEmergencyContactEventOnUpdate(emergencyContactEventActionType: EventActionType?, contactId: Long, prisonerContactId: Long, prisonerNumber: String, source: Source, user: User) {
     emergencyContactEventActionType?.let { actionType ->
       when (actionType) {
-        EventActionType.CREATE -> trackCreateEmergencyContactEvent(contactId = contactId, prisonerContactId = prisonerContactId, source = source, user = user)
+        EventActionType.CREATE -> trackCreateEmergencyContactEvent(contactId = contactId, prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, source = source, user = user)
         EventActionType.UPDATE -> {} // do nothing
-        EventActionType.DELETE -> trackDeleteEmergencyContactEvent(contactId = contactId, prisonerContactId = prisonerContactId, source = source, user = user)
+        EventActionType.DELETE -> trackDeleteEmergencyContactEvent(contactId = contactId, prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, source = source, user = user)
       }
     }
   }
 
-  private fun trackApprovedVisitorEventOnUpdate(approvedVisitorEventActionType: EventActionType?, contactId: Long, prisonerContactId: Long, source: Source, user: User) {
+  private fun trackApprovedVisitorEventOnUpdate(approvedVisitorEventActionType: EventActionType?, contactId: Long, prisonerContactId: Long, prisonerNumber: String, source: Source, user: User) {
     approvedVisitorEventActionType?.let { actionType ->
       when (actionType) {
-        EventActionType.CREATE -> trackCreateApprovedVisitorEvent(contactId = contactId, prisonerContactId = prisonerContactId, source = source, user = user)
+        EventActionType.CREATE -> trackCreateApprovedVisitorEvent(contactId = contactId, prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, source = source, user = user)
         EventActionType.UPDATE -> {} // do nothing
-        EventActionType.DELETE -> trackDeleteApprovedVisitorEvent(contactId = contactId, prisonerContactId = prisonerContactId, source = source, user = user)
+        EventActionType.DELETE -> trackDeleteApprovedVisitorEvent(contactId = contactId, prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, source = source, user = user)
       }
     }
   }
@@ -516,33 +517,33 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
     null
   }
 
-  private fun trackCreateNextOfKinEvent(contactId: Long, prisonerContactId: Long, source: Source, user: User) {
-    val event = ContactNextOfKinCustomEvent(contactId, prisonerContactId, EventActionType.CREATE, source, user)
+  private fun trackCreateNextOfKinEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, source: Source, user: User) {
+    val event = ContactNextOfKinCustomEvent(contactId, prisonerContactId, prisonerNumber, EventActionType.CREATE, source, user)
     telemetryService.track(event)
   }
 
-  private fun trackDeleteNextOfKinEvent(contactId: Long, prisonerContactId: Long, source: Source, user: User) {
-    val event = ContactNextOfKinCustomEvent(contactId, prisonerContactId, EventActionType.DELETE, source, user)
+  private fun trackDeleteNextOfKinEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, source: Source, user: User) {
+    val event = ContactNextOfKinCustomEvent(contactId, prisonerContactId, prisonerNumber, EventActionType.DELETE, source, user)
     telemetryService.track(event)
   }
 
-  private fun trackCreateApprovedVisitorEvent(contactId: Long, prisonerContactId: Long, source: Source, user: User) {
-    val event = ContactApprovedVisitorCustomEvent(contactId, prisonerContactId, EventActionType.CREATE, source, user)
+  private fun trackCreateApprovedVisitorEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, source: Source, user: User) {
+    val event = ContactApprovedVisitorCustomEvent(contactId, prisonerContactId, prisonerNumber, EventActionType.CREATE, source, user)
     telemetryService.track(event)
   }
 
-  private fun trackDeleteApprovedVisitorEvent(contactId: Long, prisonerContactId: Long, source: Source, user: User) {
-    val event = ContactApprovedVisitorCustomEvent(contactId, prisonerContactId, EventActionType.DELETE, source, user)
+  private fun trackDeleteApprovedVisitorEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, source: Source, user: User) {
+    val event = ContactApprovedVisitorCustomEvent(contactId, prisonerContactId, prisonerNumber, EventActionType.DELETE, source, user)
     telemetryService.track(event)
   }
 
-  private fun trackCreateEmergencyContactEvent(contactId: Long, prisonerContactId: Long, source: Source, user: User) {
-    val event = ContactEmergencyContactCustomEvent(contactId, prisonerContactId, EventActionType.CREATE, source, user)
+  private fun trackCreateEmergencyContactEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, source: Source, user: User) {
+    val event = ContactEmergencyContactCustomEvent(contactId, prisonerContactId, prisonerNumber, EventActionType.CREATE, source, user)
     telemetryService.track(event)
   }
 
-  private fun trackDeleteEmergencyContactEvent(contactId: Long, prisonerContactId: Long, source: Source, user: User) {
-    val event = ContactEmergencyContactCustomEvent(contactId, prisonerContactId, EventActionType.DELETE, source, user)
+  private fun trackDeleteEmergencyContactEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, source: Source, user: User) {
+    val event = ContactEmergencyContactCustomEvent(contactId, prisonerContactId, prisonerNumber, EventActionType.DELETE, source, user)
     telemetryService.track(event)
   }
 
@@ -578,19 +579,19 @@ class TelemetryContactCustomEventService(private val telemetryService: Telemetry
 
   private fun trackCreatePrisonerContactChildEvents(contactId: Long, prisonerContactId: Long, prisonerNumber: String, isNextOfKin: Boolean, isEmergencyContact: Boolean, isApprovedVisitor: Boolean, source: Source, user: User) {
     if (isNextOfKin) {
-      trackCreateNextOfKinEvent(contactId = contactId, prisonerContactId = prisonerContactId, source = source, user = user)
+      trackCreateNextOfKinEvent(contactId = contactId, prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, source = source, user = user)
     }
     if (isEmergencyContact) {
-      trackCreateEmergencyContactEvent(contactId = contactId, prisonerContactId = prisonerContactId, source = source, user = user)
+      trackCreateEmergencyContactEvent(contactId = contactId, prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, source = source, user = user)
     }
     if (isApprovedVisitor) {
-      trackCreateApprovedVisitorEvent(contactId = contactId, prisonerContactId = prisonerContactId, source = source, user = user)
+      trackCreateApprovedVisitorEvent(contactId = contactId, prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, source = source, user = user)
     }
   }
 
-  private fun trackUpdatePrisonerContactChildEvents(contactId: Long, prisonerContactId: Long, nextOfKinEventActionType: EventActionType?, approvedVisitorEventActionType: EventActionType?, emergencyContactEventActionType: EventActionType?, source: Source, user: User) {
-    trackNextOfKinEventOnUpdate(nextOfKinEventActionType = nextOfKinEventActionType, contactId = contactId, prisonerContactId = prisonerContactId, source = source, user = user)
-    trackEmergencyContactEventOnUpdate(emergencyContactEventActionType = emergencyContactEventActionType, contactId = contactId, prisonerContactId = prisonerContactId, source = source, user = user)
-    trackApprovedVisitorEventOnUpdate(approvedVisitorEventActionType = approvedVisitorEventActionType, contactId = contactId, prisonerContactId = prisonerContactId, source = source, user = user)
+  private fun trackUpdatePrisonerContactChildEvents(contactId: Long, prisonerContactId: Long, prisonerNumber: String, nextOfKinEventActionType: EventActionType?, approvedVisitorEventActionType: EventActionType?, emergencyContactEventActionType: EventActionType?, source: Source, user: User) {
+    trackNextOfKinEventOnUpdate(nextOfKinEventActionType = nextOfKinEventActionType, contactId = contactId, prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, source = source, user = user)
+    trackEmergencyContactEventOnUpdate(emergencyContactEventActionType = emergencyContactEventActionType, contactId = contactId, prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, source = source, user = user)
+    trackApprovedVisitorEventOnUpdate(approvedVisitorEventActionType = approvedVisitorEventActionType, contactId = contactId, prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, source = source, user = user)
   }
 }

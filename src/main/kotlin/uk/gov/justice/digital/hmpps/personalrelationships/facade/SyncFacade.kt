@@ -656,7 +656,7 @@ class SyncFacade(
     relationshipsRemoved: List<PrisonerRelationshipIds>,
   ) = relationshipsRemoved.map { removed ->
     removed.prisonerContactRestrictionIds.forEach { prisonerContactRestrictionId ->
-      telemetryContactCustomEventService.trackDeletePrisonerContactRestrictionEvent(removed.contactId, prisonerContactRestrictionId, Source.NOMIS, userOrDefault(null))
+      telemetryContactCustomEventService.trackDeletePrisonerContactRestrictionEvent(contactId = removed.contactId, contactRestrictionId = prisonerContactRestrictionId, prisonerNumber = removed.prisonerNumber, source = Source.NOMIS, user = userOrDefault(null))
     }
 
     telemetryContactCustomEventService.trackDeletePrisonerContactEvent(contactId = removed.contactId, prisonerContactId = removed.prisonerContactId, prisonerNumber = removed.prisonerNumber, relationshipTypeCode = null, relationshipToPrisonerCode = null, activeRelationship = null, source = Source.NOMIS, user = userOrDefault(null))
@@ -693,7 +693,7 @@ class SyncFacade(
     relationshipsCreated: List<PrisonerContactAndRestrictionIds>,
   ) = relationshipsCreated.map { created ->
     created.restrictions.forEach { restriction ->
-      telemetryContactCustomEventService.trackCreatePrisonerContactRestrictionEvent(created.contactId, restriction.dpsId, Source.NOMIS, userOrDefault())
+      telemetryContactCustomEventService.trackCreatePrisonerContactRestrictionEvent(created.contactId, restriction.dpsId, prisonerNumber, Source.NOMIS, userOrDefault())
     }
 
     telemetryContactCustomEventService.trackCreatePrisonerContactEvent(created.contactId, created.relationship.dpsId, prisonerNumber, Source.NOMIS, userOrDefault())

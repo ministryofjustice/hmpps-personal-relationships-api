@@ -15,7 +15,10 @@ class ContactApprovedVisitorCustomEvent private constructor(
   val eventSource: Source,
   val eventUser: User,
 ) : ContactCustomTelemetryEvent(contactId, getEvent(eventActionType), eventSource.name, eventUser) {
-  override fun customProperties(): Map<String, String> = mapOf("prisoner_contact_id" to contactApprovedVisitorCustomProperties.prisonerContactId.toString())
+  override fun customProperties(): Map<String, String> = mapOf(
+    "prisoner_contact_id" to contactApprovedVisitorCustomProperties.prisonerContactId.toString(),
+    "prisoner_number" to contactApprovedVisitorCustomProperties.prisonerNumber,
+  )
 
   companion object {
     fun getEvent(eventActionType: EventActionType): TelemetryCustomEventType = when (eventActionType) {
@@ -28,12 +31,14 @@ class ContactApprovedVisitorCustomEvent private constructor(
   constructor(
     contactId: Long,
     prisonerContactId: Long,
+    prisonerNumber: String,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, ContactApprovedVisitorCustomProperties(prisonerContactId), eventActionType, eventSource, eventUser)
+  ) : this(contactId, ContactApprovedVisitorCustomProperties(prisonerContactId, prisonerNumber), eventActionType, eventSource, eventUser)
 }
 
 internal class ContactApprovedVisitorCustomProperties(
   val prisonerContactId: Long,
+  val prisonerNumber: String,
 )
