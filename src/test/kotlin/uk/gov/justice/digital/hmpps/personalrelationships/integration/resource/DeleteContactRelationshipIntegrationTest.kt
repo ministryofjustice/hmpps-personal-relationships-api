@@ -348,7 +348,17 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
   }
 
   private fun assertCustomEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, groupCode: String, relationshipCode: String, relationshipStatus: Boolean, source: Source, user: User) {
-    verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactEvent(contactId, prisonerContactId, prisonerNumber, groupCode, relationshipCode, relationshipStatus, source, user)
+    verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactEvent(
+      contactId = contactId,
+      prisonerContactId = prisonerContactId,
+      prisonerNumber = prisonerNumber,
+      relationshipTypeCode = groupCode,
+      relationshipToPrisonerCode = relationshipCode,
+      activeRelationship = relationshipStatus,
+      source = source,
+      user = user,
+    )
+
     val relationshipStatusString = if (relationshipStatus) "active" else "inactive"
     verify(telemetryClient, times(1)).trackEvent(
       "prisoner-contact-deleted",
