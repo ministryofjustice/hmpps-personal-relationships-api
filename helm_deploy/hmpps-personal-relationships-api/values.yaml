@@ -100,6 +100,14 @@ generic-service:
       DPR_USER: "DPR_USER"
       DPR_PASSWORD: "DPR_PASSWORD"
 
+  resources:
+    requests:
+      cpu: 100m
+      memory: 1024Mi
+    limits:
+      cpu: 2000m
+      memory: 2048Mi
+
   allowlist:
     groups:
       - internal
