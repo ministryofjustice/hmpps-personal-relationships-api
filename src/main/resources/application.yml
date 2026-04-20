@@ -134,3 +134,9 @@ sentry:
 contact-search:
   slow-query:
     row-limit: 2000
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
