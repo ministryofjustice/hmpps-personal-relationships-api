@@ -33,3 +33,9 @@ api:
       prisoner-search: https://prisoner-search-dev.prison.service.justice.gov.uk
       manage-users: https://manage-users-api-dev.hmpps.service.justice.gov.uk
       organisations: https://organisations-api-dev.hmpps.service.justice.gov.uk
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
