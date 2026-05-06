@@ -200,7 +200,7 @@ class SyncAdminService(
           contact.relationshipToPrisoner == incomingRelationship.relationshipType.code &&
           contact.approvedVisitor
       }
-      .maxByOrNull { it.updatedTime ?: it.createdTime ?: LocalDateTime.MIN }
+      .maxByOrNull { it.updatedTime ?: it.createdTime }
   }
 
   private fun extractResetAndSavePrisonerContacts(

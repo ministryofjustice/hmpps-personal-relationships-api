@@ -68,7 +68,6 @@ class SyncPrisonerNumberOfChildrenService(
       active = true,
     )
     val saved = newNumberOfChildren.let { numberOfChildrenRepository.save(it) }
-      ?: throw IllegalArgumentException("Cannot save number of children for prisoner")
 
     if (existingCount != null) {
       return SyncPrisonerNumberOfChildrenData(from(saved), Status.UPDATED, updatedId = existingCount.prisonerNumberOfChildrenId)
