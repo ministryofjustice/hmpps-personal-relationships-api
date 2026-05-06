@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.personalrelationships.config
 
-import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ValidationException
 import org.apache.commons.lang3.exception.ExceptionUtils
@@ -28,13 +27,12 @@ import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicatePer
 import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicateRelationshipException
 import uk.gov.justice.digital.hmpps.personalrelationships.exception.InvalidReferenceCodeGroupException
 import uk.gov.justice.digital.hmpps.personalrelationships.exception.RelationshipCannotBeRemovedDueToDependencyException
-import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PublishEventException
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.format.DateTimeParseException
 import java.util.*
 
 @RestControllerAdvice
-class HmppsContactsApiExceptionHandler(private val telemetryClient: TelemetryClient) {
+class HmppsContactsApiExceptionHandler {
   @ExceptionHandler(ValidationException::class)
   fun handleValidationException(e: ValidationException): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(BAD_REQUEST)
@@ -56,28 +54,6 @@ class HmppsContactsApiExceptionHandler(private val telemetryClient: TelemetryCli
         developerMessage = e.message,
       ),
     ).also { log.info("Illegal argument exception: {}", e.message) }
-
-  @ExceptionHandler(PublishEventException::class)
-  fun handlePublishEventException(e: PublishEventException): ResponseEntity<ErrorResponse> = ResponseEntity
-    .status(INTERNAL_SERVER_ERROR)
-    .body(
-      ErrorResponse(
-        status = INTERNAL_SERVER_ERROR,
-        userMessage = "Failed to publish event: ${e.message}",
-        developerMessage = e.message,
-      ),
-    ).also {
-      log.info("Failed to publish event exception: {}", e.message)
-      telemetryClient.trackEvent(
-        "personal-relationships-api-publish-event-error",
-        mapOf(
-          "status" to INTERNAL_SERVER_ERROR.toString(),
-          "message" to e.message,
-          "cause" to "Failed to publish event: ${e.cause?.message}",
-        ),
-        null,
-      )
-    }
 
   @ExceptionHandler(NoResourceFoundException::class)
   fun handleNoResourceFoundException(e: NoResourceFoundException): ResponseEntity<ErrorResponse> = ResponseEntity

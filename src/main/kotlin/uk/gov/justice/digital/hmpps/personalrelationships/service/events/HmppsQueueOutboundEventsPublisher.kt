@@ -38,13 +38,14 @@ class HmppsQueueOutboundEventsPublisher(
           event = mapper.writeValueAsString(event),
           attributes = metaData(event),
         )
-      } catch (e: Throwable) {
-        val message = "Failed (publishToDomainEventsTopic) to publish Event $event.eventType to $TOPIC_ID"
+      } catch (e: Exception) {
+        val message = "Failed (publishToDomainEventsTopic) to publish Event ${event.eventType} to $TOPIC_ID"
         log.error(message, e)
         throw PublishEventException(message, e)
       }
+    } else {
+      log.info("Ignoring publishing of event $event (feature switched off)")
     }
-    log.info("Ignoring publishing of event $event (feature switched off)")
   }
 
   private fun metaData(payload: OutboundHMPPSDomainEvent) = mapOf("eventType" to MessageAttributeValue.builder().dataType("String").stringValue(payload.eventType).build())
