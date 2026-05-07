@@ -70,7 +70,6 @@ class SyncPrisonerDomesticStatusService(
     )
 
     val saved = domesticStatusRepository.save(newDomesticStatus)
-      ?: throw IllegalArgumentException("Cannot save domestic status for prisoner")
 
     // set UPDATED status if existingStatus is not null and request domestic status value is not same as existing value , return created if existing status is null
     if (existingStatus != null) {

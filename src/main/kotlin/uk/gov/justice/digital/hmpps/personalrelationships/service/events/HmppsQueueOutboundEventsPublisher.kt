@@ -3,11 +3,12 @@ package uk.gov.justice.digital.hmpps.personalrelationships.service.events
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
-import software.amazon.awssdk.services.sns.model.PublishRequest
 import tools.jackson.databind.ObjectMapper
 import uk.gov.justice.digital.hmpps.personalrelationships.config.Feature
 import uk.gov.justice.digital.hmpps.personalrelationships.config.FeatureSwitches
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
+import uk.gov.justice.hmpps.sqs.publish
+import java.util.function.Supplier
 
 class HmppsQueueOutboundEventsPublisher(
   private val hmppsQueueService: HmppsQueueService,
@@ -31,17 +32,27 @@ class HmppsQueueOutboundEventsPublisher(
 
   override fun send(event: OutboundHMPPSDomainEvent) {
     if (outboundEventsEnabled) {
-      domainEventsTopic.snsClient.publish(
-        PublishRequest.builder()
-          .topicArn(domainEventsTopic.arn)
-          .message(mapper.writeValueAsString(event))
-          .messageAttributes(metaData(event))
-          .build(),
-      )
-      return
+      try {
+        domainEventsTopic.publish(
+          eventType = event.eventType,
+          event = mapper.writeValueAsString(event),
+          attributes = metaData(event),
+        )
+      } catch (e: Exception) {
+        val message = "Failed (publishToDomainEventsTopic) to publish Event ${event.eventType} to $TOPIC_ID"
+        log.error(message, e)
+        throw PublishEventException(message, e)
+      }
+    } else {
+      log.info("Ignoring publishing of event $event (feature switched off)")
     }
-    log.info("Ignoring publishing of event $event (feature switched off)")
   }
 
   private fun metaData(payload: OutboundHMPPSDomainEvent) = mapOf("eventType" to MessageAttributeValue.builder().dataType("String").stringValue(payload.eventType).build())
+}
+
+class PublishEventException(message: String? = null, cause: Throwable? = null) :
+  RuntimeException(message, cause),
+  Supplier<PublishEventException> {
+  override fun get(): PublishEventException = PublishEventException(message, cause)
 }
