@@ -77,3 +77,6 @@ sonar-project.properties
 
 #Perf tests
 src/gatling/resources/data/
+
+#Other
+.DS_Store

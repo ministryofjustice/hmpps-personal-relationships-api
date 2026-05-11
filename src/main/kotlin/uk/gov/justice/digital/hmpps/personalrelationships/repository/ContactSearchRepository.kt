@@ -14,10 +14,10 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
     """
     select c.contactId 
     from ContactEntity c 
-    where c.contactId = :contactId
+    where c.contactId in :contactIds
     """,
   )
-  fun findAllByContactIdEquals(contactId: Long, pageable: Pageable): Page<Long>
+  fun findAllByContactIdIn(contactIds: Collection<Long>, pageable: Pageable): Page<Long>
 
   @Query(
     """

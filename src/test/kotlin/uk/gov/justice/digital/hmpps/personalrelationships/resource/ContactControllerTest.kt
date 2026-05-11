@@ -161,12 +161,12 @@ class ContactControllerTest {
       val pageContacts = PageImpl(contactEntities, pageable, contactEntities.size.toLong())
 
       // When
-      val expectedRequest = ContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1), UserSearchType.PARTIAL, false, 123456, "123456")
+      val expectedRequest = ContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1), UserSearchType.PARTIAL, false, 123456, null, "123456")
       whenever(contactFacade.searchContacts(pageable, expectedRequest)).thenReturn(PagedModel(pageContacts))
 
       // Act
       val result: PagedModel<ContactSearchResultItem> =
-        controller.searchContacts(pageable, "last", "first", "middle", "123456", LocalDate.of(1980, 1, 1), "PARTIAL", false, "123456")
+        controller.searchContacts(pageable, "last", "first", "middle", 123456, null, LocalDate.of(1980, 1, 1), "PARTIAL", false, "123456")
 
       // Then
       assertNotNull(result)
@@ -177,6 +177,19 @@ class ContactControllerTest {
       assertThat(result.content[0].id).isEqualTo(1L)
       assertThat(result.content[0].noFixedAddress).isEqualTo(true)
       verify(contactFacade).searchContacts(pageable, expectedRequest)
+    }
+
+    @Test
+    fun `should propagate exceptions when searching for contacts`() {
+      val pageable = PageRequest.of(0, 10)
+
+      val expectedRequest = ContactSearchRequest("last", "first", "middle", LocalDate.of(1980, 1, 1), UserSearchType.PARTIAL, false, 123456, listOf(123456), "123456")
+
+      whenever(contactFacade.searchContacts(pageable, expectedRequest)).thenThrow(IllegalArgumentException("Provide either contactId or contactIds, not both"))
+
+      assertThrows<IllegalArgumentException>("Provide either contactId or contactIds, not both") {
+        controller.searchContacts(pageable, "last", "first", "middle", 123456, listOf(123456), LocalDate.of(1980, 1, 1), "PARTIAL", false, "123456")
+      }
     }
   }
 

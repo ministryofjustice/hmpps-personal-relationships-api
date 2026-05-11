@@ -75,8 +75,11 @@ class ContactSearchService(
 
     val pageOfContactIds = when (searchType) {
       CONTACT_ID_ONLY -> {
-        logger.info("CONTACT_ID_ONLY search for ${request.contactId}")
-        contactSearchRepository.findAllByContactIdEquals(request.contactId!!, pageable)
+        val contactIds = resolveContactIds(request)!!
+
+        logger.info("CONTACT_ID_ONLY search for ${contactIds.size} contact IDs")
+
+        contactSearchRepository.findAllByContactIdIn(contactIds, pageable)
       }
 
       DATE_OF_BIRTH_ONLY -> {
@@ -280,9 +283,10 @@ class ContactSearchService(
 
   private fun validateRequest(request: ContactSearchRequest) {
     val nameProvided = request.lastName != null || request.firstName != null || request.middleNames != null
+    val contactIdsProvided = !resolveContactIds(request).isNullOrEmpty()
     val isNamedSearchType = request.searchType in setOf(UserSearchType.SOUNDS_LIKE, UserSearchType.PARTIAL, UserSearchType.EXACT)
 
-    if (isNamedSearchType && request.contactId == null && request.dateOfBirth == null) {
+    if (isNamedSearchType && !contactIdsProvided && request.dateOfBirth == null) {
       val typeLabel = request.searchType.name.lowercase().replace("_", "-")
       require(nameProvided) { "A name must be provided for $typeLabel searches" }
 
@@ -291,8 +295,8 @@ class ContactSearchService(
       }
     }
 
-    require(request.contactId != null || request.dateOfBirth != null || nameProvided) {
-      "Either contact ID, date of birth or a full or partial name must be provided for contact searches"
+    require(contactIdsProvided || request.dateOfBirth != null || nameProvided) {
+      "Either contact ID, contact IDs, date of birth or a full or partial name must be provided for contact searches"
     }
   }
 
@@ -308,7 +312,7 @@ class ContactSearchService(
   }
 
   fun determineSearchType(request: ContactSearchRequest): ContactSearchType {
-    val contactIdPresent = request.contactId != null
+    val contactIdPresent = !resolveContactIds(request).isNullOrEmpty()
     val dobPresent = request.dateOfBirth != null
     val namesEntered = listOf(request.firstName, request.lastName, request.middleNames).any { it != null }
     val previousNames = namesEntered && request.previousNames == true
@@ -335,6 +339,18 @@ class ContactSearchService(
     (UserSearchType.PARTIAL to false to false) -> NAMES_MATCH
     (UserSearchType.PARTIAL to false to true) -> NAMES_MATCH_AND_HISTORY
     else -> NAMES_MATCH
+  }
+
+  private fun resolveContactIds(request: ContactSearchRequest): List<Long>? {
+    if (request.contactId != null && !request.contactIds.isNullOrEmpty()) {
+      throw IllegalArgumentException("Provide either contactId or contactIds, not both")
+    }
+
+    return when {
+      !request.contactIds.isNullOrEmpty() -> request.contactIds.distinct()
+      request.contactId != null -> listOf(request.contactId)
+      else -> null
+    }
   }
 
   companion object {

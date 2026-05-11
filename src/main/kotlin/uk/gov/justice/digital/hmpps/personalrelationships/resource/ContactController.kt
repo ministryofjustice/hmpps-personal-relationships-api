@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestAttribute
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.facade.ContactFacade
@@ -217,27 +218,38 @@ class ContactController(
     @Parameter(hidden = true)
     pageable: Pageable,
     @Parameter(`in` = ParameterIn.QUERY, description = "Last name of the contact", example = "Jones", required = false)
+    @RequestParam(required = false)
     @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
     lastName: String?,
     @Parameter(`in` = ParameterIn.QUERY, description = "First name of the contact", example = "Elton", required = false)
+    @RequestParam(required = false)
     @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
     firstName: String?,
     @Parameter(`in` = ParameterIn.QUERY, description = "Middle names of the contact", example = "Simon", required = false)
+    @RequestParam(required = false)
     @Pattern(regexp = VALID_NAME_REGEX, message = VALID_NAME_MESSAGE)
     middleNames: String?,
     @Parameter(`in` = ParameterIn.QUERY, description = "The contact ID", example = "123456", required = false)
-    contactId: String?,
+    @RequestParam(required = false)
+    contactId: Long?,
+    @Parameter(`in` = ParameterIn.QUERY, description = "Contact IDs. Comma-separated list of contact IDs, e.g. contactIds=123,456,789", example = "123,456,789", required = false)
+    @RequestParam(required = false)
+    contactIds: List<Long>?,
     @Parameter(`in` = ParameterIn.QUERY, description = "Date of birth (dd/mm/yyyy)", example = "30/12/2010", required = false)
+    @RequestParam(required = false)
     @Past(message = "The date of birth must be in the past")
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     dateOfBirth: LocalDate?,
     @NotNull(message = "The search type must be one of EXACT, PARTIAL or SOUNDS_LIKE")
     @Pattern(regexp = VALID_SEARCH_TYPE, message = "The search type must be one of EXACT, PARTIAL or SOUNDS_LIKE")
     @Parameter(`in` = ParameterIn.QUERY, description = "The search type one of EXACT, PARTIAL or SOUNDS_LIKE", example = "PARTIAL", required = true)
+    @RequestParam
     searchType: String?,
     @Parameter(`in` = ParameterIn.QUERY, description = "Search for previous names", example = "false", required = false)
+    @RequestParam(required = false)
     previousNames: Boolean = false,
     @Parameter(`in` = ParameterIn.QUERY, description = "Prisoner number to check relationships", example = "A1234BC", required = false)
+    @RequestParam(required = false)
     @Pattern(regexp = VALID_LETTER_OR_NUMBER_REGEX, message = VALID_LETTER_OR_NUMBER_MESSAGE)
     includePrisonerRelationships: String?,
   ): PagedModel<ContactSearchResultItem> = contactFacade.searchContacts(
@@ -249,7 +261,8 @@ class ContactController(
       dateOfBirth = dateOfBirth,
       searchType = UserSearchType.valueOf(searchType!!),
       previousNames = previousNames,
-      contactId = contactId?.toLong(),
+      contactId = contactId,
+      contactIds = contactIds,
       includePrisonerRelationships = includePrisonerRelationships,
     ),
   )

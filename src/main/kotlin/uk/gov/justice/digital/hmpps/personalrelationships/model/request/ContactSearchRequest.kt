@@ -10,6 +10,7 @@ data class ContactSearchRequest(
   val searchType: UserSearchType,
   val previousNames: Boolean? = false,
   val contactId: Long? = null,
+  val contactIds: List<Long>? = null,
   val includePrisonerRelationships: String? = null,
 )
 
