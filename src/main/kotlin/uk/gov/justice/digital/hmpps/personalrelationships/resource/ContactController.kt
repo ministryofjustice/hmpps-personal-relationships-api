@@ -196,7 +196,7 @@ class ContactController(
    * The search controller
    */
   @GetMapping("/search")
-  @Operation(summary = "Search contacts", description = "Search contacts by name, date of birth or contact ID")
+  @Operation(summary = "Search contacts", description = "Search contacts by name, date of birth, contact ID or list of contactIds")
   @ApiResponses(
     value = [
       ApiResponse(
