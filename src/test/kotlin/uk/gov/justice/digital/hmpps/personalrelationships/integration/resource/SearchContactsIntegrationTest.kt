@@ -224,6 +224,26 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     }
   }
 
+  @Test
+  fun `should find contacts by list of contact IDs`() {
+    val uri = UriComponentsBuilder.fromPath("contact/search")
+      .queryParam("searchType", "EXACT")
+      .queryParam("contactIds", "1", "2")
+      .build()
+      .toUri()
+
+    val body = testAPIClient.getSearchContactResults(uri)
+
+    with(body!!) {
+      assertThat(content).isNotEmpty()
+      assertThat(content.size).isEqualTo(2)
+      assertThat(page.totalElements).isEqualTo(2)
+      assertThat(page.totalPages).isEqualTo(1)
+
+      assertThat(content).extracting("id").containsAll(listOf(1L, 2L))
+    }
+  }
+
   @ParameterizedTest
   @CsvSource(
     "Smith,John,Jon|Smith|1980-01-01;John|Smithe|1980-01-01",
