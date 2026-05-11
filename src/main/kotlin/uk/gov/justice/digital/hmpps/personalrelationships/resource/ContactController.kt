@@ -231,7 +231,7 @@ class ContactController(
     middleNames: String?,
     @Parameter(`in` = ParameterIn.QUERY, description = "The contact ID", example = "123456", required = false)
     @RequestParam(required = false)
-    contactId: Long?,
+    contactId: String?,
     @Parameter(`in` = ParameterIn.QUERY, description = "Contact IDs. Comma-separated list of contact IDs, e.g. contactIds=123,456,789", example = "123,456,789", required = false)
     @RequestParam(required = false)
     contactIds: List<Long>?,
@@ -261,7 +261,7 @@ class ContactController(
       dateOfBirth = dateOfBirth,
       searchType = UserSearchType.valueOf(searchType!!),
       previousNames = previousNames,
-      contactId = contactId,
+      contactId = contactId?.toLong(),
       contactIds = contactIds,
       includePrisonerRelationships = includePrisonerRelationships,
     ),

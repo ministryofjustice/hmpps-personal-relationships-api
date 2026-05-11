@@ -166,7 +166,7 @@ class ContactControllerTest {
 
       // Act
       val result: PagedModel<ContactSearchResultItem> =
-        controller.searchContacts(pageable, "last", "first", "middle", 123456, null, LocalDate.of(1980, 1, 1), "PARTIAL", false, "123456")
+        controller.searchContacts(pageable, "last", "first", "middle", "123456", null, LocalDate.of(1980, 1, 1), "PARTIAL", false, "123456")
 
       // Then
       assertNotNull(result)
@@ -188,7 +188,7 @@ class ContactControllerTest {
       whenever(contactFacade.searchContacts(pageable, expectedRequest)).thenThrow(IllegalArgumentException("Provide either contactId or contactIds, not both"))
 
       assertThrows<IllegalArgumentException>("Provide either contactId or contactIds, not both") {
-        controller.searchContacts(pageable, "last", "first", "middle", 123456, listOf(123456), LocalDate.of(1980, 1, 1), "PARTIAL", false, "123456")
+        controller.searchContacts(pageable, "last", "first", "middle", "123456", listOf(123456), LocalDate.of(1980, 1, 1), "PARTIAL", false, "123456")
       }
     }
   }
