@@ -260,6 +260,7 @@ class ContactSearchService(
               relationshipToPrisonerCode = summary.relationshipToPrisoner,
               relationshipToPrisonerDescription = summary.relationshipToPrisonerDescription,
               isRelationshipActive = summary.active,
+              approvedVisitor = summary.approvedVisitor,
             )
           }
         }

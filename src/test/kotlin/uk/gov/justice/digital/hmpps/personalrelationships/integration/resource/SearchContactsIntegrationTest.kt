@@ -783,7 +783,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
               relationshipToPrisonerCode = "FRI",
               isNextOfKin = false,
               isEmergencyContact = false,
-              isApprovedVisitor = false,
+              isApprovedVisitor = true,
               comments = null,
             ),
           ),
@@ -804,6 +804,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
             ),
           ),
         )
+
         // ensure includes inactive relationships
         testAPIClient.updateRelationship(
           contactMultiple.createdRelationship!!.prisonerContactId,
@@ -824,6 +825,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
             ),
           ),
         )
+
         val contactNone = testAPIClient.createAContact(
           CreateContactRequest(
             lastName = "ABCDEFG",
@@ -831,6 +833,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
             dateOfBirth = randomDob,
           ),
         )
+
         mapOf(
           contactSingle.createdContact.id to listOf(
             ExistingRelationshipToPrisoner(
@@ -840,6 +843,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
               relationshipToPrisonerCode = "FRI",
               relationshipToPrisonerDescription = "Friend",
               isRelationshipActive = true,
+              approvedVisitor = true,
             ),
           ),
           contactMultiple.createdContact.id to listOf(
@@ -850,6 +854,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
               relationshipToPrisonerCode = "MOT",
               relationshipToPrisonerDescription = "Mother",
               isRelationshipActive = false,
+              approvedVisitor = false,
             ),
             ExistingRelationshipToPrisoner(
               prisonerContactId = contactMultipleSecondRelationship.prisonerContactId,
@@ -858,6 +863,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
               relationshipToPrisonerCode = "DR",
               relationshipToPrisonerDescription = "Doctor",
               isRelationshipActive = true,
+              approvedVisitor = false,
             ),
           ),
           contactNone.id to emptyList(),
