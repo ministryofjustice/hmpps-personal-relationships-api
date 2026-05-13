@@ -781,9 +781,9 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
               prisonerNumber = prisonerNumber,
               relationshipTypeCode = "S",
               relationshipToPrisonerCode = "FRI",
-              isNextOfKin = false,
-              isEmergencyContact = false,
-              isApprovedVisitor = false,
+              isNextOfKin = true,
+              isEmergencyContact = true,
+              isApprovedVisitor = true,
               comments = null,
             ),
           ),
@@ -804,6 +804,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
             ),
           ),
         )
+
         // ensure includes inactive relationships
         testAPIClient.updateRelationship(
           contactMultiple.createdRelationship!!.prisonerContactId,
@@ -824,6 +825,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
             ),
           ),
         )
+
         val contactNone = testAPIClient.createAContact(
           CreateContactRequest(
             lastName = "ABCDEFG",
@@ -831,6 +833,7 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
             dateOfBirth = randomDob,
           ),
         )
+
         mapOf(
           contactSingle.createdContact.id to listOf(
             ExistingRelationshipToPrisoner(
@@ -840,6 +843,10 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
               relationshipToPrisonerCode = "FRI",
               relationshipToPrisonerDescription = "Friend",
               isRelationshipActive = true,
+              isApprovedVisitor = true,
+              isEmergencyContact = true,
+              isNextOfKin = true,
+              comments = null,
             ),
           ),
           contactMultiple.createdContact.id to listOf(
@@ -850,6 +857,10 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
               relationshipToPrisonerCode = "MOT",
               relationshipToPrisonerDescription = "Mother",
               isRelationshipActive = false,
+              isApprovedVisitor = false,
+              isEmergencyContact = false,
+              isNextOfKin = false,
+              comments = null,
             ),
             ExistingRelationshipToPrisoner(
               prisonerContactId = contactMultipleSecondRelationship.prisonerContactId,
@@ -858,6 +869,10 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
               relationshipToPrisonerCode = "DR",
               relationshipToPrisonerDescription = "Doctor",
               isRelationshipActive = true,
+              isApprovedVisitor = false,
+              isEmergencyContact = false,
+              isNextOfKin = false,
+              comments = null,
             ),
           ),
           contactNone.id to emptyList(),
