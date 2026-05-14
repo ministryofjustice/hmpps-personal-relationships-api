@@ -45,69 +45,19 @@ class RestrictionsService(
 
   fun getGlobalRestrictionsForContact(contactId: Long): List<ContactRestrictionDetails> {
     validateContactExists(contactId)
-    val restrictionsWithEnteredBy = contactRestrictionDetailsRepository.findAllByContactId(contactId)
-      .map { entity -> entity to (entity.updatedBy ?: entity.createdBy) }
-    val enteredByMap = restrictionsWithEnteredBy
-      .map { (_, enteredByUsername) -> enteredByUsername }
-      .toSet().associateWith { enteredByUsername -> manageUsersService.getUserByUsername(enteredByUsername)?.name ?: enteredByUsername }
-    return restrictionsWithEnteredBy.map { (entity, enteredByUsername) ->
-      ContactRestrictionDetails(
-        contactRestrictionId = entity.contactRestrictionId,
-        contactId = entity.contactId,
-        restrictionType = entity.restrictionType,
-        restrictionTypeDescription = entity.restrictionTypeDescription,
-        startDate = entity.startDate,
-        expiryDate = entity.expiryDate,
-        comments = entity.comments,
-        enteredByUsername = enteredByUsername,
-        enteredByDisplayName = enteredByMap[enteredByUsername] ?: enteredByUsername,
-        createdBy = entity.createdBy,
-        createdTime = entity.createdTime,
-        updatedBy = entity.updatedBy,
-        updatedTime = entity.updatedTime,
-      )
-    }
+    return getGlobalRestrictionDetails(contactId)
   }
 
   fun getGlobalRestrictionsForContacts(contactIds: Set<Long>): ContactsRestrictionsResponse {
     val contactRestrictions = buildList {
       contactRepository.findAllById(contactIds)
         .forEach { contact ->
-
-          val globalContactRestrictions = run {
-            val restrictionsWithEnteredBy = contactRestrictionDetailsRepository.findAllByContactId(contact.contactId!!)
-              .map { entity -> entity to (entity.updatedBy ?: entity.createdBy) }
-
-            val enteredByMap = restrictionsWithEnteredBy
-              .map { (_, enteredByUsername) -> enteredByUsername }
-              .toSet()
-              .associateWith { enteredByUsername ->
-                manageUsersService.getUserByUsername(enteredByUsername)?.name ?: enteredByUsername
-              }
-
-            restrictionsWithEnteredBy.map { (entity, enteredByUsername) ->
-              ContactRestrictionDetails(
-                contactRestrictionId = entity.contactRestrictionId,
-                contactId = entity.contactId,
-                restrictionType = entity.restrictionType,
-                restrictionTypeDescription = entity.restrictionTypeDescription,
-                startDate = entity.startDate,
-                expiryDate = entity.expiryDate,
-                comments = entity.comments,
-                enteredByUsername = enteredByUsername,
-                enteredByDisplayName = enteredByMap[enteredByUsername] ?: enteredByUsername,
-                createdBy = entity.createdBy,
-                createdTime = entity.createdTime,
-                updatedBy = entity.updatedBy,
-                updatedTime = entity.updatedTime,
-              )
-            }
-          }
+          val contactId = contact.contactId!!
 
           add(
             ContactRestrictions(
-              contactId = contact.contactId!!,
-              globalContactRestrictions = globalContactRestrictions,
+              contactId = contactId,
+              globalContactRestrictions = getGlobalRestrictionDetails(contactId),
             ),
           )
         }
@@ -366,5 +316,35 @@ class RestrictionsService(
   private fun validateContactExists(contactId: Long) {
     contactRepository.findById(contactId)
       .orElseThrow { EntityNotFoundException("Contact ($contactId) could not be found") }
+  }
+
+  private fun getGlobalRestrictionDetails(contactId: Long): List<ContactRestrictionDetails> {
+    val restrictionsWithEnteredBy = contactRestrictionDetailsRepository.findAllByContactId(contactId)
+      .map { entity -> entity to (entity.updatedBy ?: entity.createdBy) }
+
+    val enteredByMap = restrictionsWithEnteredBy
+      .map { (_, enteredByUsername) -> enteredByUsername }
+      .toSet()
+      .associateWith { enteredByUsername ->
+        manageUsersService.getUserByUsername(enteredByUsername)?.name ?: enteredByUsername
+      }
+
+    return restrictionsWithEnteredBy.map { (entity, enteredByUsername) ->
+      ContactRestrictionDetails(
+        contactRestrictionId = entity.contactRestrictionId,
+        contactId = entity.contactId,
+        restrictionType = entity.restrictionType,
+        restrictionTypeDescription = entity.restrictionTypeDescription,
+        startDate = entity.startDate,
+        expiryDate = entity.expiryDate,
+        comments = entity.comments,
+        enteredByUsername = enteredByUsername,
+        enteredByDisplayName = enteredByMap[enteredByUsername] ?: enteredByUsername,
+        createdBy = entity.createdBy,
+        createdTime = entity.createdTime,
+        updatedBy = entity.updatedBy,
+        updatedTime = entity.updatedTime,
+      )
+    }
   }
 }

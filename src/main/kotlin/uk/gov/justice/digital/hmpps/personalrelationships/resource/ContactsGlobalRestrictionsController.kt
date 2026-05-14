@@ -16,9 +16,11 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.personalrelationships.facade.ContactGlobalRestrictionsFacade
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactIdsRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactsRestrictionsResponse
+import uk.gov.justice.digital.hmpps.personalrelationships.swagger.AuthApiResponses
 
 @RestController
 @RequestMapping(value = ["contacts/restrictions"], produces = [MediaType.APPLICATION_JSON_VALUE])
+@AuthApiResponses
 class ContactsGlobalRestrictionsController(
   val restrictionsFacade: ContactGlobalRestrictionsFacade,
 ) {
