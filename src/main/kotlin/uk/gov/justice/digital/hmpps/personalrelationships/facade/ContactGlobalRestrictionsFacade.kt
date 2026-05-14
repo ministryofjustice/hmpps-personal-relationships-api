@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.CreateContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.UpdateContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactRestrictionDetails
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactsRestrictionsResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.service.RestrictionsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
@@ -19,6 +20,8 @@ class ContactGlobalRestrictionsFacade(
 ) {
 
   fun getGlobalRestrictionsForContact(contactId: Long): List<ContactRestrictionDetails> = restrictionsService.getGlobalRestrictionsForContact(contactId)
+
+  fun getGlobalRestrictionsForContacts(contactIds: Set<Long>): ContactsRestrictionsResponse = restrictionsService.getGlobalRestrictionsForContacts(contactIds)
 
   fun createContactGlobalRestriction(
     contactId: Long,
