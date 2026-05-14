@@ -472,7 +472,7 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectBodyList(ContactRestrictionDetails::class.java)
     .returnResult().responseBody!!
 
-  fun getBulkContactGlobalRestrictions(contactIds: List<Long>): ContactsRestrictionsResponse = webTestClient.post()
+  fun getContactsGlobalRestrictions(contactIds: List<Long>): ContactsRestrictionsResponse = webTestClient.post()
     .uri("/contacts/restrictions")
     .headers(setAuthorisationUsingCurrentUser())
     .bodyValue(ContactIdsRequest(contactIds))

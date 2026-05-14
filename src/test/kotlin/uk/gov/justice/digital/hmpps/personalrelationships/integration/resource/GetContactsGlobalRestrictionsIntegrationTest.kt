@@ -32,7 +32,7 @@ class GetContactsGlobalRestrictionsIntegrationTest : SecureAPIIntegrationTestBas
     stubGetUserByUsername(UserDetails("JBAKER_GEN", "James Baker"))
     setCurrentUser(StubUser.READ_ONLY_USER.copy(roles = listOf(role)))
 
-    val response = testAPIClient.getBulkContactGlobalRestrictions(listOf(3L))
+    val response = testAPIClient.getContactsGlobalRestrictions(listOf(3L))
 
     assertThat(response.contactRestrictions).hasSize(1)
 
@@ -72,7 +72,7 @@ class GetContactsGlobalRestrictionsIntegrationTest : SecureAPIIntegrationTestBas
       testAPIClient.createAContact(CreateContactRequest(lastName = "Last", firstName = "First"))
     }
 
-    val response = testAPIClient.getBulkContactGlobalRestrictions(listOf(createdContact.id))
+    val response = testAPIClient.getContactsGlobalRestrictions(listOf(createdContact.id))
 
     assertThat(response.contactRestrictions).hasSize(1)
 
@@ -86,7 +86,7 @@ class GetContactsGlobalRestrictionsIntegrationTest : SecureAPIIntegrationTestBas
   fun `should only return contacts where matches are found`() {
     stubGetUserByUsername(UserDetails("JBAKER_GEN", "James Baker"))
 
-    val response = testAPIClient.getBulkContactGlobalRestrictions(listOf(3L, -1L))
+    val response = testAPIClient.getContactsGlobalRestrictions(listOf(3L, -1L))
 
     assertThat(response.contactRestrictions).hasSize(1)
 
@@ -98,7 +98,7 @@ class GetContactsGlobalRestrictionsIntegrationTest : SecureAPIIntegrationTestBas
 
   @Test
   fun `should return empty list if no contacts are found`() {
-    val response = testAPIClient.getBulkContactGlobalRestrictions(listOf(-1L, -2L))
+    val response = testAPIClient.getContactsGlobalRestrictions(listOf(-1L, -2L))
 
     assertThat(response.contactRestrictions).isEmpty()
   }
