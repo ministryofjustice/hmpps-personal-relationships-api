@@ -7,6 +7,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.personalrelationships.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.AddContactRelationshipRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactIdsRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.PatchRelationshipRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.PrisonerContactIdsRequest
@@ -44,6 +45,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.response.Contact
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactPhoneDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactSearchResultItem
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactsRestrictionsResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.EmploymentDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.LinkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PatchContactResponse
@@ -469,6 +471,16 @@ class TestAPIClient(private val webTestClient: WebTestClient, private val jwtAut
     .expectHeader().contentType(MediaType.APPLICATION_JSON)
     .expectBodyList(ContactRestrictionDetails::class.java)
     .returnResult().responseBody!!
+
+  fun getContactsGlobalRestrictions(contactIds: List<Long>): ContactsRestrictionsResponse = webTestClient.post()
+    .uri("/contacts/restrictions")
+    .headers(setAuthorisationUsingCurrentUser())
+    .bodyValue(ContactIdsRequest(contactIds))
+    .exchange()
+    .expectStatus().isOk
+    .expectBody(ContactsRestrictionsResponse::class.java)
+    .returnResult()
+    .responseBody!!
 
   fun createContactGlobalRestriction(
     contactId: Long,
