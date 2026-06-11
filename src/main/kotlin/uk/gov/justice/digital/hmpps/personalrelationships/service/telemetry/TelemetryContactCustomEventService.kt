@@ -308,9 +308,10 @@ class TelemetryContactCustomEventService(
   }
 
   fun trackUpdatePrisonerContactEvent(syncPrisonerContact: SyncPrisonerContact, nextOfKinEventActionType: EventActionType?, approvedVisitorEventActionType: EventActionType?, emergencyContactEventActionType: EventActionType?, source: Source, user: User) {
+    val linkedPrisonersCount = getLinkedPrisonersCount(syncPrisonerContact.contactId)
     val event = PrisonerContactCustomEvent(
       contactId = syncPrisonerContact.contactId,
-      linkedPrisonersCount = getLinkedPrisonersCount(syncPrisonerContact.contactId),
+      linkedPrisonersCount = linkedPrisonersCount,
       syncPrisonerContact = syncPrisonerContact,
       eventActionType = EventActionType.UPDATE,
       eventSource = source,
@@ -330,6 +331,8 @@ class TelemetryContactCustomEventService(
   }
 
   fun trackDeletePrisonerContactEvent(syncPrisonerContact: SyncPrisonerContact, source: Source, user: User) {
+    val linkedPrisonersCount = getLinkedPrisonersCount(syncPrisonerContact.contactId)
+
     trackDeletePrisonerContactEvent(
       contactId = syncPrisonerContact.contactId,
       prisonerContactId = syncPrisonerContact.id,
@@ -346,7 +349,7 @@ class TelemetryContactCustomEventService(
         contactId = syncPrisonerContact.contactId,
         prisonerContactId = syncPrisonerContact.id,
         prisonerNumber = syncPrisonerContact.prisonerNumber,
-        linkedPrisonersCount = getLinkedPrisonersCount(syncPrisonerContact.contactId),
+        linkedPrisonersCount = linkedPrisonersCount,
         source = source,
         user = user,
       )
@@ -372,6 +375,7 @@ class TelemetryContactCustomEventService(
   }
 
   fun trackDeletePrisonerContactEvent(deletedRelationships: DeletedRelationshipIds, relationshipTypeCode: String, relationshipToPrisonerCode: String, activeRelationship: Boolean, nextOfKinEventActionType: EventActionType?, approvedVisitorEventActionType: EventActionType?, emergencyContactEventActionType: EventActionType?, source: Source, user: User) {
+    val linkedPrisonersCount = getLinkedPrisonersCount(deletedRelationships.contactId)
     trackDeletePrisonerContactEvent(
       contactId = deletedRelationships.contactId,
       prisonerContactId = deletedRelationships.prisonerContactId,
@@ -387,7 +391,7 @@ class TelemetryContactCustomEventService(
         contactId = deletedRelationships.contactId,
         prisonerContactId = deletedRelationships.prisonerContactId,
         prisonerNumber = deletedRelationships.prisonerNumber,
-        linkedPrisonersCount = getLinkedPrisonersCount(deletedRelationships.contactId),
+        linkedPrisonersCount = linkedPrisonersCount,
         source = source,
         user = user,
       )
