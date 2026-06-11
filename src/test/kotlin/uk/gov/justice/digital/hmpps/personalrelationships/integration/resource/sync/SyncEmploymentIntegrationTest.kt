@@ -288,6 +288,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
         "contact_id" to syncEmployment.contactId.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_employment_id" to syncEmployment.employmentId.toString(),
+        "linked_prisoners_count" to "0",
       ),
       null,
     )
@@ -305,6 +306,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
         "contact_id" to syncEmployment.contactId.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_employment_id" to syncEmployment.employmentId.toString(),
+        "linked_prisoners_count" to "0",
       ),
       null,
     )
@@ -321,6 +323,7 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
         "username" to user.username,
         "contact_id" to syncEmployment.contactId.toString(),
         "contact_employment_id" to syncEmployment.employmentId.toString(),
+        "linked_prisoners_count" to "0",
       ),
       null,
     )

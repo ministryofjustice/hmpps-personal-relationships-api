@@ -15,11 +15,12 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.Tele
 
 class PrisonerContactRestrictionCustomEvent private constructor(
   override val contactId: Long,
+  linkedPrisonersCount: Long,
   private val prisonerContactRestrictionCustomProperties: PrisonerContactRestrictionCustomProperties,
   eventActionType: EventActionType,
   eventSource: Source,
   eventUser: User,
-) : ContactCustomTelemetryEvent(contactId, getEvent(eventActionType), eventSource.name, eventUser) {
+) : ContactCustomTelemetryEvent(contactId, linkedPrisonersCount, getEvent(eventActionType), eventSource.name, eventUser) {
   override fun customProperties(): Map<String, String> {
     val customProperties = mutableMapOf(
       "prisoner_contact_restriction_id" to prisonerContactRestrictionCustomProperties.prisonerContactRestrictionId.toString(),
@@ -42,28 +43,31 @@ class PrisonerContactRestrictionCustomEvent private constructor(
 
   constructor(
     contactId: Long,
+    linkedPrisonersCount: Long,
     prisonerContactRestrictionDetails: PrisonerContactRestrictionDetails,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, PrisonerContactRestrictionCustomProperties(prisonerContactRestrictionDetails), eventActionType, eventSource, eventUser)
+  ) : this(contactId, linkedPrisonersCount, PrisonerContactRestrictionCustomProperties(prisonerContactRestrictionDetails), eventActionType, eventSource, eventUser)
 
   constructor(
     contactId: Long,
+    linkedPrisonersCount: Long,
     syncPrisonerContactRestriction: SyncPrisonerContactRestriction,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, PrisonerContactRestrictionCustomProperties(syncPrisonerContactRestriction), eventActionType, eventSource, eventUser)
+  ) : this(contactId, linkedPrisonersCount, PrisonerContactRestrictionCustomProperties(syncPrisonerContactRestriction), eventActionType, eventSource, eventUser)
 
   constructor(
     contactId: Long,
     contactRestrictionId: Long,
+    linkedPrisonersCount: Long,
     prisonerNumber: String,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, PrisonerContactRestrictionCustomProperties(prisonerContactRestrictionId = contactRestrictionId, prisonerNumber = prisonerNumber, restrictionType = null), eventActionType, eventSource, eventUser)
+  ) : this(contactId, linkedPrisonersCount, PrisonerContactRestrictionCustomProperties(prisonerContactRestrictionId = contactRestrictionId, prisonerNumber = prisonerNumber, restrictionType = null), eventActionType, eventSource, eventUser)
 }
 
 internal class PrisonerContactRestrictionCustomProperties(

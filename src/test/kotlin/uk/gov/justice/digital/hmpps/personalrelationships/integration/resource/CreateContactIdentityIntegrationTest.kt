@@ -252,6 +252,7 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactIdentityDetails.contactId.toString(),
         "contact_identity_id" to contactIdentityDetails.contactIdentityId.toString(),
+        "linked_prisoners_count" to "0",
       ),
       null,
     )

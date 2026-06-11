@@ -281,6 +281,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
         "username" to user.username,
         "contact_id" to syncContact.id.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
+        "linked_prisoners_count" to "0",
       ),
       null,
     )
@@ -297,6 +298,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
         "username" to user.username,
         "contact_id" to syncContact.id.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
+        "linked_prisoners_count" to "0",
       ),
       null,
     )
@@ -311,6 +313,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "contact_id" to contactId.toString(),
+        "linked_prisoners_count" to "0",
       ),
       null,
     )

@@ -16,11 +16,12 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.Tele
 
 class PrisonerContactCustomEvent private constructor(
   override val contactId: Long,
+  val linkedPrisonersCount: Long,
   private val prisonerContactCustomProperties: PrisonerContactCustomProperties,
   val eventActionType: EventActionType,
   val eventSource: Source,
   val eventUser: User,
-) : ContactCustomTelemetryEvent(contactId, telemetryCustomEventType = getEvent(eventActionType), source = eventSource.name, user = eventUser) {
+) : ContactCustomTelemetryEvent(contactId, linkedPrisonersCount, telemetryCustomEventType = getEvent(eventActionType), source = eventSource.name, user = eventUser) {
   override fun customProperties(): Map<String, String> {
     val properties = mutableMapOf(
       "prisoner_contact_id" to prisonerContactCustomProperties.prisonerContactId.toString(),
@@ -52,31 +53,35 @@ class PrisonerContactCustomEvent private constructor(
 
   constructor(
     contactId: Long,
+    linkedPrisonersCount: Long,
     prisonerContactRelationship: PrisonerContactRelationshipDetails,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, PrisonerContactCustomProperties(prisonerContactRelationship), eventActionType, eventSource, eventUser)
+  ) : this(contactId, linkedPrisonersCount, PrisonerContactCustomProperties(prisonerContactRelationship), eventActionType, eventSource, eventUser)
 
   constructor(
     contactId: Long,
+    linkedPrisonersCount: Long,
     syncPrisonerContact: SyncPrisonerContact,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, PrisonerContactCustomProperties(syncPrisonerContact), eventActionType, eventSource, eventUser)
+  ) : this(contactId, linkedPrisonersCount, PrisonerContactCustomProperties(syncPrisonerContact), eventActionType, eventSource, eventUser)
 
   constructor(
     contactId: Long,
+    linkedPrisonersCount: Long,
     relationshipApproved: RelationshipsApproved,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, PrisonerContactCustomProperties(relationshipApproved), eventActionType, eventSource, eventUser)
+  ) : this(contactId, linkedPrisonersCount, PrisonerContactCustomProperties(relationshipApproved), eventActionType, eventSource, eventUser)
 
   constructor(
     contactId: Long,
     prisonerContactId: Long,
+    linkedPrisonersCount: Long,
     prisonerNumber: String,
     relationshipTypeCode: String? = null,
     relationshipToPrisonerCode: String? = null,
@@ -84,7 +89,7 @@ class PrisonerContactCustomEvent private constructor(
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, PrisonerContactCustomProperties(prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, relationshipTypeCode = relationshipTypeCode, relationshipToPrisonerCode = relationshipToPrisonerCode, isRelationshipActive = activeRelationship), eventActionType, eventSource, eventUser)
+  ) : this(contactId, linkedPrisonersCount, PrisonerContactCustomProperties(prisonerContactId = prisonerContactId, prisonerNumber = prisonerNumber, relationshipTypeCode = relationshipTypeCode, relationshipToPrisonerCode = relationshipToPrisonerCode, isRelationshipActive = activeRelationship), eventActionType, eventSource, eventUser)
 }
 
 internal class PrisonerContactCustomProperties(

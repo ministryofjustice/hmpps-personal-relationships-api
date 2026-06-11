@@ -277,6 +277,7 @@ class UpdateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
         "contact_id" to updatedContactRestrictionDetails.contactId.toString(),
         "contact_restriction_id" to updatedContactRestrictionDetails.contactRestrictionId.toString(),
         "restriction_code" to restrictionType,
+        "linked_prisoners_count" to "0",
       ),
       null,
     )

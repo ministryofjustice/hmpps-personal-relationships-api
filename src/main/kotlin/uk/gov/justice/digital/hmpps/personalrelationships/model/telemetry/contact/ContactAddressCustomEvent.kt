@@ -16,11 +16,12 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.Tele
 
 class ContactAddressCustomEvent private constructor(
   override val contactId: Long,
+  val linkedPrisonersCount: Long,
   private val contactAddressCustomProperties: ContactAddressCustomProperties,
   eventActionType: EventActionType,
   eventSource: Source,
   eventUser: User,
-) : ContactCustomTelemetryEvent(contactId, telemetryCustomEventType = getEvent(eventActionType), source = eventSource.name, user = eventUser) {
+) : ContactCustomTelemetryEvent(contactId = contactId, linkedPrisonerCount = linkedPrisonersCount, telemetryCustomEventType = getEvent(eventActionType), source = eventSource.name, user = eventUser) {
   override fun customProperties(): Map<String, String> = mapOf("contact_address_id" to contactAddressCustomProperties.contactAddressId.toString())
 
   companion object {
@@ -33,35 +34,39 @@ class ContactAddressCustomEvent private constructor(
 
   constructor(
     contactId: Long,
+    linkedPrisonersCount: Long,
     contactAddressDetails: ContactAddressDetails,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, ContactAddressCustomProperties(contactAddressDetails), eventActionType, eventSource, eventUser)
+  ) : this(contactId, linkedPrisonersCount, ContactAddressCustomProperties(contactAddressDetails), eventActionType, eventSource, eventUser)
 
   constructor(
     contactId: Long,
+    linkedPrisonersCount: Long,
     syncContactAddress: SyncContactAddress,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, ContactAddressCustomProperties(syncContactAddress), eventActionType, eventSource, eventUser)
+  ) : this(contactId, linkedPrisonersCount, ContactAddressCustomProperties(syncContactAddress), eventActionType, eventSource, eventUser)
 
   constructor(
     contactId: Long,
+    linkedPrisonersCount: Long,
     contactAddressResponse: ContactAddressResponse,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, ContactAddressCustomProperties(contactAddressResponse), eventActionType, eventSource, eventUser)
+  ) : this(contactId, linkedPrisonersCount, ContactAddressCustomProperties(contactAddressResponse), eventActionType, eventSource, eventUser)
 
   constructor(
     contactId: Long,
     contactAddressId: Long,
+    linkedPrisonersCount: Long,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, ContactAddressCustomProperties(contactAddressId), eventActionType, eventSource, eventUser)
+  ) : this(contactId, linkedPrisonersCount, ContactAddressCustomProperties(contactAddressId), eventActionType, eventSource, eventUser)
 }
 
 internal class ContactAddressCustomProperties(val contactAddressId: Long) {

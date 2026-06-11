@@ -56,4 +56,6 @@ class LinkedPrisonersService(
     val last = (first + pageable.pageSize).coerceAtMost(totalSize)
     return PagedModel(PageImpl(relationshipsWithPrisonerDetails.subList(first, last), pageable, totalSize.toLong()))
   }
+
+  fun getCurrentTermLinkedPrisonerCount(contactId: Long): Long = prisonerContactSummaryRepository.getCountOfCurrentTermPrisonersLinkedToContact(contactId)
 }

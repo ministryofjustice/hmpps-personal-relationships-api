@@ -204,7 +204,7 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
       personReference = PersonReference(dpsContactId = created.createdContact.id, nomsNumber = request.relationship!!.prisonerNumber),
     )
 
-    assertCustomEvent(created.createdRelationship, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(created.createdRelationship, 1, Source.DPS, User("created", "BXI"))
   }
 
   @ParameterizedTest
@@ -244,7 +244,7 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
       personReference = PersonReference(dpsContactId = created.createdContact.id, nomsNumber = request.relationship!!.prisonerNumber),
     )
 
-    assertCustomEvent(created.createdRelationship, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(created.createdRelationship, 1, Source.DPS, User("created", "BXI"))
   }
 
   private fun asserPrisonerContactEquals(
@@ -286,7 +286,7 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
     }
   }
 
-  private fun assertCustomEvent(contactRelationshipDetails: PrisonerContactRelationshipDetails, source: Source, user: User) {
+  private fun assertCustomEvent(contactRelationshipDetails: PrisonerContactRelationshipDetails, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackCreatePrisonerContactEvent(contactRelationshipDetails, source, user)
     verify(telemetryClient, times(1)).trackEvent(
       "prisoner-contact-created",
@@ -301,6 +301,7 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
         "group_code" to contactRelationshipDetails.relationshipTypeCode,
         "relationship_code" to contactRelationshipDetails.relationshipToPrisonerCode,
         "relationship_status" to "active",
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )

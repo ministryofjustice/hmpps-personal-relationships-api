@@ -128,10 +128,10 @@ class DeleteContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
-    assertCustomEvent(savedContactId, savedAddressPhoneId, Source.DPS, User("deleted", "BXI"))
+    assertCustomEvent(savedContactId, savedAddressPhoneId, 0, Source.DPS, User("deleted", "BXI"))
   }
 
-  private fun assertCustomEvent(contactId: Long, contactAddressPhoneId: Long, source: Source, user: User) {
+  private fun assertCustomEvent(contactId: Long, contactAddressPhoneId: Long, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackDeleteContactAddressPhoneEvent(any<ContactAddressPhoneDetails>(), any<Source>(), any<User>())
     verify(telemetryClient, times(1)).trackEvent(
       "contact-address-phone-deleted",
@@ -142,6 +142,7 @@ class DeleteContactAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase() 
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactId.toString(),
         "contact_address_phone_id" to contactAddressPhoneId.toString(),
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )

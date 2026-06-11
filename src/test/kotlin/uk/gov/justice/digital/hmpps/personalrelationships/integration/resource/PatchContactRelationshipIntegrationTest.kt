@@ -149,7 +149,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     contactRepository.deleteById(prisonerContactId)
 
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
     }
   }
 
@@ -222,7 +222,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     contactRepository.deleteById(prisonerContact.contactId)
 
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
     }
   }
 
@@ -256,10 +256,10 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     contactRepository.deleteById(prisonerContact.contactId)
 
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
-      assertNextOfKinCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
-      assertEmergencyContactCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
-      assertApprovedVisitorCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
+      assertNextOfKinCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
+      assertEmergencyContactCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
+      assertApprovedVisitorCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
     }
   }
 
@@ -289,8 +289,8 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     contactRepository.deleteById(prisonerContact.contactId)
 
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
-      assertApprovedVisitorCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
+      assertApprovedVisitorCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
     }
   }
 
@@ -320,8 +320,8 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     contactRepository.deleteById(prisonerContact.contactId)
 
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
-      assertEmergencyContactCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
+      assertEmergencyContactCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
     }
   }
 
@@ -351,7 +351,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     contactRepository.deleteById(prisonerContact.contactId)
 
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
     }
   }
 
@@ -381,7 +381,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     contactRepository.deleteById(prisonerContact.contactId)
 
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
     }
   }
 
@@ -407,7 +407,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
     contactRepository.deleteById(prisonerContact.contactId)
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
     }
   }
 
@@ -445,7 +445,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     contactRepository.deleteById(prisonerContact.contactId)
 
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
     }
   }
 
@@ -530,7 +530,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     }
   }
 
-  private fun assertCustomEvent(updatedPrisonerContact: PrisonerContactSummary, source: Source, user: User) {
+  private fun assertCustomEvent(updatedPrisonerContact: PrisonerContactSummary, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactEvent(any<PrisonerContactRelationshipDetails>(), anyOrNull<EventActionType>(), anyOrNull<EventActionType>(), anyOrNull<EventActionType>(), any<Source>(), any<User>())
     verify(telemetryClient, times(1)).trackEvent(
       "prisoner-contact-updated",
@@ -545,12 +545,13 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "group_code" to updatedPrisonerContact.relationshipTypeCode,
         "relationship_code" to updatedPrisonerContact.relationshipToPrisonerCode,
         "relationship_status" to "active",
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )
   }
 
-  private fun assertNextOfKinCustomEvent(updatedPrisonerContact: PrisonerContactSummary, source: Source, user: User) {
+  private fun assertNextOfKinCustomEvent(updatedPrisonerContact: PrisonerContactSummary, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryClient, times(1)).trackEvent(
       "contact-next-of-kin-created",
       mapOf(
@@ -561,12 +562,13 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
         "prisoner_number" to updatedPrisonerContact.prisonerNumber,
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )
   }
 
-  private fun assertApprovedVisitorCustomEvent(updatedPrisonerContact: PrisonerContactSummary, source: Source, user: User) {
+  private fun assertApprovedVisitorCustomEvent(updatedPrisonerContact: PrisonerContactSummary, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryClient, times(1)).trackEvent(
       "contact-approved-visitor-created",
       mapOf(
@@ -577,12 +579,13 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
         "prisoner_number" to updatedPrisonerContact.prisonerNumber,
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )
   }
 
-  private fun assertEmergencyContactCustomEvent(updatedPrisonerContact: PrisonerContactSummary, source: Source, user: User) {
+  private fun assertEmergencyContactCustomEvent(updatedPrisonerContact: PrisonerContactSummary, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryClient, times(1)).trackEvent(
       "contact-emergency-contact-created",
       mapOf(
@@ -593,6 +596,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
         "prisoner_number" to updatedPrisonerContact.prisonerNumber,
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )

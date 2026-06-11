@@ -5,9 +5,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argThat
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
@@ -121,7 +124,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .expectStatus()
         .isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(SyncPrisonerContactRestriction::class.java)
+        .expectBody<SyncPrisonerContactRestriction>()
         .returnResult().responseBody!!
 
       with(prisonerContactRestriction) {
@@ -150,7 +153,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .expectStatus()
         .isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(SyncPrisonerContactRestriction::class.java)
+        .expectBody<SyncPrisonerContactRestriction>()
         .returnResult().responseBody!!
 
       // The created is returned
@@ -187,7 +190,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .expectStatus()
         .isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(SyncPrisonerContactRestriction::class.java)
+        .expectBody<SyncPrisonerContactRestriction>()
         .returnResult().responseBody!!
 
       with(prisonerContactRestriction) {
@@ -213,7 +216,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .expectStatus()
         .isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(SyncPrisonerContactRestriction::class.java)
+        .expectBody<SyncPrisonerContactRestriction>()
         .returnResult().responseBody!!
 
       // Check the updated copy
@@ -250,7 +253,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .expectStatus()
         .isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(SyncPrisonerContactRestriction::class.java)
+        .expectBody<SyncPrisonerContactRestriction>()
         .returnResult().responseBody!!
 
       webTestClient.delete()
@@ -279,20 +282,20 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
 
     private fun assertCustomCreatedEvent(syncPrisonerContactRestriction: SyncPrisonerContactRestriction, source: Source, user: User) {
       verify(telemetryContactCustomEventService, times(1)).trackCreatePrisonerContactRestrictionEvent(syncPrisonerContactRestriction, source, user)
-
       verify(telemetryClient, times(1)).trackEvent(
-        "prisoner-contact-restriction-created",
-        mapOf(
-          "description" to "A prisoner contact restriction has been created",
-          "source" to source.name,
-          "username" to user.username,
-          "active_caseload_id" to user.activeCaseLoadId,
-          "contact_id" to syncPrisonerContactRestriction.contactId.toString(),
-          "prisoner_contact_restriction_id" to syncPrisonerContactRestriction.prisonerContactRestrictionId.toString(),
-          "restriction_code" to syncPrisonerContactRestriction.restrictionType,
-          "prisoner_number" to syncPrisonerContactRestriction.prisonerNumber,
-        ),
-        null,
+        argThat { name -> name == "prisoner-contact-restriction-created" },
+        argThat { properties ->
+          properties["description"] == "A prisoner contact restriction has been created" &&
+            properties["source"] == source.name &&
+            properties["username"] == user.username &&
+            properties["contact_id"] == syncPrisonerContactRestriction.contactId.toString() &&
+            properties["active_caseload_id"] == user.activeCaseLoadId &&
+            properties["prisoner_contact_restriction_id"] == syncPrisonerContactRestriction.prisonerContactRestrictionId.toString() &&
+            properties["restriction_code"] == syncPrisonerContactRestriction.restrictionType &&
+            properties["prisoner_number"] == syncPrisonerContactRestriction.prisonerNumber &&
+            properties["linked_prisoners_count"] != null
+        },
+        isNull(),
       )
     }
 
@@ -300,18 +303,19 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactRestrictionEvent(syncPrisonerContactRestriction, source, user)
 
       verify(telemetryClient, times(1)).trackEvent(
-        "prisoner-contact-restriction-updated",
-        mapOf(
-          "description" to "A prisoner contact restriction has been updated",
-          "source" to source.name,
-          "username" to user.username,
-          "active_caseload_id" to user.activeCaseLoadId,
-          "contact_id" to syncPrisonerContactRestriction.contactId.toString(),
-          "prisoner_contact_restriction_id" to syncPrisonerContactRestriction.prisonerContactRestrictionId.toString(),
-          "restriction_code" to syncPrisonerContactRestriction.restrictionType,
-          "prisoner_number" to syncPrisonerContactRestriction.prisonerNumber,
-        ),
-        null,
+        argThat { name -> name == "prisoner-contact-restriction-updated" },
+        argThat { properties ->
+          properties["description"] == "A prisoner contact restriction has been updated" &&
+            properties["source"] == source.name &&
+            properties["username"] == user.username &&
+            properties["contact_id"] == syncPrisonerContactRestriction.contactId.toString() &&
+            properties["active_caseload_id"] == user.activeCaseLoadId &&
+            properties["prisoner_contact_restriction_id"] == syncPrisonerContactRestriction.prisonerContactRestrictionId.toString() &&
+            properties["restriction_code"] == syncPrisonerContactRestriction.restrictionType &&
+            properties["prisoner_number"] == syncPrisonerContactRestriction.prisonerNumber &&
+            properties["linked_prisoners_count"] != null
+        },
+        isNull(),
       )
     }
 
@@ -319,17 +323,19 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactRestrictionEvent(any<SyncPrisonerContactRestriction>(), any<Source>(), any<User>())
 
       verify(telemetryClient, times(1)).trackEvent(
-        "prisoner-contact-restriction-deleted",
-        mapOf(
-          "description" to "A prisoner contact restriction has been deleted",
-          "source" to source.name,
-          "username" to user.username,
-          "contact_id" to syncPrisonerContactRestriction.contactId.toString(),
-          "prisoner_contact_restriction_id" to syncPrisonerContactRestriction.prisonerContactRestrictionId.toString(),
-          "restriction_code" to syncPrisonerContactRestriction.restrictionType,
-          "prisoner_number" to syncPrisonerContactRestriction.prisonerNumber,
-        ),
-        null,
+        argThat { name -> name == "prisoner-contact-restriction-deleted" },
+        argThat { properties ->
+          properties["description"] == "A prisoner contact restriction has been deleted" &&
+            properties["source"] == source.name &&
+            properties["username"] == user.username &&
+            properties["contact_id"] == syncPrisonerContactRestriction.contactId.toString() &&
+            properties["active_caseload_id"] == user.activeCaseLoadId &&
+            properties["prisoner_contact_restriction_id"] == syncPrisonerContactRestriction.prisonerContactRestrictionId.toString() &&
+            properties["restriction_code"] == syncPrisonerContactRestriction.restrictionType &&
+            properties["prisoner_number"] == syncPrisonerContactRestriction.prisonerNumber &&
+            properties["linked_prisoners_count"] != null
+        },
+        isNull(),
       )
     }
 

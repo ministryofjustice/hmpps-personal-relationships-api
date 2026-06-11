@@ -159,7 +159,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = contactEmail.contactId),
     )
 
-    assertCustomCreatedEvent(contactEmail, Source.NOMIS, User("CREATE", "KMI"))
+    assertCustomCreatedEvent(contactEmail, 0, Source.NOMIS, User("CREATE", "KMI"))
   }
 
   @Test
@@ -212,7 +212,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = contactEmail.contactId),
     )
 
-    assertCustomUpdatedEvent(updatedEmail, Source.NOMIS, User("UPDATE", "BXI"))
+    assertCustomUpdatedEvent(updatedEmail, 0, Source.NOMIS, User("UPDATE", "BXI"))
   }
 
   @Test
@@ -240,7 +240,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = 3),
     )
 
-    assertCustomDeletedEvent(3, contactEmailId, Source.NOMIS, User("SYS"))
+    assertCustomDeletedEvent(3, contactEmailId, 2, Source.NOMIS, User("SYS"))
   }
 
   private fun updateContactEmailRequest(contactId: Long) = SyncUpdateContactEmailRequest(
@@ -261,7 +261,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
     firstName = "first",
   )
 
-  private fun assertCustomCreatedEvent(syncContactEmail: SyncContactEmail, source: Source, user: User) {
+  private fun assertCustomCreatedEvent(syncContactEmail: SyncContactEmail, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackCreateContactEmailEvent(syncContactEmail, source, user)
 
     verify(telemetryClient, times(1)).trackEvent(
@@ -273,12 +273,13 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
         "contact_id" to syncContactEmail.contactId.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_email_id" to syncContactEmail.contactEmailId.toString(),
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )
   }
 
-  private fun assertCustomUpdatedEvent(syncContactEmail: SyncContactEmail, source: Source, user: User) {
+  private fun assertCustomUpdatedEvent(syncContactEmail: SyncContactEmail, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackUpdateContactEmailEvent(syncContactEmail, source, user)
 
     verify(telemetryClient, times(1)).trackEvent(
@@ -290,12 +291,13 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
         "contact_id" to syncContactEmail.contactId.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_email_id" to syncContactEmail.contactEmailId.toString(),
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )
   }
 
-  private fun assertCustomDeletedEvent(contactId: Long, contactEmailId: Long, source: Source, user: User) {
+  private fun assertCustomDeletedEvent(contactId: Long, contactEmailId: Long, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackDeleteContactEmailEvent(any<SyncContactEmail>(), any<Source>(), any<User>())
     verify(telemetryClient, times(1)).trackEvent(
       "contact-email-deleted",
@@ -305,6 +307,7 @@ class SyncContactEmailIntegrationTest : PostgresIntegrationTestBase() {
         "username" to user.username,
         "contact_id" to contactId.toString(),
         "contact_email_id" to contactEmailId.toString(),
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )

@@ -229,7 +229,7 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
+    assertCustomEvent(updated, 0, Source.DPS, User("updated", "BXI"))
   }
 
   @Test
@@ -504,7 +504,7 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     )
   }
 
-  private fun assertCustomEvent(contactAddressResponse: ContactAddressResponse, source: Source, user: User) {
+  private fun assertCustomEvent(contactAddressResponse: ContactAddressResponse, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackUpdateContactAddressEvent(any<UpdateAddressResponse>(), any<Source>(), any<User>())
     verify(telemetryClient, times(1)).trackEvent(
       "contact-address-updated",
@@ -515,6 +515,7 @@ class UpdateContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactAddressResponse.contactId.toString(),
         "contact_address_id" to contactAddressResponse.contactAddressId.toString(),
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )

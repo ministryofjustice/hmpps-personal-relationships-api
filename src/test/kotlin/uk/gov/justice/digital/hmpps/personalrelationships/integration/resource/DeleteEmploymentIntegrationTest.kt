@@ -99,10 +99,10 @@ class DeleteEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
-    assertCustomEvent(savedContactId, savedEmploymentId, Source.DPS, User("deleted", "BXI"))
+    assertCustomEvent(savedContactId, savedEmploymentId, 0, Source.DPS, User("deleted", "BXI"))
   }
 
-  private fun assertCustomEvent(contactId: Long, employmentId: Long, source: Source, user: User) {
+  private fun assertCustomEvent(contactId: Long, employmentId: Long, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackDeleteEmploymentEvent(contactId, employmentId, source, user)
     verify(telemetryClient, times(1)).trackEvent(
       "contact-employment-deleted",
@@ -113,6 +113,7 @@ class DeleteEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactId.toString(),
         "contact_employment_id" to employmentId.toString(),
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )
