@@ -92,8 +92,8 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         assertThat(relationshipsRemoved).extracting("prisonerNumber").containsOnly("A3333AA", "A4444AA")
 
         checkForExpectedEvents(relationshipsRemoved, relationshipsCreated, createdPrisonerNumber = "A3333AA")
-        relationshipsRemoved.map { relationship ->
-          relationship.prisonerContactRestrictionIds.map { restrictionId ->
+        relationshipsRemoved.forEach { relationship ->
+          relationship.prisonerContactRestrictionIds.forEach { restrictionId ->
             assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, "A3333AA", 0, Source.NOMIS, User("SYS", null))
             assertCustomPrisonerContactDeletedEvent(relationship.contactId, relationship.prisonerContactId, relationship.prisonerNumber, 0, Source.NOMIS, User("SYS", null))
           }
