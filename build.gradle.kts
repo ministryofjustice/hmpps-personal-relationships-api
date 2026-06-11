@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.3.1"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.4.0"
   id("org.openapi.generator") version "7.23.0"
   id("io.gatling.gradle") version "3.15.1"
   kotlin("plugin.spring") version "2.4.0"
@@ -38,14 +38,14 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-flyway")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.3.2")
-  implementation("io.sentry:sentry-spring-boot-4-starter:8.43.1")
+  implementation("io.sentry:sentry-spring-boot-4-starter:8.43.2")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.openapitools:jackson-databind-nullable:0.2.10")
   implementation("org.apache.logging.log4j:log4j-api:2.26.0")
   implementation("io.github.cdimascio:dotenv-kotlin:6.5.1")
 
   // CSV dependencies
-  implementation("tools.jackson.dataformat:jackson-dataformat-csv:3.1.4")
+  implementation("tools.jackson.dataformat:jackson-dataformat-csv:3.2.0")
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
