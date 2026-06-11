@@ -8,6 +8,7 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.context.jdbc.Sql
+import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.migrate.CodedValue
@@ -82,7 +83,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         .expectStatus()
         .isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(MergePrisonerContactResponse::class.java)
+        .expectBody<MergePrisonerContactResponse>()
         .returnResult().responseBody!!
 
       with(mergeResponse) {
@@ -97,11 +98,6 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
             assertCustomPrisonerContactDeletedEvent(relationship.contactId, relationship.prisonerContactId, relationship.prisonerNumber, 0, Source.NOMIS, User("SYS", null))
           }
         }
-
-/*
-        assertCustomPrisonerContactRestrictionCreatedEvent(created.contactId, restriction.dpsId, createdPrisonerNumber, linkedPrisonersCountCreated, Source.NOMIS, User("SYS", null))
-        assertCustomPrisonerContactCreatedEvent(created.contactId, created.relationship.dpsId, createdPrisonerNumber, linkedPrisonersCountCreated, Source.NOMIS, User("SYS", null))
-*/
       }
     }
 
@@ -148,7 +144,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         .expectStatus()
         .isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(MergePrisonerContactResponse::class.java)
+        .expectBody<MergePrisonerContactResponse>()
         .returnResult().responseBody!!
 
       with(mergeResponse) {
@@ -230,16 +226,16 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         .expectStatus()
         .isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(ResetPrisonerContactResponse::class.java)
+        .expectBody<ResetPrisonerContactResponse>()
         .returnResult().responseBody!!
 
       with(resetResponse) {
         assertThat(relationshipsCreated).hasSize(0)
         assertThat(relationshipsRemoved).hasSize(2)
         assertThat(relationshipsRemoved).extracting("prisonerNumber").containsOnly("A3333AA")
-        val restrictionsRemoved = relationshipsRemoved.map { relationship ->
+        val restrictionsRemoved = relationshipsRemoved.flatMap { relationship ->
           relationship.prisonerContactRestrictionIds
-        }.flatten()
+        }
         assertThat(restrictionsRemoved).hasSize(2)
 
         checkForExpectedEvents(relationshipsRemoved, relationshipsCreated, createdPrisonerNumber = "A3333AA")
@@ -294,7 +290,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         .expectStatus()
         .isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(ResetPrisonerContactResponse::class.java)
+        .expectBody<ResetPrisonerContactResponse>()
         .returnResult().responseBody!!
 
       with(resetResponse) {
@@ -302,15 +298,15 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         assertThat(relationshipsRemoved).extracting("prisonerNumber").containsOnly("A4444AA")
         assertThat(relationshipsCreated).hasSize(2)
 
-        val restrictionsRemoved = relationshipsRemoved.map { relationship ->
+        val restrictionsRemoved = relationshipsRemoved.flatMap { relationship ->
           relationship.prisonerContactRestrictionIds
-        }.flatten()
+        }
 
         assertThat(restrictionsRemoved).hasSize(0)
 
-        val restrictionsCreated = relationshipsCreated.map { relationship ->
+        val restrictionsCreated = relationshipsCreated.flatMap { relationship ->
           relationship.restrictions.map { it.dpsId }
-        }.flatten()
+        }
 
         assertThat(restrictionsCreated).hasSize(2)
 
@@ -377,8 +373,8 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
     relationshipsCreated: List<PrisonerContactAndRestrictionIds>,
     createdPrisonerNumber: String,
   ) {
-    relationshipsRemoved.map { relationship ->
-      relationship.prisonerContactRestrictionIds.map { restrictionId ->
+    relationshipsRemoved.forEach { relationship ->
+      relationship.prisonerContactRestrictionIds.forEach { restrictionId ->
         stubEvents.assertHasEvent(
           event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_DELETED,
           additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = restrictionId, prisonerContactId = relationship.prisonerContactId, source = Source.NOMIS, username = "SYS", activeCaseLoadId = null),
@@ -398,8 +394,8 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
       )
     }
 
-    relationshipsCreated.map { created ->
-      created.restrictions.map { restriction ->
+    relationshipsCreated.forEach { created ->
+      created.restrictions.forEach { restriction ->
         stubEvents.assertHasEvent(
           event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
           additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = restriction.dpsId, prisonerContactId = created.relationship.dpsId, source = Source.NOMIS, username = "SYS", activeCaseLoadId = null),

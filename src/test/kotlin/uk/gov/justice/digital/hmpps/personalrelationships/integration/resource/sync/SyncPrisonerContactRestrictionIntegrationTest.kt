@@ -10,12 +10,12 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncCreatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncUpdatePrisonerContactRestrictionRequest
-import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncContactRestriction
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerContactRestriction
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
@@ -124,7 +124,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .expectStatus()
         .isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(SyncPrisonerContactRestriction::class.java)
+        .expectBody<SyncPrisonerContactRestriction>()
         .returnResult().responseBody!!
 
       with(prisonerContactRestriction) {
@@ -153,7 +153,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .expectStatus()
         .isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(SyncPrisonerContactRestriction::class.java)
+        .expectBody<SyncPrisonerContactRestriction>()
         .returnResult().responseBody!!
 
       // The created is returned
@@ -190,7 +190,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .expectStatus()
         .isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(SyncPrisonerContactRestriction::class.java)
+        .expectBody<SyncPrisonerContactRestriction>()
         .returnResult().responseBody!!
 
       with(prisonerContactRestriction) {
@@ -216,7 +216,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .expectStatus()
         .isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(SyncPrisonerContactRestriction::class.java)
+        .expectBody<SyncPrisonerContactRestriction>()
         .returnResult().responseBody!!
 
       // Check the updated copy
@@ -253,7 +253,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         .expectStatus()
         .isOk
         .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody(SyncPrisonerContactRestriction::class.java)
+        .expectBody<SyncPrisonerContactRestriction>()
         .returnResult().responseBody!!
 
       webTestClient.delete()
@@ -280,32 +280,8 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       assertCustomDeletedEvent(prisonerContactRestriction, Source.NOMIS, User("SYS", null))
     }
 
-    /*private fun assertCustomCreatedEvent(syncPrisonerContactRestriction: SyncPrisonerContactRestriction, source: Source, user: User) {
-      verify(telemetryContactCustomEventService, times(1)).trackCreatePrisonerContactRestrictionEvent(syncPrisonerContactRestriction, source, user)
-
-      verify(telemetryClient, times(1)).trackEvent(
-        "prisoner-contact-restriction-created",
-        mapOf(
-          "description" to "A prisoner contact restriction has been created",
-          "source" to source.name,
-          "username" to user.username,
-          "active_caseload_id" to user.activeCaseLoadId,
-          "contact_id" to syncPrisonerContactRestriction.contactId.toString(),
-          "prisoner_contact_restriction_id" to syncPrisonerContactRestriction.prisonerContactRestrictionId.toString(),
-          "restriction_code" to syncPrisonerContactRestriction.restrictionType,
-          "prisoner_number" to syncPrisonerContactRestriction.prisonerNumber,
-        ),
-        null,
-      )
-    }*/
-
     private fun assertCustomCreatedEvent(syncPrisonerContactRestriction: SyncPrisonerContactRestriction, source: Source, user: User) {
       verify(telemetryContactCustomEventService, times(1)).trackCreatePrisonerContactRestrictionEvent(syncPrisonerContactRestriction, source, user)
-/*      telemetryClient.trackEvent(
-        "prisoner-contact-restriction-created",
-        {"description" = "A prisoner contact restriction has been created", "source" = "NOMIS", "username" = "admin", "contact_id" = "1", "linked_prisoners_count" = "6", "active_caseload_id" = "KMI", "prisoner_contact_restriction_id" = "8", "prisoner_number" = "A1234BB", "restriction_code" = "PREINF"},
-        null
-      );*/
       verify(telemetryClient, times(1)).trackEvent(
         argThat { name -> name == "prisoner-contact-restriction-created" },
         argThat { properties ->
@@ -357,41 +333,6 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
             properties["prisoner_contact_restriction_id"] == syncPrisonerContactRestriction.prisonerContactRestrictionId.toString() &&
             properties["restriction_code"] == syncPrisonerContactRestriction.restrictionType &&
             properties["prisoner_number"] == syncPrisonerContactRestriction.prisonerNumber &&
-            properties["linked_prisoners_count"] != null
-        },
-        isNull(),
-      )
-    }
-
-    private fun assertCustomUpdatedEvent(syncContactRestriction: SyncContactRestriction, source: Source, user: User) {
-      verify(telemetryContactCustomEventService, times(1)).trackUpdateContactRestrictionEvent(syncContactRestriction, source, user)
-
-      verify(telemetryClient, times(1)).trackEvent(
-        argThat { name -> name == "contact-restriction-updated" },
-        argThat { properties ->
-          properties["description"] == "A contact restriction has been updated" &&
-            properties["source"] == source.name &&
-            properties["username"] == user.username &&
-            properties["contact_id"] == syncContactRestriction.contactId.toString() &&
-            properties["active_caseload_id"] == user.activeCaseLoadId &&
-            properties["contact_restriction_id"] == syncContactRestriction.contactRestrictionId.toString() &&
-            properties["restriction_code"] == syncContactRestriction.restrictionType &&
-            properties["linked_prisoners_count"] != null
-        },
-        isNull(),
-      )
-    }
-
-    private fun assertCustomDeletedEvent(contactId: Long, contactRestrictionId: Long, linkedPrisonersCount: Int, source: Source, user: User) {
-      verify(telemetryClient, times(1)).trackEvent(
-        argThat { name -> name == "contact-restriction-deleted" },
-        argThat { properties ->
-          properties["description"] == "A contact restriction has been deleted" &&
-            properties["source"] == source.name &&
-            properties["username"] == user.username &&
-            properties["contact_id"] == contactId.toString() &&
-            properties["contact_restriction_id"] == contactRestrictionId.toString() &&
-            properties["restriction_code"] == "CCTV" &&
             properties["linked_prisoners_count"] != null
         },
         isNull(),

@@ -210,9 +210,10 @@ class TelemetryContactCustomEventService(
   }
 
   fun trackCreatePrisonerContactEvent(prisonerContactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
+    val linkedPrisonersCount = getLinkedPrisonersCount(prisonerContactRelationship.contactId)
     val event = PrisonerContactCustomEvent(
       contactId = prisonerContactRelationship.contactId,
-      linkedPrisonersCount = getLinkedPrisonersCount(prisonerContactRelationship.contactId),
+      linkedPrisonersCount = linkedPrisonersCount,
       prisonerContactRelationship = prisonerContactRelationship,
       eventActionType = EventActionType.CREATE,
       eventSource = source,
@@ -222,7 +223,7 @@ class TelemetryContactCustomEventService(
 
     // log all child events
     with(prisonerContactRelationship) {
-      trackCreatePrisonerContactChildEvents(contactId = contactId, prisonerContactId = prisonerContactId, linkedPrisonersCount = getLinkedPrisonersCount(prisonerContactRelationship.contactId), prisonerNumber = prisonerNumber, isNextOfKin = isNextOfKin, isEmergencyContact = isEmergencyContact, isApprovedVisitor = isApprovedVisitor, source = source, user = user)
+      trackCreatePrisonerContactChildEvents(contactId = contactId, prisonerContactId = prisonerContactId, linkedPrisonersCount = linkedPrisonersCount, prisonerNumber = prisonerNumber, isNextOfKin = isNextOfKin, isEmergencyContact = isEmergencyContact, isApprovedVisitor = isApprovedVisitor, source = source, user = user)
     }
   }
 
