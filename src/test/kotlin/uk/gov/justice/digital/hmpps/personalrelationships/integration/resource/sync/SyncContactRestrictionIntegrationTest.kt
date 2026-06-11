@@ -252,7 +252,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = 3),
     )
 
-    assertCustomDeletedEvent(3, contactRestrictionId, Source.NOMIS, User("SYS"))
+    assertCustomDeletedEvent(3, contactRestrictionId, 2, Source.NOMIS, User("SYS"))
   }
 
   private fun updateContactRestrictionRequest(contactId: Long) = SyncUpdateContactRestrictionRequest(
@@ -292,6 +292,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_restriction_id" to syncContactRestriction.contactRestrictionId.toString(),
         "restriction_code" to syncContactRestriction.restrictionType,
+        "linked_prisoners_count" to "0",
       ),
       null,
     )
@@ -310,12 +311,13 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_restriction_id" to syncContactRestriction.contactRestrictionId.toString(),
         "restriction_code" to syncContactRestriction.restrictionType,
+        "linked_prisoners_count" to "0",
       ),
       null,
     )
   }
 
-  private fun assertCustomDeletedEvent(contactId: Long, contactRestrictionId: Long, source: Source, user: User) {
+  private fun assertCustomDeletedEvent(contactId: Long, contactRestrictionId: Long, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryClient, times(1)).trackEvent(
       "contact-restriction-deleted",
       mapOf(
@@ -325,6 +327,7 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
         "contact_id" to contactId.toString(),
         "contact_restriction_id" to contactRestrictionId.toString(),
         "restriction_code" to "CCTV",
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )

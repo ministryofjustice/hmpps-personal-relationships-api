@@ -185,7 +185,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
     )
 
-    assertCustomEvent(created, Source.DPS, User("created", "BXI"), "BAN")
+    assertCustomEvent(created, 1, Source.DPS, User("created", "BXI"), "BAN")
   }
 
   @ParameterizedTest
@@ -222,7 +222,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
     )
 
-    assertCustomEvent(created, Source.DPS, User("created", "BXI"), "BAN")
+    assertCustomEvent(created, 1, Source.DPS, User("created", "BXI"), "BAN")
   }
 
   companion object {
@@ -239,7 +239,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
     )
   }
 
-  private fun assertCustomEvent(contactRestrictionDetails: PrisonerContactRestrictionDetails, source: Source, user: User, restrictionType: String) {
+  private fun assertCustomEvent(contactRestrictionDetails: PrisonerContactRestrictionDetails, linkedPrisonersCount: Int, source: Source, user: User, restrictionType: String) {
     verify(telemetryContactCustomEventService, times(1)).trackCreatePrisonerContactRestrictionEvent(any<PrisonerContactRestrictionDetails>(), any<Source>(), any<User>())
     verify(telemetryClient, times(1)).trackEvent(
       "prisoner-contact-restriction-created",
@@ -252,6 +252,7 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
         "prisoner_contact_restriction_id" to contactRestrictionDetails.prisonerContactRestrictionId.toString(),
         "restriction_code" to restrictionType,
         "prisoner_number" to contactRestrictionDetails.prisonerNumber,
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )

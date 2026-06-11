@@ -250,7 +250,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
+    assertCustomEvent(updated, 0, Source.DPS, User("updated", "BXI"))
   }
 
   @ParameterizedTest
@@ -273,7 +273,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
+    assertCustomEvent(updated, 0, Source.DPS, User("updated", "BXI"))
   }
 
   @Test
@@ -303,7 +303,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
+    assertCustomEvent(updated, 0, Source.DPS, User("updated", "BXI"))
   }
 
   @Test
@@ -328,7 +328,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
+    assertCustomEvent(updated, 0, Source.DPS, User("updated", "BXI"))
   }
 
   @Test
@@ -358,7 +358,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
+    assertCustomEvent(updated, 0, Source.DPS, User("updated", "BXI"))
   }
 
   @Test
@@ -383,7 +383,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
+    assertCustomEvent(updated, 0, Source.DPS, User("updated", "BXI"))
   }
 
   @Test
@@ -433,7 +433,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       additionalInfo = ContactAddressInfo(other.contactAddressId, Source.DPS, "updated", "BXI"),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
+    assertCustomEvent(updated, 0, Source.DPS, User("updated", "BXI"))
   }
 
   @Test
@@ -471,7 +471,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
+    assertCustomEvent(updated, 0, Source.DPS, User("updated", "BXI"))
   }
 
   companion object {
@@ -585,7 +585,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
     )
   }
 
-  private fun assertCustomEvent(contactAddressResponse: ContactAddressResponse, source: Source, user: User) {
+  private fun assertCustomEvent(contactAddressResponse: ContactAddressResponse, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackUpdateContactAddressEvent(any<UpdateAddressResponse>(), any<Source>(), any<User>())
     verify(telemetryClient, times(1)).trackEvent(
       "contact-address-updated",
@@ -596,6 +596,7 @@ class PatchContactAddressIntegrationTest : SecureAPIIntegrationTestBase() {
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactAddressResponse.contactId.toString(),
         "contact_address_id" to contactAddressResponse.contactAddressId.toString(),
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )

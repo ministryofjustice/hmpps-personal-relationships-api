@@ -169,7 +169,7 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = contactId),
     )
 
-    assertCustomCreatedEvent(syncContactAddress = contactAddress, source = Source.NOMIS, user = User("CREATE", "KMI"))
+    assertCustomCreatedEvent(syncContactAddress = contactAddress, source = Source.NOMIS, linkedPrisonersCount = 0, user = User("CREATE", "KMI"))
   }
 
   @Test
@@ -226,7 +226,7 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = contactId),
     )
 
-    assertCustomUpdatedEvent(syncContactAddress = updatedAddress, source = Source.NOMIS, user = User("UPDATE", "BXI"))
+    assertCustomUpdatedEvent(syncContactAddress = updatedAddress, source = Source.NOMIS, linkedPrisonersCount = 0, user = User("UPDATE", "BXI"))
   }
 
   @Test
@@ -277,7 +277,7 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
       assertThat(createdTime).isNotNull()
     }
 
-    assertCustomUpdatedEvent(syncContactAddress = updatedAddress, source = Source.NOMIS, user = User("UPDATE", "BXI"))
+    assertCustomUpdatedEvent(syncContactAddress = updatedAddress, source = Source.NOMIS, linkedPrisonersCount = 0, user = User("UPDATE", "BXI"))
   }
 
   @Test
@@ -300,7 +300,7 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = 4),
     )
 
-    assertCustomDeletedEvent(contactId = 4, contactAddressId = 5, source = Source.NOMIS, user = User("SYS"))
+    assertCustomDeletedEvent(contactId = 4, contactAddressId = 5, linkedPrisonersCount = 2, source = Source.NOMIS, user = User("SYS"))
   }
 
   private fun updateContactAddressRequest(contactId: Long, verified: Boolean = false) = SyncUpdateContactAddressRequest(
@@ -342,7 +342,7 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
     firstName = "first",
   )
 
-  private fun assertCustomCreatedEvent(syncContactAddress: SyncContactAddress, source: Source, user: User) {
+  private fun assertCustomCreatedEvent(syncContactAddress: SyncContactAddress, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackCreateContactAddressEvent(syncContactAddress, source, user)
 
     verify(telemetryClient, times(1)).trackEvent(
@@ -354,12 +354,13 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
         "contact_id" to syncContactAddress.contactId.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_address_id" to syncContactAddress.contactAddressId.toString(),
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )
   }
 
-  private fun assertCustomUpdatedEvent(syncContactAddress: SyncContactAddress, source: Source, user: User) {
+  private fun assertCustomUpdatedEvent(syncContactAddress: SyncContactAddress, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackUpdateContactAddressEvent(syncContactAddress, source, user)
 
     verify(telemetryClient, times(1)).trackEvent(
@@ -371,12 +372,13 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
         "contact_id" to syncContactAddress.contactId.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_address_id" to syncContactAddress.contactAddressId.toString(),
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )
   }
 
-  private fun assertCustomDeletedEvent(contactId: Long, contactAddressId: Long, source: Source, user: User) {
+  private fun assertCustomDeletedEvent(contactId: Long, contactAddressId: Long, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryClient, times(1)).trackEvent(
       "contact-address-deleted",
       mapOf(
@@ -385,6 +387,7 @@ class SyncContactAddressIntegrationTest : PostgresIntegrationTestBase() {
         "username" to user.username,
         "contact_id" to contactId.toString(),
         "contact_address_id" to contactAddressId.toString(),
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )

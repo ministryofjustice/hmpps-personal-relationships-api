@@ -275,6 +275,7 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactAddressPhoneDetails.contactId.toString(),
         "contact_address_phone_id" to contactAddressPhoneDetails.contactAddressPhoneId.toString(),
+        "linked_prisoners_count" to "0",
       ),
       null,
     )

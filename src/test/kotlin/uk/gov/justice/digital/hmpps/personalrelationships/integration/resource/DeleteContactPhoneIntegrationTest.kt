@@ -122,7 +122,7 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
-    assertCustomEvent(savedContactId, savedContactPhoneId, Source.DPS, User("deleted", "BXI"))
+    assertCustomEvent(savedContactId, savedContactPhoneId, 0, Source.DPS, User("deleted", "BXI"))
   }
 
   @ParameterizedTest
@@ -183,10 +183,10 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(addressPhoneRepository.findById(addressPhone.contactPhoneId)).isNotPresent
     assertThat(addressRepository.findById(address.contactAddressId)).isPresent
 
-    assertCustomEvent(savedContactId, savedContactPhoneId, Source.DPS, User("deleted", "BXI"))
+    assertCustomEvent(savedContactId, savedContactPhoneId, 0, Source.DPS, User("deleted", "BXI"))
   }
 
-  private fun assertCustomEvent(contactId: Long, contactPhoneId: Long, source: Source, user: User) {
+  private fun assertCustomEvent(contactId: Long, contactPhoneId: Long, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackDeleteContactPhoneEvent(contactId, contactPhoneId, source, user)
     verify(telemetryClient, times(1)).trackEvent(
       "contact-phone-deleted",
@@ -197,6 +197,7 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactId.toString(),
         "contact_phone_id" to contactPhoneId.toString(),
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )

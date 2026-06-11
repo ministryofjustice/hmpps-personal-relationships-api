@@ -10,11 +10,12 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.Tele
 
 class ContactEmergencyContactCustomEvent private constructor(
   override val contactId: Long,
+  val linkedPrisonersCount: Long,
   private val contactEmergencyContactCustomProperties: ContactEmergencyContactCustomProperties,
   val eventActionType: EventActionType,
   val eventSource: Source,
   val eventUser: User,
-) : ContactCustomTelemetryEvent(contactId, getEvent(eventActionType), eventSource.name, eventUser) {
+) : ContactCustomTelemetryEvent(contactId, linkedPrisonersCount, getEvent(eventActionType), eventSource.name, eventUser) {
   override fun customProperties(): Map<String, String> = mapOf(
     "prisoner_contact_id" to contactEmergencyContactCustomProperties.prisonerContactId.toString(),
     "prisoner_number" to contactEmergencyContactCustomProperties.prisonerNumber,
@@ -31,11 +32,12 @@ class ContactEmergencyContactCustomEvent private constructor(
   constructor(
     contactId: Long,
     prisonerContactId: Long,
+    linkedPrisonersCount: Long,
     prisonerNumber: String,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, ContactEmergencyContactCustomProperties(prisonerContactId, prisonerNumber), eventActionType, eventSource, eventUser)
+  ) : this(contactId, linkedPrisonersCount, ContactEmergencyContactCustomProperties(prisonerContactId, prisonerNumber), eventActionType, eventSource, eventUser)
 }
 
 internal class ContactEmergencyContactCustomProperties(

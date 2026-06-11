@@ -162,7 +162,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = contactIdentity.contactId),
     )
 
-    assertCustomCreatedEvent(contactIdentity, Source.NOMIS, User("CREATE", "KMI"))
+    assertCustomCreatedEvent(contactIdentity, 0, Source.NOMIS, User("CREATE", "KMI"))
   }
 
   @ParameterizedTest
@@ -225,7 +225,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = updatedIdentity.contactId),
     )
 
-    assertCustomUpdatedEvent(updatedIdentity, Source.NOMIS, User("UPDATE", "BXI"))
+    assertCustomUpdatedEvent(updatedIdentity, 0, Source.NOMIS, User("UPDATE", "BXI"))
   }
 
   @Test
@@ -253,7 +253,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
       personReference = PersonReference(dpsContactId = 3),
     )
 
-    assertCustomDeletedEvent(3, contactIdentityId, Source.NOMIS, User("SYS"))
+    assertCustomDeletedEvent(3, contactIdentityId, 2, Source.NOMIS, User("SYS"))
   }
 
   private fun updateContactIdentityRequest(contactId: Long, issuingAuthority: String? = "UKBORDER") = SyncUpdateContactIdentityRequest(
@@ -278,7 +278,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
     firstName = "first",
   )
 
-  private fun assertCustomCreatedEvent(syncContactIdentity: SyncContactIdentity, source: Source, user: User) {
+  private fun assertCustomCreatedEvent(syncContactIdentity: SyncContactIdentity, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackCreateContactIdentityEvent(syncContactIdentity, source, user)
 
     verify(telemetryClient, times(1)).trackEvent(
@@ -290,12 +290,13 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
         "contact_id" to syncContactIdentity.contactId.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_identity_id" to syncContactIdentity.contactIdentityId.toString(),
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )
   }
 
-  private fun assertCustomUpdatedEvent(syncContactIdentity: SyncContactIdentity, source: Source, user: User) {
+  private fun assertCustomUpdatedEvent(syncContactIdentity: SyncContactIdentity, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackUpdateContactIdentityEvent(syncContactIdentity, source, user)
 
     verify(telemetryClient, times(1)).trackEvent(
@@ -307,12 +308,13 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
         "contact_id" to syncContactIdentity.contactId.toString(),
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_identity_id" to syncContactIdentity.contactIdentityId.toString(),
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )
   }
 
-  private fun assertCustomDeletedEvent(contactId: Long, contactIdentityId: Long, source: Source, user: User) {
+  private fun assertCustomDeletedEvent(contactId: Long, contactIdentityId: Long, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryClient, times(1)).trackEvent(
       "contact-identity-deleted",
       mapOf(
@@ -321,6 +323,7 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
         "username" to user.username,
         "contact_id" to contactId.toString(),
         "contact_identity_id" to contactIdentityId.toString(),
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )

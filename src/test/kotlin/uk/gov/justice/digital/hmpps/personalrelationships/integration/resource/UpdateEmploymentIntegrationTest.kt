@@ -161,6 +161,7 @@ class UpdateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to updatedEmploymentDetails.contactId.toString(),
         "contact_employment_id" to updatedEmploymentDetails.employmentId.toString(),
+        "linked_prisoners_count" to "0",
       ),
       null,
     )

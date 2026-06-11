@@ -15,11 +15,18 @@ import uk.gov.justice.digital.hmpps.personalrelationships.service.telemetry.Tele
 
 class ContactEmploymentCustomEvent private constructor(
   override val contactId: Long,
+  val linkedPrisonersCount: Long,
   private val contactEmploymentCustomProperties: ContactEmploymentCustomProperties,
   val eventActionType: EventActionType,
   val eventSource: Source,
   val eventUser: User,
-) : ContactCustomTelemetryEvent(contactId, getEvent(eventActionType), eventSource.name, eventUser) {
+) : ContactCustomTelemetryEvent(
+  contactId = contactId,
+  linkedPrisonerCount = linkedPrisonersCount,
+  telemetryCustomEventType = getEvent(eventActionType = eventActionType),
+  source = eventSource.name,
+  user = eventUser,
+) {
   override fun customProperties(): Map<String, String> = mapOf("contact_employment_id" to contactEmploymentCustomProperties.contactEmploymentId.toString())
 
   companion object {
@@ -32,27 +39,51 @@ class ContactEmploymentCustomEvent private constructor(
 
   constructor(
     contactId: Long,
+    linkedPrisonersCount: Long,
     employmentDetails: EmploymentDetails,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, ContactEmploymentCustomProperties(employmentDetails), eventActionType, eventSource, eventUser)
+  ) : this(
+    contactId = contactId,
+    linkedPrisonersCount = linkedPrisonersCount,
+    contactEmploymentCustomProperties = ContactEmploymentCustomProperties(employmentDetails),
+    eventActionType = eventActionType,
+    eventSource = eventSource,
+    eventUser = eventUser,
+  )
 
   constructor(
     contactId: Long,
     syncEmployment: SyncEmployment,
+    linkedPrisonersCount: Long,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, ContactEmploymentCustomProperties(syncEmployment), eventActionType, eventSource, eventUser)
+  ) : this(
+    contactId = contactId,
+    linkedPrisonersCount = linkedPrisonersCount,
+    contactEmploymentCustomProperties = ContactEmploymentCustomProperties(syncEmployment),
+    eventActionType = eventActionType,
+    eventSource = eventSource,
+    eventUser = eventUser,
+  )
 
   constructor(
     contactId: Long,
     employmentId: Long,
+    linkedPrisonersCount: Long,
     eventActionType: EventActionType,
     eventSource: Source,
     eventUser: User,
-  ) : this(contactId, ContactEmploymentCustomProperties(employmentId), eventActionType, eventSource, eventUser)
+  ) : this(
+    contactId = contactId,
+    linkedPrisonersCount = linkedPrisonersCount,
+    contactEmploymentCustomProperties = ContactEmploymentCustomProperties(employmentId),
+    eventActionType = eventActionType,
+    eventSource = eventSource,
+    eventUser = eventUser,
+  )
 }
 
 internal class ContactEmploymentCustomProperties(

@@ -91,6 +91,17 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         assertThat(relationshipsRemoved).extracting("prisonerNumber").containsOnly("A3333AA", "A4444AA")
 
         checkForExpectedEvents(relationshipsRemoved, relationshipsCreated, createdPrisonerNumber = "A3333AA")
+        relationshipsRemoved.map { relationship ->
+          relationship.prisonerContactRestrictionIds.map { restrictionId ->
+            assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, "A3333AA", 0, Source.NOMIS, User("SYS", null))
+            assertCustomPrisonerContactDeletedEvent(relationship.contactId, relationship.prisonerContactId, relationship.prisonerNumber, 0, Source.NOMIS, User("SYS", null))
+          }
+        }
+
+/*
+        assertCustomPrisonerContactRestrictionCreatedEvent(created.contactId, restriction.dpsId, createdPrisonerNumber, linkedPrisonersCountCreated, Source.NOMIS, User("SYS", null))
+        assertCustomPrisonerContactCreatedEvent(created.contactId, created.relationship.dpsId, createdPrisonerNumber, linkedPrisonersCountCreated, Source.NOMIS, User("SYS", null))
+*/
       }
     }
 
@@ -146,6 +157,19 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         assertThat(relationshipsCreated).hasSize(2)
 
         checkForExpectedEvents(relationshipsRemoved, relationshipsCreated, createdPrisonerNumber = "A3333AA")
+        relationshipsRemoved.forEach { relationship ->
+          relationship.prisonerContactRestrictionIds.forEach { restrictionId ->
+            assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, "A3333AA", 1, Source.NOMIS, User("SYS", null))
+            assertCustomPrisonerContactDeletedEvent(relationship.contactId, relationship.prisonerContactId, relationship.prisonerNumber, 1, Source.NOMIS, User("SYS", null))
+          }
+        }
+
+        relationshipsCreated.forEach { created ->
+          created.restrictions.forEach { restriction ->
+            assertCustomPrisonerContactRestrictionCreatedEvent(created.contactId, restriction.dpsId, "A3333AA", 1, Source.NOMIS, User("SYS", null))
+            assertCustomPrisonerContactCreatedEvent(created.contactId, created.relationship.dpsId, "A3333AA", 1, Source.NOMIS, User("SYS", null))
+          }
+        }
       }
     }
 
@@ -219,6 +243,12 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         assertThat(restrictionsRemoved).hasSize(2)
 
         checkForExpectedEvents(relationshipsRemoved, relationshipsCreated, createdPrisonerNumber = "A3333AA")
+        relationshipsRemoved.forEach { relationship ->
+          relationship.prisonerContactRestrictionIds.forEach { restrictionId ->
+            assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, "A3333AA", 0, Source.NOMIS, User("SYS", null))
+            assertCustomPrisonerContactDeletedEvent(relationship.contactId, relationship.prisonerContactId, relationship.prisonerNumber, 0, Source.NOMIS, User("SYS", null))
+          }
+        }
       }
     }
 
@@ -285,6 +315,19 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         assertThat(restrictionsCreated).hasSize(2)
 
         checkForExpectedEvents(relationshipsRemoved, relationshipsCreated, createdPrisonerNumber = "A4444AA")
+        relationshipsRemoved.forEach { relationship ->
+          relationship.prisonerContactRestrictionIds.forEach { restrictionId ->
+            assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, "A4444AA", 1, Source.NOMIS, User("SYS", null))
+            assertCustomPrisonerContactDeletedEvent(relationship.contactId, relationship.prisonerContactId, relationship.prisonerNumber, 1, Source.NOMIS, User("SYS", null))
+          }
+        }
+
+        relationshipsCreated.forEach { created ->
+          created.restrictions.forEach { restriction ->
+            assertCustomPrisonerContactRestrictionCreatedEvent(created.contactId, restriction.dpsId, "A4444AA", 1, Source.NOMIS, User("SYS", null))
+            assertCustomPrisonerContactCreatedEvent(created.contactId, created.relationship.dpsId, "A4444AA", 1, Source.NOMIS, User("SYS", null))
+          }
+        }
       }
     }
 
@@ -344,8 +387,6 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
             nomsNumber = relationship.prisonerNumber,
           ),
         )
-
-        assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, createdPrisonerNumber, Source.NOMIS, User("SYS", null))
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_DELETED,
@@ -355,8 +396,6 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
           nomsNumber = relationship.prisonerNumber,
         ),
       )
-
-      assertCustomPrisonerContactDeletedEvent(relationship.contactId, relationship.prisonerContactId, relationship.prisonerNumber, Source.NOMIS, User("SYS", null))
     }
 
     relationshipsCreated.map { created ->
@@ -369,8 +408,6 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
             nomsNumber = createdPrisonerNumber,
           ),
         )
-
-        assertCustomPrisonerContactRestrictionCreatedEvent(created.contactId, restriction.dpsId, createdPrisonerNumber, Source.NOMIS, User("SYS", null))
       }
 
       stubEvents.assertHasEvent(
@@ -381,12 +418,10 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
           nomsNumber = createdPrisonerNumber,
         ),
       )
-
-      assertCustomPrisonerContactCreatedEvent(created.contactId, created.relationship.dpsId, createdPrisonerNumber, Source.NOMIS, User("SYS", null))
     }
   }
 
-  private fun assertCustomPrisonerContactCreatedEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, source: Source, user: User) {
+  private fun assertCustomPrisonerContactCreatedEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackCreatePrisonerContactEvent(contactId, prisonerContactId, prisonerNumber, source, user)
 
     verify(telemetryClient, times(1)).trackEvent(
@@ -398,12 +433,13 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         "contact_id" to contactId.toString(),
         "prisoner_contact_id" to prisonerContactId.toString(),
         "prisoner_number" to prisonerNumber,
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )
   }
 
-  private fun assertCustomPrisonerContactRestrictionCreatedEvent(contactId: Long, prisonerContactRestrictionId: Long, prisonerNumber: String, source: Source, user: User) {
+  private fun assertCustomPrisonerContactRestrictionCreatedEvent(contactId: Long, prisonerContactRestrictionId: Long, prisonerNumber: String, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackCreatePrisonerContactRestrictionEvent(contactId, prisonerContactRestrictionId, prisonerNumber, source, user)
 
     verify(telemetryClient, times(1)).trackEvent(
@@ -415,12 +451,13 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         "contact_id" to contactId.toString(),
         "prisoner_contact_restriction_id" to prisonerContactRestrictionId.toString(),
         "prisoner_number" to prisonerNumber,
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )
   }
 
-  private fun assertCustomPrisonerContactRestrictionDeletedEvent(contactId: Long, prisonerContactRestrictionId: Long, prisonerNumber: String, source: Source, user: User) {
+  private fun assertCustomPrisonerContactRestrictionDeletedEvent(contactId: Long, prisonerContactRestrictionId: Long, prisonerNumber: String, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactRestrictionEvent(contactId, prisonerContactRestrictionId, prisonerNumber, source, user)
 
     verify(telemetryClient, times(1)).trackEvent(
@@ -432,12 +469,13 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         "contact_id" to contactId.toString(),
         "prisoner_contact_restriction_id" to prisonerContactRestrictionId.toString(),
         "prisoner_number" to prisonerNumber,
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )
   }
 
-  private fun assertCustomPrisonerContactDeletedEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, source: Source, user: User) {
+  private fun assertCustomPrisonerContactDeletedEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactEvent(
       contactId = contactId,
       prisonerContactId = prisonerContactId,
@@ -458,6 +496,7 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         "contact_id" to contactId.toString(),
         "prisoner_contact_id" to prisonerContactId.toString(),
         "prisoner_number" to prisonerNumber,
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )

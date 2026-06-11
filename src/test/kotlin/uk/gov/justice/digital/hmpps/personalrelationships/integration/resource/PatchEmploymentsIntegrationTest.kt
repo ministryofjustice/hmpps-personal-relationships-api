@@ -232,7 +232,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
       event = OutboundEvent.EMPLOYMENT_UPDATED,
       additionalInfo = EmploymentInfo(employmentToRemainUntouched.employmentId, source = Source.DPS, "updated", "BXI"),
     )
-    assertCustomEvent(newEmployment, Source.DPS, User("updated", "BXI"))
+    assertCustomEvent(newEmployment, 0, Source.DPS, User("updated", "BXI"))
   }
 
   @Test
@@ -345,7 +345,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
     deleteEmployments = emptyList(),
   )
 
-  private fun assertCustomEvent(updatedEmploymentDetails: EmploymentDetails, source: Source, user: User) {
+  private fun assertCustomEvent(updatedEmploymentDetails: EmploymentDetails, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackCreateEmploymentEvent(updatedEmploymentDetails.contactId, updatedEmploymentDetails.employmentId, source, user)
     verify(telemetryClient, times(1)).trackEvent(
       "contact-employment-created",
@@ -356,6 +356,7 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
         "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to updatedEmploymentDetails.contactId.toString(),
         "contact_employment_id" to updatedEmploymentDetails.employmentId.toString(),
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )

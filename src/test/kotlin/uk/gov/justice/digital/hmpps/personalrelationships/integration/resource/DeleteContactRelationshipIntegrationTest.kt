@@ -106,7 +106,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumber),
     )
 
-    assertCustomEvent(contactId = savedContactId, prisonerContactId = savedPrisonerContactId, prisonerNumber = prisonerNumber, groupCode = "S", relationshipCode = "FRI", relationshipStatus = true, source = Source.DPS, user = User("deleted", "BXI"))
+    assertCustomEvent(contactId = savedContactId, prisonerContactId = savedPrisonerContactId, prisonerNumber = prisonerNumber, groupCode = "S", relationshipCode = "FRI", relationshipStatus = true, linkedPrisonersCount = 0, source = Source.DPS, user = User("deleted", "BXI"))
     verify(telemetryClient, never()).trackEvent(
       eq("contact-next-of-kin-deleted"),
       any<Map<String, String>>(),
@@ -131,7 +131,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     )
 
     testAPIClient.deletePrisonerContact(result.prisonerContactId)
-    assertNextOfKinCustomDeletedEvent(result, Source.DPS, User("deleted", "BXI"))
+    assertNextOfKinCustomDeletedEvent(result, 1, Source.DPS, User("deleted", "BXI"))
   }
 
   @Test
@@ -151,7 +151,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     )
 
     testAPIClient.deletePrisonerContact(result.prisonerContactId)
-    assertApprovedVisitorDeletedCustomEvent(result, Source.DPS, User("deleted", "BXI"))
+    assertApprovedVisitorDeletedCustomEvent(result, 1, Source.DPS, User("deleted", "BXI"))
   }
 
   @Test
@@ -171,7 +171,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     )
 
     testAPIClient.deletePrisonerContact(result.prisonerContactId)
-    assertEmergencyContactDeletedCustomEvent(result, Source.DPS, User("deleted", "BXI"))
+    assertEmergencyContactDeletedCustomEvent(result, 1, Source.DPS, User("deleted", "BXI"))
   }
 
   @Test
@@ -347,7 +347,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     )
   }
 
-  private fun assertCustomEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, groupCode: String, relationshipCode: String, relationshipStatus: Boolean, source: Source, user: User) {
+  private fun assertCustomEvent(contactId: Long, prisonerContactId: Long, prisonerNumber: String, groupCode: String, relationshipCode: String, relationshipStatus: Boolean, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactEvent(
       contactId = contactId,
       prisonerContactId = prisonerContactId,
@@ -373,12 +373,13 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         "group_code" to groupCode,
         "relationship_code" to relationshipCode,
         "relationship_status" to relationshipStatusString,
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )
   }
 
-  private fun assertNextOfKinCustomDeletedEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
+  private fun assertNextOfKinCustomDeletedEvent(contactRelationship: PrisonerContactRelationshipDetails, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryClient, times(1)).trackEvent(
       "contact-next-of-kin-deleted",
       mapOf(
@@ -389,12 +390,13 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
         "prisoner_number" to contactRelationship.prisonerNumber,
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )
   }
 
-  private fun assertApprovedVisitorDeletedCustomEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
+  private fun assertApprovedVisitorDeletedCustomEvent(contactRelationship: PrisonerContactRelationshipDetails, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryClient, times(1)).trackEvent(
       "contact-approved-visitor-deleted",
       mapOf(
@@ -405,12 +407,13 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
         "prisoner_number" to contactRelationship.prisonerNumber,
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )
   }
 
-  private fun assertEmergencyContactDeletedCustomEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
+  private fun assertEmergencyContactDeletedCustomEvent(contactRelationship: PrisonerContactRelationshipDetails, linkedPrisonersCount: Int, source: Source, user: User) {
     verify(telemetryClient, times(1)).trackEvent(
       "contact-emergency-contact-deleted",
       mapOf(
@@ -421,6 +424,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
         "prisoner_number" to contactRelationship.prisonerNumber,
+        "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
       null,
     )

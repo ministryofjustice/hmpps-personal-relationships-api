@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argThat
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
@@ -13,6 +15,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncCreatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncUpdatePrisonerContactRestrictionRequest
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncContactRestriction
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerContactRestriction
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.PersonReference
@@ -277,7 +280,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       assertCustomDeletedEvent(prisonerContactRestriction, Source.NOMIS, User("SYS", null))
     }
 
-    private fun assertCustomCreatedEvent(syncPrisonerContactRestriction: SyncPrisonerContactRestriction, source: Source, user: User) {
+    /*private fun assertCustomCreatedEvent(syncPrisonerContactRestriction: SyncPrisonerContactRestriction, source: Source, user: User) {
       verify(telemetryContactCustomEventService, times(1)).trackCreatePrisonerContactRestrictionEvent(syncPrisonerContactRestriction, source, user)
 
       verify(telemetryClient, times(1)).trackEvent(
@@ -294,24 +297,49 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         ),
         null,
       )
+    }*/
+
+    private fun assertCustomCreatedEvent(syncPrisonerContactRestriction: SyncPrisonerContactRestriction, source: Source, user: User) {
+      verify(telemetryContactCustomEventService, times(1)).trackCreatePrisonerContactRestrictionEvent(syncPrisonerContactRestriction, source, user)
+/*      telemetryClient.trackEvent(
+        "prisoner-contact-restriction-created",
+        {"description" = "A prisoner contact restriction has been created", "source" = "NOMIS", "username" = "admin", "contact_id" = "1", "linked_prisoners_count" = "6", "active_caseload_id" = "KMI", "prisoner_contact_restriction_id" = "8", "prisoner_number" = "A1234BB", "restriction_code" = "PREINF"},
+        null
+      );*/
+      verify(telemetryClient, times(1)).trackEvent(
+        argThat { name -> name == "prisoner-contact-restriction-created" },
+        argThat { properties ->
+          properties["description"] == "A prisoner contact restriction has been created" &&
+            properties["source"] == source.name &&
+            properties["username"] == user.username &&
+            properties["contact_id"] == syncPrisonerContactRestriction.contactId.toString() &&
+            properties["active_caseload_id"] == user.activeCaseLoadId &&
+            properties["prisoner_contact_restriction_id"] == syncPrisonerContactRestriction.prisonerContactRestrictionId.toString() &&
+            properties["restriction_code"] == syncPrisonerContactRestriction.restrictionType &&
+            properties["prisoner_number"] == syncPrisonerContactRestriction.prisonerNumber &&
+            properties["linked_prisoners_count"] != null
+        },
+        isNull(),
+      )
     }
 
     private fun assertCustomUpdatedEvent(syncPrisonerContactRestriction: SyncPrisonerContactRestriction, source: Source, user: User) {
       verify(telemetryContactCustomEventService, times(1)).trackUpdatePrisonerContactRestrictionEvent(syncPrisonerContactRestriction, source, user)
 
       verify(telemetryClient, times(1)).trackEvent(
-        "prisoner-contact-restriction-updated",
-        mapOf(
-          "description" to "A prisoner contact restriction has been updated",
-          "source" to source.name,
-          "username" to user.username,
-          "active_caseload_id" to user.activeCaseLoadId,
-          "contact_id" to syncPrisonerContactRestriction.contactId.toString(),
-          "prisoner_contact_restriction_id" to syncPrisonerContactRestriction.prisonerContactRestrictionId.toString(),
-          "restriction_code" to syncPrisonerContactRestriction.restrictionType,
-          "prisoner_number" to syncPrisonerContactRestriction.prisonerNumber,
-        ),
-        null,
+        argThat { name -> name == "prisoner-contact-restriction-updated" },
+        argThat { properties ->
+          properties["description"] == "A prisoner contact restriction has been updated" &&
+            properties["source"] == source.name &&
+            properties["username"] == user.username &&
+            properties["contact_id"] == syncPrisonerContactRestriction.contactId.toString() &&
+            properties["active_caseload_id"] == user.activeCaseLoadId &&
+            properties["prisoner_contact_restriction_id"] == syncPrisonerContactRestriction.prisonerContactRestrictionId.toString() &&
+            properties["restriction_code"] == syncPrisonerContactRestriction.restrictionType &&
+            properties["prisoner_number"] == syncPrisonerContactRestriction.prisonerNumber &&
+            properties["linked_prisoners_count"] != null
+        },
+        isNull(),
       )
     }
 
@@ -319,17 +347,54 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       verify(telemetryContactCustomEventService, times(1)).trackDeletePrisonerContactRestrictionEvent(any<SyncPrisonerContactRestriction>(), any<Source>(), any<User>())
 
       verify(telemetryClient, times(1)).trackEvent(
-        "prisoner-contact-restriction-deleted",
-        mapOf(
-          "description" to "A prisoner contact restriction has been deleted",
-          "source" to source.name,
-          "username" to user.username,
-          "contact_id" to syncPrisonerContactRestriction.contactId.toString(),
-          "prisoner_contact_restriction_id" to syncPrisonerContactRestriction.prisonerContactRestrictionId.toString(),
-          "restriction_code" to syncPrisonerContactRestriction.restrictionType,
-          "prisoner_number" to syncPrisonerContactRestriction.prisonerNumber,
-        ),
-        null,
+        argThat { name -> name == "prisoner-contact-restriction-deleted" },
+        argThat { properties ->
+          properties["description"] == "A prisoner contact restriction has been deleted" &&
+            properties["source"] == source.name &&
+            properties["username"] == user.username &&
+            properties["contact_id"] == syncPrisonerContactRestriction.contactId.toString() &&
+            properties["active_caseload_id"] == user.activeCaseLoadId &&
+            properties["prisoner_contact_restriction_id"] == syncPrisonerContactRestriction.prisonerContactRestrictionId.toString() &&
+            properties["restriction_code"] == syncPrisonerContactRestriction.restrictionType &&
+            properties["prisoner_number"] == syncPrisonerContactRestriction.prisonerNumber &&
+            properties["linked_prisoners_count"] != null
+        },
+        isNull(),
+      )
+    }
+
+    private fun assertCustomUpdatedEvent(syncContactRestriction: SyncContactRestriction, source: Source, user: User) {
+      verify(telemetryContactCustomEventService, times(1)).trackUpdateContactRestrictionEvent(syncContactRestriction, source, user)
+
+      verify(telemetryClient, times(1)).trackEvent(
+        argThat { name -> name == "contact-restriction-updated" },
+        argThat { properties ->
+          properties["description"] == "A contact restriction has been updated" &&
+            properties["source"] == source.name &&
+            properties["username"] == user.username &&
+            properties["contact_id"] == syncContactRestriction.contactId.toString() &&
+            properties["active_caseload_id"] == user.activeCaseLoadId &&
+            properties["contact_restriction_id"] == syncContactRestriction.contactRestrictionId.toString() &&
+            properties["restriction_code"] == syncContactRestriction.restrictionType &&
+            properties["linked_prisoners_count"] != null
+        },
+        isNull(),
+      )
+    }
+
+    private fun assertCustomDeletedEvent(contactId: Long, contactRestrictionId: Long, linkedPrisonersCount: Int, source: Source, user: User) {
+      verify(telemetryClient, times(1)).trackEvent(
+        argThat { name -> name == "contact-restriction-deleted" },
+        argThat { properties ->
+          properties["description"] == "A contact restriction has been deleted" &&
+            properties["source"] == source.name &&
+            properties["username"] == user.username &&
+            properties["contact_id"] == contactId.toString() &&
+            properties["contact_restriction_id"] == contactRestrictionId.toString() &&
+            properties["restriction_code"] == "CCTV" &&
+            properties["linked_prisoners_count"] != null
+        },
+        isNull(),
       )
     }
 
