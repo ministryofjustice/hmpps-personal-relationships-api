@@ -37,24 +37,13 @@ Useful tools but not essential:
 There are two key environment variables needed to run the service. The system client id and secret used to retrieve the OAuth 2.0 access token needed for service to service API calls can be set as local environment variables.
 This allows API calls made from this service that do not use the caller's token to successfully authenticate.
 
-Add the following to a local `.env` file in the root folder of this project (_you can extract the credentials from the dev k8s project namespace_).
+Copy the `example.env` file to `.env`, in the root folder of this project (_you can extract the credentials from the dev k8s project namespace_).
+```bash
+  cp example.env .env
+```
 
-N.B. you must escape any '$' characters with '\\$'
+N.B. you must escape any `$` characters with `\\$`
 
-
-| var                    | description                                                                                         | example value             |
-|------------------------|-----------------------------------------------------------------------------------------------------|---------------------------|
-| SYSTEM_CLIENT_ID       | system client id used for auth                                                                      | <no_example>              |
-| SYSTEM_CLIENT_SECRET   | system client secret used for auth                                                                  | <no_example>              |
-| DB_SERVER              | the host of the local DB (used by application.yaml <br/> and application-test.yaml)                 | localhost                 |
-| DB_NAME                | the name of the database (for local, <br/> it relates to the name docker compose uses)              | personal-relationships-db |
-| DB_USER                | the username for the database (for local, <br/> it relates to the user docker compose uses)         | contacts                  |
-| DB_PASS                | the password for the database (for local, <br/> it relates to the user docker compose uses)         | contacts                  |
-| DB_SSL_MODE            | the security of the database connection                                                             | prefer                    |
-| LOCAL_DB_PORT          | the port of of the database (for local, <br/> it relates to the user docker compose uses)           | 5772                      |
-| POSTGRES_TEST_DB_PORT  | the port the integration tests use (optional, set if you don't want it using the default 5432 port) | 5773                      |
-| DPR_USER               | <>                                                                                                  | dpr_user                  |
-| DPR_PASSWORD           | <>                                                                                                  | dpr_password              |
 
 Start up the docker dependencies using the docker-compose file in the `hmpps-personal-relationships-api` service. It will start 
 on the port set in your .env LOCAL_DB_PORT.
