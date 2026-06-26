@@ -59,14 +59,14 @@ N.B. you must escape any '$' characters with '\\$'
 Start up the docker dependencies using the docker-compose file in the `hmpps-personal-relationships-api` service. It will start 
 on the port set in your .env LOCAL_DB_PORT.
 
-```
+```bash
 docker compose up -d
 ```
 
 There is a script to help, which sets local profiles, port and DB connection properties to the
 values required.
 
-```
+```bash
 ./run-local.sh
 ```
 
@@ -92,7 +92,7 @@ You can configure the tests using the following system properties:
 Example:
 
 ```bash
-./gradlew gatlingRun -DAUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token -DCLIENT_ID='**REDACTED**' -DCLIENT_SECRET='**REDACTED**' -DBASE_URL=https://localhost:8080 -ENVIRONMENT_NAME=dev
+./gradlew gatlingRun -DAUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token -DCLIENT_ID='**REDACTED**' -DCLIENT_SECRET='**REDACTED**' -DBASE_URL=https://localhost:8080 -DENVIRONMENT_NAME=dev
 
 ```
 ```markdown
