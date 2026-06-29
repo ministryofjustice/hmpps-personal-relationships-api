@@ -72,13 +72,9 @@ class PrisonerContactSearchRepository(
         } else {
           cb.desc(contact.get<String>(property))
         }
-        // order date of birth with nulls as if they are the eldest.
+        // always order date of birth with nulls last
         if (property == PrisonerContactSummaryEntity::dateOfBirth.name && order is JpaOrder) {
-          order = if (it.isAscending) {
-            order.nullPrecedence(Nulls.FIRST)
-          } else {
             order.nullPrecedence(Nulls.LAST)
-          }
         }
         order
       }.toList()
