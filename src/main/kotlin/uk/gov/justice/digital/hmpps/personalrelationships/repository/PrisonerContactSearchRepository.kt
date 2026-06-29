@@ -67,14 +67,14 @@ class PrisonerContactSearchRepository(
     if (pageable.sort.isSorted) {
       val order = pageable.sort.map {
         val property = mapSortPropertiesOfPrisonerContactSearch(it.property)
-        var order: Order = if (it.isAscending) {
+        val order: Order = if (it.isAscending) {
           cb.asc(contact.get<String>(property))
         } else {
           cb.desc(contact.get<String>(property))
         }
         // always order date of birth with nulls last
         if (property == PrisonerContactSummaryEntity::dateOfBirth.name && order is JpaOrder) {
-            order.nullPrecedence(Nulls.LAST)
+          order.nullPrecedence(Nulls.LAST)
         }
         order
       }.toList()
