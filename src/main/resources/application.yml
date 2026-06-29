@@ -31,8 +31,6 @@ spring:
     generate-ddl: false
     hibernate:
       ddl-auto: none
-      order_by:
-        default_null_ordering: last
     properties:
       org.hibernate.envers.audit_table_suffix: _audit
       org.hibernate.envers.revision_field_name: rev_id
