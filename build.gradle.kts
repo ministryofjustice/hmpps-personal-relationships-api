@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.5.4"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.5.6"
   id("org.openapi.generator") version "7.23.0"
   id("io.gatling.gradle") version "3.15.1"
   kotlin("plugin.spring") version "2.4.0"
@@ -49,7 +49,7 @@ dependencies {
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
-  runtimeOnly("org.postgresql:postgresql:42.7.12")
+  runtimeOnly("org.postgresql:postgresql:42.7.13")
   implementation("org.hibernate.orm:hibernate-envers")
   implementation("org.springframework.data:spring-data-envers")
 
