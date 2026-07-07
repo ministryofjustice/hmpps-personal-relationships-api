@@ -461,7 +461,7 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  fun `should sort by date of birth with nulls as eldest`() {
+  fun `should sort by date of birth with nulls last`() {
     val prisonerNumber = "Z5678ZZ"
     stubPrisonSearchWithResponse(prisonerNumber)
     val relationship = ContactRelationship(
@@ -502,7 +502,7 @@ class GetPrisonerContactsIntegrationTest : SecureAPIIntegrationTestBase() {
 
     val resultsEldestFirst = getForUrl("/prisoner/$prisonerNumber/contact?sort=dateOfBirth,asc")
     assertThat(resultsEldestFirst.content).extracting("firstName").isEqualTo(
-      listOf("None", "Eldest", "Youngest"),
+      listOf("Eldest", "Youngest", "None"),
     )
 
     val resultsYoungestFirst = getForUrl("/prisoner/$prisonerNumber/contact?sort=dateOfBirth,desc")
