@@ -6,7 +6,10 @@ generic-service:
 
   ingress:
     host: personal-relationships-api-dev.hmpps.service.justice.gov.uk
-
+  
+  scheduledDowntime:
+    enabled: true
+  
   env:
     SENTRY_ENVIRONMENT: dev
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: "applicationinsights.dev.json"
