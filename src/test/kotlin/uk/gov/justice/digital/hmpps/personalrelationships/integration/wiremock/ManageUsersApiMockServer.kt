@@ -5,11 +5,12 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
 
 class ManageUsersApiMockServer : MockServer(8093) {
 
-  fun stubGetUser(user: UserDetails) {
+  fun stubGetUser(user: UserDetails, status: HttpStatus = HttpStatus.OK) {
     stubFor(
       WireMock.get("/users/${user.username}")
         .willReturn(
@@ -24,7 +25,7 @@ class ManageUsersApiMockServer : MockServer(8093) {
                 }
               """.trimIndent(),
             )
-            .withStatus(200),
+            .withStatus(status.value()),
         ),
     )
   }
