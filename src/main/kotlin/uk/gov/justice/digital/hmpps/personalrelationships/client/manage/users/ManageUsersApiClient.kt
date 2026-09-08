@@ -31,7 +31,6 @@ class ManageUsersApiClient(private val manageUsersApiWebClient: WebClient) {
         else ->
           log.warn("manage-users-api unavailable when looking up username: {}", username, ex)
       }
-      log.debug("Couldn't find user with username: {}", username)
       Mono.empty()
     }
     .block()

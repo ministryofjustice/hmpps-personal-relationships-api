@@ -29,14 +29,14 @@ class ManageUsersApiClientTest {
   }
 
   @Test
-  fun `should return fallback user on 503`() {
+  fun `should return null on 503`() {
     server.stubGetUser(UserDetails("USER1", "User One"), HttpStatus.SERVICE_UNAVAILABLE)
 
     assertThat(client.getUserByUsername("USER1")).isNull()
   }
 
   @Test
-  fun `should return fallback user on 504`() {
+  fun `should return null on 504`() {
     server.stubGetUser(UserDetails("USER1", "User One"), HttpStatus.GATEWAY_TIMEOUT)
 
     assertThat(client.getUserByUsername("USER1")).isNull()
