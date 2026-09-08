@@ -20,11 +20,17 @@ class ManageUsersApiClient(private val manageUsersApiWebClient: WebClient) {
     .uri("/users/{username}", username)
     .retrieve()
     .bodyToMono<UserDetails>()
-    .onErrorResume({ exception ->
-      exception is WebClientResponseException.ServiceUnavailable ||
-        exception is WebClientResponseException.GatewayTimeout ||
-        exception is WebClientResponseException.NotFound
-    }) {
+    .onErrorResume({ ex ->
+      ex is WebClientResponseException.NotFound ||
+        ex is WebClientResponseException.ServiceUnavailable ||
+        ex is WebClientResponseException.GatewayTimeout
+    }) { ex ->
+      when (ex) {
+        is WebClientResponseException.NotFound ->
+          log.debug("Couldn't find user with username: {}", username)
+        else ->
+          log.warn("manage-users-api unavailable when looking up username: {}", username, ex)
+      }
       log.debug("Couldn't find user with username: {}", username)
       Mono.empty()
     }
