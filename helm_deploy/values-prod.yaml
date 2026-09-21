@@ -14,8 +14,6 @@ generic-service:
 
   postgresDatabaseRestore:
     enabled: true
-    env:
-      FORCE_RUN: true
     namespace_secrets:
       rds-postgresql-instance-output:
         DB_NAME: "database_name"
