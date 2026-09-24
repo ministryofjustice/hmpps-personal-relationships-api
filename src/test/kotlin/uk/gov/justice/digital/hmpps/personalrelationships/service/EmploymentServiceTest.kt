@@ -42,7 +42,8 @@ class EmploymentServiceTest {
   private val contactRepository: ContactRepository = mock()
   private val employmentRepository: EmploymentRepository = mock()
   private val organisationService: OrganisationService = mock()
-  private val service = EmploymentService(contactRepository, employmentRepository, organisationService)
+  private val transactionalEmploymentService = TransactionalEmploymentService(contactRepository, employmentRepository, organisationService)
+  private val service = EmploymentService(organisationService, transactionalEmploymentService)
   private val user = aUser()
 
   @Test
