@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.personalrelationships.service
 
-import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.personalrelationships.client.organisationsapi.model.OrganisationSummary
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.EmploymentEntity
@@ -10,124 +8,58 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.internal.PatchEm
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.employment.PatchEmploymentsRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.employment.UpdateEmploymentRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.EmploymentDetails
-import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactRepository
-import uk.gov.justice.digital.hmpps.personalrelationships.repository.EmploymentRepository
-import java.time.LocalDateTime
 
 @Service
-@Transactional
 class EmploymentService(
-  private val contactRepository: ContactRepository,
-  private val employmentRepository: EmploymentRepository,
   private val organisationService: OrganisationService,
+  private val transactionalEmploymentService: TransactionalEmploymentService,
 ) {
 
-  fun patchEmployments(contactId: Long, request: PatchEmploymentsRequest, user: User): PatchEmploymentResult {
-    validateContactExists(contactId)
-    val createdIds = mutableListOf<Long>()
-    val updatedIds = mutableListOf<Long>()
-    val deletedIds = mutableListOf<Long>()
-    val existingEmployments = employmentRepository.findByContactId(contactId)
-    request.createEmployments.onEach { newEmployment ->
-      val created = employmentRepository.saveAndFlush(
-        EmploymentEntity(
-          employmentId = 0,
-          organisationId = newEmployment.organisationId,
-          contactId = contactId,
-          active = newEmployment.isActive,
-          createdBy = user.username,
-          createdTime = LocalDateTime.now(),
-          updatedBy = null,
-          updatedTime = null,
-        ),
-      )
-      createdIds.add(created.employmentId)
-    }
-    request.updateEmployments.onEach { updatedEmployment ->
-      val existingEmployment = existingEmployments.find { it.employmentId == updatedEmployment.employmentId }
-        ?: throw EntityNotFoundException("Employment with id ${updatedEmployment.employmentId} not found")
-      employmentRepository.saveAndFlush(
-        existingEmployment.copy(
-          organisationId = updatedEmployment.organisationId,
-          active = updatedEmployment.isActive,
-          updatedBy = user.username,
-          updatedTime = LocalDateTime.now(),
-        ),
-      )
-      updatedIds.add(updatedEmployment.employmentId)
-    }
-    request.deleteEmployments.onEach { deletedEmploymentId ->
-      val existingEmployment = existingEmployments.find { it.employmentId == deletedEmploymentId }
-        ?: throw EntityNotFoundException("Employment with id $deletedEmploymentId not found")
-      employmentRepository.delete(existingEmployment)
-      deletedIds.add(deletedEmploymentId)
-    }
-    return PatchEmploymentResult(
-      createdIds = createdIds,
-      updatedIds = updatedIds,
-      deletedIds = deletedIds,
-      employmentsAfterUpdate = getEmploymentDetails(contactId),
-    )
-  }
+  fun patchEmployments(contactId: Long, request: PatchEmploymentsRequest, user: User): PatchEmploymentResult = transactionalEmploymentService.patchEmployments(contactId, request, user)
 
-  fun getEmploymentDetails(contactId: Long) = employmentRepository.findByContactId(contactId).map { employment ->
-    val org = organisationService.getOrganisationSummaryById(employment.organisationId)
-    createEmploymentDetails(employment, org)
+  fun getEmploymentDetails(contactId: Long): List<EmploymentDetails> {
+    val employments = transactionalEmploymentService.getEmploymentEntities(contactId)
+    val organisations = employments
+      .map { it.organisationId }
+      .distinct()
+      .associateWith { organisationService.getOrganisationSummaryById(it) }
+
+    return employments.map { employment ->
+      createEmploymentDetails(employment, organisations.getValue(employment.organisationId))
+    }
   }
 
   fun getEmployment(contactId: Long, employmentId: Long): EmploymentDetails {
-    validateContactExists(contactId)
-    val employment = validateEmploymentExists(employmentId)
+    val employment = transactionalEmploymentService.getEmployment(contactId, employmentId)
     val org = organisationService.getOrganisationSummaryById(employment.organisationId)
     return createEmploymentDetails(employment, org)
   }
 
   fun createEmployment(contactId: Long, organisationId: Long, isActive: Boolean, createdBy: String): EmploymentDetails {
-    validateContactExists(contactId)
+    transactionalEmploymentService.validateContactExists(contactId)
     val organisation = validateOrganisationExists(organisationId)
-    val created = employmentRepository.saveAndFlush(
-      EmploymentEntity(
-        employmentId = 0,
-        organisationId = organisationId,
-        contactId = contactId,
-        active = isActive,
-        createdBy = createdBy,
-        createdTime = LocalDateTime.now(),
-        updatedBy = null,
-        updatedTime = null,
-      ),
+    val created = transactionalEmploymentService.createEmployment(
+      contactId = contactId,
+      organisationId = organisationId,
+      isActive = isActive,
+      createdBy = createdBy,
     )
     return createEmploymentDetails(created, organisation)
   }
 
   fun updateEmployment(contactId: Long, employmentId: Long, request: UpdateEmploymentRequest, user: User): EmploymentDetails {
-    validateContactExists(contactId)
+    transactionalEmploymentService.validateContactExists(contactId)
     val organisation = validateOrganisationExists(request.organisationId)
-    val originalEntity = validateEmploymentExists(employmentId)
-    val updated = employmentRepository.saveAndFlush(
-      originalEntity.copy(
-        organisationId = request.organisationId,
-        active = request.isActive,
-        updatedBy = user.username,
-        updatedTime = LocalDateTime.now(),
-      ),
+    val updated = transactionalEmploymentService.updateEmployment(
+      employmentId = employmentId,
+      organisationId = request.organisationId,
+      isActive = request.isActive,
+      updatedBy = user.username,
     )
     return createEmploymentDetails(updated, organisation)
   }
 
-  fun deleteEmployment(contactId: Long, employmentId: Long) {
-    validateContactExists(contactId)
-    val originalEntity = validateEmploymentExists(employmentId)
-    employmentRepository.delete(originalEntity)
-  }
-
-  private fun validateContactExists(contactId: Long) {
-    contactRepository.findById(contactId)
-      .orElseThrow { EntityNotFoundException("Contact ($contactId) not found") }
-  }
-
-  private fun validateEmploymentExists(employmentId: Long): EmploymentEntity = employmentRepository.findById(employmentId)
-    .orElseThrow { EntityNotFoundException("Employment ($employmentId) not found") }!!
+  fun deleteEmployment(contactId: Long, employmentId: Long) = transactionalEmploymentService.deleteEmployment(contactId, employmentId)
 
   private fun validateOrganisationExists(organisationId: Long): OrganisationSummary = organisationService.getOrganisationSummaryById(organisationId)
 
