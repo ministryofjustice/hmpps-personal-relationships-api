@@ -25,15 +25,17 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrict
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.service.PrisonerContactRelationshipService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.TransactionalPrisonerContactRelationshipService
 import java.time.LocalDate
 
 class PrisonerContactControllerTest {
 
   private val prisonerContactRelationshipService: PrisonerContactRelationshipService = mock()
+  private val transactionalPrisonerContactRelationshipService: TransactionalPrisonerContactRelationshipService = mock()
   private val contactFacade: ContactFacade = mock()
   private val prisonerContactRestrictionsFacade: PrisonerContactRestrictionsFacade = mock()
 
-  private val controller = PrisonerContactController(prisonerContactRelationshipService, contactFacade, prisonerContactRestrictionsFacade)
+  private val controller = PrisonerContactController(prisonerContactRelationshipService, transactionalPrisonerContactRelationshipService, contactFacade, prisonerContactRestrictionsFacade)
 
   @Nested
   inner class GetPrisonerContactRelationship {
