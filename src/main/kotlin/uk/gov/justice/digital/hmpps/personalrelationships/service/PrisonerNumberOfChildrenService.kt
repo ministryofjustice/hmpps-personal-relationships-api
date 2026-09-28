@@ -2,18 +2,17 @@ package uk.gov.justice.digital.hmpps.personalrelationships.service
 
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
-import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerNumberOfChildren
+import uk.gov.justice.digital.hmpps.personalrelationships.mapping.toModel
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateOrUpdatePrisonerNumberOfChildrenRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerNumberOfChildrenResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerNumberOfChildrenRepository
-import java.time.LocalDateTime
 
 @Service
 class PrisonerNumberOfChildrenService(
-  private val prisonerNumberOfChildrenRepository: PrisonerNumberOfChildrenRepository,
   private val prisonerService: PrisonerService,
+  private val prisonerNumberOfChildrenRepository: PrisonerNumberOfChildrenRepository,
+  private val txService: TransactionalPrisonerNumberOfChildrenService,
 ) {
   fun getNumberOfChildren(prisonerNumber: String): PrisonerNumberOfChildrenResponse = prisonerNumberOfChildrenActive(prisonerNumber)
     ?.toModel()
@@ -27,7 +26,6 @@ class PrisonerNumberOfChildrenService(
    * If no record exists:
    * - A new active record is created
    */
-  @Transactional
   fun createOrUpdateNumberOfChildren(
     prisonerNumber: String,
     request: CreateOrUpdatePrisonerNumberOfChildrenRequest,
@@ -36,35 +34,12 @@ class PrisonerNumberOfChildrenService(
     prisonerService.getPrisoner(prisonerNumber)
       ?: throw EntityNotFoundException("Prisoner number $prisonerNumber - not found")
 
-    // Find existing numberOfChildren, If exists, deactivate it
-    prisonerNumberOfChildrenActive(prisonerNumber)?.let {
-      val deactivatedNumberOfChildrenCount = it.copy(
-        active = false,
-      )
-      prisonerNumberOfChildrenRepository.save(deactivatedNumberOfChildrenCount)
-    }
+    val prisonerNumberOfChildrenActive = prisonerNumberOfChildrenActive(prisonerNumber)
 
-    // Create new active numberOfChildren
-    val newNumberOfChildren = PrisonerNumberOfChildren(
-      prisonerNumber = prisonerNumber,
-      numberOfChildren = request.numberOfChildren?.toString(),
-      createdBy = user.username,
-      createdTime = LocalDateTime.now(),
-      active = true,
-    )
-    // Save and return the new numberOfChildren
-    return prisonerNumberOfChildrenRepository.save(newNumberOfChildren).toModel()
+    return txService.createOrUpdateNumberOfChildren(prisonerNumber, prisonerNumberOfChildrenActive, request, user)
   }
 
   private fun prisonerNumberOfChildrenActive(prisonerNumber: String) = prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(
     prisonerNumber,
-  )
-
-  private fun PrisonerNumberOfChildren.toModel(): PrisonerNumberOfChildrenResponse = PrisonerNumberOfChildrenResponse(
-    id = prisonerNumberOfChildrenId,
-    numberOfChildren = numberOfChildren,
-    active = active,
-    createdTime = createdTime,
-    createdBy = createdBy,
   )
 }
