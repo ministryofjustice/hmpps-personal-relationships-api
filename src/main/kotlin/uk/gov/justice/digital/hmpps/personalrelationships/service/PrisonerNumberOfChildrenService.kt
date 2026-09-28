@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerNum
 class PrisonerNumberOfChildrenService(
   private val prisonerService: PrisonerService,
   private val prisonerNumberOfChildrenRepository: PrisonerNumberOfChildrenRepository,
-  private val txService: TransactionalPrisonerNumberOfChildrenService,
+  private val transactionalPrisonerNumberOfChildrenService: TransactionalPrisonerNumberOfChildrenService,
 ) {
   fun getNumberOfChildren(prisonerNumber: String): PrisonerNumberOfChildrenResponse = prisonerNumberOfChildrenActive(prisonerNumber)
     ?.toModel()
@@ -36,7 +36,7 @@ class PrisonerNumberOfChildrenService(
 
     val prisonerNumberOfChildrenActive = prisonerNumberOfChildrenActive(prisonerNumber)
 
-    return txService.createOrUpdateNumberOfChildren(prisonerNumber, prisonerNumberOfChildrenActive, request, user)
+    return transactionalPrisonerNumberOfChildrenService.createOrUpdateNumberOfChildren(prisonerNumber, prisonerNumberOfChildrenActive, request, user)
   }
 
   private fun prisonerNumberOfChildrenActive(prisonerNumber: String) = prisonerNumberOfChildrenRepository.findByPrisonerNumberAndActiveTrue(
