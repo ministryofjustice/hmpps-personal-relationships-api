@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.response.Prisone
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactsRestrictionsResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.RelationshipDeletePlan
 import uk.gov.justice.digital.hmpps.personalrelationships.service.PrisonerContactRelationshipService
+import uk.gov.justice.digital.hmpps.personalrelationships.service.TransactionalPrisonerContactRelationshipService
 import uk.gov.justice.digital.hmpps.personalrelationships.swagger.AuthApiResponses
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
@@ -47,6 +48,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 @AuthApiResponses
 class PrisonerContactController(
   private val prisonerContactRelationshipService: PrisonerContactRelationshipService,
+  private val transactionalPrisonerContactRelationshipService: TransactionalPrisonerContactRelationshipService,
   private val contactFacade: ContactFacade,
   private val prisonerContactRestrictionsFacade: PrisonerContactRestrictionsFacade,
 ) {
@@ -445,5 +447,5 @@ class PrisonerContactController(
     @RequestBody
     @Parameter(description = "The prisoner number and contact ID pairs to return relationships for", required = true)
     request: PrisonerContactRelationshipsRequest,
-  ): PrisonerContactRelationshipsResponse = prisonerContactRelationshipService.getSummaryRelationships(request)
+  ): PrisonerContactRelationshipsResponse = transactionalPrisonerContactRelationshipService.getSummaryRelationships(request)
 }

@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactRestrict
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.EmploymentEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerContactRestrictionDetailsEntity
+import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerContactSummaryEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.Address
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.CreateContactAddressRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.PatchContactAddressRequest
@@ -745,3 +746,57 @@ fun createPrisonerContactEntity(
 )
 
 fun aUser(username: String = "USER1", activeCaseLoadId: String? = null): User = User(username, activeCaseLoadId)
+
+fun makePrisonerContact(
+  prisonerContactId: Long,
+  contactId: Long,
+  dateOfBirth: LocalDate?,
+  firstName: String,
+  lastName: String,
+  active: Boolean = true,
+): PrisonerContactSummaryEntity = PrisonerContactSummaryEntity(
+  prisonerContactId,
+  contactId = contactId,
+  title = "MR",
+  titleDescription = "Mr",
+  firstName = firstName,
+  middleNames = "Any",
+  lastName = lastName,
+  dateOfBirth = dateOfBirth,
+  deceasedDate = null,
+  contactAddressId = 3L,
+  flat = "2B",
+  property = "123",
+  street = "Baker Street",
+  area = "Westminster",
+  cityCode = "SHEF",
+  cityDescription = "Sheffield",
+  countyCode = "SYORKS",
+  countyDescription = "South Yorkshire",
+  postCode = "NW1 6XE",
+  countryCode = "UK",
+  countryDescription = "United Kingdom",
+  noFixedAddress = false,
+  primaryAddress = false,
+  mailFlag = false,
+  contactPhoneId = 4L,
+  phoneType = "Mobile",
+  phoneTypeDescription = "Mobile Phone",
+  phoneNumber = "07123456789",
+  extNumber = "0123",
+  contactEmailId = 5L,
+  emailAddress = "john.doe@example.com",
+  prisonerNumber = "A1234BC",
+  relationshipToPrisoner = "FRIEND",
+  relationshipToPrisonerDescription = "Friend",
+  active = active,
+  approvedVisitor = true,
+  nextOfKin = false,
+  emergencyContact = false,
+  currentTerm = true,
+  comments = "No comments",
+  relationshipType = "S",
+  relationshipTypeDescription = "Social",
+  staffFlag = false,
+  approvedBy = "A_USER",
+)
