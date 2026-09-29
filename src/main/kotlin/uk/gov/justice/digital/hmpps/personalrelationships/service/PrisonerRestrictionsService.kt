@@ -4,17 +4,14 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PagedModel
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerRestrictionDetailsEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.mapping.sync.mapRestrictionsWithEnteredBy
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerRestrictionDetails
-import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerRestrictionDetailsRepository
 
 @Service
-@Transactional
 class PrisonerRestrictionsService(
-  private val prisonerRestrictionDetailsRepository: PrisonerRestrictionDetailsRepository,
   private val manageUsersService: ManageUsersService,
+  private val transactionalPrisonerRestrictionsService: TransactionalPrisonerRestrictionsService,
 ) {
 
   fun getPrisonerRestrictions(
@@ -44,7 +41,7 @@ class PrisonerRestrictionsService(
   }
 
   fun getPrisonerRestrictions(prisonerNumber: String): List<PrisonerRestrictionDetails> {
-    val restrictionsWithEnteredBy: Iterable<Pair<PrisonerRestrictionDetailsEntity, String>> = prisonerRestrictionDetailsRepository.findByPrisonerNumber(prisonerNumber)
+    val restrictionsWithEnteredBy: Iterable<Pair<PrisonerRestrictionDetailsEntity, String>> = transactionalPrisonerRestrictionsService.getPrisonerRestrictions(prisonerNumber)
       .map { entity -> entity to (entity.updatedBy ?: entity.createdBy) }
     val enteredByMap = restrictionsWithEnteredBy
       .map { (_, authorisedUsername) -> authorisedUsername }
