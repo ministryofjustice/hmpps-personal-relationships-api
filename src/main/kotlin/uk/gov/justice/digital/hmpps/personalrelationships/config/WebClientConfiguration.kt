@@ -12,11 +12,11 @@ import java.time.Duration
 @Configuration
 class WebClientConfiguration(
   @Value("\${api.base.url.hmpps-auth}") val hmppsAuthBaseUri: String,
-  @Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
+  @Value("\${api.health.timeout:2s}") val healthTimeout: Duration,
   @Value("\${api.base.url.prisoner-search}") val prisonerSearchBaseUri: String,
   @Value("\${api.base.url.manage-users}") val manageUsersBaseUri: String,
   @Value("\${api.base.url.organisations}") val organisationsBaseUri: String,
-  @Value("\${api.timeout:30s}") val timeout: Duration,
+  @Value("\${api.timeout:10s}") val timeout: Duration,
   private val builder: WebClient.Builder,
 ) {
   @Bean
