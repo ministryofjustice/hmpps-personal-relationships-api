@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.personalrelationships.service
 
 import jakarta.persistence.EntityNotFoundException
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
@@ -10,20 +8,11 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
-import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerDomesticStatus
-import uk.gov.justice.digital.hmpps.personalrelationships.entity.ReferenceCodeEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.helpers.aUser
 import uk.gov.justice.digital.hmpps.personalrelationships.helpers.isEqualTo
-import uk.gov.justice.digital.hmpps.personalrelationships.helpers.prisoner
-import uk.gov.justice.digital.hmpps.personalrelationships.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateOrUpdatePrisonerDomesticStatusRequest
-import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerDomesticStatusRepository
-import uk.gov.justice.digital.hmpps.personalrelationships.repository.ReferenceCodeRepository
-import java.time.LocalDateTime
 
 @ExtendWith(MockitoExtension::class)
 class PrisonerDomesticStatusServiceTest {
@@ -41,21 +30,21 @@ class PrisonerDomesticStatusServiceTest {
 
   private val user = aUser("test-user")
 
-    @Test
-    fun `should throws exception when prisoner doesn't exist`() {
-      // Given
-      val request = CreateOrUpdatePrisonerDomesticStatusRequest(
-        domesticStatusCode = "M",
-      )
-      whenever(prisonerService.getPrisoner(any())).thenReturn(null)
+  @Test
+  fun `should throws exception when prisoner doesn't exist`() {
+    // Given
+    val request = CreateOrUpdatePrisonerDomesticStatusRequest(
+      domesticStatusCode = "M",
+    )
+    whenever(prisonerService.getPrisoner(any())).thenReturn(null)
 
-      // When/Then
-      assertThrows<EntityNotFoundException> {
-        prisonerDomesticStatusService.createOrUpdateDomesticStatus(
-          prisonerNumber,
-          request,
-          user,
-        )
-      }.message isEqualTo "Prisoner number $prisonerNumber - not found"
-    }
+    // When/Then
+    assertThrows<EntityNotFoundException> {
+      prisonerDomesticStatusService.createOrUpdateDomesticStatus(
+        prisonerNumber,
+        request,
+        user,
+      )
+    }.message isEqualTo "Prisoner number $prisonerNumber - not found"
+  }
 }

@@ -40,12 +40,12 @@ class TransactionalPrisonerDomesticStatusServiceTest {
   private val prisonerNumber = "A1234BC"
 
   private val prisoner = Prisoner(
-  prisonerNumber,
-  prisonId = "TEST",
-  prisonName = "HMPPS Test",
-  lastName = "Doe",
-  firstName = "J",
-  middleNames = null
+    prisonerNumber,
+    prisonId = "TEST",
+    prisonName = "HMPPS Test",
+    lastName = "Doe",
+    firstName = "J",
+    middleNames = null,
   )
 
   private val user = aUser("test-user")
