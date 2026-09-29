@@ -8,7 +8,6 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
-import org.mockito.kotlin.times
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.personalrelationships.helpers.aUser
 import uk.gov.justice.digital.hmpps.personalrelationships.helpers.isEqualTo
