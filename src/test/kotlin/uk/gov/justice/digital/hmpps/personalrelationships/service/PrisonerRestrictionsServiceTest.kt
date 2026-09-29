@@ -6,15 +6,14 @@ import org.mockito.Mockito.mock
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerRestrictionDetailsEntity
-import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerRestrictionDetailsRepository
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 class PrisonerRestrictionsServiceTest {
 
-  private var prisonerRestrictionDetailsRepository: PrisonerRestrictionDetailsRepository = mock()
   private var manageUsersService: ManageUsersService = mock()
-  private var service: PrisonerRestrictionsService = PrisonerRestrictionsService(prisonerRestrictionDetailsRepository, manageUsersService)
+  private var transactionalPrisonerRestrictionsService: TransactionalPrisonerRestrictionsService = mock()
+  private var service: PrisonerRestrictionsService = PrisonerRestrictionsService(manageUsersService, transactionalPrisonerRestrictionsService)
 
   @Test
   fun `getPrisonerRestrictions returns all restrictions paged when currentTermOnly is false`() {
@@ -24,7 +23,7 @@ class PrisonerRestrictionsServiceTest {
       createPrisonerRestrictionEntity().copy(prisonerRestrictionId = 2L, currentTerm = false),
       createPrisonerRestrictionEntity().copy(prisonerRestrictionId = 3L, currentTerm = true),
     )
-    whenever(prisonerRestrictionDetailsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(restrictions)
+    whenever(transactionalPrisonerRestrictionsService.getPrisonerRestrictions(prisonerNumber)).thenReturn(restrictions)
 
     val pageable = PageRequest.of(0, 2)
     val result = service.getPrisonerRestrictions(prisonerNumber, currentTermOnly = false, pageable, paged = true)
@@ -42,7 +41,7 @@ class PrisonerRestrictionsServiceTest {
       createPrisonerRestrictionEntity().copy(prisonerRestrictionId = 2L, currentTerm = false),
       createPrisonerRestrictionEntity().copy(prisonerRestrictionId = 3L, currentTerm = true),
     )
-    whenever(prisonerRestrictionDetailsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(restrictions)
+    whenever(transactionalPrisonerRestrictionsService.getPrisonerRestrictions(prisonerNumber)).thenReturn(restrictions)
 
     val pageable = PageRequest.of(0, 10)
     val result = service.getPrisonerRestrictions(prisonerNumber, currentTermOnly = true, pageable, paged = true)
@@ -55,7 +54,7 @@ class PrisonerRestrictionsServiceTest {
   @Test
   fun `getPrisonerRestrictions returns empty when no restrictions exist`() {
     val prisonerNumber = "A1234BC"
-    whenever(prisonerRestrictionDetailsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(emptyList())
+    whenever(transactionalPrisonerRestrictionsService.getPrisonerRestrictions(prisonerNumber)).thenReturn(emptyList())
 
     val pageable = PageRequest.of(0, 10)
     val result = service.getPrisonerRestrictions(prisonerNumber, currentTermOnly = false, pageable, paged = true)
@@ -72,7 +71,7 @@ class PrisonerRestrictionsServiceTest {
       createPrisonerRestrictionEntity().copy(prisonerRestrictionId = 2L, currentTerm = false),
       createPrisonerRestrictionEntity().copy(prisonerRestrictionId = 3L, currentTerm = true),
     )
-    whenever(prisonerRestrictionDetailsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(restrictions)
+    whenever(transactionalPrisonerRestrictionsService.getPrisonerRestrictions(prisonerNumber)).thenReturn(restrictions)
 
     val pageable = PageRequest.of(0, 1)
     val result = service.getPrisonerRestrictions(prisonerNumber, currentTermOnly = false, pageable, paged = false)
