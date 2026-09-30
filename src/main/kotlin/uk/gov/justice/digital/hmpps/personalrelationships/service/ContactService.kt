@@ -15,15 +15,14 @@ import uk.gov.justice.digital.hmpps.personalrelationships.exception.Relationship
 import uk.gov.justice.digital.hmpps.personalrelationships.mapping.toEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.mapping.toModel
 import uk.gov.justice.digital.hmpps.personalrelationships.model.ReferenceCodeGroup
+import uk.gov.justice.digital.hmpps.personalrelationships.model.internal.ContactCreationContext
+import uk.gov.justice.digital.hmpps.personalrelationships.model.internal.ContactRelationshipReferenceData
 import uk.gov.justice.digital.hmpps.personalrelationships.model.internal.DeletedRelationshipIds
 import uk.gov.justice.digital.hmpps.personalrelationships.model.internal.DeletedResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.ContactRelationship
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.PatchRelationshipRequest
-import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.Address
-import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.CreateContactAddressRequest
-import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity.CreateMultipleIdentitiesRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactAuditEntry
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactCreationResult
@@ -59,10 +58,8 @@ class ContactService(
   private val contactIdentityDetailsRepository: ContactIdentityDetailsRepository,
   private val referenceCodeService: ReferenceCodeService,
   private val employmentService: EmploymentService,
-  private val contactIdentityService: ContactIdentityService,
-  private val contactAddressService: ContactAddressService,
-  private val contactPhoneService: ContactPhoneService,
-  private val contactEmailService: ContactEmailService,
+  private val transactionalContactService: TransactionalContactService,
+  private val contactCreationResultBuilder: ContactCreationResultBuilder,
   private val prisonerContactRestrictionRepository: PrisonerContactRestrictionRepository,
   private val deletedPrisonerContactRepository: DeletedPrisonerContactRepository,
   private val contactAuditHistoryRepository: ContactAuditHistoryRepository,
@@ -73,100 +70,36 @@ class ContactService(
 
   private val internalOfficialTypes = listOf("POM", "COM", "CA", "RO", "CUSPO", "CUSPO2", "OFS", "PPA", "PROB")
 
-  @Transactional
   fun createContact(request: CreateContactRequest, user: User): ContactCreationResult {
-    if (request.relationship != null) {
-      validateNewRelationship(request.relationship)
+    val relationshipReferenceData = request.relationship?.let { validateNewRelationship(it) }
+    val title = validateOptionalCode(request.titleCode, ReferenceCodeGroup.TITLE)
+    val gender = validateOptionalCode(request.genderCode, ReferenceCodeGroup.GENDER)
+    val language = validateOptionalCode(request.languageCode, ReferenceCodeGroup.LANGUAGE)
+    val domesticStatus = validateOptionalCode(request.domesticStatusCode, ReferenceCodeGroup.DOMESTIC_STS)
+    val organisations = request.employments.associate { employment ->
+      employment.organisationId to employmentService.validateOrganisationExists(employment.organisationId)
     }
-    validateOptionalCode(request.titleCode, ReferenceCodeGroup.TITLE)
-    validateOptionalCode(request.genderCode, ReferenceCodeGroup.GENDER)
-    validateOptionalCode(request.languageCode, ReferenceCodeGroup.LANGUAGE)
-    validateOptionalCode(request.domesticStatusCode, ReferenceCodeGroup.DOMESTIC_STS)
-
-    val newContact = request.toModel(user)
-    val createdContact = contactRepository.saveAndFlush(newContact)
-    val newRelationship = request.relationship?.toEntity(createdContact.id(), user.username)
-      ?.let { prisonerContactRepository.saveAndFlush(it) }
-
-    createIdentityInformation(createdContact, request, user)
-    createAddresses(createdContact.id(), request.addresses, user)
-    createPhoneNumbers(request, createdContact, user)
-    createEmailAddresses(request, createdContact, user)
-    createEmployments(request, createdContact, user)
-
-    logger.info("Created new contact {}", createdContact)
-    newRelationship?.let { logger.info("Created new relationship {}", newRelationship) }
-    return ContactCreationResult(
-      enrichContact(createdContact),
-      newRelationship?.let { enrichRelationship(newRelationship) },
+    // Retain enrichment data so response building needs no post-commit API reads.
+    val context = ContactCreationContext(
+      title = title,
+      gender = gender,
+      language = language,
+      domesticStatus = domesticStatus,
+      relationship = relationshipReferenceData,
+      organisations = organisations,
     )
-  }
 
-  private fun createPhoneNumbers(
-    request: CreateContactRequest,
-    createdContact: ContactEntity,
-    user: User,
-  ) {
-    if (request.phoneNumbers.isNotEmpty()) {
-      contactPhoneService.createMultiple(createdContact.id(), user.username, request.phoneNumbers)
-    }
-  }
+    // Capture the database-backed response snapshot inside the transaction so read failures roll it back.
+    val creationResult = transactionalContactService.createContact(request, user)
 
-  private fun createEmailAddresses(
-    request: CreateContactRequest,
-    createdContact: ContactEntity,
-    user: User,
-  ) {
-    if (request.emailAddresses.isNotEmpty()) {
-      contactEmailService.createMultiple(createdContact.id(), user.username, request.emailAddresses)
-    }
-  }
-
-  private fun createEmployments(
-    request: CreateContactRequest,
-    createdContact: ContactEntity,
-    user: User,
-  ) {
-    request.employments.forEach { employment ->
-      employmentService.createEmployment(
-        createdContact.id(),
-        employment.organisationId,
-        employment.isActive,
-        user.username,
-      )
-    }
+    logger.info("Created new contact {}", creationResult.contact)
+    creationResult.relationship?.let { logger.info("Created new relationship {}", it) }
+    // Build from retained data only, avoiding fallible enrichment reads after commit.
+    return contactCreationResultBuilder.build(creationResult, context)
   }
 
   fun getContact(id: Long): ContactDetails? = contactRepository.findById(id).getOrNull()
     ?.let { enrichContact(it) }
-
-  private fun createAddresses(contactId: Long, addresses: List<Address>, user: User) {
-    addresses.forEach { address ->
-      contactAddressService.create(
-        contactId,
-        CreateContactAddressRequest(
-          addressType = address.addressType,
-          primaryAddress = address.primaryAddress,
-          flat = address.flat,
-          property = address.property,
-          street = address.street,
-          area = address.area,
-          cityCode = address.cityCode,
-          countyCode = address.countyCode,
-          postcode = address.postcode,
-          countryCode = address.countryCode,
-          verified = address.verified,
-          mailFlag = address.mailFlag,
-          startDate = address.startDate,
-          endDate = address.endDate,
-          noFixedAddress = address.noFixedAddress,
-          phoneNumbers = address.phoneNumbers,
-          comments = address.comments,
-        ),
-        user,
-      )
-    }
-  }
 
   fun getContactName(id: Long): ContactNameDetails? = contactRepository.findById(id).getOrNull()
     ?.let { contactEntity ->
@@ -204,19 +137,20 @@ class ContactService(
 
   private fun validateOptionalCode(code: String?, group: ReferenceCodeGroup): ReferenceCode? = code?.let { referenceCodeService.validateReferenceCode(group, it, false) }
 
-  private fun validateNewRelationship(relationship: ContactRelationship) {
+  private fun validateNewRelationship(relationship: ContactRelationship): ContactRelationshipReferenceData {
     prisonerService.getPrisoner(relationship.prisonerNumber)
       ?: throw EntityNotFoundException("Prisoner (${relationship.prisonerNumber}) could not be found")
-    referenceCodeService.validateReferenceCode(
+    val relationshipType = referenceCodeService.validateReferenceCode(
       ReferenceCodeGroup.RELATIONSHIP_TYPE,
       relationship.relationshipTypeCode,
       allowInactive = false,
     )
-    validateRelationshipToPrisoner(
+    val relationshipToPrisoner = validateRelationshipToPrisoner(
       relationship.relationshipTypeCode,
       relationship.relationshipToPrisonerCode,
       allowInactive = false,
     )
+    return ContactRelationshipReferenceData(relationshipType, relationshipToPrisoner)
   }
 
   private fun enrichContact(contactEntity: ContactEntity): ContactDetails {
@@ -524,13 +458,11 @@ class ContactService(
     relationshipType: String?,
     relationshipToPrisoner: String,
     allowInactive: Boolean,
-  ) {
-    referenceCodeService.validateReferenceCode(
-      referenceCodeGroupForRelationshipType(relationshipType),
-      relationshipToPrisoner,
-      allowInactive,
-    )
-  }
+  ): ReferenceCode = referenceCodeService.validateReferenceCode(
+    referenceCodeGroupForRelationshipType(relationshipType),
+    relationshipToPrisoner,
+    allowInactive,
+  )
 
   private fun referenceCodeGroupForRelationshipType(relationshipType: String?): ReferenceCodeGroup {
     val groupCodeForRelationship = when (relationshipType) {
@@ -577,40 +509,34 @@ class ContactService(
     }
   }
 
-  private fun createIdentityInformation(
-    createdContact: ContactEntity,
-    request: CreateContactRequest,
-    user: User,
-  ) {
-    if (request.identities.isNotEmpty()) {
-      contactIdentityService.createMultiple(
-        createdContact.id(),
-        CreateMultipleIdentitiesRequest(identities = request.identities),
-        user,
-      )
-    }
-  }
-
-  private fun enrichRelationship(relationship: PrisonerContactEntity): PrisonerContactRelationshipDetails = PrisonerContactRelationshipDetails(
-    prisonerContactId = relationship.prisonerContactId,
-    contactId = relationship.contactId,
-    prisonerNumber = relationship.prisonerNumber,
-    relationshipTypeCode = relationship.relationshipType,
+  private fun enrichRelationship(relationship: PrisonerContactEntity): PrisonerContactRelationshipDetails = relationship.toDetails(
     relationshipTypeDescription = referenceCodeService.getReferenceDataByGroupAndCode(
       ReferenceCodeGroup.RELATIONSHIP_TYPE,
       relationship.relationshipType,
     )?.description ?: relationship.relationshipType,
-    relationshipToPrisonerCode = relationship.relationshipToPrisoner,
     relationshipToPrisonerDescription = referenceCodeService.getReferenceDataByGroupAndCode(
       referenceCodeGroupForRelationshipType(relationship.relationshipType),
       relationship.relationshipToPrisoner,
     )?.description ?: relationship.relationshipToPrisoner,
-    isEmergencyContact = relationship.emergencyContact,
-    isNextOfKin = relationship.nextOfKin,
-    isApprovedVisitor = relationship.approvedVisitor,
-    isRelationshipActive = relationship.active,
-    comments = relationship.comments,
-    approvedBy = relationship.approvedBy,
+  )
+
+  private fun PrisonerContactEntity.toDetails(
+    relationshipTypeDescription: String,
+    relationshipToPrisonerDescription: String,
+  ) = PrisonerContactRelationshipDetails(
+    prisonerContactId = prisonerContactId,
+    contactId = contactId,
+    prisonerNumber = prisonerNumber,
+    relationshipTypeCode = relationshipType,
+    relationshipTypeDescription = relationshipTypeDescription,
+    relationshipToPrisonerCode = relationshipToPrisoner,
+    relationshipToPrisonerDescription = relationshipToPrisonerDescription,
+    isEmergencyContact = emergencyContact,
+    isNextOfKin = nextOfKin,
+    isApprovedVisitor = approvedVisitor,
+    isRelationshipActive = active,
+    comments = comments,
+    approvedBy = approvedBy,
   )
 
   @Transactional

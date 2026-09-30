@@ -9,9 +9,13 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
@@ -23,6 +27,8 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.request.identity
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.phone.PhoneNumber
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactCreationResult
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ContactDetails
+import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactAddressDetailsRepository
+import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.ContactAddressInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.ContactAddressPhoneInfo
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.ContactEmailInfo
@@ -39,6 +45,12 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
 class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
+
+  @Autowired
+  private lateinit var contactRepository: ContactRepository
+
+  @MockitoSpyBean
+  private lateinit var contactAddressDetailsRepository: ContactAddressDetailsRepository
 
   @BeforeEach
   fun setUp() {
@@ -389,6 +401,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @Test
   fun `should rollback if addresses or address phones are invalid`() {
+    val contactCountBeforeRequest = contactRepository.count()
     val addressWithInvalidPhone = Address(
       addressType = "HOME",
       primaryAddress = false,
@@ -424,9 +437,30 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Validation failure: Unsupported phone type (FOO)")
+    assertThat(contactRepository.count()).isEqualTo(contactCountBeforeRequest)
     stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_CREATED)
     stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_ADDRESS_CREATED)
     stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED)
+  }
+
+  @Test
+  fun `should rollback if creating the local response snapshot fails`() {
+    val contactCountBeforeRequest = contactRepository.count()
+    doThrow(RuntimeException("Snapshot failed"))
+      .whenever(contactAddressDetailsRepository)
+      .findByContactId(any())
+
+    webTestClient.post()
+      .uri("/contact")
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisationUsingCurrentUser())
+      .bodyValue(aMinimalCreateContactRequest())
+      .exchange()
+      .expectStatus().is5xxServerError
+
+    assertThat(contactRepository.count()).isEqualTo(contactCountBeforeRequest)
+    stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_CREATED)
   }
 
   @Test
@@ -599,6 +633,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
   @Test
   fun `should rollback if employments are invalid`() {
+    val contactCountBeforeRequest = contactRepository.count()
     stubOrganisationSummaryNotFound(1)
     val invalid = Employment(
       organisationId = 1,
@@ -618,6 +653,7 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).isEqualTo("Entity not found : Organisation with id 1 not found")
+    assertThat(contactRepository.count()).isEqualTo(contactCountBeforeRequest)
     stubEvents.assertHasNoEvents(event = OutboundEvent.CONTACT_CREATED)
     stubEvents.assertHasNoEvents(event = OutboundEvent.EMPLOYMENT_CREATED)
   }

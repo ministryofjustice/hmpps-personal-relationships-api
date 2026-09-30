@@ -61,7 +61,7 @@ class EmploymentService(
 
   fun deleteEmployment(contactId: Long, employmentId: Long) = transactionalEmploymentService.deleteEmployment(contactId, employmentId)
 
-  private fun validateOrganisationExists(organisationId: Long): OrganisationSummary = organisationService.getOrganisationSummaryById(organisationId)
+  fun validateOrganisationExists(organisationId: Long): OrganisationSummary = organisationService.getOrganisationSummaryById(organisationId)
 
   private fun createEmploymentDetails(
     employment: EmploymentEntity,

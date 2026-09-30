@@ -12,6 +12,7 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.ArgumentMatchers.eq
+import org.mockito.Mockito.inOrder
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
@@ -86,6 +87,22 @@ class ContactServiceTest {
   private val contactAddressService: ContactAddressService = mock()
   private val contactPhoneService: ContactPhoneService = mock()
   private val contactEmailService: ContactEmailService = mock()
+  private val transactionalEmploymentService: TransactionalEmploymentService = mock()
+  private val transactionalContactService = TransactionalContactService(
+    contactRepository,
+    prisonerContactRepository,
+    contactIdentityService,
+    contactAddressService,
+    contactPhoneService,
+    contactEmailService,
+    transactionalEmploymentService,
+    contactAddressDetailsRepository,
+    contactAddressPhoneRepository,
+    contactPhoneDetailsRepository,
+    contactEmailRepository,
+    contactIdentityDetailsRepository,
+  )
+  private val contactCreationResultBuilder = ContactCreationResultBuilder()
   private val prisonerContactRestrictionRepository: PrisonerContactRestrictionRepository = mock()
   private val deletedPrisonerContactRepository: DeletedPrisonerContactRepository = mock()
   private val contactHistoryRepository: ContactAuditHistoryRepository = mock()
@@ -100,10 +117,8 @@ class ContactServiceTest {
     contactIdentityDetailsRepository,
     referenceCodeService,
     employmentService,
-    contactIdentityService,
-    contactAddressService,
-    contactPhoneService,
-    contactEmailService,
+    transactionalContactService,
+    contactCreationResultBuilder,
     prisonerContactRestrictionRepository,
     deletedPrisonerContactRepository,
     contactHistoryRepository,
@@ -232,8 +247,13 @@ class ContactServiceTest {
 
       verify(contactPhoneService).createMultiple(123L, user.username, listOf(phoneNumber))
       verify(contactEmailService).createMultiple(123L, user.username, listOf(EmailAddress("test@example.com")))
-      verify(employmentService).createEmployment(123L, 1, true, user.username)
-      verify(employmentService).createEmployment(123L, 2, false, user.username)
+      inOrder(employmentService, transactionalEmploymentService).apply {
+        verify(employmentService).validateOrganisationExists(1)
+        verify(employmentService).validateOrganisationExists(2)
+        verify(transactionalEmploymentService).createEmployment(123L, 1, true, user.username)
+        verify(transactionalEmploymentService).createEmployment(123L, 2, false, user.username)
+      }
+      verify(employmentService, never()).getEmploymentDetails(any())
     }
 
     @Test
@@ -376,6 +396,7 @@ class ContactServiceTest {
       )
       whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
+      mockRelationshipTypeReferenceCode(relationshipType)
       val referenceCode = ReferenceCode(1, expectedReferenceCodeGroup, "FRI", "Friend", 1, true)
       whenever(referenceCodeService.getReferenceDataByGroupAndCode(expectedReferenceCodeGroup, "FRI")).thenReturn(
         referenceCode,
@@ -433,6 +454,7 @@ class ContactServiceTest {
       )
       whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
+      mockRelationshipTypeReferenceCode("S")
       val referenceCode = ReferenceCode(1, ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "FRI", "Friend", 1, true)
       whenever(referenceCodeService.getReferenceDataByGroupAndCode(ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "FRI")).thenReturn(
         referenceCode,
@@ -608,6 +630,23 @@ class ContactServiceTest {
     }
 
     @Test
+    fun `should not create a contact when organisation validation fails`() {
+      val request = CreateContactRequest(
+        lastName = "last",
+        firstName = "first",
+        employments = listOf(Employment(1, true)),
+      )
+      whenever(employmentService.validateOrganisationExists(1)).thenThrow(RuntimeException("Bang!"))
+
+      assertThrows<RuntimeException>("Bang!") {
+        service.createContact(request, user)
+      }
+
+      verify(contactRepository, never()).saveAndFlush(any())
+      verify(transactionalEmploymentService, never()).createEmployment(any(), any(), any(), any())
+    }
+
+    @Test
     fun `should propagate exceptions creating a contact with employments`() {
       val request = CreateContactRequest(
         lastName = "last",
@@ -615,7 +654,7 @@ class ContactServiceTest {
         employments = listOf(Employment(1, true)),
       )
       whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
-      whenever(employmentService.createEmployment(any(), any(), any(), any())).thenThrow(RuntimeException("Bang!"))
+      whenever(transactionalEmploymentService.createEmployment(any(), any(), any(), any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
         service.createContact(request, user)
@@ -638,6 +677,14 @@ class ContactServiceTest {
         ),
       )
       whenever(prisonerService.getPrisoner(any())).thenReturn(prisoner("A1234BC", prisonId = "MDI"))
+      mockRelationshipTypeReferenceCode("S")
+      whenever(
+        referenceCodeService.validateReferenceCode(
+          ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
+          "FRI",
+          allowInactive = false,
+        ),
+      ).thenReturn(ReferenceCode(1, ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "FRI", "Friend", 1, true))
       whenever(contactRepository.saveAndFlush<ContactEntity>(any())).thenAnswer { i -> (i.arguments[0] as ContactEntity).copy(contactId = 123) }
       whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenThrow(RuntimeException("Bang!"))
 
@@ -984,6 +1031,7 @@ class ContactServiceTest {
       )
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
       whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
+      mockRelationshipTypeReferenceCode("S")
       val referenceCode = ReferenceCode(1, ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "MOT", "Mother", 1, true)
       whenever(
         referenceCodeService.getReferenceDataByGroupAndCode(
@@ -1887,6 +1935,17 @@ class ContactServiceTest {
     ).thenReturn(
       ReferenceCode(1, ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "BRO", "Brother", 1, true),
     )
+  }
+
+  private fun mockRelationshipTypeReferenceCode(relationshipType: String) {
+    val description = if (relationshipType == "S") "Social" else "Official"
+    whenever(
+      referenceCodeService.validateReferenceCode(
+        ReferenceCodeGroup.RELATIONSHIP_TYPE,
+        relationshipType,
+        allowInactive = false,
+      ),
+    ).thenReturn(ReferenceCode(1, ReferenceCodeGroup.RELATIONSHIP_TYPE, relationshipType, description, 1, true))
   }
 
   @Nested
