@@ -37,7 +37,7 @@ class EmploymentService(
 
   fun createEmployment(contactId: Long, organisationId: Long, isActive: Boolean, createdBy: String): EmploymentDetails {
     transactionalEmploymentService.validateContactExists(contactId)
-    val organisation = validateOrganisationExists(organisationId)
+    val organisation = validateOrganisationExists(organisationId) // TODO: API call here
     val created = transactionalEmploymentService.createEmployment(
       contactId = contactId,
       organisationId = organisationId,
