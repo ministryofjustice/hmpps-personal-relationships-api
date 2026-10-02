@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.personalrelationships.entity.DeletedPrisoner
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerContactEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicateRelationshipException
 import uk.gov.justice.digital.hmpps.personalrelationships.exception.RelationshipCannotBeRemovedDueToDependencyException
-import uk.gov.justice.digital.hmpps.personalrelationships.mapping.toEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.mapping.toModel
 import uk.gov.justice.digital.hmpps.personalrelationships.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.personalrelationships.model.internal.ContactCreationContext
@@ -114,25 +113,13 @@ class ContactService(
       )
     }
 
-  @Transactional
   fun addContactRelationship(request: AddContactRelationshipRequest, user: User): PrisonerContactRelationshipDetails {
-    validateNewRelationship(request.relationship)
-    getContact(request.contactId) ?: throw EntityNotFoundException("Contact (${request.contactId}) could not be found")
-    if (prisonerContactRepository.findDuplicateRelationships(
-        request.relationship.prisonerNumber,
-        request.contactId,
-        request.relationship.relationshipToPrisonerCode,
-      ).isNotEmpty()
-    ) {
-      throw DuplicateRelationshipException(
-        request.relationship.prisonerNumber,
-        request.contactId,
-        request.relationship.relationshipToPrisonerCode,
-      )
-    }
-    val newRelationship = request.relationship.toEntity(request.contactId, user.username)
-    prisonerContactRepository.saveAndFlush(newRelationship)
-    return enrichRelationship(newRelationship)
+    val relationshipReferenceData = validateNewRelationship(request.relationship)
+    val newRelationship = transactionalContactService.addContactRelationship(request, user)
+    return newRelationship.toDetails(
+      relationshipTypeDescription = relationshipReferenceData.relationshipType.description,
+      relationshipToPrisonerDescription = relationshipReferenceData.relationshipToPrisoner.description,
+    )
   }
 
   private fun validateOptionalCode(code: String?, group: ReferenceCodeGroup): ReferenceCode? = code?.let { referenceCodeService.validateReferenceCode(group, it, false) }

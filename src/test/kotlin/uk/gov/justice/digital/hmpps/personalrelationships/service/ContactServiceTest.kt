@@ -1005,6 +1005,14 @@ class ContactServiceTest {
       comments = "Foo",
     )
     private val request = AddContactRelationshipRequest(contactId, relationship)
+    private val relationshipToPrisonerReference = ReferenceCode(
+      1,
+      ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
+      "MOT",
+      "Mother",
+      1,
+      true,
+    )
     private val contact = ContactEntity(
       contactId = contactId,
       title = null,
@@ -1023,31 +1031,11 @@ class ContactServiceTest {
       val relationship = relationship.copy(isApprovedVisitor = updatingApprovedVisitor)
       val request = AddContactRelationshipRequest(contactId, relationship)
 
-      whenever(prisonerService.getPrisoner(any())).thenReturn(
-        prisoner(
-          request.relationship.prisonerNumber,
-          prisonId = "MDI",
-        ),
-      )
+      mockValidRelationship()
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
       whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenAnswer { i -> i.arguments[0] }
-      mockRelationshipTypeReferenceCode("S")
-      val referenceCode = ReferenceCode(1, ReferenceCodeGroup.SOCIAL_RELATIONSHIP, "MOT", "Mother", 1, true)
-      whenever(
-        referenceCodeService.getReferenceDataByGroupAndCode(
-          ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
-          "MOT",
-        ),
-      ).thenReturn(referenceCode)
-      whenever(
-        referenceCodeService.validateReferenceCode(
-          ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
-          "MOT",
-          allowInactive = false,
-        ),
-      ).thenReturn(referenceCode)
 
-      service.addContactRelationship(request, user)
+      val result = service.addContactRelationship(request, user)
 
       val prisonerContactCaptor = argumentCaptor<PrisonerContactEntity>()
       verify(prisonerContactRepository).saveAndFlush(prisonerContactCaptor.capture())
@@ -1067,11 +1055,27 @@ class ContactServiceTest {
           assertThat(approvedTime).isNull()
         }
       }
-      verify(referenceCodeService).validateReferenceCode(
-        ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
-        "MOT",
-        allowInactive = false,
-      )
+      assertThat(result.relationshipTypeDescription).isEqualTo("Social")
+      assertThat(result.relationshipToPrisonerDescription).isEqualTo("Mother")
+      verify(referenceCodeService, never()).getReferenceDataByGroupAndCode(any(), any())
+      verify(employmentService, never()).getEmploymentDetails(any())
+
+      inOrder(prisonerService, referenceCodeService, contactRepository, prisonerContactRepository).apply {
+        verify(prisonerService).getPrisoner("A1234BC")
+        verify(referenceCodeService).validateReferenceCode(
+          ReferenceCodeGroup.RELATIONSHIP_TYPE,
+          "S",
+          allowInactive = false,
+        )
+        verify(referenceCodeService).validateReferenceCode(
+          ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
+          "MOT",
+          allowInactive = false,
+        )
+        verify(contactRepository).findById(contactId)
+        verify(prisonerContactRepository).findDuplicateRelationships("A1234BC", contactId, "MOT")
+        verify(prisonerContactRepository).saveAndFlush(any())
+      }
     }
 
     @Test
@@ -1085,27 +1089,43 @@ class ContactServiceTest {
 
     @Test
     fun `should blow up if contact not found`() {
+      mockValidRelationship()
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.empty())
 
-      assertThrows<EntityNotFoundException>("Contact ($contactId) could not be found") {
+      val exception = assertThrows<EntityNotFoundException> {
         service.addContactRelationship(request, user)
       }
+
+      assertThat(exception.message).isEqualTo("Contact ($contactId) could not be found")
+      verify(prisonerContactRepository, never()).saveAndFlush(any())
     }
 
     @Test
     fun `should propagate exceptions adding a relationship`() {
-      whenever(prisonerService.getPrisoner(any())).thenReturn(
-        prisoner(
-          request.relationship.prisonerNumber,
-          prisonId = "MDI",
-        ),
-      )
+      mockValidRelationship()
       whenever(contactRepository.findById(contactId)).thenReturn(Optional.of(contact))
       whenever(prisonerContactRepository.saveAndFlush<PrisonerContactEntity>(any())).thenThrow(RuntimeException("Bang!"))
 
       assertThrows<RuntimeException>("Bang!") {
         service.addContactRelationship(request, user)
       }
+    }
+
+    private fun mockValidRelationship() {
+      whenever(prisonerService.getPrisoner(any())).thenReturn(
+        prisoner(
+          request.relationship.prisonerNumber,
+          prisonId = "MDI",
+        ),
+      )
+      mockRelationshipTypeReferenceCode("S")
+      whenever(
+        referenceCodeService.validateReferenceCode(
+          ReferenceCodeGroup.SOCIAL_RELATIONSHIP,
+          "MOT",
+          allowInactive = false,
+        ),
+      ).thenReturn(relationshipToPrisonerReference)
     }
   }
 
