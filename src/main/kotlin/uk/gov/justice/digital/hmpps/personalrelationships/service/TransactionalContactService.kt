@@ -1,12 +1,16 @@
 package uk.gov.justice.digital.hmpps.personalrelationships.service
 
+import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactEntity
+import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerContactEntity
+import uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicateRelationshipException
 import uk.gov.justice.digital.hmpps.personalrelationships.mapping.toEntity
 import uk.gov.justice.digital.hmpps.personalrelationships.mapping.toModel
 import uk.gov.justice.digital.hmpps.personalrelationships.model.internal.TransactionalContactCreationResult
+import uk.gov.justice.digital.hmpps.personalrelationships.model.request.AddContactRelationshipRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.Address
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.CreateContactAddressRequest
@@ -56,6 +60,29 @@ class TransactionalContactService(
       emails = contactEmailRepository.findByContactId(createdContact.id()),
       identities = contactIdentityDetailsRepository.findByContactId(createdContact.id()),
       employments = transactionalEmploymentService.getEmploymentEntities(createdContact.id()),
+    )
+  }
+
+  @Transactional
+  fun addContactRelationship(request: AddContactRelationshipRequest, user: User): PrisonerContactEntity {
+    contactRepository.findById(request.contactId)
+      .orElseThrow { EntityNotFoundException("Contact (${request.contactId}) could not be found") }
+
+    if (prisonerContactRepository.findDuplicateRelationships(
+        request.relationship.prisonerNumber,
+        request.contactId,
+        request.relationship.relationshipToPrisonerCode,
+      ).isNotEmpty()
+    ) {
+      throw DuplicateRelationshipException(
+        request.relationship.prisonerNumber,
+        request.contactId,
+        request.relationship.relationshipToPrisonerCode,
+      )
+    }
+
+    return prisonerContactRepository.saveAndFlush(
+      request.relationship.toEntity(request.contactId, user.username),
     )
   }
 
