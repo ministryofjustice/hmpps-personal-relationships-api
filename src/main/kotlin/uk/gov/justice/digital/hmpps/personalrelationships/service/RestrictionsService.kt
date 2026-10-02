@@ -4,10 +4,6 @@ import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
-import uk.gov.justice.digital.hmpps.personalrelationships.entity.ContactRestrictionEntity
-import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerContactEntity
-import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerContactRestrictionEntity
-import uk.gov.justice.digital.hmpps.personalrelationships.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.CreateContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.CreatePrisonerContactRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.UpdateContactRestrictionRequest
@@ -21,26 +17,20 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.response.Prisone
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactRestrictions
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerContactsRestrictionsResponse
-import uk.gov.justice.digital.hmpps.personalrelationships.model.response.ReferenceCode
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactRestrictionDetailsRepository
-import uk.gov.justice.digital.hmpps.personalrelationships.repository.ContactRestrictionRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerContactRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerContactRestrictionDetailsRepository
-import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerContactRestrictionRepository
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Service
 class RestrictionsService(
   private val contactRestrictionDetailsRepository: ContactRestrictionDetailsRepository,
-  private val contactRestrictionRepository: ContactRestrictionRepository,
   private val contactRepository: ContactRepository,
   private val prisonerContactRepository: PrisonerContactRepository,
   private val prisonerContactRestrictionDetailsRepository: PrisonerContactRestrictionDetailsRepository,
-  private val prisonerContactRestrictionRepository: PrisonerContactRestrictionRepository,
-  private val referenceCodeService: ReferenceCodeService,
   private val manageUsersService: ManageUsersService,
+  private val transactionalRestrictionsService: TransactionalRestrictionsService,
 ) {
 
   fun getGlobalRestrictionsForContact(contactId: Long): List<ContactRestrictionDetails> {
@@ -168,23 +158,14 @@ class RestrictionsService(
     request: CreateContactRestrictionRequest,
     user: User,
   ): ContactRestrictionDetails {
-    validateContactExists(contactId)
     validateExpiryDateBeforeStartDate(request.startDate, request.expiryDate)
-
-    val type = referenceCodeService.validateReferenceCode(ReferenceCodeGroup.RESTRICTION, request.restrictionType, allowInactive = false)
-    val created = contactRestrictionRepository.saveAndFlush(
-      ContactRestrictionEntity(
-        contactRestrictionId = 0,
-        contactId = contactId,
-        restrictionType = request.restrictionType,
-        startDate = request.startDate,
-        expiryDate = request.expiryDate,
-        comments = request.comments,
-        createdBy = user.username,
-        createdTime = LocalDateTime.now(),
-      ),
+    val enteredByDisplayName = getUserDisplayName(user.username)
+    return transactionalRestrictionsService.createContactGlobalRestriction(
+      contactId,
+      request,
+      user,
+      enteredByDisplayName,
     )
-    return contactRestrictionDetails(created, type)
   }
 
   private fun validateExpiryDateBeforeStartDate(startDate: LocalDate, expiryDate: LocalDate?) {
@@ -199,44 +180,14 @@ class RestrictionsService(
     request: UpdateContactRestrictionRequest,
     user: User,
   ): ContactRestrictionDetails {
-    validateContactExists(contactId)
     validateExpiryDateBeforeStartDate(request.startDate, request.expiryDate)
-    val contactRestriction = contactRestrictionRepository.findById(contactRestrictionId)
-      .orElseThrow { EntityNotFoundException("Contact restriction ($contactRestrictionId) could not be found") }
-    val type = referenceCodeService.validateReferenceCode(ReferenceCodeGroup.RESTRICTION, request.restrictionType, allowInactive = true)
-    val updated = contactRestrictionRepository.saveAndFlush(
-      contactRestriction.copy(
-        restrictionType = request.restrictionType,
-        startDate = request.startDate,
-        expiryDate = request.expiryDate,
-        comments = request.comments,
-        updatedBy = user.username,
-        updatedTime = LocalDateTime.now(),
-      ),
-    )
-    return contactRestrictionDetails(updated, type)
-  }
-
-  private fun contactRestrictionDetails(
-    entity: ContactRestrictionEntity,
-    type: ReferenceCode,
-  ): ContactRestrictionDetails {
-    val enteredByUsername = entity.updatedBy ?: entity.createdBy
-    val enteredByDisplayName = manageUsersService.getUserByUsername(enteredByUsername)?.name ?: enteredByUsername
-    return ContactRestrictionDetails(
-      contactRestrictionId = entity.contactRestrictionId,
-      contactId = entity.contactId,
-      restrictionType = entity.restrictionType,
-      restrictionTypeDescription = type.description,
-      startDate = entity.startDate,
-      expiryDate = entity.expiryDate,
-      comments = entity.comments,
-      enteredByUsername = enteredByUsername,
-      enteredByDisplayName = enteredByDisplayName,
-      createdBy = entity.createdBy,
-      createdTime = entity.createdTime,
-      updatedBy = entity.updatedBy,
-      updatedTime = entity.updatedTime,
+    val enteredByDisplayName = getUserDisplayName(user.username)
+    return transactionalRestrictionsService.updateContactGlobalRestriction(
+      contactId,
+      contactRestrictionId,
+      request,
+      user,
+      enteredByDisplayName,
     )
   }
 
@@ -245,22 +196,13 @@ class RestrictionsService(
     request: CreatePrisonerContactRestrictionRequest,
     user: User,
   ): PrisonerContactRestrictionDetails {
-    val relationship = prisonerContactRepository.findById(prisonerContactId)
-      .orElseThrow { EntityNotFoundException("Prisoner contact ($prisonerContactId) could not be found") }
-    val type = referenceCodeService.validateReferenceCode(ReferenceCodeGroup.RESTRICTION, request.restrictionType, allowInactive = false)
-    val created = prisonerContactRestrictionRepository.saveAndFlush(
-      PrisonerContactRestrictionEntity(
-        prisonerContactRestrictionId = 0,
-        prisonerContactId = prisonerContactId,
-        restrictionType = request.restrictionType,
-        startDate = request.startDate,
-        expiryDate = request.expiryDate,
-        comments = request.comments,
-        createdBy = user.username,
-        createdTime = LocalDateTime.now(),
-      ),
+    val enteredByDisplayName = getUserDisplayName(user.username)
+    return transactionalRestrictionsService.createPrisonerContactRestriction(
+      prisonerContactId,
+      request,
+      user,
+      enteredByDisplayName,
     )
-    return prisonerContactRestrictionDetails(created, relationship, type)
   }
 
   fun updatePrisonerContactRestriction(
@@ -269,49 +211,17 @@ class RestrictionsService(
     request: UpdatePrisonerContactRestrictionRequest,
     user: User,
   ): PrisonerContactRestrictionDetails {
-    val relationship = prisonerContactRepository.findById(prisonerContactId)
-      .orElseThrow { EntityNotFoundException("Prisoner contact ($prisonerContactId) could not be found") }
-    val prisonerContactRestriction = prisonerContactRestrictionRepository.findById(prisonerContactRestrictionId)
-      .orElseThrow { EntityNotFoundException("Prisoner contact restriction ($prisonerContactRestrictionId) could not be found") }
-    val type = referenceCodeService.validateReferenceCode(ReferenceCodeGroup.RESTRICTION, request.restrictionType, allowInactive = true)
-    val updated = prisonerContactRestrictionRepository.saveAndFlush(
-      prisonerContactRestriction.copy(
-        restrictionType = request.restrictionType,
-        startDate = request.startDate,
-        expiryDate = request.expiryDate,
-        comments = request.comments,
-        updatedBy = user.username,
-        updatedTime = LocalDateTime.now(),
-      ),
+    val enteredByDisplayName = getUserDisplayName(user.username)
+    return transactionalRestrictionsService.updatePrisonerContactRestriction(
+      prisonerContactId,
+      prisonerContactRestrictionId,
+      request,
+      user,
+      enteredByDisplayName,
     )
-    return prisonerContactRestrictionDetails(updated, relationship, type)
   }
 
-  private fun prisonerContactRestrictionDetails(
-    entity: PrisonerContactRestrictionEntity,
-    relationship: PrisonerContactEntity,
-    type: ReferenceCode,
-  ): PrisonerContactRestrictionDetails {
-    val enteredByUsername = entity.updatedBy ?: entity.createdBy
-    val enteredByDisplayName = manageUsersService.getUserByUsername(enteredByUsername)?.name ?: enteredByUsername
-    return PrisonerContactRestrictionDetails(
-      prisonerContactRestrictionId = entity.prisonerContactRestrictionId,
-      prisonerContactId = entity.prisonerContactId,
-      contactId = relationship.contactId,
-      prisonerNumber = relationship.prisonerNumber,
-      restrictionType = entity.restrictionType,
-      restrictionTypeDescription = type.description,
-      startDate = entity.startDate,
-      expiryDate = entity.expiryDate,
-      comments = entity.comments,
-      enteredByUsername = enteredByUsername,
-      enteredByDisplayName = enteredByDisplayName,
-      createdBy = entity.createdBy,
-      createdTime = entity.createdTime,
-      updatedBy = entity.updatedBy,
-      updatedTime = entity.updatedTime,
-    )
-  }
+  private fun getUserDisplayName(username: String) = manageUsersService.getUserByUsername(username)?.name ?: username
 
   private fun validateContactExists(contactId: Long) {
     contactRepository.findById(contactId)

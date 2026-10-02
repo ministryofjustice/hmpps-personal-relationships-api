@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
+import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -80,15 +81,20 @@ class RestrictionsServiceTest {
   private val prisonerContactRestrictionRepository: PrisonerContactRestrictionRepository = mock()
   private val referenceCodeService: ReferenceCodeService = mock()
   private val manageUsersService: ManageUsersService = mock()
-  private val service = RestrictionsService(
-    contactRestrictionDetailsRepository,
+  private val transactionalRestrictionsService = TransactionalRestrictionsService(
     contactRestrictionRepository,
     contactRepository,
     prisonerContactRepository,
-    prisonerContactRestrictionDetailsRepository,
     prisonerContactRestrictionRepository,
     referenceCodeService,
+  )
+  private val service = RestrictionsService(
+    contactRestrictionDetailsRepository,
+    contactRepository,
+    prisonerContactRepository,
+    prisonerContactRestrictionDetailsRepository,
     manageUsersService,
+    transactionalRestrictionsService,
   )
 
   @Nested
@@ -438,6 +444,18 @@ class RestrictionsServiceTest {
         service.createContactGlobalRestriction(contactId, aCreateGlobalRestrictionRequest(), user)
       }
       assertThat(exception.message).isEqualTo("Contact (99) could not be found")
+    }
+
+    @Test
+    fun `should not create global restriction if user lookup fails`() {
+      whenever(manageUsersService.getUserByUsername(user.username)).thenThrow(RuntimeException("Bang!"))
+
+      assertThrows<RuntimeException> {
+        service.createContactGlobalRestriction(contactId, aCreateGlobalRestrictionRequest(), user)
+      }
+
+      verify(contactRepository, never()).findById(any())
+      verify(contactRestrictionRepository, never()).saveAndFlush(any())
     }
 
     @Test
