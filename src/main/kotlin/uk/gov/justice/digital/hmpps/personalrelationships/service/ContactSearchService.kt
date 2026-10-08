@@ -299,6 +299,13 @@ class ContactSearchService(
       }
     }
 
+    if (request.searchType == UserSearchType.PARTIAL && request.previousNames == true && !contactIdsProvided) {
+      val suppliedNames = listOfNotNull(request.lastName, request.firstName, request.middleNames)
+      require(suppliedNames.all { it.trim().length >= 3 }) {
+        "Names must be 3 or more characters for partial previous-name searches"
+      }
+    }
+
     require(contactIdsProvided || request.dateOfBirth != null || nameProvided) {
       "Either contact ID, contact IDs, date of birth or a full or partial name must be provided for contact searches"
     }

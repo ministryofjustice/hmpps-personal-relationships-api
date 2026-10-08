@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.personalrelationships.service
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.Mockito.mock
@@ -170,6 +171,23 @@ class ContactSearchServiceTest {
     fun `Should choose search by date of birth and names match and history`() {
       val request2 = request.copy(dateOfBirth = LocalDate.of(1980, 1, 1), previousNames = true)
       assertThat(service.determineSearchType(request2)).isEqualTo(ContactSearchType.DATE_OF_BIRTH_AND_NAMES_MATCH_AND_HISTORY)
+    }
+
+    @Test
+    fun `Should reject partial previous-name searches shorter than three characters when date of birth is supplied`() {
+      val request = request.copy(
+        lastName = "qx",
+        firstName = null,
+        middleNames = null,
+        dateOfBirth = LocalDate.of(1980, 1, 1),
+        previousNames = true,
+      )
+
+      val exception = assertThrows<IllegalArgumentException> {
+        service.searchContacts(request, PageRequest.of(0, 10))
+      }
+
+      assertThat(exception.message).isEqualTo("Names must be 3 or more characters for partial previous-name searches")
     }
 
     @Test

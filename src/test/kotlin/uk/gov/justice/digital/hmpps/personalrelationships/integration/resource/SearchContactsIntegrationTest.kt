@@ -730,6 +730,36 @@ class SearchContactsIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(errors.developerMessage).contains("Last name must be 2 or more characters")
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = ["lastName", "firstName", "middleNames"])
+  fun `should reject partial previous-name searches shorter than three characters`(nameParameter: String) {
+    val uri: URI = UriComponentsBuilder.fromPath("contact/search")
+      .queryParam("searchType", "PARTIAL")
+      .queryParam(nameParameter, "qx")
+      .queryParam("previousNames", "true")
+      .build()
+      .toUri()
+
+    val errors = testAPIClient.getBadResponseErrors(uri)
+
+    assertThat(errors.developerMessage).contains("Names must be 3 or more characters for partial previous-name searches")
+  }
+
+  @Test
+  fun `should reject partial previous-name searches shorter than three characters when date of birth is supplied`() {
+    val uri: URI = UriComponentsBuilder.fromPath("contact/search")
+      .queryParam("searchType", "PARTIAL")
+      .queryParam("lastName", "qx")
+      .queryParam("dateOfBirth", "01/01/1980")
+      .queryParam("previousNames", "true")
+      .build()
+      .toUri()
+
+    val errors = testAPIClient.getBadResponseErrors(uri)
+
+    assertThat(errors.developerMessage).contains("Names must be 3 or more characters for partial previous-name searches")
+  }
+
   @Test
   fun `should get bad request when searched with no required search parameters`() {
     val uri: URI = UriComponentsBuilder.fromPath("contact/search")
