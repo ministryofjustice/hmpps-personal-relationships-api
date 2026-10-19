@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.EnumSource
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
@@ -142,6 +143,27 @@ class ContactSearchServiceTest {
         Sort.Order.asc("date_of_birth"),
         Sort.Order.asc("contact_id"),
       )
+    }
+
+    @ParameterizedTest
+    @EnumSource(Sort.Direction::class)
+    fun `NAMES_MATCH maps the id sort alias without adding a conflicting tie breaker`(direction: Sort.Direction) {
+      val pageable = PageRequest.of(0, 10, Sort.by(direction, "id"))
+      val captorPageable = argumentCaptor<Pageable>()
+
+      whenever(contactSearchRepository.findAllByNamesMatch(any(), any(), any(), any(), any()))
+        .thenReturn(PageImpl(emptyList<Long>(), pageable, 0))
+
+      service.searchContacts(request, pageable)
+
+      verify(contactSearchRepository).findAllByNamesMatch(
+        eq(request.firstName),
+        eq(request.middleNames),
+        eq(request.lastName),
+        eq(service.rowLimiter),
+        captorPageable.capture(),
+      )
+      assertThat(captorPageable.firstValue.sort.toList()).containsExactly(Sort.Order(direction, "contact_id"))
     }
 
     @Test
