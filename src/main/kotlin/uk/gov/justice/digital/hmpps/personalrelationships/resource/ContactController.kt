@@ -196,7 +196,11 @@ class ContactController(
    * The search controller
    */
   @GetMapping("/search")
-  @Operation(summary = "Search contacts", description = "Search contacts by name, date of birth, contact ID or list of contactIds")
+  @Operation(
+    summary = "Search contacts",
+    description = "Search contacts by name, date of birth, contact ID or list of contactIds. " +
+      "Partial name searches without a date of birth are limited to the configured number of matching contacts (2,000 by default), before sorting and pagination.",
+  )
   @ApiResponses(
     value = [
       ApiResponse(

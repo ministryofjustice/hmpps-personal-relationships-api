@@ -179,6 +179,7 @@ class ContactSearchService(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
+          rowLimiter,
           pageable,
         )
       }

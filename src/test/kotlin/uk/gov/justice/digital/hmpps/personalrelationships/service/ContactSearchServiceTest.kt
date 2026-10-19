@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.EnumSource
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
@@ -108,6 +109,64 @@ class ContactSearchServiceTest {
     fun `Should choose search by date of birth and names sound like`() {
       val request2 = request.copy(dateOfBirth = LocalDate.of(1980, 1, 1), searchType = UserSearchType.SOUNDS_LIKE)
       assertThat(service.determineSearchType(request2)).isEqualTo(ContactSearchType.DATE_OF_BIRTH_AND_NAMES_SOUND_LIKE)
+    }
+
+    @Test
+    fun `NAMES_MATCH uses the configured row limit and preserves entity pagination and sort`() {
+      val cappedService = ContactSearchService(
+        prisonerContactSummaryRepository,
+        contactSearchRepository,
+        contactWithAddressRepository,
+        rowLimiter = 23,
+      )
+      val pageable = PageRequest.of(2, 10, Sort.by(Sort.Order.desc("lastName"), Sort.Order.asc("firstName"), Sort.Order.asc("dateOfBirth")))
+      val request = request.copy(firstName = " first ", middleNames = " middle ", lastName = " last ")
+      val captorPageable = argumentCaptor<Pageable>()
+
+      whenever(contactSearchRepository.findAllByNamesMatch(any(), any(), any(), any(), any()))
+        .thenReturn(PageImpl(emptyList<Long>(), pageable, 0))
+
+      cappedService.searchContacts(request, pageable)
+
+      verify(contactSearchRepository).findAllByNamesMatch(
+        eq("first"),
+        eq("middle"),
+        eq("last"),
+        eq(23),
+        captorPageable.capture(),
+      )
+      assertThat(captorPageable.firstValue.pageNumber).isEqualTo(2)
+      assertThat(captorPageable.firstValue.pageSize).isEqualTo(10)
+      assertThat(captorPageable.firstValue.sort.toList()).containsExactly(
+        Sort.Order.desc("lastName"),
+        Sort.Order.asc("firstName"),
+        Sort.Order.asc("dateOfBirth"),
+        Sort.Order.asc("contactId"),
+      )
+    }
+
+    @ParameterizedTest
+    @EnumSource(Sort.Direction::class)
+    fun `NAMES_MATCH preserves the id sort alias for the entity query`(direction: Sort.Direction) {
+      val pageable = PageRequest.of(0, 10, Sort.by(direction, "id"))
+      val captorPageable = argumentCaptor<Pageable>()
+
+      whenever(contactSearchRepository.findAllByNamesMatch(any(), any(), any(), any(), any()))
+        .thenReturn(PageImpl(emptyList<Long>(), pageable, 0))
+
+      service.searchContacts(request, pageable)
+
+      verify(contactSearchRepository).findAllByNamesMatch(
+        eq(request.firstName),
+        eq(request.middleNames),
+        eq(request.lastName),
+        eq(service.rowLimiter),
+        captorPageable.capture(),
+      )
+      assertThat(captorPageable.firstValue.sort.toList()).containsExactly(
+        Sort.Order(direction, "id"),
+        Sort.Order.asc("contactId"),
+      )
     }
 
     @Test
