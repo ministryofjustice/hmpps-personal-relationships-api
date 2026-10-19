@@ -2,11 +2,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.11"
-  id("org.openapi.generator") version "7.25.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.12"
+  id("org.openapi.generator") version "7.26.0"
   id("io.gatling.gradle") version "3.16.0"
-  kotlin("plugin.spring") version "2.4.20"
-  kotlin("plugin.jpa") version "2.4.20"
+  kotlin("plugin.spring") version "2.4.21"
+  kotlin("plugin.jpa") version "2.4.21"
 }
 
 allOpen {
@@ -38,7 +38,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-flyway")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.1")
-  implementation("io.sentry:sentry-spring-boot-4-starter:8.59.0")
+  implementation("io.sentry:sentry-spring-boot-4-starter:8.61.0")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.openapitools:jackson-databind-nullable:0.2.12")
   implementation("org.apache.logging.log4j:log4j-api:2.26.1")
@@ -49,7 +49,7 @@ dependencies {
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
-  runtimeOnly("org.postgresql:postgresql:42.7.13")
+  runtimeOnly("org.postgresql:postgresql:42.7.14")
   implementation("org.hibernate.orm:hibernate-envers")
   implementation("org.springframework.data:spring-data-envers")
 
@@ -71,7 +71,7 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers-postgresql:2.0.5")
   testImplementation("org.testcontainers:testcontainers-localstack:2.0.5")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
-  testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.66.0")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-testing:1.67.0")
 }
 
 tasks {
