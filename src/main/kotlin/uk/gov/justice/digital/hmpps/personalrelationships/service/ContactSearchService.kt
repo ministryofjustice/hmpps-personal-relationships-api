@@ -43,18 +43,12 @@ class ContactSearchService(
   fun searchContacts(request: ContactSearchRequest, pageable: Pageable): Page<ContactSearchResultItem> {
     validateRequest(request)
 
-    val normalizedSort = Sort.by(
-      pageable.sort.map { order ->
-        if (order.property == "id") order.withProperty("contactId") else order
-      }.toList(),
-    )
-
     // force adding contactId sort to the pageable as without it the same contactId is encountered across multiple pages.
     // only append the contactId sort if it is not already present
-    val sortWithId = if (normalizedSort.getOrderFor("contactId") == null) {
-      normalizedSort.and(Sort.by("contactId").ascending())
+    val sortWithId = if (pageable.sort.getOrderFor("contactId") == null) {
+      pageable.sort.and(Sort.by("contactId").ascending())
     } else {
-      normalizedSort
+      pageable.sort
     }
     val pageableWithIdSort = PageRequest.of(
       pageable.pageNumber,
@@ -181,14 +175,12 @@ class ContactSearchService(
 
       NAMES_MATCH -> {
         logger.info("NAMES_MATCH search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
-        val nativePageable = PageRequest.of(pageable.pageNumber, pageable.pageSize, manipulateSortToNative(pageable.sort))
-
         contactSearchRepository.findAllByNamesMatch(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
           rowLimiter,
-          nativePageable,
+          pageable,
         )
       }
 

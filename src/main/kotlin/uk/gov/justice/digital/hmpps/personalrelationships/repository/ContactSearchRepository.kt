@@ -75,34 +75,34 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
   )
   fun findAllByNamesExact(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
+  // Hibernate requires ordering for a limited HQL subquery. A constant keeps candidate selection unordered.
   @Query(
     """
-      with filtered_contacts AS (
-        select c.contact_id
-        from contact c
-        where (:lastName is null or c.last_name ilike '%'||:lastName||'%' escape '#')
-        and (:firstName is null or c.first_name ilike '%'||:firstName||'%' escape '#')
-        and (:middleNames is null or c.middle_names ilike '%'||:middleNames||'%' escape '#')
+      select c.contactId
+      from ContactEntity c
+      where c.contactId in (
+        select matching.contactId
+        from ContactEntity matching
+        where (:lastName is null or matching.lastName ilike %:lastName% escape '#')
+        and (:firstName is null or matching.firstName ilike %:firstName% escape '#')
+        and (:middleNames is null or matching.middleNames ilike %:middleNames% escape '#')
+        order by cast(null as integer)
         limit :rowLimiter
       )
-      select c.contact_id
-      from contact c
-      where c.contact_id in (select contact_id from filtered_contacts)
     """,
     countQuery = """
-      with filtered_contacts AS (
-        select c.contact_id
-        from contact c
-        where (:lastName is null or c.last_name ilike '%'||:lastName||'%' escape '#')
-        and (:firstName is null or c.first_name ilike '%'||:firstName||'%' escape '#')
-        and (:middleNames is null or c.middle_names ilike '%'||:middleNames||'%' escape '#')
+      select count(c.contactId)
+      from ContactEntity c
+      where c.contactId in (
+        select matching.contactId
+        from ContactEntity matching
+        where (:lastName is null or matching.lastName ilike %:lastName% escape '#')
+        and (:firstName is null or matching.firstName ilike %:firstName% escape '#')
+        and (:middleNames is null or matching.middleNames ilike %:middleNames% escape '#')
+        order by cast(null as integer)
         limit :rowLimiter
       )
-      select count(c.contact_id) as count
-      from contact c
-      where c.contact_id in (select contact_id from filtered_contacts)
     """,
-    nativeQuery = true,
   )
   fun findAllByNamesMatch(firstName: String?, middleNames: String?, lastName: String?, rowLimiter: Int, pageable: Pageable): Page<Long>
 

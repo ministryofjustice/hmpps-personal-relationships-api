@@ -112,7 +112,7 @@ class ContactSearchServiceTest {
     }
 
     @Test
-    fun `NAMES_MATCH uses the configured row limit and converts pagination and sort for the native query`() {
+    fun `NAMES_MATCH uses the configured row limit and preserves entity pagination and sort`() {
       val cappedService = ContactSearchService(
         prisonerContactSummaryRepository,
         contactSearchRepository,
@@ -138,16 +138,16 @@ class ContactSearchServiceTest {
       assertThat(captorPageable.firstValue.pageNumber).isEqualTo(2)
       assertThat(captorPageable.firstValue.pageSize).isEqualTo(10)
       assertThat(captorPageable.firstValue.sort.toList()).containsExactly(
-        Sort.Order.desc("last_name"),
-        Sort.Order.asc("first_name"),
-        Sort.Order.asc("date_of_birth"),
-        Sort.Order.asc("contact_id"),
+        Sort.Order.desc("lastName"),
+        Sort.Order.asc("firstName"),
+        Sort.Order.asc("dateOfBirth"),
+        Sort.Order.asc("contactId"),
       )
     }
 
     @ParameterizedTest
     @EnumSource(Sort.Direction::class)
-    fun `NAMES_MATCH maps the id sort alias without adding a conflicting tie breaker`(direction: Sort.Direction) {
+    fun `NAMES_MATCH preserves the id sort alias for the entity query`(direction: Sort.Direction) {
       val pageable = PageRequest.of(0, 10, Sort.by(direction, "id"))
       val captorPageable = argumentCaptor<Pageable>()
 
@@ -163,7 +163,10 @@ class ContactSearchServiceTest {
         eq(service.rowLimiter),
         captorPageable.capture(),
       )
-      assertThat(captorPageable.firstValue.sort.toList()).containsExactly(Sort.Order(direction, "contact_id"))
+      assertThat(captorPageable.firstValue.sort.toList()).containsExactly(
+        Sort.Order(direction, "id"),
+        Sort.Order.asc("contactId"),
+      )
     }
 
     @Test
