@@ -175,11 +175,14 @@ class ContactSearchService(
 
       NAMES_MATCH -> {
         logger.info("NAMES_MATCH search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
+        val nativePageable = PageRequest.of(pageable.pageNumber, pageable.pageSize, manipulateSortToNative(pageable.sort))
+
         contactSearchRepository.findAllByNamesMatch(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
-          pageable,
+          rowLimiter,
+          nativePageable,
         )
       }
 

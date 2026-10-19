@@ -77,14 +77,34 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
 
   @Query(
     """
-    select c.contactId
-    from ContactEntity c
-    where (:lastName is null or c.lastName ilike %:lastName% escape '#')
-      and (:firstName is null or c.firstName ilike %:firstName% escape '#')
-      and (:middleNames is null or c.middleNames ilike %:middleNames% escape '#')
+      with filtered_contacts AS (
+        select c.contact_id
+        from contact c
+        where (:lastName is null or c.last_name ilike '%'||:lastName||'%' escape '#')
+        and (:firstName is null or c.first_name ilike '%'||:firstName||'%' escape '#')
+        and (:middleNames is null or c.middle_names ilike '%'||:middleNames||'%' escape '#')
+        limit :rowLimiter
+      )
+      select c.contact_id
+      from contact c
+      where c.contact_id in (select contact_id from filtered_contacts)
     """,
+    countQuery = """
+      with filtered_contacts AS (
+        select c.contact_id
+        from contact c
+        where (:lastName is null or c.last_name ilike '%'||:lastName||'%' escape '#')
+        and (:firstName is null or c.first_name ilike '%'||:firstName||'%' escape '#')
+        and (:middleNames is null or c.middle_names ilike '%'||:middleNames||'%' escape '#')
+        limit :rowLimiter
+      )
+      select count(c.contact_id) as count
+      from contact c
+      where c.contact_id in (select contact_id from filtered_contacts)
+    """,
+    nativeQuery = true,
   )
-  fun findAllByNamesMatch(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
+  fun findAllByNamesMatch(firstName: String?, middleNames: String?, lastName: String?, rowLimiter: Int, pageable: Pageable): Page<Long>
 
   @Query(
     """

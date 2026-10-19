@@ -111,6 +111,40 @@ class ContactSearchServiceTest {
     }
 
     @Test
+    fun `NAMES_MATCH uses the configured row limit and converts pagination and sort for the native query`() {
+      val cappedService = ContactSearchService(
+        prisonerContactSummaryRepository,
+        contactSearchRepository,
+        contactWithAddressRepository,
+        rowLimiter = 23,
+      )
+      val pageable = PageRequest.of(2, 10, Sort.by(Sort.Order.desc("lastName"), Sort.Order.asc("firstName"), Sort.Order.asc("dateOfBirth")))
+      val request = request.copy(firstName = " first ", middleNames = " middle ", lastName = " last ")
+      val captorPageable = argumentCaptor<Pageable>()
+
+      whenever(contactSearchRepository.findAllByNamesMatch(any(), any(), any(), any(), any()))
+        .thenReturn(PageImpl(emptyList<Long>(), pageable, 0))
+
+      cappedService.searchContacts(request, pageable)
+
+      verify(contactSearchRepository).findAllByNamesMatch(
+        eq("first"),
+        eq("middle"),
+        eq("last"),
+        eq(23),
+        captorPageable.capture(),
+      )
+      assertThat(captorPageable.firstValue.pageNumber).isEqualTo(2)
+      assertThat(captorPageable.firstValue.pageSize).isEqualTo(10)
+      assertThat(captorPageable.firstValue.sort.toList()).containsExactly(
+        Sort.Order.desc("last_name"),
+        Sort.Order.asc("first_name"),
+        Sort.Order.asc("date_of_birth"),
+        Sort.Order.asc("contact_id"),
+      )
+    }
+
+    @Test
     fun `NAMES_SOUND_LIKE_AND_HISTORY uses rowLimiter and converts sort to snake_case`() {
       val pageable = PageRequest.of(0, 10, Sort.by("lastName", "firstName", "dateOfBirth"))
       val request = request.copy(
