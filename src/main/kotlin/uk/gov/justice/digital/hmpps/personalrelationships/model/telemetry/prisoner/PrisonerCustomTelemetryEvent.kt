@@ -13,10 +13,6 @@ abstract class PrisonerCustomTelemetryEvent(open val prisonerNumber: String, val
       "prisoner_number" to prisonerNumber,
     )
 
-    if (user.activeCaseLoadId != null) {
-      properties["active_caseload_id"] = user.activeCaseLoadId
-    }
-
     return properties.toMap() + customProperties()
   }
 
