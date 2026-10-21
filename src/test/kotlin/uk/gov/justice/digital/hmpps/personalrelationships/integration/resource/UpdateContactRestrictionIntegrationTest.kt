@@ -203,11 +203,11 @@ class UpdateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_UPDATED,
-      additionalInfo = ContactRestrictionInfo(updated.contactRestrictionId, Source.DPS, "updated", "BXI"),
+      additionalInfo = ContactRestrictionInfo(updated.contactRestrictionId, Source.DPS, "updated", null),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"), "CCTV")
+    assertCustomEvent(updated, Source.DPS, User("updated"), "CCTV")
   }
 
   @ParameterizedTest
@@ -244,11 +244,11 @@ class UpdateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_UPDATED,
-      additionalInfo = ContactRestrictionInfo(updated.contactRestrictionId, Source.DPS, "updated", "BXI"),
+      additionalInfo = ContactRestrictionInfo(updated.contactRestrictionId, Source.DPS, "updated", null),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"), "CCTV")
+    assertCustomEvent(updated, Source.DPS, User("updated"), "CCTV")
   }
 
   companion object {
@@ -273,7 +273,6 @@ class UpdateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A contact restriction has been updated",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to updatedContactRestrictionDetails.contactId.toString(),
         "contact_restriction_id" to updatedContactRestrictionDetails.contactRestrictionId.toString(),
         "restriction_code" to restrictionType,

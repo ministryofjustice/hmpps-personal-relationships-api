@@ -200,7 +200,7 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
 
   @Test
   fun `should update the restriction with minimal fields`() {
-    stubGetUserByUsername(UserDetails("updated", "Updated User", "BXI"))
+    stubGetUserByUsername(UserDetails("updated", "Updated User"))
     val request = UpdatePrisonerContactRestrictionRequest(
       restrictionType = "CCTV",
       startDate = LocalDate.of(1990, 1, 1),
@@ -234,18 +234,18 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
-      additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = updated.prisonerContactRestrictionId, prisonerContactId = savedPrisonerContactId, Source.DPS, "updated", "BXI"),
+      additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = updated.prisonerContactRestrictionId, prisonerContactId = savedPrisonerContactId, Source.DPS, "updated", null),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"), "CCTV")
+    assertCustomEvent(updated, Source.DPS, User("updated"), "CCTV")
   }
 
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__RW"])
   fun `should update the restriction with all fields`(role: String) {
     setCurrentUser(StubUser.UPDATING_USER.copy(roles = listOf(role)))
-    stubGetUserByUsername(UserDetails("updated", "Updated User", "BXI"))
+    stubGetUserByUsername(UserDetails("updated", "Updated User"))
     val request = UpdatePrisonerContactRestrictionRequest(
       restrictionType = "CCTV",
       startDate = LocalDate.of(1990, 1, 1),
@@ -278,11 +278,11 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
-      additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = updated.prisonerContactRestrictionId, prisonerContactId = savedPrisonerContactId, source = Source.DPS, username = "updated", activeCaseLoadId = "BXI"),
+      additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = updated.prisonerContactRestrictionId, prisonerContactId = savedPrisonerContactId, source = Source.DPS, username = "updated", activeCaseLoadId = null),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"), "CCTV")
+    assertCustomEvent(updated, Source.DPS, User("updated"), "CCTV")
   }
 
   companion object {
@@ -307,7 +307,6 @@ class UpdatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
         "description" to "A prisoner contact restriction has been updated",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to updatedPrisonerContactRestrictionDetails.contactId.toString(),
         "restriction_code" to restrictionType,
         "prisoner_contact_restriction_id" to updatedPrisonerContactRestrictionDetails.prisonerContactRestrictionId.toString(),

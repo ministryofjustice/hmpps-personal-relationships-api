@@ -212,12 +212,12 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_EMAIL_CREATED,
-        additionalInfo = ContactEmailInfo(createdEmailAddress!!.contactEmailId, Source.DPS, "created", "BXI"),
+        additionalInfo = ContactEmailInfo(createdEmailAddress!!.contactEmailId, Source.DPS, "created", null),
         personReference = PersonReference(dpsContactId = savedContactId),
       )
     }
 
-    assertCustomEvent(created.first(), Source.DPS, User("created", "BXI"))
+    assertCustomEvent(created.first(), Source.DPS, User("created"))
   }
 
   private fun assertCustomEvent(contactEmailDetails: ContactEmailDetails, source: Source, user: User) {
@@ -228,7 +228,6 @@ class CreateMultipleEmailsIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A contact email has been created",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactEmailDetails.contactId.toString(),
         "contact_email_id" to contactEmailDetails.contactEmailId.toString(),
         "linked_prisoners_count" to "0",

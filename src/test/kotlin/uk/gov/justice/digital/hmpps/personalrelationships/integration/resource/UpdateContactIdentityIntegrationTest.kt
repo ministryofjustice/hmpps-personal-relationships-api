@@ -247,11 +247,11 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_UPDATED,
-      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "updated", "BXI"),
+      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "updated", null),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
+    assertCustomEvent(updated, Source.DPS, User("updated"))
   }
 
   @ParameterizedTest
@@ -282,11 +282,11 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_UPDATED,
-      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "updated", "BXI"),
+      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "updated", null),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
+    assertCustomEvent(updated, Source.DPS, User("updated"))
   }
 
   companion object {
@@ -314,7 +314,6 @@ class UpdateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A contact identity has been updated",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactIdentityDetails.contactId.toString(),
         "contact_identity_id" to contactIdentityDetails.contactIdentityId.toString(),
         "linked_prisoners_count" to "0",

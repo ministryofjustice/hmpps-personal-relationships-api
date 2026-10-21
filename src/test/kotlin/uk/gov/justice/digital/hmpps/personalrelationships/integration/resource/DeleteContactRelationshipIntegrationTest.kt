@@ -102,11 +102,11 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_DELETED,
-      additionalInfo = PrisonerContactInfo(savedPrisonerContactId, Source.DPS, "deleted", "BXI"),
+      additionalInfo = PrisonerContactInfo(savedPrisonerContactId, Source.DPS, "deleted", null),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumber),
     )
 
-    assertCustomEvent(contactId = savedContactId, prisonerContactId = savedPrisonerContactId, prisonerNumber = prisonerNumber, groupCode = "S", relationshipCode = "FRI", relationshipStatus = true, linkedPrisonersCount = 0, source = Source.DPS, user = User("deleted", "BXI"))
+    assertCustomEvent(contactId = savedContactId, prisonerContactId = savedPrisonerContactId, prisonerNumber = prisonerNumber, groupCode = "S", relationshipCode = "FRI", relationshipStatus = true, linkedPrisonersCount = 0, source = Source.DPS, user = User("deleted"))
     verify(telemetryClient, never()).trackEvent(
       eq("contact-next-of-kin-deleted"),
       any<Map<String, String>>(),
@@ -131,7 +131,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     )
 
     testAPIClient.deletePrisonerContact(result.prisonerContactId)
-    assertNextOfKinCustomDeletedEvent(result, 1, Source.DPS, User("deleted", "BXI"))
+    assertNextOfKinCustomDeletedEvent(result, 1, Source.DPS, User("deleted"))
   }
 
   @Test
@@ -151,7 +151,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     )
 
     testAPIClient.deletePrisonerContact(result.prisonerContactId)
-    assertApprovedVisitorDeletedCustomEvent(result, 1, Source.DPS, User("deleted", "BXI"))
+    assertApprovedVisitorDeletedCustomEvent(result, 1, Source.DPS, User("deleted"))
   }
 
   @Test
@@ -171,7 +171,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     )
 
     testAPIClient.deletePrisonerContact(result.prisonerContactId)
-    assertEmergencyContactDeletedCustomEvent(result, 1, Source.DPS, User("deleted", "BXI"))
+    assertEmergencyContactDeletedCustomEvent(result, 1, Source.DPS, User("deleted"))
   }
 
   @Test
@@ -226,12 +226,12 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_DELETED,
-      additionalInfo = PrisonerContactInfo(savedPrisonerContactId, Source.DPS, "deleted", "BXI"),
+      additionalInfo = PrisonerContactInfo(savedPrisonerContactId, Source.DPS, "deleted", null),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumber),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_UPDATED,
-      additionalInfo = ContactInfo(contactId = savedContactId, Source.DPS, "deleted", "BXI"),
+      additionalInfo = ContactInfo(contactId = savedContactId, Source.DPS, "deleted", null),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
   }
@@ -291,7 +291,7 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
     assertThat(contacts.find { it.prisonerContactId == savedPrisonerContactId }).isNull()
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_DELETED,
-      additionalInfo = PrisonerContactInfo(savedPrisonerContactId, Source.DPS, "deleted", "BXI"),
+      additionalInfo = PrisonerContactInfo(savedPrisonerContactId, Source.DPS, "deleted", null),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumber),
     )
     val deleted = deletedPrisonerContactRepository.findByPrisonerContactId(savedPrisonerContactId)
@@ -366,7 +366,6 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         "description" to "A prisoner contact has been deleted",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactId.toString(),
         "prisoner_number" to prisonerNumber,
         "prisoner_contact_id" to prisonerContactId.toString(),
@@ -387,7 +386,6 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         "source" to source.name,
         "username" to user.username,
         "contact_id" to contactRelationship.contactId.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
         "prisoner_number" to contactRelationship.prisonerNumber,
         "linked_prisoners_count" to linkedPrisonersCount.toString(),
@@ -404,7 +402,6 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         "source" to source.name,
         "username" to user.username,
         "contact_id" to contactRelationship.contactId.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
         "prisoner_number" to contactRelationship.prisonerNumber,
         "linked_prisoners_count" to linkedPrisonersCount.toString(),
@@ -421,7 +418,6 @@ class DeleteContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() 
         "source" to source.name,
         "username" to user.username,
         "contact_id" to contactRelationship.contactId.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
         "prisoner_number" to contactRelationship.prisonerNumber,
         "linked_prisoners_count" to linkedPrisonersCount.toString(),

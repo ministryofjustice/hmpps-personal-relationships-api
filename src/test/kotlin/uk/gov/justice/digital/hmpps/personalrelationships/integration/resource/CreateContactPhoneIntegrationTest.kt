@@ -187,11 +187,11 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(created.contactPhoneId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactPhoneInfo(created.contactPhoneId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
 
-    assertCustomEvent(created, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(created, Source.DPS, User("created"))
   }
 
   @ParameterizedTest
@@ -210,11 +210,11 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(created.contactPhoneId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactPhoneInfo(created.contactPhoneId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
 
-    assertCustomEvent(created, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(created, Source.DPS, User("created"))
   }
 
   private fun assertEqualsExcludingTimestamps(phone: ContactPhoneDetails, request: CreatePhoneRequest) {
@@ -235,7 +235,6 @@ class CreateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A contact phone has been created",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactPhoneDetails.contactId.toString(),
         "contact_phone_id" to contactPhoneDetails.contactPhoneId.toString(),
         "linked_prisoners_count" to "0",

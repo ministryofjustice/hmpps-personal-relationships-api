@@ -167,11 +167,11 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_CREATED,
-      additionalInfo = ContactRestrictionInfo(created.contactRestrictionId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactRestrictionInfo(created.contactRestrictionId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
 
-    assertCustomEvent(created, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(created, Source.DPS, User("created"))
   }
 
   @ParameterizedTest
@@ -202,11 +202,11 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_CREATED,
-      additionalInfo = ContactRestrictionInfo(created.contactRestrictionId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactRestrictionInfo(created.contactRestrictionId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
 
-    assertCustomEvent(created, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(created, Source.DPS, User("created"))
   }
 
   companion object {
@@ -231,7 +231,6 @@ class CreateContactRestrictionIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A contact restriction has been created",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactRestrictionDetails.contactId.toString(),
         "contact_restriction_id" to contactRestrictionDetails.contactRestrictionId.toString(),
         "restriction_code" to contactRestrictionDetails.restrictionType,

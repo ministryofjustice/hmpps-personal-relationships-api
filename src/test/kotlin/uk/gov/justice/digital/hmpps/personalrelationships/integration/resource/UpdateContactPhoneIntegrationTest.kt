@@ -223,11 +223,11 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_UPDATED,
-      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "updated", "BXI"),
+      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "updated", null),
       personReference = PersonReference(savedContactId),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
+    assertCustomEvent(updated, Source.DPS, User("updated"))
   }
 
   @ParameterizedTest
@@ -254,11 +254,11 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_UPDATED,
-      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "updated", "BXI"),
+      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "updated", null),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
+    assertCustomEvent(updated, Source.DPS, User("updated"))
   }
 
   companion object {
@@ -286,7 +286,6 @@ class UpdateContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A contact phone has been updated",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactPhoneDetails.contactId.toString(),
         "contact_phone_id" to contactPhoneDetails.contactPhoneId.toString(),
         "linked_prisoners_count" to "0",

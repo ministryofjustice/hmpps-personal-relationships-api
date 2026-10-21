@@ -95,11 +95,11 @@ class DeleteEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_DELETED,
-      additionalInfo = EmploymentInfo(savedEmploymentId, Source.DPS, "deleted", "BXI"),
+      additionalInfo = EmploymentInfo(savedEmploymentId, Source.DPS, "deleted", null),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
-    assertCustomEvent(savedContactId, savedEmploymentId, 0, Source.DPS, User("deleted", "BXI"))
+    assertCustomEvent(savedContactId, savedEmploymentId, 0, Source.DPS, User("deleted"))
   }
 
   private fun assertCustomEvent(contactId: Long, employmentId: Long, linkedPrisonersCount: Int, source: Source, user: User) {
@@ -110,7 +110,6 @@ class DeleteEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A contact employment has been deleted",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactId.toString(),
         "contact_employment_id" to employmentId.toString(),
         "linked_prisoners_count" to linkedPrisonersCount.toString(),

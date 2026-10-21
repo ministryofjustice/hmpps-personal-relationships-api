@@ -143,13 +143,13 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].relationshipToPrisonerCode).isEqualTo("SIS")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", null),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
     contactRepository.deleteById(prisonerContactId)
 
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user"))
     }
   }
 
@@ -214,7 +214,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].relationshipToPrisonerCode).isEqualTo("DR")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", null),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
 
@@ -222,7 +222,7 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     contactRepository.deleteById(prisonerContact.contactId)
 
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user"))
     }
   }
 
@@ -249,17 +249,17 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].isEmergencyContact).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", null),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
     prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
     contactRepository.deleteById(prisonerContact.contactId)
 
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
-      assertNextOfKinCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
-      assertEmergencyContactCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
-      assertApprovedVisitorCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user"))
+      assertNextOfKinCustomEvent(it, 1, Source.DPS, User("read_write_user"))
+      assertEmergencyContactCustomEvent(it, 1, Source.DPS, User("read_write_user"))
+      assertApprovedVisitorCustomEvent(it, 1, Source.DPS, User("read_write_user"))
     }
   }
 
@@ -282,15 +282,15 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].isApprovedVisitor).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", null),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
     prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
     contactRepository.deleteById(prisonerContact.contactId)
 
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
-      assertApprovedVisitorCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user"))
+      assertApprovedVisitorCustomEvent(it, 1, Source.DPS, User("read_write_user"))
     }
   }
 
@@ -313,15 +313,15 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].isEmergencyContact).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", null),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
     prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
     contactRepository.deleteById(prisonerContact.contactId)
 
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
-      assertEmergencyContactCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user"))
+      assertEmergencyContactCustomEvent(it, 1, Source.DPS, User("read_write_user"))
     }
   }
 
@@ -344,14 +344,14 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].isRelationshipActive).isTrue
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", null),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
     prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
     contactRepository.deleteById(prisonerContact.contactId)
 
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user"))
     }
   }
 
@@ -374,14 +374,14 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts[0].comments).isEqualTo("New comment")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", null),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
     prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
     contactRepository.deleteById(prisonerContact.contactId)
 
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user"))
     }
   }
 
@@ -401,13 +401,13 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertThat(updatedPrisonerContacts).hasSize(1)
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", null),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
     prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
     contactRepository.deleteById(prisonerContact.contactId)
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user"))
     }
   }
 
@@ -438,14 +438,14 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
     assertUpdatedPrisonerContactEquals(updatedPrisonerContacts[0], updateRequest)
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", "BXI"),
+      additionalInfo = PrisonerContactInfo(prisonerContactId, Source.DPS, "read_write_user", null),
       personReference = PersonReference(prisonerNumber, prisonerContact.contactId),
     )
     prisonerContactRepository.deleteById(prisonerContact.prisonerContactId)
     contactRepository.deleteById(prisonerContact.contactId)
 
     updatedPrisonerContacts.forEach {
-      assertCustomEvent(it, 1, Source.DPS, User("read_write_user", "BXI"))
+      assertCustomEvent(it, 1, Source.DPS, User("read_write_user"))
     }
   }
 
@@ -538,7 +538,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A prisoner contact has been updated",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to updatedPrisonerContact.contactId.toString(),
         "prisoner_number" to updatedPrisonerContact.prisonerNumber,
         "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
@@ -559,7 +558,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "contact_id" to updatedPrisonerContact.contactId.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
         "prisoner_number" to updatedPrisonerContact.prisonerNumber,
         "linked_prisoners_count" to linkedPrisonersCount.toString(),
@@ -576,7 +574,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "contact_id" to updatedPrisonerContact.contactId.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
         "prisoner_number" to updatedPrisonerContact.prisonerNumber,
         "linked_prisoners_count" to linkedPrisonersCount.toString(),
@@ -593,7 +590,6 @@ class PatchContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "contact_id" to updatedPrisonerContact.contactId.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to updatedPrisonerContact.prisonerContactId.toString(),
         "prisoner_number" to updatedPrisonerContact.prisonerNumber,
         "linked_prisoners_count" to linkedPrisonersCount.toString(),

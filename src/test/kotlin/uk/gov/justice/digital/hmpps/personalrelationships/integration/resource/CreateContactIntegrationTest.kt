@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.personalrelationships.integration.resource
 
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -19,6 +21,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
+import uk.gov.justice.digital.hmpps.personalrelationships.integration.wiremock.ManageUsersApiExtension.Companion.manageUsersApiMockServer
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.address.Address
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.email.EmailAddress
@@ -216,11 +219,12 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactReturnedOnCreate.id, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactInfo(contactReturnedOnCreate.id, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = contactReturnedOnCreate.id),
     )
 
-    assertCustomEvent(contactReturnedOnCreate, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(contactReturnedOnCreate, Source.DPS, User("created"))
+    manageUsersApiMockServer.verify(0, getRequestedFor(urlPathMatching("/users/.*")))
   }
 
   @Test
@@ -250,19 +254,19 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactReturnedOnCreate.id, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactInfo(contactReturnedOnCreate.id, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = contactReturnedOnCreate.id),
     )
 
     contactReturnedOnCreate.identities.forEach { identity ->
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_IDENTITY_CREATED,
-        additionalInfo = ContactIdentityInfo(identity.contactIdentityId, Source.DPS, "created", "BXI"),
+        additionalInfo = ContactIdentityInfo(identity.contactIdentityId, Source.DPS, "created", null),
         personReference = PersonReference(dpsContactId = contactReturnedOnCreate.id),
       )
     }
 
-    assertCustomEvent(contactReturnedOnCreate, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(contactReturnedOnCreate, Source.DPS, User("created"))
   }
 
   @Test
@@ -368,19 +372,19 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactInfo(contactId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(minimalCreated.contactAddressId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactAddressInfo(minimalCreated.contactAddressId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_CREATED,
-      additionalInfo = ContactAddressInfo(everythingCreated.contactAddressId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactAddressInfo(everythingCreated.contactAddressId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
@@ -391,12 +395,12 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
         everythingCreated.contactAddressId,
         Source.DPS,
         "created",
-        "BXI",
+        null,
       ),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
-    assertCustomEvent(contactReturned.createdContact, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(contactReturned.createdContact, Source.DPS, User("created"))
   }
 
   @Test
@@ -492,23 +496,23 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactInfo(contactId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(minimalCreated.contactPhoneId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactPhoneInfo(minimalCreated.contactPhoneId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(everythingCreated.contactPhoneId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactPhoneInfo(everythingCreated.contactPhoneId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
-    assertCustomEvent(contactReturned.createdContact, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(contactReturned.createdContact, Source.DPS, User("created"))
   }
 
   @Test
@@ -550,23 +554,23 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactInfo(contactId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_CREATED,
-      additionalInfo = ContactEmailInfo(firstCreated!!.contactEmailId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactEmailInfo(firstCreated!!.contactEmailId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_EMAIL_CREATED,
-      additionalInfo = ContactEmailInfo(secondCreated!!.contactEmailId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactEmailInfo(secondCreated!!.contactEmailId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
-    assertCustomEvent(contactReturned.createdContact, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(contactReturned.createdContact, Source.DPS, User("created"))
   }
 
   @Test
@@ -612,23 +616,23 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contactId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactInfo(contactId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_CREATED,
-      additionalInfo = EmploymentInfo(firstCreated.employmentId, Source.DPS, "created", "BXI"),
+      additionalInfo = EmploymentInfo(firstCreated.employmentId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_CREATED,
-      additionalInfo = EmploymentInfo(secondCreated.employmentId, Source.DPS, "created", "BXI"),
+      additionalInfo = EmploymentInfo(secondCreated.employmentId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = contactId),
     )
 
-    assertCustomEvent(contactReturned.createdContact, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(contactReturned.createdContact, Source.DPS, User("created"))
   }
 
   @Test
@@ -681,11 +685,11 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contact.id, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactInfo(contact.id, Source.DPS, "created", null),
       personReference = PersonReference(contact.id),
     )
 
-    assertCustomEvent(contact, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(contact, Source.DPS, User("created"))
   }
 
   private fun assertContactsAreEqualExcludingTimestamps(contact: ContactDetails, request: CreateContactRequest) {
@@ -712,7 +716,6 @@ class CreateContactIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A contact has been created",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactDetails.id.toString(),
         "linked_prisoners_count" to "0",
       ),

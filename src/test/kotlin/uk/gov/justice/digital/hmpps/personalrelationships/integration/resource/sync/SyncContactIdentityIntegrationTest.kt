@@ -9,7 +9,6 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
@@ -32,8 +31,6 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
     setCurrentUser(StubUser.READ_WRITE_USER)
     savedContactId = testAPIClient.createAContact(aMinimalCreateContactRequest()).id
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
-    stubGetUserByUsername(UserDetails("CREATE", "Create", "KMI"))
-    stubGetUserByUsername(UserDetails("UPDATE", "Update", "BXI"))
   }
 
   @Test
@@ -158,11 +155,11 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_CREATED,
-      additionalInfo = ContactIdentityInfo(contactIdentity.contactIdentityId, Source.NOMIS, "CREATE", "KMI"),
+      additionalInfo = ContactIdentityInfo(contactIdentity.contactIdentityId, Source.NOMIS, "CREATE", null),
       personReference = PersonReference(dpsContactId = contactIdentity.contactId),
     )
 
-    assertCustomCreatedEvent(contactIdentity, 0, Source.NOMIS, User("CREATE", "KMI"))
+    assertCustomCreatedEvent(contactIdentity, 0, Source.NOMIS, User("CREATE"))
   }
 
   @ParameterizedTest
@@ -221,11 +218,11 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_UPDATED,
-      additionalInfo = ContactIdentityInfo(updatedIdentity.contactIdentityId, Source.NOMIS, "UPDATE", "BXI"),
+      additionalInfo = ContactIdentityInfo(updatedIdentity.contactIdentityId, Source.NOMIS, "UPDATE", null),
       personReference = PersonReference(dpsContactId = updatedIdentity.contactId),
     )
 
-    assertCustomUpdatedEvent(updatedIdentity, 0, Source.NOMIS, User("UPDATE", "BXI"))
+    assertCustomUpdatedEvent(updatedIdentity, 0, Source.NOMIS, User("UPDATE"))
   }
 
   @Test
@@ -288,7 +285,6 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "contact_id" to syncContactIdentity.contactId.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_identity_id" to syncContactIdentity.contactIdentityId.toString(),
         "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
@@ -306,7 +302,6 @@ class SyncContactIdentityIntegrationTest : PostgresIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "contact_id" to syncContactIdentity.contactId.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_identity_id" to syncContactIdentity.contactIdentityId.toString(),
         "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),

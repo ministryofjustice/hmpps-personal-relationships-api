@@ -745,7 +745,7 @@ fun createPrisonerContactEntity(
   createdTime = createdTime,
 )
 
-fun aUser(username: String = "USER1", activeCaseLoadId: String? = null): User = User(username, activeCaseLoadId)
+fun aUser(username: String = "USER1"): User = User(username)
 
 fun makePrisonerContact(
   prisonerContactId: Long,

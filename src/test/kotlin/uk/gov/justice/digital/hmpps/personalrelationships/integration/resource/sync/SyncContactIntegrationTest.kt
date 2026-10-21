@@ -1,14 +1,16 @@
 package uk.gov.justice.digital.hmpps.personalrelationships.integration.resource.sync
 
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
+import uk.gov.justice.digital.hmpps.personalrelationships.integration.wiremock.ManageUsersApiExtension.Companion.manageUsersApiMockServer
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncCreateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncUpdateContactRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncContact
@@ -26,8 +28,6 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
   fun resetEvents() {
     stubEvents.reset()
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
-    stubGetUserByUsername(UserDetails("JD000001", "JD000001", "KMI"))
-    stubGetUserByUsername(UserDetails("UPDATE", "Update", "BXI"))
   }
 
   @Test
@@ -166,11 +166,12 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contact.id, Source.NOMIS, "JD000001", "KMI"),
+      additionalInfo = ContactInfo(contact.id, Source.NOMIS, "JD000001", null),
       personReference = PersonReference(dpsContactId = contact.id),
     )
 
-    assertCustomCreatedEvent(contact, Source.NOMIS, User("JD000001", "KMI"))
+    assertCustomCreatedEvent(contact, Source.NOMIS, User("JD000001"))
+    manageUsersApiMockServer.verify(0, getRequestedFor(urlPathMatching("/users/.*")))
   }
 
   @Test
@@ -189,7 +190,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contact.id, Source.NOMIS, "JD000001", "KMI"),
+      additionalInfo = ContactInfo(contact.id, Source.NOMIS, "JD000001", null),
       personReference = PersonReference(dpsContactId = contact.id),
     )
 
@@ -228,11 +229,11 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_UPDATED,
-      additionalInfo = ContactInfo(contact.id, Source.NOMIS, "UPDATE", "BXI"),
+      additionalInfo = ContactInfo(contact.id, Source.NOMIS, "UPDATE", null),
       personReference = PersonReference(dpsContactId = contact.id),
     )
 
-    assertCustomUpdatedEvent(updatedContact, Source.NOMIS, User("UPDATE", "BXI"))
+    assertCustomUpdatedEvent(updatedContact, Source.NOMIS, User("UPDATE"))
   }
 
   @Test
@@ -257,7 +258,7 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(contact.id, Source.NOMIS, "JD000001", "KMI"),
+      additionalInfo = ContactInfo(contact.id, Source.NOMIS, "JD000001", null),
       personReference = PersonReference(dpsContactId = contact.id),
     )
 
@@ -280,7 +281,6 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "contact_id" to syncContact.id.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
         "linked_prisoners_count" to "0",
       ),
       null,
@@ -297,7 +297,6 @@ class SyncContactIntegrationTest : PostgresIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "contact_id" to syncContact.id.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
         "linked_prisoners_count" to "0",
       ),
       null,

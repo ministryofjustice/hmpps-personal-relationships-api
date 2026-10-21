@@ -40,7 +40,6 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.Sy
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncEmployment
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerContact
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerContactRestriction
-import uk.gov.justice.digital.hmpps.personalrelationships.service.ManageUsersService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
@@ -74,7 +73,6 @@ class SyncFacadeTest {
   private val syncAdminService: SyncAdminService = mock()
   private val syncContactReconciliationService: SyncContactReconciliationService = mock()
   private val outboundEventsService: OutboundEventsService = mock()
-  private val manageUsersService: ManageUsersService = mock()
   private val telemetryContactCustomEventService: TelemetryContactCustomEventService = mock()
 
   private val facade = SyncFacade(
@@ -91,7 +89,6 @@ class SyncFacadeTest {
     syncAdminService,
     syncContactReconciliationService,
     outboundEventsService,
-    manageUsersService,
     telemetryContactCustomEventService,
   )
 

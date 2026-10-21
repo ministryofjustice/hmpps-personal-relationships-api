@@ -136,11 +136,11 @@ class UpdateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_UPDATED,
-      additionalInfo = EmploymentInfo(updated.employmentId, Source.DPS, "updated", "BXI"),
+      additionalInfo = EmploymentInfo(updated.employmentId, Source.DPS, "updated", null),
       personReference = PersonReference(dpsContactId = updated.contactId),
     )
 
-    assertCustomEvent(updated, Source.DPS, User("updated", "BXI"))
+    assertCustomEvent(updated, Source.DPS, User("updated"))
   }
 
   companion object {
@@ -158,7 +158,6 @@ class UpdateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A contact employment has been updated",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to updatedEmploymentDetails.contactId.toString(),
         "contact_employment_id" to updatedEmploymentDetails.employmentId.toString(),
         "linked_prisoners_count" to "0",

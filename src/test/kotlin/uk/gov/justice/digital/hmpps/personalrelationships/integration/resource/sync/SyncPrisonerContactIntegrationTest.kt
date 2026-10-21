@@ -9,7 +9,6 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncCreatePrisonerContactRequest
@@ -28,8 +27,6 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
   @BeforeEach
   fun setUp() {
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
-    stubGetUserByUsername(UserDetails("adminUser", "Create", "KMI"))
-    stubGetUserByUsername(UserDetails("UpdatedUser", "Update", "BXI"))
   }
 
   @Nested
@@ -182,14 +179,14 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_CREATED,
-        additionalInfo = PrisonerContactInfo(prisonerContact.id, Source.NOMIS, "adminUser", "KMI"),
+        additionalInfo = PrisonerContactInfo(prisonerContact.id, Source.NOMIS, "adminUser", null),
         personReference = PersonReference(dpsContactId = prisonerContact.contactId, nomsNumber = prisonerContact.prisonerNumber),
       )
 
-      assertCustomCreatedEvent(prisonerContact, 10, Source.NOMIS, User("adminUser", "KMI"))
-      assertNextOfKinCustomCreatedEvent(prisonerContact, 10, Source.NOMIS, User("adminUser", "KMI"))
-      assertApprovedVisitorCustomCreatedEvent(prisonerContact, 10, Source.NOMIS, User("adminUser", "KMI"))
-      assertEmergencyContactCustomCreatedEvent(prisonerContact, 10, Source.NOMIS, User("adminUser", "KMI"))
+      assertCustomCreatedEvent(prisonerContact, 10, Source.NOMIS, User("adminUser"))
+      assertNextOfKinCustomCreatedEvent(prisonerContact, 10, Source.NOMIS, User("adminUser"))
+      assertApprovedVisitorCustomCreatedEvent(prisonerContact, 10, Source.NOMIS, User("adminUser"))
+      assertEmergencyContactCustomCreatedEvent(prisonerContact, 10, Source.NOMIS, User("adminUser"))
     }
 
     @Test
@@ -260,11 +257,11 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", "BXI"),
+        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", null),
         personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
       )
 
-      assertCustomUpdatedEvent(updatedPrisonerContact, 9, Source.NOMIS, User("UpdatedUser", "BXI"))
+      assertCustomUpdatedEvent(updatedPrisonerContact, 9, Source.NOMIS, User("UpdatedUser"))
     }
 
     @Test
@@ -305,11 +302,11 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", "BXI"),
+        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", null),
         personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
       )
 
-      assertNextOfKinCustomCreatedEvent(updatedPrisonerContact, 7, Source.NOMIS, User("UpdatedUser", "BXI"))
+      assertNextOfKinCustomCreatedEvent(updatedPrisonerContact, 7, Source.NOMIS, User("UpdatedUser"))
     }
 
     @Test
@@ -351,7 +348,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", "BXI"),
+        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", null),
         personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
       )
 
@@ -362,7 +359,6 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "source" to "NOMIS",
           "username" to "UpdatedUser",
           "contact_id" to updatedPrisonerContact.contactId.toString(),
-          "active_caseload_id" to "BXI",
           "prisoner_contact_id" to updatedPrisonerContact.id.toString(),
           "prisoner_number" to updatedPrisonerContact.prisonerNumber,
           "linked_prisoners_count" to "14",
@@ -409,11 +405,11 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", "BXI"),
+        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", null),
         personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
       )
 
-      assertApprovedVisitorCustomCreatedEvent(updatedPrisonerContact, 13, Source.NOMIS, User("UpdatedUser", "BXI"))
+      assertApprovedVisitorCustomCreatedEvent(updatedPrisonerContact, 13, Source.NOMIS, User("UpdatedUser"))
     }
 
     @Test
@@ -455,7 +451,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", "BXI"),
+        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", null),
         personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
       )
 
@@ -466,7 +462,6 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "source" to "NOMIS",
           "username" to "UpdatedUser",
           "contact_id" to updatedPrisonerContact.contactId.toString(),
-          "active_caseload_id" to "BXI",
           "prisoner_contact_id" to updatedPrisonerContact.id.toString(),
           "prisoner_number" to updatedPrisonerContact.prisonerNumber,
           "linked_prisoners_count" to "11",
@@ -513,11 +508,11 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", "BXI"),
+        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", null),
         personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
       )
 
-      assertEmergencyContactCustomCreatedEvent(updatedPrisonerContact, 10, Source.NOMIS, User("UpdatedUser", "BXI"))
+      assertEmergencyContactCustomCreatedEvent(updatedPrisonerContact, 10, Source.NOMIS, User("UpdatedUser"))
     }
 
     @Test
@@ -559,7 +554,7 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
 
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_UPDATED,
-        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", "BXI"),
+        additionalInfo = PrisonerContactInfo(updatedPrisonerContact.id, Source.NOMIS, "UpdatedUser", null),
         personReference = PersonReference(dpsContactId = updatedPrisonerContact.contactId, nomsNumber = updatedPrisonerContact.prisonerNumber),
       )
 
@@ -570,7 +565,6 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "source" to "NOMIS",
           "username" to "UpdatedUser",
           "contact_id" to updatedPrisonerContact.contactId.toString(),
-          "active_caseload_id" to "BXI",
           "prisoner_contact_id" to updatedPrisonerContact.id.toString(),
           "prisoner_number" to updatedPrisonerContact.prisonerNumber,
           "linked_prisoners_count" to "12",
@@ -713,7 +707,6 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "source" to source.name,
           "username" to user.username,
           "contact_id" to syncPrisonerContact.contactId.toString(),
-          "active_caseload_id" to user.activeCaseLoadId,
           "prisoner_contact_id" to syncPrisonerContact.id.toString(),
           "prisoner_number" to syncPrisonerContact.prisonerNumber,
           "group_code" to syncPrisonerContact.contactType,
@@ -735,7 +728,6 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "source" to source.name,
           "username" to user.username,
           "contact_id" to syncPrisonerContact.contactId.toString(),
-          "active_caseload_id" to user.activeCaseLoadId,
           "prisoner_contact_id" to syncPrisonerContact.id.toString(),
           "prisoner_number" to syncPrisonerContact.prisonerNumber,
           "group_code" to syncPrisonerContact.contactType,
@@ -777,7 +769,6 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "source" to source.name,
           "username" to user.username,
           "contact_id" to syncPrisonerContact.contactId.toString(),
-          "active_caseload_id" to user.activeCaseLoadId,
           "prisoner_contact_id" to syncPrisonerContact.id.toString(),
           "prisoner_number" to syncPrisonerContact.prisonerNumber,
           "linked_prisoners_count" to linkedPrisonersCount.toString(),
@@ -794,7 +785,6 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "source" to source.name,
           "username" to user.username,
           "contact_id" to syncPrisonerContact.contactId.toString(),
-          "active_caseload_id" to user.activeCaseLoadId,
           "prisoner_contact_id" to syncPrisonerContact.id.toString(),
           "prisoner_number" to syncPrisonerContact.prisonerNumber,
           "linked_prisoners_count" to linkedPrisonersCount.toString(),
@@ -811,7 +801,6 @@ class SyncPrisonerContactIntegrationTest : PostgresIntegrationTestBase() {
           "source" to source.name,
           "username" to user.username,
           "contact_id" to syncPrisonerContact.contactId.toString(),
-          "active_caseload_id" to user.activeCaseLoadId,
           "prisoner_contact_id" to syncPrisonerContact.id.toString(),
           "prisoner_number" to syncPrisonerContact.prisonerNumber,
           "linked_prisoners_count" to linkedPrisonersCount.toString(),

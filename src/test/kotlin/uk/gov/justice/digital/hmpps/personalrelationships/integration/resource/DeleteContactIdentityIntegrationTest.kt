@@ -66,7 +66,7 @@ class DeleteContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_IDENTITY_DELETED,
-      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "deleted", "BXI"),
+      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "deleted", null),
     )
   }
 
@@ -87,7 +87,7 @@ class DeleteContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.CONTACT_IDENTITY_DELETED,
-      additionalInfo = ContactIdentityInfo(-99, Source.DPS, "deleted", "BXI"),
+      additionalInfo = ContactIdentityInfo(-99, Source.DPS, "deleted", null),
     )
   }
 
@@ -111,11 +111,11 @@ class DeleteContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_DELETED,
-      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "deleted", "BXI"),
+      additionalInfo = ContactIdentityInfo(savedContactIdentityId, Source.DPS, "deleted", null),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
-    assertCustomEvent(savedContactId, savedContactIdentityId, 0, Source.DPS, User("deleted", "BXI"))
+    assertCustomEvent(savedContactId, savedContactIdentityId, 0, Source.DPS, User("deleted"))
   }
 
   private fun assertCustomEvent(contactId: Long, contactIdentityId: Long, linkedPrisonersCount: Int, source: Source, user: User) {
@@ -126,7 +126,6 @@ class DeleteContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A contact identity has been deleted",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactId.toString(),
         "contact_identity_id" to contactIdentityId.toString(),
         "linked_prisoners_count" to linkedPrisonersCount.toString(),

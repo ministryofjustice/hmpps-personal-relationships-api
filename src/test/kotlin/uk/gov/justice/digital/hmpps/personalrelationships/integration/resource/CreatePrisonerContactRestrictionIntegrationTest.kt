@@ -181,11 +181,11 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
-      additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = created.prisonerContactRestrictionId, prisonerContactId = savedPrisonerContactId, Source.DPS, "created", "BXI"),
+      additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = created.prisonerContactRestrictionId, prisonerContactId = savedPrisonerContactId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
     )
 
-    assertCustomEvent(created, 1, Source.DPS, User("created", "BXI"), "BAN")
+    assertCustomEvent(created, 1, Source.DPS, User("created"), "BAN")
   }
 
   @ParameterizedTest
@@ -218,11 +218,11 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
-      additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = created.prisonerContactRestrictionId, prisonerContactId = savedPrisonerContactId, source = Source.DPS, username = "created", activeCaseLoadId = "BXI"),
+      additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = created.prisonerContactRestrictionId, prisonerContactId = savedPrisonerContactId, source = Source.DPS, username = "created", activeCaseLoadId = null),
       personReference = PersonReference(dpsContactId = savedContactId, nomsNumber = prisonerNumberCreatedAgainst),
     )
 
-    assertCustomEvent(created, 1, Source.DPS, User("created", "BXI"), "BAN")
+    assertCustomEvent(created, 1, Source.DPS, User("created"), "BAN")
   }
 
   companion object {
@@ -247,7 +247,6 @@ class CreatePrisonerContactRestrictionIntegrationTest : SecureAPIIntegrationTest
         "description" to "A prisoner contact restriction has been created",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactRestrictionDetails.contactId.toString(),
         "prisoner_contact_restriction_id" to contactRestrictionDetails.prisonerContactRestrictionId.toString(),
         "restriction_code" to restrictionType,
