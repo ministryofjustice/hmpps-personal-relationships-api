@@ -8,6 +8,6 @@ import uk.gov.justice.digital.hmpps.personalrelationships.config.CacheConfigurat
 
 @Service
 class ManageUsersService(private val manageUsersClient: ManageUsersApiClient) {
-  @Cacheable(CacheConfiguration.USER_DETAILS_CACHE)
+  @Cacheable(value = [CacheConfiguration.USER_DETAILS_CACHE], unless = "#result == null")
   fun getUserByUsername(username: String): UserDetails? = manageUsersClient.getUserByUsername(username)
 }
