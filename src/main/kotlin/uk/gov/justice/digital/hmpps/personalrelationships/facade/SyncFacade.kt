@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.personalrelationships.facade
 
-import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PagedModel
 import org.springframework.stereotype.Service
@@ -30,7 +29,6 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.Syn
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.PrisonerContactAndRestrictionIds
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.PrisonerRelationshipIds
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerContact
-import uk.gov.justice.digital.hmpps.personalrelationships.service.ManageUsersService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.OutboundEventsService
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
@@ -80,7 +78,6 @@ class SyncFacade(
   private val syncAdminService: SyncAdminService,
   private val syncContactReconciliationService: SyncContactReconciliationService,
   private val outboundEventsService: OutboundEventsService,
-  private val manageUsersService: ManageUsersService,
   private val telemetryContactCustomEventService: TelemetryContactCustomEventService,
 ) {
   // ================================================================
@@ -699,19 +696,5 @@ class SyncFacade(
     telemetryContactCustomEventService.trackCreatePrisonerContactEvent(created.contactId, created.relationship.dpsId, prisonerNumber, Source.NOMIS, userOrDefault())
   }
 
-  private fun userOrDefault(username: String? = null): User = username?.let { enrichIfPossible(username) } ?: User.SYS_USER
-
-  private fun enrichIfPossible(username: String): User {
-    val userDetails = try {
-      manageUsersService.getUserByUsername(username)
-    } catch (e: Exception) {
-      logger.error("Unhandled exception getting user {}", username, e)
-      null
-    }
-    return User(username, userDetails?.activeCaseLoadId)
-  }
-
-  companion object {
-    private val logger = LoggerFactory.getLogger(this::class.java)
-  }
+  private fun userOrDefault(username: String? = null): User = username?.let { User(it) } ?: User.SYS_USER
 }

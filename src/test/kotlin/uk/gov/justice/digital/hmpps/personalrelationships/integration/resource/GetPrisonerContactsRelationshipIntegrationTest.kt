@@ -48,7 +48,7 @@ class GetPrisonerContactsRelationshipIntegrationTest : SecureAPIIntegrationTestB
   @ParameterizedTest
   @ValueSource(strings = ["ROLE_CONTACTS_ADMIN", "ROLE_CONTACTS__R", "ROLE_CONTACTS__RW"])
   fun `getById - should return OK`(role: String) {
-    stubGetUserByUsername(UserDetails("A_USER", "Created User", "BXI"))
+    stubGetUserByUsername(UserDetails("A_USER", "Created User"))
     setCurrentUser(StubUser.READ_ONLY_USER.copy(roles = listOf(role)))
     val expectedPrisonerContactRelationship = PrisonerContactRelationshipDetails(
       prisonerContactId = 1,

@@ -118,11 +118,11 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_DELETED,
-      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "deleted", "BXI"),
+      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "deleted", null),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
-    assertCustomEvent(savedContactId, savedContactPhoneId, 0, Source.DPS, User("deleted", "BXI"))
+    assertCustomEvent(savedContactId, savedContactPhoneId, 0, Source.DPS, User("deleted"))
   }
 
   @ParameterizedTest
@@ -176,14 +176,14 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_DELETED,
-      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "deleted", "BXI"),
+      additionalInfo = ContactPhoneInfo(savedContactPhoneId, Source.DPS, "deleted", null),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
     assertThat(addressPhoneRepository.findById(addressPhone.contactPhoneId)).isNotPresent
     assertThat(addressRepository.findById(address.contactAddressId)).isPresent
 
-    assertCustomEvent(savedContactId, savedContactPhoneId, 0, Source.DPS, User("deleted", "BXI"))
+    assertCustomEvent(savedContactId, savedContactPhoneId, 0, Source.DPS, User("deleted"))
   }
 
   private fun assertCustomEvent(contactId: Long, contactPhoneId: Long, linkedPrisonersCount: Int, source: Source, user: User) {
@@ -194,7 +194,6 @@ class DeleteContactPhoneIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A contact phone has been deleted",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactId.toString(),
         "contact_phone_id" to contactPhoneId.toString(),
         "linked_prisoners_count" to linkedPrisonersCount.toString(),

@@ -247,7 +247,7 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
     assertThat(mobile).isNotNull()
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
-      additionalInfo = ContactAddressPhoneInfo(mobile!!.contactAddressPhoneId, savedAddressId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactAddressPhoneInfo(mobile!!.contactAddressPhoneId, savedAddressId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
@@ -255,12 +255,12 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
     assertThat(home).isNotNull()
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_ADDRESS_PHONE_CREATED,
-      additionalInfo = ContactAddressPhoneInfo(home!!.contactAddressPhoneId, savedAddressId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactAddressPhoneInfo(home!!.contactAddressPhoneId, savedAddressId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
 
     created.forEach {
-      assertCustomEvent(it, Source.DPS, user = User("created", "BXI"))
+      assertCustomEvent(it, Source.DPS, user = User("created"))
     }
   }
 
@@ -272,7 +272,6 @@ class CreateMultipleAddressPhoneIntegrationTest : SecureAPIIntegrationTestBase()
         "description" to "A contact address phone has been created",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactAddressPhoneDetails.contactId.toString(),
         "contact_address_phone_id" to contactAddressPhoneDetails.contactAddressPhoneId.toString(),
         "linked_prisoners_count" to "0",

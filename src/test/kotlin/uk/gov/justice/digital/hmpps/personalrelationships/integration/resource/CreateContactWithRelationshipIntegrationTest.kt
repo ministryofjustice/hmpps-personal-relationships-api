@@ -194,17 +194,17 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(created.createdContact.id, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactInfo(created.createdContact.id, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = created.createdContact.id),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_CREATED,
-      additionalInfo = PrisonerContactInfo(created.createdRelationship.prisonerContactId, Source.DPS, "created", "BXI"),
+      additionalInfo = PrisonerContactInfo(created.createdRelationship.prisonerContactId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = created.createdContact.id, nomsNumber = request.relationship!!.prisonerNumber),
     )
 
-    assertCustomEvent(created.createdRelationship, 1, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(created.createdRelationship, 1, Source.DPS, User("created"))
   }
 
   @ParameterizedTest
@@ -234,17 +234,17 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_CREATED,
-      additionalInfo = ContactInfo(created.createdContact.id, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactInfo(created.createdContact.id, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = created.createdContact.id),
     )
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_CONTACT_CREATED,
-      additionalInfo = PrisonerContactInfo(created.createdRelationship.prisonerContactId, Source.DPS, "created", "BXI"),
+      additionalInfo = PrisonerContactInfo(created.createdRelationship.prisonerContactId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = created.createdContact.id, nomsNumber = request.relationship!!.prisonerNumber),
     )
 
-    assertCustomEvent(created.createdRelationship, 1, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(created.createdRelationship, 1, Source.DPS, User("created"))
   }
 
   private fun asserPrisonerContactEquals(
@@ -294,7 +294,6 @@ class CreateContactWithRelationshipIntegrationTest : PostgresIntegrationTestBase
         "description" to "A prisoner contact has been created",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactRelationshipDetails.contactId.toString(),
         "prisoner_contact_id" to contactRelationshipDetails.prisonerContactId.toString(),
         "prisoner_number" to contactRelationshipDetails.prisonerNumber,

@@ -11,7 +11,6 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.expectBody
-import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.SyncCreatePrisonerContactRestrictionRequest
@@ -30,8 +29,6 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
   @BeforeEach
   fun setUp() {
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
-    stubGetUserByUsername(UserDetails("admin", "Create", "KMI"))
-    stubGetUserByUsername(UserDetails("UpdatedUser", "Update", "BXI"))
   }
 
   @Nested
@@ -171,11 +168,11 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_CREATED,
-        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = prisonerContactRestriction.prisonerContactRestrictionId, prisonerContactId = prisonerContactRestriction.prisonerContactId, Source.NOMIS, "admin", "KMI"),
+        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = prisonerContactRestriction.prisonerContactRestrictionId, prisonerContactId = prisonerContactRestriction.prisonerContactId, Source.NOMIS, "admin", null),
         personReference = PersonReference(dpsContactId = prisonerContactRestriction.contactId, nomsNumber = prisonerContactRestriction.prisonerNumber),
       )
 
-      assertCustomCreatedEvent(prisonerContactRestriction, Source.NOMIS, User("admin", "KMI"))
+      assertCustomCreatedEvent(prisonerContactRestriction, Source.NOMIS, User("admin"))
     }
 
     @Test
@@ -234,11 +231,11 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
       }
       stubEvents.assertHasEvent(
         event = OutboundEvent.PRISONER_CONTACT_RESTRICTION_UPDATED,
-        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = updatedPrisonerContactRestriction.prisonerContactRestrictionId, prisonerContactId = prisonerContactRestriction.prisonerContactId, source = Source.NOMIS, username = "UpdatedUser", activeCaseLoadId = "BXI"),
+        additionalInfo = PrisonerContactRestrictionInfo(prisonerContactRestrictionId = updatedPrisonerContactRestriction.prisonerContactRestrictionId, prisonerContactId = prisonerContactRestriction.prisonerContactId, source = Source.NOMIS, username = "UpdatedUser", activeCaseLoadId = null),
         personReference = PersonReference(dpsContactId = updatedPrisonerContactRestriction.contactId, nomsNumber = updatedPrisonerContactRestriction.prisonerNumber),
       )
 
-      assertCustomUpdatedEvent(updatedPrisonerContactRestriction, Source.NOMIS, User("UpdatedUser", "BXI"))
+      assertCustomUpdatedEvent(updatedPrisonerContactRestriction, Source.NOMIS, User("UpdatedUser"))
     }
 
     @Test
@@ -277,7 +274,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
         personReference = PersonReference(dpsContactId = prisonerContactRestriction.contactId, nomsNumber = prisonerContactRestriction.prisonerNumber),
       )
 
-      assertCustomDeletedEvent(prisonerContactRestriction, Source.NOMIS, User("SYS", null))
+      assertCustomDeletedEvent(prisonerContactRestriction, Source.NOMIS, User("SYS"))
     }
 
     private fun assertCustomCreatedEvent(syncPrisonerContactRestriction: SyncPrisonerContactRestriction, source: Source, user: User) {
@@ -289,7 +286,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
             properties["source"] == source.name &&
             properties["username"] == user.username &&
             properties["contact_id"] == syncPrisonerContactRestriction.contactId.toString() &&
-            properties["active_caseload_id"] == user.activeCaseLoadId &&
+            !properties.containsKey("active_caseload_id") &&
             properties["prisoner_contact_restriction_id"] == syncPrisonerContactRestriction.prisonerContactRestrictionId.toString() &&
             properties["restriction_code"] == syncPrisonerContactRestriction.restrictionType &&
             properties["prisoner_number"] == syncPrisonerContactRestriction.prisonerNumber &&
@@ -309,7 +306,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
             properties["source"] == source.name &&
             properties["username"] == user.username &&
             properties["contact_id"] == syncPrisonerContactRestriction.contactId.toString() &&
-            properties["active_caseload_id"] == user.activeCaseLoadId &&
+            !properties.containsKey("active_caseload_id") &&
             properties["prisoner_contact_restriction_id"] == syncPrisonerContactRestriction.prisonerContactRestrictionId.toString() &&
             properties["restriction_code"] == syncPrisonerContactRestriction.restrictionType &&
             properties["prisoner_number"] == syncPrisonerContactRestriction.prisonerNumber &&
@@ -329,7 +326,7 @@ class SyncPrisonerContactRestrictionIntegrationTest : PostgresIntegrationTestBas
             properties["source"] == source.name &&
             properties["username"] == user.username &&
             properties["contact_id"] == syncPrisonerContactRestriction.contactId.toString() &&
-            properties["active_caseload_id"] == user.activeCaseLoadId &&
+            !properties.containsKey("active_caseload_id") &&
             properties["prisoner_contact_restriction_id"] == syncPrisonerContactRestriction.prisonerContactRestrictionId.toString() &&
             properties["restriction_code"] == syncPrisonerContactRestriction.restrictionType &&
             properties["prisoner_number"] == syncPrisonerContactRestriction.prisonerNumber &&

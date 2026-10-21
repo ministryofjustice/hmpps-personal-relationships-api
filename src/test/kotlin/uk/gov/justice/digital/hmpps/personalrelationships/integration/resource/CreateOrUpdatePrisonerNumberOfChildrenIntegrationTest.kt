@@ -70,11 +70,11 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-      additionalInfo = PrisonerNumberOfChildren(response!!.id, Source.DPS, "read_write_user", "BXI"),
+      additionalInfo = PrisonerNumberOfChildren(response!!.id, Source.DPS, "read_write_user", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
 
-    assertCustomEvent(prisonerNumber, response, Source.DPS, User("read_write_user", "BXI"))
+    assertCustomEvent(prisonerNumber, response, Source.DPS, User("read_write_user"))
   }
 
   @Test
@@ -108,7 +108,7 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-      additionalInfo = PrisonerNumberOfChildren(response!!.id, Source.DPS, "read_write_user", "BXI"),
+      additionalInfo = PrisonerNumberOfChildren(response!!.id, Source.DPS, "read_write_user", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -155,11 +155,11 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_NUMBER_OF_CHILDREN_CREATED,
-      additionalInfo = PrisonerNumberOfChildren(response.id, Source.DPS, "read_write_user", "BXI"),
+      additionalInfo = PrisonerNumberOfChildren(response.id, Source.DPS, "read_write_user", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
 
-    assertCustomEvent(prisonerNumber, updateResponse, Source.DPS, User("read_write_user", "BXI"))
+    assertCustomEvent(prisonerNumber, updateResponse, Source.DPS, User("read_write_user"))
   }
 
   @Test
@@ -213,7 +213,6 @@ class CreateOrUpdatePrisonerNumberOfChildrenIntegrationTest : SecureAPIIntegrati
         "description" to "A number of children record has been created",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_number" to prisonerNumber,
         "prisoner_number_of_children_id" to prisonerNumberOfChildrenResponse.id.toString(),
       ),

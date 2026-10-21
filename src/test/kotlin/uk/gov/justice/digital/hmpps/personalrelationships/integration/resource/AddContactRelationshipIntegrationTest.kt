@@ -187,16 +187,16 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         createdRelationship.prisonerContactId,
         source = Source.DPS,
         "read_write_user",
-        "BXI",
+        null,
       ),
       personReference = PersonReference(dpsContactId = contact.id, nomsNumber = request.relationship.prisonerNumber),
     )
 
-    assertCustomEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
+    assertCustomEvent(createdRelationship, Source.DPS, User("read_write_user"))
     // next of kin, emergency contact and approved visitor are true so an event needs to be created for each
-    assertNextOfKinCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
-    assertApprovedVisitorCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
-    assertEmergencyContactCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
+    assertNextOfKinCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user"))
+    assertApprovedVisitorCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user"))
+    assertEmergencyContactCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user"))
   }
 
   @Test
@@ -230,12 +230,12 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         createdRelationship.prisonerContactId,
         source = Source.DPS,
         "read_write_user",
-        "BXI",
+        null,
       ),
       personReference = PersonReference(dpsContactId = contact.id, nomsNumber = request.relationship.prisonerNumber),
     )
 
-    assertCustomEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
+    assertCustomEvent(createdRelationship, Source.DPS, User("read_write_user"))
     verify(telemetryClient, never()).trackEvent(
       eq("contact-next-of-kin-created"),
       any<Map<String, String>>(),
@@ -306,19 +306,19 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         createdRelationship.prisonerContactId,
         source = Source.DPS,
         "read_write_user",
-        "BXI",
+        null,
       ),
       personReference = PersonReference(dpsContactId = contact.id, nomsNumber = request.relationship.prisonerNumber),
     )
 
-    assertCustomEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
+    assertCustomEvent(createdRelationship, Source.DPS, User("read_write_user"))
     verify(telemetryClient, never()).trackEvent(
       eq("contact-next-of-kin-created"),
       any<Map<String, String>>(),
       anyOrNull(),
     )
-    assertApprovedVisitorCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
-    assertEmergencyContactCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user", "BXI"))
+    assertApprovedVisitorCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user"))
+    assertEmergencyContactCustomCreatedEvent(createdRelationship, Source.DPS, User("read_write_user"))
   }
 
   private fun assertCustomEvent(contactRelationship: PrisonerContactRelationshipDetails, source: Source, user: User) {
@@ -330,7 +330,6 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A prisoner contact has been created",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactRelationship.contactId.toString(),
         "linked_prisoners_count" to "1",
         "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
@@ -352,7 +351,6 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "username" to user.username,
         "contact_id" to contactRelationship.contactId.toString(),
         "linked_prisoners_count" to "1",
-        "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
         "prisoner_number" to contactRelationship.prisonerNumber,
       ),
@@ -369,7 +367,6 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "username" to user.username,
         "contact_id" to contactRelationship.contactId.toString(),
         "linked_prisoners_count" to "1",
-        "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
         "prisoner_number" to contactRelationship.prisonerNumber,
       ),
@@ -386,7 +383,6 @@ class AddContactRelationshipIntegrationTest : SecureAPIIntegrationTestBase() {
         "username" to user.username,
         "contact_id" to contactRelationship.contactId.toString(),
         "linked_prisoners_count" to "1",
-        "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_contact_id" to contactRelationship.prisonerContactId.toString(),
         "prisoner_number" to contactRelationship.prisonerNumber,
       ),

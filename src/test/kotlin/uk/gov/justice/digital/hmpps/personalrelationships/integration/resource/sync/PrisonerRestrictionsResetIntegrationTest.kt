@@ -200,7 +200,7 @@ class PrisonerRestrictionsResetIntegrationTest : PostgresIntegrationTestBase() {
         personReference = PersonReference(RESETTING_PRISONER_NUMBER),
       )
 
-      assertCustomPrisonerRestrictionCreatedEvent(RESETTING_PRISONER_NUMBER, restrictionId, Source.NOMIS, User("SYS", null))
+      assertCustomPrisonerRestrictionCreatedEvent(RESETTING_PRISONER_NUMBER, restrictionId, Source.NOMIS, User("SYS"))
     }
 // Verify that a PRISONER_RESTRICTION_DELETED event was fired for the removed prisoner
     response.deletedRestrictions.forEach {
@@ -215,7 +215,7 @@ class PrisonerRestrictionsResetIntegrationTest : PostgresIntegrationTestBase() {
         personReference = PersonReference(RESETTING_PRISONER_NUMBER),
       )
 
-      assertCustomPrisonerRestrictionDeletedEvent(RESETTING_PRISONER_NUMBER, it, Source.NOMIS, User("SYS", null))
+      assertCustomPrisonerRestrictionDeletedEvent(RESETTING_PRISONER_NUMBER, it, Source.NOMIS, User("SYS"))
     }
   }
 

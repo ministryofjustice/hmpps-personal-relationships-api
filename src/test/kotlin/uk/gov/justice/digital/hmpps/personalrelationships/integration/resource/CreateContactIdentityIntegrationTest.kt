@@ -205,11 +205,11 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_CREATED,
-      additionalInfo = ContactIdentityInfo(created.contactIdentityId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactIdentityInfo(created.contactIdentityId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
 
-    assertCustomEvent(created, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(created, Source.DPS, User("created"))
   }
 
   @Test
@@ -226,7 +226,7 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_IDENTITY_CREATED,
-      additionalInfo = ContactIdentityInfo(created.contactIdentityId, Source.DPS, "created", "BXI"),
+      additionalInfo = ContactIdentityInfo(created.contactIdentityId, Source.DPS, "created", null),
       personReference = PersonReference(created.contactId),
     )
   }
@@ -249,7 +249,6 @@ class CreateContactIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A contact identity has been created",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactIdentityDetails.contactId.toString(),
         "contact_identity_id" to contactIdentityDetails.contactIdentityId.toString(),
         "linked_prisoners_count" to "0",

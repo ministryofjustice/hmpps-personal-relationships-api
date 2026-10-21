@@ -75,7 +75,7 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(response!!.id, Source.DPS, "read_write_user", "BXI"),
+      additionalInfo = PrisonerDomesticStatus(response!!.id, Source.DPS, "read_write_user", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -112,7 +112,7 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(response!!.id, Source.DPS, "read_write_user", "BXI"),
+      additionalInfo = PrisonerDomesticStatus(response!!.id, Source.DPS, "read_write_user", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -160,11 +160,11 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
       )
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_DOMESTIC_STATUS_CREATED,
-      additionalInfo = PrisonerDomesticStatus(response.id, Source.DPS, "read_write_user", "BXI"),
+      additionalInfo = PrisonerDomesticStatus(response.id, Source.DPS, "read_write_user", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
 
-    assertCustomEvent(prisonerNumber, updateResponse, Source.DPS, User("read_write_user", "BXI"))
+    assertCustomEvent(prisonerNumber, updateResponse, Source.DPS, User("read_write_user"))
   }
 
   @Test
@@ -240,7 +240,6 @@ class CreateOrUpdatePrisonerDomesticStatusIntegrationTest : SecureAPIIntegration
         "description" to "A domestic status record has been created",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "prisoner_number" to prisonerNumber,
         "prisoner_domestic_status_id" to prisonerDomesticStatusResponse.id.toString(),
       ),

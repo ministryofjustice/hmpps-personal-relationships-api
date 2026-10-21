@@ -8,7 +8,6 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
@@ -29,8 +28,6 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
   fun resetEvents() {
     stubEvents.reset()
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
-    stubGetUserByUsername(UserDetails("CREATOR", "Create", "KMI"))
-    stubGetUserByUsername(UserDetails("UPDATER", "Update", "BXI"))
   }
 
   @Test
@@ -163,11 +160,11 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_CREATED,
-      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, "CREATOR", "KMI"),
+      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, "CREATOR", null),
       personReference = PersonReference(dpsContactId = employment.contactId),
     )
 
-    assertCustomCreatedEvent(employment, Source.NOMIS, User("CREATOR", "KMI"))
+    assertCustomCreatedEvent(employment, Source.NOMIS, User("CREATOR"))
   }
 
   @Test
@@ -200,11 +197,11 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_UPDATED,
-      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, updateEmploymentRequest.updatedBy, "BXI"),
+      additionalInfo = EmploymentInfo(employment.employmentId, Source.NOMIS, updateEmploymentRequest.updatedBy, null),
       personReference = PersonReference(dpsContactId = updatedEmployment.contactId),
     )
 
-    assertCustomUpdatedEvent(updatedEmployment, Source.NOMIS, User(updateEmploymentRequest.updatedBy, "BXI"))
+    assertCustomUpdatedEvent(updatedEmployment, Source.NOMIS, User(updateEmploymentRequest.updatedBy))
   }
 
   @Test
@@ -286,7 +283,6 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "contact_id" to syncEmployment.contactId.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_employment_id" to syncEmployment.employmentId.toString(),
         "linked_prisoners_count" to "0",
       ),
@@ -304,7 +300,6 @@ class SyncEmploymentIntegrationTest : PostgresIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "contact_id" to syncEmployment.contactId.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_employment_id" to syncEmployment.employmentId.toString(),
         "linked_prisoners_count" to "0",
       ),

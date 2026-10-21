@@ -8,7 +8,6 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
@@ -32,8 +31,6 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     setCurrentUser(StubUser.READ_WRITE_USER)
     savedContactId = testAPIClient.createAContact(aMinimalCreateContactRequest()).id
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
-    stubGetUserByUsername(UserDetails("CREATE", "Create", "KMI"))
-    stubGetUserByUsername(UserDetails("UPDATE", "Update", "BXI"))
   }
 
   @Test
@@ -162,11 +159,11 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_CREATED,
-      additionalInfo = ContactRestrictionInfo(contactRestriction.contactRestrictionId, Source.NOMIS, "CREATE", "KMI"),
+      additionalInfo = ContactRestrictionInfo(contactRestriction.contactRestrictionId, Source.NOMIS, "CREATE", null),
       personReference = PersonReference(dpsContactId = contactRestriction.contactId),
     )
 
-    assertCustomCreatedEvent(contactRestriction, Source.NOMIS, User("CREATE", "KMI"))
+    assertCustomCreatedEvent(contactRestriction, Source.NOMIS, User("CREATE"))
   }
 
   @Test
@@ -220,11 +217,11 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_RESTRICTION_UPDATED,
-      additionalInfo = ContactRestrictionInfo(updatedRestriction.contactRestrictionId, Source.NOMIS, "UPDATE", "BXI"),
+      additionalInfo = ContactRestrictionInfo(updatedRestriction.contactRestrictionId, Source.NOMIS, "UPDATE", null),
       personReference = PersonReference(dpsContactId = updatedRestriction.contactId),
     )
 
-    assertCustomUpdatedEvent(updatedRestriction, Source.NOMIS, User("UPDATE", "BXI"))
+    assertCustomUpdatedEvent(updatedRestriction, Source.NOMIS, User("UPDATE"))
   }
 
   @Test
@@ -289,7 +286,6 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "contact_id" to syncContactRestriction.contactId.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_restriction_id" to syncContactRestriction.contactRestrictionId.toString(),
         "restriction_code" to syncContactRestriction.restrictionType,
         "linked_prisoners_count" to "0",
@@ -308,7 +304,6 @@ class SyncContactRestrictionIntegrationTest : PostgresIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "contact_id" to syncContactRestriction.contactId.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_restriction_id" to syncContactRestriction.contactRestrictionId.toString(),
         "restriction_code" to syncContactRestriction.restrictionType,
         "linked_prisoners_count" to "0",

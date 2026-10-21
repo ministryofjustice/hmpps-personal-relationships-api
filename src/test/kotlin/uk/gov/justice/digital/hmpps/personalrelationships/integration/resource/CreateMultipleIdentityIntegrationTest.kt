@@ -246,7 +246,7 @@ class CreateMultipleIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(createdTime).isNotNull()
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_IDENTITY_CREATED,
-        additionalInfo = ContactIdentityInfo(contactIdentityId, Source.DPS, "created", "BXI"),
+        additionalInfo = ContactIdentityInfo(contactIdentityId, Source.DPS, "created", null),
         personReference = PersonReference(savedContactId),
       )
     }
@@ -261,12 +261,12 @@ class CreateMultipleIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
       assertThat(createdTime).isNotNull()
       stubEvents.assertHasEvent(
         event = OutboundEvent.CONTACT_IDENTITY_CREATED,
-        additionalInfo = ContactIdentityInfo(contactIdentityId, Source.DPS, "created", "BXI"),
+        additionalInfo = ContactIdentityInfo(contactIdentityId, Source.DPS, "created", null),
         personReference = PersonReference(savedContactId),
       )
     }
 
-    assertCustomEvent(created.first(), Source.DPS, User("created", "BXI"))
+    assertCustomEvent(created.first(), Source.DPS, User("created"))
   }
 
   companion object {
@@ -318,7 +318,6 @@ class CreateMultipleIdentityIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A contact identity has been created",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to contactIdentityDetails.contactId.toString(),
         "contact_identity_id" to contactIdentityDetails.contactIdentityId.toString(),
         "linked_prisoners_count" to "0",

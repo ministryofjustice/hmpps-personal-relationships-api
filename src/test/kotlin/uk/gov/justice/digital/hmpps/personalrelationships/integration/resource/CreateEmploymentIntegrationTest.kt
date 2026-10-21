@@ -103,11 +103,11 @@ class CreateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_CREATED,
-      additionalInfo = EmploymentInfo(created.employmentId, Source.DPS, "created", "BXI"),
+      additionalInfo = EmploymentInfo(created.employmentId, Source.DPS, "created", null),
       personReference = PersonReference(dpsContactId = created.contactId),
     )
 
-    assertCustomEvent(created, Source.DPS, User("created", "BXI"))
+    assertCustomEvent(created, Source.DPS, User("created"))
   }
 
   private fun assertCustomEvent(employmentDetails: EmploymentDetails, source: Source, user: User) {
@@ -118,7 +118,6 @@ class CreateEmploymentIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A contact employment has been created",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to employmentDetails.contactId.toString(),
         "contact_employment_id" to employmentDetails.employmentId.toString(),
         "linked_prisoners_count" to "0",

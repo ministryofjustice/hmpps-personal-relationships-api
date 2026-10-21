@@ -8,7 +8,6 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.personalrelationships.client.manage.users.UserDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.CreateContactRequest
@@ -31,8 +30,6 @@ class SyncContactPhoneIntegrationTest : PostgresIntegrationTestBase() {
     setCurrentUser(StubUser.READ_WRITE_USER)
     savedContactId = testAPIClient.createAContact(aMinimalCreateContactRequest()).id
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
-    stubGetUserByUsername(UserDetails("CREATE", "Create", "KMI"))
-    stubGetUserByUsername(UserDetails("UPDATE", "Update", "BXI"))
   }
 
   @Test
@@ -159,11 +156,11 @@ class SyncContactPhoneIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_CREATED,
-      additionalInfo = ContactPhoneInfo(contactPhone.contactPhoneId, Source.NOMIS, "CREATE", "KMI"),
+      additionalInfo = ContactPhoneInfo(contactPhone.contactPhoneId, Source.NOMIS, "CREATE", null),
       personReference = PersonReference(dpsContactId = contactPhone.contactId),
     )
 
-    assertCustomCreatedEvent(contactPhone, 0, Source.NOMIS, User("CREATE", "KMI"))
+    assertCustomCreatedEvent(contactPhone, 0, Source.NOMIS, User("CREATE"))
   }
 
   @Test
@@ -215,11 +212,11 @@ class SyncContactPhoneIntegrationTest : PostgresIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.CONTACT_PHONE_UPDATED,
-      additionalInfo = ContactPhoneInfo(contactPhone.contactPhoneId, Source.NOMIS, "UPDATE", "BXI"),
+      additionalInfo = ContactPhoneInfo(contactPhone.contactPhoneId, Source.NOMIS, "UPDATE", null),
       personReference = PersonReference(dpsContactId = contactPhone.contactId),
     )
 
-    assertCustomUpdatedEvent(updatedPhone, 0, Source.NOMIS, User("UPDATE", "BXI"))
+    assertCustomUpdatedEvent(updatedPhone, 0, Source.NOMIS, User("UPDATE"))
   }
 
   @Test
@@ -282,7 +279,6 @@ class SyncContactPhoneIntegrationTest : PostgresIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "contact_id" to syncContactPhone.contactId.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_phone_id" to syncContactPhone.contactPhoneId.toString(),
         "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),
@@ -300,7 +296,6 @@ class SyncContactPhoneIntegrationTest : PostgresIntegrationTestBase() {
         "source" to source.name,
         "username" to user.username,
         "contact_id" to syncContactPhone.contactId.toString(),
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_phone_id" to syncContactPhone.contactPhoneId.toString(),
         "linked_prisoners_count" to linkedPrisonersCount.toString(),
       ),

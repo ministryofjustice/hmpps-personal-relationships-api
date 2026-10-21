@@ -20,10 +20,6 @@ abstract class ContactCustomTelemetryEvent(
       "linked_prisoners_count" to linkedPrisonerCount.toString(),
     )
 
-    if (user.activeCaseLoadId != null) {
-      properties["active_caseload_id"] = user.activeCaseLoadId
-    }
-
     return properties.toMap() + customProperties()
   }
 

@@ -94,8 +94,8 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         checkForExpectedEvents(relationshipsRemoved, relationshipsCreated, createdPrisonerNumber = "A3333AA")
         relationshipsRemoved.forEach { relationship ->
           relationship.prisonerContactRestrictionIds.forEach { restrictionId ->
-            assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, "A3333AA", 0, Source.NOMIS, User("SYS", null))
-            assertCustomPrisonerContactDeletedEvent(relationship.contactId, relationship.prisonerContactId, relationship.prisonerNumber, 0, Source.NOMIS, User("SYS", null))
+            assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, "A3333AA", 0, Source.NOMIS, User("SYS"))
+            assertCustomPrisonerContactDeletedEvent(relationship.contactId, relationship.prisonerContactId, relationship.prisonerNumber, 0, Source.NOMIS, User("SYS"))
           }
         }
       }
@@ -155,15 +155,15 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         checkForExpectedEvents(relationshipsRemoved, relationshipsCreated, createdPrisonerNumber = "A3333AA")
         relationshipsRemoved.forEach { relationship ->
           relationship.prisonerContactRestrictionIds.forEach { restrictionId ->
-            assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, "A3333AA", 1, Source.NOMIS, User("SYS", null))
-            assertCustomPrisonerContactDeletedEvent(relationship.contactId, relationship.prisonerContactId, relationship.prisonerNumber, 1, Source.NOMIS, User("SYS", null))
+            assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, "A3333AA", 1, Source.NOMIS, User("SYS"))
+            assertCustomPrisonerContactDeletedEvent(relationship.contactId, relationship.prisonerContactId, relationship.prisonerNumber, 1, Source.NOMIS, User("SYS"))
           }
         }
 
         relationshipsCreated.forEach { created ->
           created.restrictions.forEach { restriction ->
-            assertCustomPrisonerContactRestrictionCreatedEvent(created.contactId, restriction.dpsId, "A3333AA", 1, Source.NOMIS, User("SYS", null))
-            assertCustomPrisonerContactCreatedEvent(created.contactId, created.relationship.dpsId, "A3333AA", 1, Source.NOMIS, User("SYS", null))
+            assertCustomPrisonerContactRestrictionCreatedEvent(created.contactId, restriction.dpsId, "A3333AA", 1, Source.NOMIS, User("SYS"))
+            assertCustomPrisonerContactCreatedEvent(created.contactId, created.relationship.dpsId, "A3333AA", 1, Source.NOMIS, User("SYS"))
           }
         }
       }
@@ -241,8 +241,8 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         checkForExpectedEvents(relationshipsRemoved, relationshipsCreated, createdPrisonerNumber = "A3333AA")
         relationshipsRemoved.forEach { relationship ->
           relationship.prisonerContactRestrictionIds.forEach { restrictionId ->
-            assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, "A3333AA", 0, Source.NOMIS, User("SYS", null))
-            assertCustomPrisonerContactDeletedEvent(relationship.contactId, relationship.prisonerContactId, relationship.prisonerNumber, 0, Source.NOMIS, User("SYS", null))
+            assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, "A3333AA", 0, Source.NOMIS, User("SYS"))
+            assertCustomPrisonerContactDeletedEvent(relationship.contactId, relationship.prisonerContactId, relationship.prisonerNumber, 0, Source.NOMIS, User("SYS"))
           }
         }
       }
@@ -313,15 +313,15 @@ class SyncAdminIntegrationTest : PostgresIntegrationTestBase() {
         checkForExpectedEvents(relationshipsRemoved, relationshipsCreated, createdPrisonerNumber = "A4444AA")
         relationshipsRemoved.forEach { relationship ->
           relationship.prisonerContactRestrictionIds.forEach { restrictionId ->
-            assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, "A4444AA", 1, Source.NOMIS, User("SYS", null))
-            assertCustomPrisonerContactDeletedEvent(relationship.contactId, relationship.prisonerContactId, relationship.prisonerNumber, 1, Source.NOMIS, User("SYS", null))
+            assertCustomPrisonerContactRestrictionDeletedEvent(relationship.contactId, restrictionId, "A4444AA", 1, Source.NOMIS, User("SYS"))
+            assertCustomPrisonerContactDeletedEvent(relationship.contactId, relationship.prisonerContactId, relationship.prisonerNumber, 1, Source.NOMIS, User("SYS"))
           }
         }
 
         relationshipsCreated.forEach { created ->
           created.restrictions.forEach { restriction ->
-            assertCustomPrisonerContactRestrictionCreatedEvent(created.contactId, restriction.dpsId, "A4444AA", 1, Source.NOMIS, User("SYS", null))
-            assertCustomPrisonerContactCreatedEvent(created.contactId, created.relationship.dpsId, "A4444AA", 1, Source.NOMIS, User("SYS", null))
+            assertCustomPrisonerContactRestrictionCreatedEvent(created.contactId, restriction.dpsId, "A4444AA", 1, Source.NOMIS, User("SYS"))
+            assertCustomPrisonerContactCreatedEvent(created.contactId, created.relationship.dpsId, "A4444AA", 1, Source.NOMIS, User("SYS"))
           }
         }
       }

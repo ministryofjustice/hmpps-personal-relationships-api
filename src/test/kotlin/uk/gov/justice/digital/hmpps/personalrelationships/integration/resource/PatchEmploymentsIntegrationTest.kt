@@ -215,24 +215,24 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
     }
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_CREATED,
-      additionalInfo = EmploymentInfo(newEmployment.employmentId, source = Source.DPS, "updated", "BXI"),
+      additionalInfo = EmploymentInfo(newEmployment.employmentId, source = Source.DPS, "updated", null),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_UPDATED,
-      additionalInfo = EmploymentInfo(employmentToBeUpdated.employmentId, source = Source.DPS, "updated", "BXI"),
+      additionalInfo = EmploymentInfo(employmentToBeUpdated.employmentId, source = Source.DPS, "updated", null),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
     stubEvents.assertHasEvent(
       event = OutboundEvent.EMPLOYMENT_DELETED,
-      additionalInfo = EmploymentInfo(employmentToBeDeleted.employmentId, source = Source.DPS, "updated", "BXI"),
+      additionalInfo = EmploymentInfo(employmentToBeDeleted.employmentId, source = Source.DPS, "updated", null),
       personReference = PersonReference(dpsContactId = savedContactId),
     )
     stubEvents.assertHasNoEvents(
       event = OutboundEvent.EMPLOYMENT_UPDATED,
-      additionalInfo = EmploymentInfo(employmentToRemainUntouched.employmentId, source = Source.DPS, "updated", "BXI"),
+      additionalInfo = EmploymentInfo(employmentToRemainUntouched.employmentId, source = Source.DPS, "updated", null),
     )
-    assertCustomEvent(newEmployment, 0, Source.DPS, User("updated", "BXI"))
+    assertCustomEvent(newEmployment, 0, Source.DPS, User("updated"))
   }
 
   @Test
@@ -353,7 +353,6 @@ class PatchEmploymentsIntegrationTest : SecureAPIIntegrationTestBase() {
         "description" to "A contact employment has been created",
         "source" to source.name,
         "username" to user.username,
-        "active_caseload_id" to user.activeCaseLoadId,
         "contact_id" to updatedEmploymentDetails.contactId.toString(),
         "contact_employment_id" to updatedEmploymentDetails.employmentId.toString(),
         "linked_prisoners_count" to linkedPrisonersCount.toString(),
