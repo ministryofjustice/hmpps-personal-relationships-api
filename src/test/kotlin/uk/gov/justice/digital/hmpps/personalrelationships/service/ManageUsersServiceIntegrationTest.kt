@@ -68,4 +68,16 @@ class ManageUsersServiceIntegrationTest {
 
     verify(manageUsersApiClient, times(2)).getUserByUsername("FOO")
   }
+
+  @Test
+  fun `should retry null lookups and cache the next successful result`() {
+    val user = UserDetails("FOO", "Foo User")
+    whenever(manageUsersApiClient.getUserByUsername("FOO")).thenReturn(null, user)
+
+    assertThat(manageUsersService.getUserByUsername("FOO")).isNull()
+    assertThat(manageUsersService.getUserByUsername("FOO")).isEqualTo(user)
+    assertThat(manageUsersService.getUserByUsername("FOO")).isEqualTo(user)
+
+    verify(manageUsersApiClient, times(2)).getUserByUsername("FOO")
+  }
 }
