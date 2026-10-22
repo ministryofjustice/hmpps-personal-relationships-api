@@ -97,7 +97,7 @@ For more information about the Gatling tests, see the [Gatling README](src/gatli
 
 ## Domain events
 
-The [AsyncAPI specification](async-api.yml) documents the 37 event types published to the shared HMPPS domain events SNS topic.
+The [AsyncAPI specification](async-api.yml) documents the event types published to the shared HMPPS domain events SNS topic.
 It references the message schemas and examples maintained in [hmpps-domain-events](https://github.com/ministryofjustice/hmpps-domain-events/tree/main/spec/schemas/contacts-api).
 Open the Event docs badge above to view the specification in AsyncAPI Studio.
 
