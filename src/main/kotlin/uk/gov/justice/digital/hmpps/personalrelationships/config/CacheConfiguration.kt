@@ -30,6 +30,6 @@ class CacheConfiguration {
   @CacheEvict(value = [USER_DETAILS_CACHE], allEntries = true)
   @Scheduled(fixedDelay = USER_DETAILS_EVICT_HOURS, timeUnit = TimeUnit.HOURS)
   fun cacheEvictUserDetails() {
-    log.info("Evicting cache: $USER_DETAILS_CACHE after $USER_DETAILS_EVICT_HOURS minutes")
+    log.info("Evicting cache: $USER_DETAILS_CACHE after $USER_DETAILS_EVICT_HOURS hours")
   }
 }
