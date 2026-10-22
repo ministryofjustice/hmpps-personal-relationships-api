@@ -45,7 +45,7 @@ dependencies {
   implementation("io.github.cdimascio:dotenv-kotlin:6.5.1")
 
   // CSV dependencies
-  implementation("tools.jackson.dataformat:jackson-dataformat-csv:3.2.3")
+  implementation("tools.jackson.dataformat:jackson-dataformat-csv:3.2.4")
 
   // Database dependencies
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
