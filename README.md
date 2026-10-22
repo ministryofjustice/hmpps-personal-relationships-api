@@ -4,6 +4,7 @@
 [![Docker Repository on ghcr](https://img.shields.io/badge/ghcr.io-repository-2496ED.svg?logo=docker)](https://ghcr.io/ministryofjustice/hmpps-personal-relationships-api)
 [![API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://personal-relationships-api-dev.hmpps.service.justice.gov.uk/swagger-ui/index.html)
 [![GitHub Actions Pipeline](https://github.com/ministryofjustice/hmpps-personal-relationships-api/actions/workflows/pipeline.yml/badge.svg)](https://github.com/ministryofjustice/hmpps-personal-relationships-api/actions/workflows/pipeline.yml)
+[![Event docs](https://img.shields.io/badge/Event_docs-view-85EA2D.svg)](https://studio.asyncapi.com/?url=https://raw.githubusercontent.com/ministryofjustice/hmpps-personal-relationships-api/main/async-api.yml)
 
 API to support the front end service allowing court and probation users to manage personal relationships for the people in prison.
 
@@ -93,6 +94,12 @@ Example:
 After running the tests, the results will be available in the `build/reports/gatling` directory. Open the `index.html` file in a web browser to view the results.
 
 For more information about the Gatling tests, see the [Gatling README](src/gatling/README.md).
+
+## Domain events
+
+The [AsyncAPI specification](async-api.yml) documents the 37 event types published to the shared HMPPS domain events SNS topic.
+It references the message schemas and examples maintained in [hmpps-domain-events](https://github.com/ministryofjustice/hmpps-domain-events/tree/main/spec/schemas/contacts-api).
+Open the Event docs badge above to view the specification in AsyncAPI Studio.
 
 ## DPS and NOMIS contact_id and person_id sync
 To allow searching for a contact by the same id in both NOMIS and DPS we are keeping contact_id in sync with NOMIS' person_id.
