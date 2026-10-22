@@ -1,0 +1,226 @@
+asyncapi: 3.0.0
+info:
+  title: Personal Relationships API
+  description: Publishes events relating to contacts, prisoner relationships, restrictions, domestic status and number of children.
+  version: 1.0.0
+
+defaultContentType: application/json
+
+servers:
+  development:
+    host: hmpps-domain-events-dev.live-1.cloud-platform.service.justice.gov.uk
+    protocol: sns
+    description: Development environment
+  preproduction:
+    host: hmpps-domain-events-preprod.live-1.cloud-platform.service.justice.gov.uk
+    protocol: sns
+    description: Pre-production environment
+  production:
+    host: hmpps-domain-events-prod.live-1.cloud-platform.service.justice.gov.uk
+    protocol: sns
+    description: Production environment
+
+components:
+  messages:
+    contacts-api.contact.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-created.yaml
+    contacts-api.contact.updated:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-updated.yaml
+    contacts-api.contact.deleted:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-deleted.yaml
+    contacts-api.contact-address.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-address-created.yaml
+    contacts-api.contact-address.updated:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-address-updated.yaml
+    contacts-api.contact-address.deleted:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-address-deleted.yaml
+    contacts-api.contact-address-phone.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-address-phone-created.yaml
+    contacts-api.contact-address-phone.updated:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-address-phone-updated.yaml
+    contacts-api.contact-address-phone.deleted:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-address-phone-deleted.yaml
+    contacts-api.contact-phone.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-phone-created.yaml
+    contacts-api.contact-phone.updated:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-phone-updated.yaml
+    contacts-api.contact-phone.deleted:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-phone-deleted.yaml
+    contacts-api.contact-email.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-email-created.yaml
+    contacts-api.contact-email.updated:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-email-updated.yaml
+    contacts-api.contact-email.deleted:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-email-deleted.yaml
+    contacts-api.contact-identity.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-identity-created.yaml
+    contacts-api.contact-identity.updated:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-identity-updated.yaml
+    contacts-api.contact-identity.deleted:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-identity-deleted.yaml
+    contacts-api.contact-restriction.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-restriction-created.yaml
+    contacts-api.contact-restriction.updated:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-restriction-updated.yaml
+    contacts-api.contact-restriction.deleted:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-contact-restriction-deleted.yaml
+    contacts-api.prisoner-contact.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-prisoner-contact-created.yaml
+    contacts-api.prisoner-contact.updated:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-prisoner-contact-updated.yaml
+    contacts-api.prisoner-contact.deleted:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-prisoner-contact-deleted.yaml
+    contacts-api.prisoner-contact-restriction.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-prisoner-contact-restriction-created.yaml
+    contacts-api.prisoner-contact-restriction.updated:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-prisoner-contact-restriction-updated.yaml
+    contacts-api.prisoner-contact-restriction.deleted:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-prisoner-contact-restriction-deleted.yaml
+    contacts-api.employment.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-employment-created.yaml
+    contacts-api.employment.updated:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-employment-updated.yaml
+    contacts-api.employment.deleted:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/contacts-api-employment-deleted.yaml
+    personal-relationships-api.number-of-children.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/personal-relationships-api-number-of-children-created.yaml
+    personal-relationships-api.number-of-children.updated:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/personal-relationships-api-number-of-children-updated.yaml
+    personal-relationships-api.domestic-status.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/personal-relationships-api-domestic-status-created.yaml
+    personal-relationships-api.domestic-status.updated:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/personal-relationships-api-domestic-status-updated.yaml
+    personal-relationships-api.prisoner-restriction.created:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/personal-relationships-api-prisoner-restriction-created.yaml
+    personal-relationships-api.prisoner-restriction.updated:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/personal-relationships-api-prisoner-restriction-updated.yaml
+    personal-relationships-api.prisoner-restriction.deleted:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/contacts-api/personal-relationships-api-prisoner-restriction-deleted.yaml
+
+channels:
+  hmpps-domain-events:
+    description: HMPPS domain events SNS topic. Subscribers can filter messages using the eventType message attribute.
+    servers:
+      - $ref: '#/servers/development'
+      - $ref: '#/servers/preproduction'
+      - $ref: '#/servers/production'
+    messages:
+      contacts-api.contact.created:
+        $ref: '#/components/messages/contacts-api.contact.created'
+      contacts-api.contact.updated:
+        $ref: '#/components/messages/contacts-api.contact.updated'
+      contacts-api.contact.deleted:
+        $ref: '#/components/messages/contacts-api.contact.deleted'
+      contacts-api.contact-address.created:
+        $ref: '#/components/messages/contacts-api.contact-address.created'
+      contacts-api.contact-address.updated:
+        $ref: '#/components/messages/contacts-api.contact-address.updated'
+      contacts-api.contact-address.deleted:
+        $ref: '#/components/messages/contacts-api.contact-address.deleted'
+      contacts-api.contact-address-phone.created:
+        $ref: '#/components/messages/contacts-api.contact-address-phone.created'
+      contacts-api.contact-address-phone.updated:
+        $ref: '#/components/messages/contacts-api.contact-address-phone.updated'
+      contacts-api.contact-address-phone.deleted:
+        $ref: '#/components/messages/contacts-api.contact-address-phone.deleted'
+      contacts-api.contact-phone.created:
+        $ref: '#/components/messages/contacts-api.contact-phone.created'
+      contacts-api.contact-phone.updated:
+        $ref: '#/components/messages/contacts-api.contact-phone.updated'
+      contacts-api.contact-phone.deleted:
+        $ref: '#/components/messages/contacts-api.contact-phone.deleted'
+      contacts-api.contact-email.created:
+        $ref: '#/components/messages/contacts-api.contact-email.created'
+      contacts-api.contact-email.updated:
+        $ref: '#/components/messages/contacts-api.contact-email.updated'
+      contacts-api.contact-email.deleted:
+        $ref: '#/components/messages/contacts-api.contact-email.deleted'
+      contacts-api.contact-identity.created:
+        $ref: '#/components/messages/contacts-api.contact-identity.created'
+      contacts-api.contact-identity.updated:
+        $ref: '#/components/messages/contacts-api.contact-identity.updated'
+      contacts-api.contact-identity.deleted:
+        $ref: '#/components/messages/contacts-api.contact-identity.deleted'
+      contacts-api.contact-restriction.created:
+        $ref: '#/components/messages/contacts-api.contact-restriction.created'
+      contacts-api.contact-restriction.updated:
+        $ref: '#/components/messages/contacts-api.contact-restriction.updated'
+      contacts-api.contact-restriction.deleted:
+        $ref: '#/components/messages/contacts-api.contact-restriction.deleted'
+      contacts-api.prisoner-contact.created:
+        $ref: '#/components/messages/contacts-api.prisoner-contact.created'
+      contacts-api.prisoner-contact.updated:
+        $ref: '#/components/messages/contacts-api.prisoner-contact.updated'
+      contacts-api.prisoner-contact.deleted:
+        $ref: '#/components/messages/contacts-api.prisoner-contact.deleted'
+      contacts-api.prisoner-contact-restriction.created:
+        $ref: '#/components/messages/contacts-api.prisoner-contact-restriction.created'
+      contacts-api.prisoner-contact-restriction.updated:
+        $ref: '#/components/messages/contacts-api.prisoner-contact-restriction.updated'
+      contacts-api.prisoner-contact-restriction.deleted:
+        $ref: '#/components/messages/contacts-api.prisoner-contact-restriction.deleted'
+      contacts-api.employment.created:
+        $ref: '#/components/messages/contacts-api.employment.created'
+      contacts-api.employment.updated:
+        $ref: '#/components/messages/contacts-api.employment.updated'
+      contacts-api.employment.deleted:
+        $ref: '#/components/messages/contacts-api.employment.deleted'
+      personal-relationships-api.number-of-children.created:
+        $ref: '#/components/messages/personal-relationships-api.number-of-children.created'
+      personal-relationships-api.number-of-children.updated:
+        $ref: '#/components/messages/personal-relationships-api.number-of-children.updated'
+      personal-relationships-api.domestic-status.created:
+        $ref: '#/components/messages/personal-relationships-api.domestic-status.created'
+      personal-relationships-api.domestic-status.updated:
+        $ref: '#/components/messages/personal-relationships-api.domestic-status.updated'
+      personal-relationships-api.prisoner-restriction.created:
+        $ref: '#/components/messages/personal-relationships-api.prisoner-restriction.created'
+      personal-relationships-api.prisoner-restriction.updated:
+        $ref: '#/components/messages/personal-relationships-api.prisoner-restriction.updated'
+      personal-relationships-api.prisoner-restriction.deleted:
+        $ref: '#/components/messages/personal-relationships-api.prisoner-restriction.deleted'
+
+operations:
+  publish-event:
+    action: send
+    summary: Publish Personal Relationships API domain events
+    channel:
+      $ref: '#/channels/hmpps-domain-events'
+    messages:
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact.created'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact.updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact.deleted'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-address.created'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-address.updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-address.deleted'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-address-phone.created'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-address-phone.updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-address-phone.deleted'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-phone.created'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-phone.updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-phone.deleted'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-email.created'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-email.updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-email.deleted'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-identity.created'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-identity.updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-identity.deleted'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-restriction.created'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-restriction.updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.contact-restriction.deleted'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.prisoner-contact.created'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.prisoner-contact.updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.prisoner-contact.deleted'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.prisoner-contact-restriction.created'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.prisoner-contact-restriction.updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.prisoner-contact-restriction.deleted'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.employment.created'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.employment.updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/contacts-api.employment.deleted'
+      - $ref: '#/channels/hmpps-domain-events/messages/personal-relationships-api.number-of-children.created'
+      - $ref: '#/channels/hmpps-domain-events/messages/personal-relationships-api.number-of-children.updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/personal-relationships-api.domestic-status.created'
+      - $ref: '#/channels/hmpps-domain-events/messages/personal-relationships-api.domestic-status.updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/personal-relationships-api.prisoner-restriction.created'
+      - $ref: '#/channels/hmpps-domain-events/messages/personal-relationships-api.prisoner-restriction.updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/personal-relationships-api.prisoner-restriction.deleted'
