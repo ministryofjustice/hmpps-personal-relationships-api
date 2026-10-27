@@ -200,11 +200,18 @@ class ContactSearchService(
 
       NAMES_SOUND_LIKE -> {
         logger.info("NAMES_SOUND_LIKE search for last ${request.lastName}, first ${request.firstName},middle ${request.middleNames}")
+        val nativeSort = Sort.by(
+          manipulateSortToNative(pageable.sort).map {
+            if (it.property == "id") it.withProperty("contact_id") else it
+          }.toList(),
+        )
+        val nativePageable = PageRequest.of(pageable.pageNumber, pageable.pageSize, nativeSort)
+
         contactSearchRepository.findAllByNamesSoundLike(
           request.firstName?.trim(),
           request.middleNames?.trim(),
           request.lastName?.trim(),
-          pageable,
+          nativePageable,
         )
       }
 
@@ -308,7 +315,7 @@ class ContactSearchService(
   fun manipulateSortToNative(originalSort: Sort = Sort.unsorted()): Sort = if (originalSort.isUnsorted) {
     originalSort
   } else {
-    Sort.by(originalSort.map { Sort.Order(it.direction, convertCamelToSnake(it.property)) }.toList())
+    Sort.by(originalSort.map { it.withProperty(convertCamelToSnake(it.property)) }.toList())
   }
 
   fun convertCamelToSnake(property: String): String {

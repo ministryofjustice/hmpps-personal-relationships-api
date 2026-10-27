@@ -170,6 +170,61 @@ class ContactSearchServiceTest {
     }
 
     @Test
+    fun `NAMES_SOUND_LIKE trims names and preserves pagination with native sorting`() {
+      val pageable = PageRequest.of(2, 10, Sort.by(Sort.Order.desc("lastName").ignoreCase().nullsLast(), Sort.Order.asc("firstName"), Sort.Order.asc("dateOfBirth")))
+      val request = request.copy(
+        firstName = " first ",
+        middleNames = " middle ",
+        lastName = " last ",
+        searchType = UserSearchType.SOUNDS_LIKE,
+      )
+      val captorPageable = argumentCaptor<Pageable>()
+
+      whenever(contactSearchRepository.findAllByNamesSoundLike(any(), any(), any(), any()))
+        .thenReturn(PageImpl(emptyList<Long>(), pageable, 0))
+
+      service.searchContacts(request, pageable)
+
+      verify(contactSearchRepository).findAllByNamesSoundLike(
+        eq("first"),
+        eq("middle"),
+        eq("last"),
+        captorPageable.capture(),
+      )
+      assertThat(captorPageable.firstValue.pageNumber).isEqualTo(2)
+      assertThat(captorPageable.firstValue.pageSize).isEqualTo(10)
+      assertThat(captorPageable.firstValue.sort.toList()).containsExactly(
+        Sort.Order.desc("last_name").ignoreCase().nullsLast(),
+        Sort.Order.asc("first_name"),
+        Sort.Order.asc("date_of_birth"),
+        Sort.Order.asc("contact_id"),
+      )
+    }
+
+    @ParameterizedTest
+    @EnumSource(Sort.Direction::class)
+    fun `NAMES_SOUND_LIKE preserves the id sort alias for the native query`(direction: Sort.Direction) {
+      val pageable = PageRequest.of(0, 10, Sort.by(direction, "id"))
+      val captorPageable = argumentCaptor<Pageable>()
+
+      whenever(contactSearchRepository.findAllByNamesSoundLike(any(), any(), any(), any()))
+        .thenReturn(PageImpl(emptyList<Long>(), pageable, 0))
+
+      service.searchContacts(request.copy(searchType = UserSearchType.SOUNDS_LIKE), pageable)
+
+      verify(contactSearchRepository).findAllByNamesSoundLike(
+        eq(request.firstName),
+        eq(request.middleNames),
+        eq(request.lastName),
+        captorPageable.capture(),
+      )
+      assertThat(captorPageable.firstValue.sort.toList()).containsExactly(
+        Sort.Order(direction, "contact_id"),
+        Sort.Order.asc("contact_id"),
+      )
+    }
+
+    @Test
     fun `NAMES_SOUND_LIKE_AND_HISTORY uses rowLimiter and converts sort to snake_case`() {
       val pageable = PageRequest.of(0, 10, Sort.by("lastName", "firstName", "dateOfBirth"))
       val request = request.copy(
