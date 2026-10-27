@@ -106,14 +106,27 @@ interface ContactSearchRepository : JpaRepository<ContactEntity, Long> {
   )
   fun findAllByNamesMatch(firstName: String?, middleNames: String?, lastName: String?, rowLimiter: Int, pageable: Pageable): Page<Long>
 
+  // Materialize the matches so ordering and pagination cannot drive a surname-index scan before filtering.
   @Query(
-    """
-    select c.contactId
-    from ContactEntity c
-    where (:lastName is null or c.lastNameSoundex = CAST(function('soundex', CAST(:lastName AS string)) AS char(4)))
-      and (:firstName is null or c.firstNameSoundex = CAST(function('soundex', CAST(:firstName AS string)) AS char(4)))
-      and (:middleNames is null or c.middleNamesSoundex = CAST(function('soundex', CAST(:middleNames AS string)) AS char(4)))
+    value = """
+      with matching_contacts as materialized (
+        select c.*
+        from contact c
+        where (cast(:lastName as text) is null or c.last_name_soundex = cast(soundex(cast(:lastName as text)) as char(4)))
+          and (cast(:firstName as text) is null or c.first_name_soundex = cast(soundex(cast(:firstName as text)) as char(4)))
+          and (cast(:middleNames as text) is null or c.middle_names_soundex = cast(soundex(cast(:middleNames as text)) as char(4)))
+      )
+      select c.contact_id
+      from matching_contacts c
     """,
+    countQuery = """
+      select count(*)
+      from contact c
+      where (cast(:lastName as text) is null or c.last_name_soundex = cast(soundex(cast(:lastName as text)) as char(4)))
+        and (cast(:firstName as text) is null or c.first_name_soundex = cast(soundex(cast(:firstName as text)) as char(4)))
+        and (cast(:middleNames as text) is null or c.middle_names_soundex = cast(soundex(cast(:middleNames as text)) as char(4)))
+    """,
+    nativeQuery = true,
   )
   fun findAllByNamesSoundLike(firstName: String?, middleNames: String?, lastName: String?, pageable: Pageable): Page<Long>
 
