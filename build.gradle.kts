@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.12"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.13"
   id("org.openapi.generator") version "7.26.0"
   id("io.gatling.gradle") version "3.16.0"
   kotlin("plugin.spring") version "2.4.21"
@@ -38,9 +38,9 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-flyway")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.1")
-  implementation("io.sentry:sentry-spring-boot-4-starter:8.61.0")
+  implementation("io.sentry:sentry-spring-boot-4-starter:8.61.1")
   implementation("org.springframework.boot:spring-boot-starter-validation")
-  implementation("org.openapitools:jackson-databind-nullable:0.2.12")
+  implementation("org.openapitools:jackson-databind-nullable:0.2.13")
   implementation("org.apache.logging.log4j:log4j-api:2.26.1")
   implementation("io.github.cdimascio:dotenv-kotlin:6.5.1")
 
@@ -54,9 +54,9 @@ dependencies {
   implementation("org.springframework.data:spring-data-envers")
 
   // OpenAPI
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0")
 
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.32.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.33.0")
   implementation("org.springframework.boot:spring-boot-jackson2")
 
   // Test dependencies
