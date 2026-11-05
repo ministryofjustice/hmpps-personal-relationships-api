@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerDomesticStatusResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerNumberOfChildrenResponse
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerRestrictionDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerDomesticStatusResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerNumberOfChildrenResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerRestriction
@@ -56,6 +57,16 @@ class TelemetryPrisonerCustomEventService(private val telemetryService: Telemetr
 
   fun trackCreatePrisonerRestrictionEvent(prisonerNumber: String, syncPrisonerRestriction: SyncPrisonerRestriction, source: Source, user: User) {
     val event = PrisonerRestrictionCustomEvent(prisonerNumber, syncPrisonerRestriction, EventActionType.CREATE, source, user)
+    telemetryService.track(event)
+  }
+
+  fun trackCreatePrisonerRestrictionEvent(prisonerNumber: String, prisonerRestrictionDetails: PrisonerRestrictionDetails, source: Source, user: User) {
+    val event = PrisonerRestrictionCustomEvent(prisonerNumber, prisonerRestrictionDetails, EventActionType.CREATE, source, user)
+    telemetryService.track(event)
+  }
+
+  fun trackUpdatePrisonerRestrictionEvent(prisonerNumber: String, prisonerRestrictionDetails: PrisonerRestrictionDetails, source: Source, user: User) {
+    val event = PrisonerRestrictionCustomEvent(prisonerNumber, prisonerRestrictionDetails, EventActionType.UPDATE, source, user)
     telemetryService.track(event)
   }
 

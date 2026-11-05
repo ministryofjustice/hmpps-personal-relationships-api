@@ -5,10 +5,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
-import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argThat
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerRestriction
@@ -54,11 +54,13 @@ class SyncPrisonerRestrictionsServiceTest {
   fun `should delete prisoner restriction`() {
     val entity = createPrisonerRestrictionEntity()
     whenever(prisonerRestrictionsRepository.findById(1L)).thenReturn(Optional.of(entity))
-    doNothing().whenever(prisonerRestrictionsRepository).deleteById(1L)
 
     val response = service.deletePrisonerRestriction(1L)
 
-    verify(prisonerRestrictionsRepository).deleteById(1L)
+    verify(prisonerRestrictionsRepository).saveAndFlush(
+      argThat<PrisonerRestriction> { deletedAt != null && updatedBy == "SYS" && updatedTime == deletedAt },
+    )
+    verify(prisonerRestrictionsRepository, never()).deleteById(any())
     assertThat(response).usingRecursiveComparison().isEqualTo(mockPrisonerRestrictionResponse())
   }
 

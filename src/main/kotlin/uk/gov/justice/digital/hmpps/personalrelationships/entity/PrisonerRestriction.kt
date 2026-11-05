@@ -5,11 +5,13 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.hibernate.annotations.SQLRestriction
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Entity
 @Table(name = "prisoner_restrictions")
+@SQLRestriction("deleted_at IS NULL")
 data class PrisonerRestriction(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,4 +38,8 @@ data class PrisonerRestriction(
   val updatedBy: String? = null,
 
   val updatedTime: LocalDateTime? = null,
-)
+
+  val deletedAt: LocalDateTime? = null,
+) {
+  fun softDeleted(deletedBy: String, at: LocalDateTime = LocalDateTime.now()) = copy(deletedAt = at, updatedBy = deletedBy, updatedTime = at)
+}
