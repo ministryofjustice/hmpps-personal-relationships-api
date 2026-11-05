@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.util.StubUser
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+// Interim SAR coverage; remove with SubjectAccessRequestService once restrictions are migrated into Alerts.
 class SubjectAccessRequestIntegrationTest : PostgresIntegrationTestBase() {
   private val prisonerNumber = "S1234AR"
 

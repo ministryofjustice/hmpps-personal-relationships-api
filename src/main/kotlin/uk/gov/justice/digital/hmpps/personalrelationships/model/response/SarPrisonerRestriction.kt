@@ -4,6 +4,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerRestric
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+// Interim SAR payload: to be superseded by the Alerts SAR endpoint when restrictions are migrated into Alerts (see SubjectAccessRequestService).
 data class SubjectAccessRequestData(
   val prisonerNumber: String,
   val fromDate: LocalDate,
