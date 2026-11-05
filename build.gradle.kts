@@ -3,7 +3,7 @@ import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.14"
-  id("org.openapi.generator") version "7.26.0"
+  id("org.openapi.generator") version "7.27.0"
   id("io.gatling.gradle") version "3.16.0"
   kotlin("plugin.spring") version "2.4.21"
   kotlin("plugin.jpa") version "2.4.21"
