@@ -58,7 +58,7 @@ class ManagePrisonerRestrictionsIntegrationTest : SecureAPIIntegrationTestBase()
 
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_RESTRICTION_CREATED,
-      additionalInfo = PrisonerRestrictionInfo(created.prisonerRestrictionId, Source.DPS, "created", "BXI"),
+      additionalInfo = PrisonerRestrictionInfo(created.prisonerRestrictionId, Source.DPS, "created", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
     assertThat(testAPIClient.getPrisonerRestrictions(prisonerNumber).content.map { it.prisonerRestrictionId }).contains(created.prisonerRestrictionId)
@@ -85,7 +85,7 @@ class ManagePrisonerRestrictionsIntegrationTest : SecureAPIIntegrationTestBase()
     assertThat(updated.updatedBy).isEqualTo("updated")
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_RESTRICTION_UPDATED,
-      additionalInfo = PrisonerRestrictionInfo(created.prisonerRestrictionId, Source.DPS, "updated", "BXI"),
+      additionalInfo = PrisonerRestrictionInfo(created.prisonerRestrictionId, Source.DPS, "updated", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
@@ -109,7 +109,7 @@ class ManagePrisonerRestrictionsIntegrationTest : SecureAPIIntegrationTestBase()
     assertThat(row["updated_time"]).isEqualTo(row["deleted_at"])
     stubEvents.assertHasEvent(
       event = OutboundEvent.PRISONER_RESTRICTION_DELETED,
-      additionalInfo = PrisonerRestrictionInfo(created.prisonerRestrictionId, Source.DPS, "deleted", "BXI"),
+      additionalInfo = PrisonerRestrictionInfo(created.prisonerRestrictionId, Source.DPS, "deleted", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
