@@ -23,10 +23,13 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
   @Autowired
   lateinit var prisonerRestrictionsRepository: PrisonerRestrictionsRepository
 
+  @Autowired
+  lateinit var jdbcTemplate: org.springframework.jdbc.core.JdbcTemplate
+
   @BeforeEach
   fun setUp() {
     setCurrentUser(StubUser.SYNC_AND_MIGRATE_USER)
-    prisonerRestrictionsRepository.deleteAll()
+    jdbcTemplate.update("delete from prisoner_restrictions")
   }
 
   @Nested
@@ -106,6 +109,29 @@ class MigratePrisonerRestrictionsIntegrationTest : PostgresIntegrationTestBase()
 
       assertThat(restrictions[2].restrictionType).isEqualTo("NONCON")
       assertThat(restrictions[2].commentText).isEqualTo("No visits allowed")
+    }
+
+    @Test
+    fun `should remove previously soft deleted restrictions when migrating`() {
+      val prisonerNumber = "A1234ZZ"
+      webTestClient.post()
+        .uri("/migrate/prisoner-restrictions")
+        .headers(setAuthorisationUsingCurrentUser())
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(basicMigrationRequest(restrictionsList = listOf(prisonerRestrictionDetailsRequest())))
+        .exchange()
+        .expectStatus().isOk
+      jdbcTemplate.update("update prisoner_restrictions set deleted_at = now() where prisoner_number = ?", prisonerNumber)
+
+      webTestClient.post()
+        .uri("/migrate/prisoner-restrictions")
+        .headers(setAuthorisationUsingCurrentUser())
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(basicMigrationRequest(restrictionsList = listOf(prisonerRestrictionDetailsRequest())))
+        .exchange()
+        .expectStatus().isOk
+
+      assertThat(jdbcTemplate.queryForObject("select count(*) from prisoner_restrictions where prisoner_number = ?", Int::class.java, prisonerNumber)).isEqualTo(1)
     }
 
     @Test
