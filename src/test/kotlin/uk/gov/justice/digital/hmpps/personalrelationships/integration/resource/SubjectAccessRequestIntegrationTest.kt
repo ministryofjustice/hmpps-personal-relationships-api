@@ -8,15 +8,16 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerRestriction
-import uk.gov.justice.digital.hmpps.personalrelationships.integration.PostgresIntegrationTestBase
+import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerRestrictionsRepository
 import uk.gov.justice.digital.hmpps.personalrelationships.util.StubUser
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 // Interim SAR coverage; remove with SubjectAccessRequestService once restrictions are migrated into Alerts.
-class SubjectAccessRequestIntegrationTest : PostgresIntegrationTestBase() {
+class SubjectAccessRequestIntegrationTest : SecureAPIIntegrationTestBase() {
   private val prisonerNumber = "S1234AR"
 
   @Autowired
@@ -24,6 +25,11 @@ class SubjectAccessRequestIntegrationTest : PostgresIntegrationTestBase() {
 
   @Autowired
   private lateinit var jdbcTemplate: JdbcTemplate
+
+  override val allowedRoles: Set<String> = setOf("ROLE_SAR_DATA_ACCESS")
+
+  override fun baseRequestBuilder(): WebTestClient.RequestHeadersSpec<*> = webTestClient.get()
+    .uri("/subject-access-request?prn=$prisonerNumber")
 
   @BeforeEach
   fun setUp() {
@@ -59,16 +65,6 @@ class SubjectAccessRequestIntegrationTest : PostgresIntegrationTestBase() {
       .headers(setAuthorisationUsingCurrentUser())
       .exchange()
       .expectStatus().isNoContent
-  }
-
-  @Test
-  fun `should be forbidden without the SAR role`() {
-    setCurrentUser(StubUser.READ_ONLY_USER)
-    webTestClient.get()
-      .uri("/subject-access-request?prn=$prisonerNumber")
-      .headers(setAuthorisationUsingCurrentUser())
-      .exchange()
-      .expectStatus().isForbidden
   }
 
   private fun getSar(): JsonNode = ObjectMapper().readTree(

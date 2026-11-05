@@ -131,7 +131,7 @@ class ManagePrisonerRestrictionsIntegrationTest : SecureAPIIntegrationTestBase()
   }
 
   @Test
-  fun `should return not found and publish nothing when updating or deleting a restriction for another prisoner`() {
+  fun `should return not found for another prisoner`() {
     val created = create(createRequest())
     stubEvents.reset()
 
