@@ -32,6 +32,7 @@ class ManagePrisonerRestrictionsIntegrationTest : SecureAPIIntegrationTestBase()
   fun setUp() {
     jdbcTemplate.update("delete from prisoner_restrictions where prisoner_number = ?", prisonerNumber)
     setCurrentUser(StubUser.CREATING_USER)
+    stubPrisonSearchWithResponse(prisonerNumber)
   }
 
   @AfterEach
@@ -152,11 +153,26 @@ class ManagePrisonerRestrictionsIntegrationTest : SecureAPIIntegrationTestBase()
       .headers(setAuthorisationUsingCurrentUser())
       .bodyValue(createRequest(type = "NOPE"))
       .exchange()
-      .expectStatus().isNotFound
+      .expectStatus().isBadRequest
       .expectBody(ErrorResponse::class.java)
       .returnResult().responseBody!!
 
     assertThat(errors.userMessage).contains("NOPE")
+    stubEvents.assertHasNoEvents(event = OutboundEvent.PRISONER_RESTRICTION_CREATED)
+  }
+
+  @Test
+  fun `should not create a restriction for an unknown prisoner`() {
+    stubPrisonSearchWithNotFoundResponse("Z1111ZZ")
+
+    webTestClient.post()
+      .uri("/prisoner-restrictions/Z1111ZZ")
+      .contentType(MediaType.APPLICATION_JSON)
+      .headers(setAuthorisationUsingCurrentUser())
+      .bodyValue(createRequest())
+      .exchange()
+      .expectStatus().isNotFound
+
     stubEvents.assertHasNoEvents(event = OutboundEvent.PRISONER_RESTRICTION_CREATED)
   }
 

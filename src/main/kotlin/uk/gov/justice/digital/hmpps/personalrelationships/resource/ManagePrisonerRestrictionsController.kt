@@ -30,7 +30,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @Tag(name = "Restrictions")
 @RestController
-@RequestMapping(value = ["prisoner-restrictions/{prisonerNumber}"], produces = [MediaType.APPLICATION_JSON_VALUE])
+@RequestMapping(value = ["prisoner-restrictions/{prisonerNumber:[A-Z][0-9]{4}[A-Z]{2}}"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @AuthApiResponses
 class ManagePrisonerRestrictionsController(
   private val facade: ManagePrisonerRestrictionsFacade,

@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrict
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.UpdatePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerRestrictionDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerRestrictionsRepository
-import uk.gov.justice.digital.hmpps.personalrelationships.repository.ReferenceCodeRepository
 import java.time.LocalDateTime
 
 /**
@@ -21,7 +20,8 @@ import java.time.LocalDateTime
 @Transactional
 class ManagePrisonerRestrictionsService(
   private val prisonerRestrictionsRepository: PrisonerRestrictionsRepository,
-  private val referenceCodeRepository: ReferenceCodeRepository,
+  private val referenceCodeService: ReferenceCodeService,
+  private val prisonerService: PrisonerService,
   private val prisonerRestrictionsService: PrisonerRestrictionsService,
 ) {
 
@@ -30,7 +30,8 @@ class ManagePrisonerRestrictionsService(
     request: CreatePrisonerRestrictionRequest,
     user: User,
   ): PrisonerRestrictionDetails {
-    validateRequest(request.restrictionType, request.effectiveDate, request.expiryDate)
+    prisonerService.checkPrisonerExists(prisonerNumber)
+    validateRequest(request.restrictionType, request.effectiveDate, request.expiryDate, allowInactiveType = false)
     val saved = prisonerRestrictionsRepository.saveAndFlush(
       PrisonerRestriction(
         prisonerNumber = prisonerNumber,
@@ -55,7 +56,7 @@ class ManagePrisonerRestrictionsService(
     user: User,
   ): PrisonerRestrictionDetails {
     val existing = findForPrisoner(prisonerNumber, prisonerRestrictionId)
-    validateRequest(request.restrictionType, request.effectiveDate, request.expiryDate)
+    validateRequest(request.restrictionType, request.effectiveDate, request.expiryDate, allowInactiveType = true)
     prisonerRestrictionsRepository.saveAndFlush(
       existing.copy(
         restrictionType = request.restrictionType,
@@ -81,9 +82,8 @@ class ManagePrisonerRestrictionsService(
   private fun getDetails(prisonerNumber: String, prisonerRestrictionId: Long) = prisonerRestrictionsService.getPrisonerRestrictions(prisonerNumber)
     .first { it.prisonerRestrictionId == prisonerRestrictionId }
 
-  private fun validateRequest(restrictionType: String, effectiveDate: java.time.LocalDate, expiryDate: java.time.LocalDate?) {
-    referenceCodeRepository.findByGroupCodeAndCode(ReferenceCodeGroup.RESTRICTION, restrictionType)
-      ?: throw EntityNotFoundException("No reference data found for groupCode: ${ReferenceCodeGroup.RESTRICTION} and code: $restrictionType")
+  private fun validateRequest(restrictionType: String, effectiveDate: java.time.LocalDate, expiryDate: java.time.LocalDate?, allowInactiveType: Boolean) {
+    referenceCodeService.validateReferenceCode(ReferenceCodeGroup.RESTRICTION, restrictionType, allowInactiveType)
     if (expiryDate != null && expiryDate.isBefore(effectiveDate)) {
       throw IllegalArgumentException("Expiry date must be on or after the effective date")
     }
