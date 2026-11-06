@@ -38,6 +38,7 @@ enum class TelemetryCustomEventType(val eventName: String, val description: Stri
   PRISONER_RESTRICTION_CREATED_EVENT("prisoner-restriction-created", "A prisoner restriction has been created"),
   PRISONER_RESTRICTION_UPDATED_EVENT("prisoner-restriction-updated", "A prisoner restriction has been updated"),
   PRISONER_RESTRICTION_DELETED_EVENT("prisoner-restriction-deleted", "A prisoner restriction has been deleted"),
+  PRISONER_RESTRICTION_CLOSED_EVENT("prisoner-restriction-closed", "A prisoner restriction has been closed"),
   CONTACT_NEXT_OF_KIN_CREATED_EVENT("contact-next-of-kin-created", "A contact next of kin has been created"),
   CONTACT_NEXT_OF_KIN_DELETED_EVENT("contact-next-of-kin-deleted", "A contact next of kin has been deleted"),
   CONTACT_APPROVED_VISITOR_CREATED_EVENT("contact-approved-visitor-created", "A contact approved visitor has been created"),

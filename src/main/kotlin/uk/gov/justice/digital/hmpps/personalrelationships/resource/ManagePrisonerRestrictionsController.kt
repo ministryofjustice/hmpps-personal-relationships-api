@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -22,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.facade.ManagePrisonerRestrictionsFacade
+import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.ClosePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.CreatePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.UpdatePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerRestrictionDetails
@@ -101,14 +101,24 @@ class ManagePrisonerRestrictionsController(
     @RequestAttribute user: User,
   ): PrisonerRestrictionDetails = facade.updatePrisonerRestriction(prisonerNumber, prisonerRestrictionId, request, user)
 
-  @DeleteMapping("/{prisonerRestrictionId}")
+  @PostMapping("/{prisonerRestrictionId}/close", consumes = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
-    summary = "Delete a prisoner restriction",
-    description = "Deletes a prisoner restriction. A DPS-sourced domain event is published so the change is synchronised to NOMIS.",
+    summary = "Close a prisoner restriction",
+    description = "Closes a prisoner restriction by setting its expiry date to today or a future date, rather than deleting it. " +
+      "A DPS-sourced update domain event is published so the change is synchronised to NOMIS.",
   )
   @ApiResponses(
     value = [
-      ApiResponse(responseCode = "204", description = "Deleted the prisoner restriction"),
+      ApiResponse(
+        responseCode = "200",
+        description = "Closed the prisoner restriction",
+        content = [Content(mediaType = "application/json", schema = Schema(implementation = PrisonerRestrictionDetails::class))],
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "The expiry date is in the past or before the effective date, or the restriction has already expired",
+        content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+      ),
       ApiResponse(
         responseCode = "404",
         description = "The restriction was not found for this prisoner",
@@ -117,12 +127,10 @@ class ManagePrisonerRestrictionsController(
     ],
   )
   @PreAuthorize("hasAnyRole('ROLE_CONTACTS_ADMIN', 'ROLE_CONTACTS__RW')")
-  fun deletePrisonerRestriction(
+  fun closePrisonerRestriction(
     @PathVariable("prisonerNumber") @Parameter(description = "The prisoner number", example = "A1234BC") prisonerNumber: String,
     @PathVariable("prisonerRestrictionId") @Parameter(description = "The prisoner restriction id", example = "123456") prisonerRestrictionId: Long,
+    @Valid @RequestBody request: ClosePrisonerRestrictionRequest,
     @RequestAttribute user: User,
-  ): ResponseEntity<Void> {
-    facade.deletePrisonerRestriction(prisonerNumber, prisonerRestrictionId, user)
-    return ResponseEntity.noContent().build()
-  }
+  ): PrisonerRestrictionDetails = facade.closePrisonerRestriction(prisonerNumber, prisonerRestrictionId, request, user)
 }

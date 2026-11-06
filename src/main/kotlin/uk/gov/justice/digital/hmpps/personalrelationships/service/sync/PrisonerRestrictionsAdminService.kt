@@ -5,7 +5,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerRestriction
 import uk.gov.justice.digital.hmpps.personalrelationships.model.ReferenceCodeGroup
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.sync.MergePrisonerRestrictionsRequest
@@ -29,11 +28,11 @@ class PrisonerRestrictionsAdminService(
   fun mergePrisonerRestrictions(request: MergePrisonerRestrictionsRequest): ChangedRestrictionsResponse {
     // Delete all restrictions for removingPrisonerNumber
     val removingRestrictions = prisonerRestrictionsRepository.findByPrisonerNumber(request.removingPrisonerNumber)
-    softDelete(removingRestrictions)
+    prisonerRestrictionsRepository.deleteAll(removingRestrictions)
 
     // Delete all restrictions for keepingPrisonerNumber
     val keepingRestrictions = prisonerRestrictionsRepository.findByPrisonerNumber(request.keepingPrisonerNumber)
-    softDelete(keepingRestrictions)
+    prisonerRestrictionsRepository.deleteAll(keepingRestrictions)
 
     // Validate reference data for each restriction
     request.restrictions.forEach { restriction ->
@@ -82,7 +81,7 @@ class PrisonerRestrictionsAdminService(
       validateReferenceDataExists(restriction.restrictionType)
     }
     // Delete all restrictions for the prisoner
-    softDelete(restrictionsForPrisoner)
+    prisonerRestrictionsRepository.deleteAll(restrictionsForPrisoner)
 
     // Save new restrictions from request
     val newRestrictions = request.restrictions.map { restriction ->
@@ -106,10 +105,6 @@ class PrisonerRestrictionsAdminService(
     val deletedRestrictions = restrictionsForPrisoner.map { it.prisonerRestrictionId }
 
     return ChangedRestrictionsResponse(hasChanged = true, createdRestrictions, deletedRestrictions)
-  }
-
-  private fun softDelete(restrictions: List<PrisonerRestriction>) {
-    prisonerRestrictionsRepository.saveAllAndFlush(restrictions.map { it.softDeleted(User.SYS_USER.username) })
   }
 
   private fun validateReferenceDataExists(code: String) {

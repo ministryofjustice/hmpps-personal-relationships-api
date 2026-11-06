@@ -43,23 +43,20 @@ class SubjectAccessRequestIntegrationTest : SecureAPIIntegrationTestBase() {
   }
 
   @Test
-  fun `should return restrictions but exclude soft deleted ones`() {
-    val kept = repository.saveAndFlush(restriction("CCTV"))
-    val deleted = repository.saveAndFlush(restriction("BAN"))
-    repository.saveAndFlush(deleted.softDeleted("deleter"))
+  fun `should return the restrictions for the prisoner`() {
+    val first = repository.saveAndFlush(restriction("CCTV"))
+    val second = repository.saveAndFlush(restriction("BAN"))
 
     val body = getSar()
 
     val restrictions = body["content"]["prisonerRestrictions"]
-    assertThat(restrictions.map { it["prisonerRestrictionId"].asLong() }).containsExactly(kept.prisonerRestrictionId)
+    assertThat(restrictions.map { it["prisonerRestrictionId"].asLong() })
+      .containsExactly(first.prisonerRestrictionId, second.prisonerRestrictionId)
     assertThat(restrictions[0]["restrictionType"].asText()).isEqualTo("CCTV")
   }
 
   @Test
-  fun `should return no content when the only restriction is soft deleted`() {
-    val deleted = repository.saveAndFlush(restriction("BAN"))
-    repository.saveAndFlush(deleted.softDeleted("deleter"))
-
+  fun `should return no content when the prisoner has no restrictions`() {
     webTestClient.get()
       .uri("/subject-access-request?prn=$prisonerNumber")
       .headers(setAuthorisationUsingCurrentUser())

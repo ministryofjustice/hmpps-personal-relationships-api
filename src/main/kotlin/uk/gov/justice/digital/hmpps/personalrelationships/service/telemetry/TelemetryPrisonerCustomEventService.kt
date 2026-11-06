@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.Sy
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerRestriction
 import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.prisoner.PrisonerDomesticStatusCustomEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.prisoner.PrisonerNumberOfChildrenCustomEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.prisoner.PrisonerRestrictionClosedCustomEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.prisoner.PrisonerRestrictionCustomEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
 
@@ -82,6 +83,11 @@ class TelemetryPrisonerCustomEventService(private val telemetryService: Telemetr
 
   fun trackDeletePrisonerRestrictionEvent(prisonerNumber: String, prisonerRestrictionId: Long, source: Source, user: User) {
     val event = PrisonerRestrictionCustomEvent(prisonerNumber, prisonerRestrictionId, EventActionType.DELETE, source, user)
+    telemetryService.track(event)
+  }
+
+  fun trackClosePrisonerRestrictionEvent(prisonerNumber: String, prisonerRestrictionDetails: PrisonerRestrictionDetails, closedImmediately: Boolean, source: Source, user: User) {
+    val event = PrisonerRestrictionClosedCustomEvent(prisonerNumber, prisonerRestrictionDetails, closedImmediately, source, user)
     telemetryService.track(event)
   }
 }

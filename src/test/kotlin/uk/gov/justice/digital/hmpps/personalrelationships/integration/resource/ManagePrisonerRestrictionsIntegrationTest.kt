@@ -9,6 +9,7 @@ import org.springframework.http.MediaType
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.personalrelationships.integration.SecureAPIIntegrationTestBase
+import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.ClosePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.CreatePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.UpdatePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerRestrictionDetails
@@ -92,57 +93,79 @@ class ManagePrisonerRestrictionsIntegrationTest : SecureAPIIntegrationTestBase()
   }
 
   @Test
-  fun `should delete a restriction and publish a DPS sourced event`() {
+  fun `should close a restriction with today's date and publish a DPS sourced update event`() {
     val created = create(createRequest())
     stubEvents.reset()
-    setCurrentUser(StubUser.DELETING_USER)
+    setCurrentUser(StubUser.UPDATING_USER)
 
-    webTestClient.delete()
-      .uri("/prisoner-restrictions/$prisonerNumber/${created.prisonerRestrictionId}")
-      .headers(setAuthorisationUsingCurrentUser())
-      .exchange()
-      .expectStatus().isNoContent
+    val closed = close(created.prisonerRestrictionId, LocalDate.now()).expectStatus().isOk
+      .expectBody(PrisonerRestrictionDetails::class.java)
+      .returnResult().responseBody!!
 
-    assertThat(testAPIClient.getPrisonerRestrictions(prisonerNumber).content.map { it.prisonerRestrictionId }).doesNotContain(created.prisonerRestrictionId)
-    val row = jdbcTemplate.queryForMap("select deleted_at, updated_by, updated_time from prisoner_restrictions where prisoner_restriction_id = ?", created.prisonerRestrictionId)
-    assertThat(row["deleted_at"]).isNotNull
-    assertThat(row["updated_by"]).isEqualTo(StubUser.DELETING_USER.username)
-    assertThat(row["updated_time"]).isEqualTo(row["deleted_at"])
+    assertThat(closed.expiryDate).isEqualTo(LocalDate.now())
+    assertThat(closed.updatedBy).isEqualTo("updated")
+    assertThat(testAPIClient.getPrisonerRestrictions(prisonerNumber).content.single { it.prisonerRestrictionId == created.prisonerRestrictionId }.expiryDate)
+      .isEqualTo(LocalDate.now())
     stubEvents.assertHasEvent(
-      event = OutboundEvent.PRISONER_RESTRICTION_DELETED,
-      additionalInfo = PrisonerRestrictionInfo(created.prisonerRestrictionId, Source.DPS, "deleted", null),
+      event = OutboundEvent.PRISONER_RESTRICTION_UPDATED,
+      additionalInfo = PrisonerRestrictionInfo(created.prisonerRestrictionId, Source.DPS, "updated", null),
       personReference = PersonReference(nomsNumber = prisonerNumber),
     )
   }
 
   @Test
-  fun `should not find or change a soft deleted restriction`() {
+  fun `should close a restriction with a future date`() {
     val created = create(createRequest())
-    webTestClient.delete()
-      .uri("/prisoner-restrictions/$prisonerNumber/${created.prisonerRestrictionId}")
-      .headers(setAuthorisationUsingCurrentUser())
-      .exchange()
-      .expectStatus().isNoContent
+    val expiry = LocalDate.now().plusDays(14)
 
-    webTestClient.delete()
-      .uri("/prisoner-restrictions/$prisonerNumber/${created.prisonerRestrictionId}")
-      .headers(setAuthorisationUsingCurrentUser())
-      .exchange()
-      .expectStatus().isNotFound
+    val closed = close(created.prisonerRestrictionId, expiry).expectStatus().isOk
+      .expectBody(PrisonerRestrictionDetails::class.java)
+      .returnResult().responseBody!!
+
+    assertThat(closed.expiryDate).isEqualTo(expiry)
   }
 
   @Test
-  fun `should return not found for another prisoner`() {
+  fun `should not close a restriction with a date in the past`() {
     val created = create(createRequest())
     stubEvents.reset()
 
-    webTestClient.delete()
-      .uri("/prisoner-restrictions/Z9999ZZ/${created.prisonerRestrictionId}")
+    close(created.prisonerRestrictionId, LocalDate.now().minusDays(1)).expectStatus().isBadRequest
+
+    stubEvents.assertHasNoEvents(event = OutboundEvent.PRISONER_RESTRICTION_UPDATED)
+  }
+
+  @Test
+  fun `should not close a restriction that has already expired`() {
+    val expired = create(CreatePrisonerRestrictionRequest("BAN", LocalDate.of(2024, 1, 1), LocalDate.of(2024, 2, 1), null))
+    stubEvents.reset()
+
+    close(expired.prisonerRestrictionId, LocalDate.now()).expectStatus().isBadRequest
+
+    stubEvents.assertHasNoEvents(event = OutboundEvent.PRISONER_RESTRICTION_UPDATED)
+  }
+
+  @Test
+  fun `should not close a restriction before its effective date`() {
+    val future = create(CreatePrisonerRestrictionRequest("BAN", LocalDate.now().plusDays(10), null, null))
+
+    close(future.prisonerRestrictionId, LocalDate.now()).expectStatus().isBadRequest
+  }
+
+  @Test
+  fun `should return not found when closing a restriction for another prisoner`() {
+    val created = create(createRequest())
+    stubEvents.reset()
+
+    webTestClient.post()
+      .uri("/prisoner-restrictions/Z9999ZZ/${created.prisonerRestrictionId}/close")
+      .contentType(MediaType.APPLICATION_JSON)
       .headers(setAuthorisationUsingCurrentUser())
+      .bodyValue(ClosePrisonerRestrictionRequest(LocalDate.now()))
       .exchange()
       .expectStatus().isNotFound
 
-    stubEvents.assertHasNoEvents(event = OutboundEvent.PRISONER_RESTRICTION_DELETED)
+    stubEvents.assertHasNoEvents(event = OutboundEvent.PRISONER_RESTRICTION_UPDATED)
   }
 
   @Test
@@ -201,6 +224,13 @@ class ManagePrisonerRestrictionsIntegrationTest : SecureAPIIntegrationTestBase()
   }
 
   private fun createRequest(type: String = "BAN", comment: String? = null) = CreatePrisonerRestrictionRequest(type, LocalDate.of(2024, 1, 1), null, comment)
+
+  private fun close(prisonerRestrictionId: Long, expiryDate: LocalDate) = webTestClient.post()
+    .uri("/prisoner-restrictions/$prisonerNumber/$prisonerRestrictionId/close")
+    .contentType(MediaType.APPLICATION_JSON)
+    .headers(setAuthorisationUsingCurrentUser())
+    .bodyValue(ClosePrisonerRestrictionRequest(expiryDate))
+    .exchange()
 
   private fun create(request: CreatePrisonerRestrictionRequest): PrisonerRestrictionDetails = webTestClient.post()
     .uri("/prisoner-restrictions/$prisonerNumber")

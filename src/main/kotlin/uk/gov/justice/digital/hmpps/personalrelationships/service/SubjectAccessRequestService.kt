@@ -14,7 +14,7 @@ import java.time.LocalDate
  *
  * Prisoner restrictions are expected to be merged into Prisoner Alerts (epic VB-3971). Once that happens the data
  * will be covered by the hmpps-alerts-api SAR endpoint when it is migrated, and this service, its models and tests
- * should be removed rather than extended. Soft deleted restrictions are deliberately excluded.
+ * should be removed rather than extended.
  */
 @Service
 class SubjectAccessRequestService(private val prisonerRestrictionsRepository: PrisonerRestrictionsRepository) : HmppsPrisonSubjectAccessRequestService {
@@ -22,7 +22,6 @@ class SubjectAccessRequestService(private val prisonerRestrictionsRepository: Pr
     val from = fromDate ?: LocalDate.EPOCH
     val to = toDate ?: LocalDate.now()
 
-    // Soft deleted restrictions are excluded by the entity's @SQLRestriction
     val restrictions = prisonerRestrictionsRepository.findByPrisonerNumber(prn)
       .filter { it.createdTime.toLocalDate() in from..to }
       .sortedBy { it.prisonerRestrictionId }

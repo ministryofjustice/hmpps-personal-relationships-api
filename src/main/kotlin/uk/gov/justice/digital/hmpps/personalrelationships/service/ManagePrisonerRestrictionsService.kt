@@ -6,10 +6,12 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.entity.PrisonerRestriction
 import uk.gov.justice.digital.hmpps.personalrelationships.model.ReferenceCodeGroup
+import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.ClosePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.CreatePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.request.restrictions.UpdatePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerRestrictionDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.repository.PrisonerRestrictionsRepository
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 /**
@@ -70,9 +72,32 @@ class ManagePrisonerRestrictionsService(
     return getDetails(prisonerNumber, prisonerRestrictionId)
   }
 
-  fun deletePrisonerRestriction(prisonerNumber: String, prisonerRestrictionId: Long, user: User) {
+  /**
+   * Closes a restriction by setting its expiry date, following the Alerts approach of ending rather than deleting.
+   * The expiry date can be today or a future date, so this can also be used to change the expiry of an open restriction.
+   */
+  fun closePrisonerRestriction(
+    prisonerNumber: String,
+    prisonerRestrictionId: Long,
+    request: ClosePrisonerRestrictionRequest,
+    user: User,
+  ): PrisonerRestrictionDetails {
     val existing = findForPrisoner(prisonerNumber, prisonerRestrictionId)
-    prisonerRestrictionsRepository.saveAndFlush(existing.softDeleted(user.username))
+    val today = LocalDate.now()
+    val currentExpiry = existing.expiryDate
+    require(currentExpiry == null || !currentExpiry.isBefore(today)) {
+      "Prisoner restriction ($prisonerRestrictionId) has already expired"
+    }
+    require(!request.expiryDate.isBefore(today)) { "Expiry date must not be in the past" }
+    require(!request.expiryDate.isBefore(existing.effectiveDate)) { "Expiry date must be on or after the effective date" }
+    prisonerRestrictionsRepository.saveAndFlush(
+      existing.copy(
+        expiryDate = request.expiryDate,
+        updatedBy = user.username,
+        updatedTime = LocalDateTime.now(),
+      ),
+    )
+    return getDetails(prisonerNumber, prisonerRestrictionId)
   }
 
   private fun findForPrisoner(prisonerNumber: String, prisonerRestrictionId: Long): PrisonerRestriction = prisonerRestrictionsRepository.findById(prisonerRestrictionId)
@@ -82,7 +107,7 @@ class ManagePrisonerRestrictionsService(
   private fun getDetails(prisonerNumber: String, prisonerRestrictionId: Long) = prisonerRestrictionsService.getPrisonerRestrictions(prisonerNumber)
     .first { it.prisonerRestrictionId == prisonerRestrictionId }
 
-  private fun validateRequest(restrictionType: String, effectiveDate: java.time.LocalDate, expiryDate: java.time.LocalDate?, allowInactiveType: Boolean) {
+  private fun validateRequest(restrictionType: String, effectiveDate: LocalDate, expiryDate: LocalDate?, allowInactiveType: Boolean) {
     referenceCodeService.validateReferenceCode(ReferenceCodeGroup.RESTRICTION, restrictionType, allowInactiveType)
     if (expiryDate != null && expiryDate.isBefore(effectiveDate)) {
       throw IllegalArgumentException("Expiry date must be on or after the effective date")

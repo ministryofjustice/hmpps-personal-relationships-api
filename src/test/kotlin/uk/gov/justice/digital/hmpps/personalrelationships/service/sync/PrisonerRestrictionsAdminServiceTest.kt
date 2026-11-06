@@ -11,9 +11,7 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
-import org.mockito.kotlin.argThat
 import org.mockito.kotlin.never
-import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageImpl
@@ -75,10 +73,10 @@ class PrisonerRestrictionsAdminServiceTest {
       }
       val result = restrictionsAdminService.mergePrisonerRestrictions(request)
       verify(prisonerRestrictionsRepository).findByPrisonerNumber(removingPrisonerNumber)
-      verifySoftDeleted(removingRestrictions)
+      verify(prisonerRestrictionsRepository).deleteAll(removingRestrictions)
       verify(prisonerRestrictionsRepository).findByPrisonerNumber(keepingPrisonerNumber)
-      verifySoftDeleted(keepingRestrictions)
-      verify(prisonerRestrictionsRepository, times(3)).saveAllAndFlush(any<List<PrisonerRestriction>>())
+      verify(prisonerRestrictionsRepository).deleteAll(keepingRestrictions)
+      verify(prisonerRestrictionsRepository).saveAllAndFlush(any<List<PrisonerRestriction>>())
       assertThat(result.hasChanged).isTrue
       assertThat(result.createdRestrictions).containsExactly(10L)
       assertThat(result.deletedRestrictions).containsExactly(2L, 1L)
@@ -128,7 +126,7 @@ class PrisonerRestrictionsAdminServiceTest {
       restrictionsAdminService.resetPrisonerRestrictions(request)
 
       verify(prisonerRestrictionsRepository).findByPrisonerNumber(prisonerNumber)
-      verifySoftDeleted(removingRestrictions)
+      verify(prisonerRestrictionsRepository).deleteAll(removingRestrictions)
 
       val addingRestrictions: List<PrisonerRestriction> = mapPrisonerRestrictionsEntities(request)
       verify(prisonerRestrictionsRepository).saveAllAndFlush(addingRestrictions)
@@ -140,7 +138,7 @@ class PrisonerRestrictionsAdminServiceTest {
       whenever(prisonerRestrictionsRepository.findByPrisonerNumber(prisonerNumber)).thenReturn(restrictions)
       whenever(referenceCodeService.validateReferenceCode(ReferenceCodeGroup.RESTRICTION, "CCTV", true))
         .thenReturn(referenceCode)
-      whenever(prisonerRestrictionsRepository.saveAllAndFlush(any<List<PrisonerRestriction>>()))
+      whenever(prisonerRestrictionsRepository.deleteAll(any<List<PrisonerRestriction>>()))
         .thenThrow(RuntimeException("DB error"))
 
       assertThrows<RuntimeException> {
@@ -148,7 +146,7 @@ class PrisonerRestrictionsAdminServiceTest {
       }.message isEqualTo "DB error"
 
       verify(prisonerRestrictionsRepository).findByPrisonerNumber(prisonerNumber)
-      verifySoftDeleted(restrictions)
+      verify(prisonerRestrictionsRepository).deleteAll(restrictions)
     }
 
     @Test
@@ -170,6 +168,7 @@ class PrisonerRestrictionsAdminServiceTest {
       }.message isEqualTo "Unsupported Restriction (CCTV)"
 
       verify(prisonerRestrictionsRepository).findByPrisonerNumber(prisonerNumber)
+      verify(prisonerRestrictionsRepository, never()).deleteAll(any())
       verify(prisonerRestrictionsRepository, never()).saveAllAndFlush(any<List<PrisonerRestriction>>())
     }
 
@@ -252,13 +251,4 @@ class PrisonerRestrictionsAdminServiceTest {
     updatedBy = "user2",
     updatedTime = LocalDateTime.of(2024, 6, 1, 12, 0).plusDays(1),
   )
-
-  private fun verifySoftDeleted(original: List<PrisonerRestriction>) {
-    verify(prisonerRestrictionsRepository).saveAllAndFlush(
-      argThat<List<PrisonerRestriction>> {
-        map { it.prisonerRestrictionId } == original.map { it.prisonerRestrictionId } &&
-          all { it.deletedAt != null && it.updatedBy == "SYS" && it.updatedTime == it.deletedAt }
-      },
-    )
-  }
 }
