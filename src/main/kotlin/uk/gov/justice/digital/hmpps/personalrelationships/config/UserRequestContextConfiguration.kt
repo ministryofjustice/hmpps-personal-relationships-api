@@ -14,7 +14,7 @@ import uk.gov.justice.hmpps.kotlin.auth.AuthAwareAuthenticationToken
 class UserRequestContextConfiguration(private val userRequestContextInterceptor: UserRequestContextInterceptor) : WebMvcConfigurer {
   override fun addInterceptors(registry: InterceptorRegistry) {
     registry.addInterceptor(userRequestContextInterceptor)
-      .addPathPatterns("/contact/**", "/prisoner/**", "/prisoner-contact/**")
+      .addPathPatterns("/contact/**", "/prisoner/**", "/prisoner-contact/**", "/prisoner-restrictions/{prisonerNumber:[A-Z][0-9]{4}[A-Z]{2}}/**")
       .excludePathPatterns("/prisoner-contact/restrictions", "/prisoner-contact/relationships/summary")
   }
 }

@@ -4,11 +4,13 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.personalrelationships.config.User
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerDomesticStatusResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerNumberOfChildrenResponse
+import uk.gov.justice.digital.hmpps.personalrelationships.model.response.PrisonerRestrictionDetails
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerDomesticStatusResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerNumberOfChildrenResponse
 import uk.gov.justice.digital.hmpps.personalrelationships.model.response.sync.SyncPrisonerRestriction
 import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.prisoner.PrisonerDomesticStatusCustomEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.prisoner.PrisonerNumberOfChildrenCustomEvent
+import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.prisoner.PrisonerRestrictionClosedCustomEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.model.telemetry.prisoner.PrisonerRestrictionCustomEvent
 import uk.gov.justice.digital.hmpps.personalrelationships.service.events.Source
 
@@ -59,6 +61,16 @@ class TelemetryPrisonerCustomEventService(private val telemetryService: Telemetr
     telemetryService.track(event)
   }
 
+  fun trackCreatePrisonerRestrictionEvent(prisonerNumber: String, prisonerRestrictionDetails: PrisonerRestrictionDetails, source: Source, user: User) {
+    val event = PrisonerRestrictionCustomEvent(prisonerNumber, prisonerRestrictionDetails, EventActionType.CREATE, source, user)
+    telemetryService.track(event)
+  }
+
+  fun trackUpdatePrisonerRestrictionEvent(prisonerNumber: String, prisonerRestrictionDetails: PrisonerRestrictionDetails, source: Source, user: User) {
+    val event = PrisonerRestrictionCustomEvent(prisonerNumber, prisonerRestrictionDetails, EventActionType.UPDATE, source, user)
+    telemetryService.track(event)
+  }
+
   fun trackCreatePrisonerRestrictionEvent(prisonerNumber: String, prisonerRestrictionId: Long, source: Source, user: User) {
     val event = PrisonerRestrictionCustomEvent(prisonerNumber, prisonerRestrictionId, EventActionType.CREATE, source, user)
     telemetryService.track(event)
@@ -71,6 +83,11 @@ class TelemetryPrisonerCustomEventService(private val telemetryService: Telemetr
 
   fun trackDeletePrisonerRestrictionEvent(prisonerNumber: String, prisonerRestrictionId: Long, source: Source, user: User) {
     val event = PrisonerRestrictionCustomEvent(prisonerNumber, prisonerRestrictionId, EventActionType.DELETE, source, user)
+    telemetryService.track(event)
+  }
+
+  fun trackClosePrisonerRestrictionEvent(prisonerNumber: String, prisonerRestrictionDetails: PrisonerRestrictionDetails, closedImmediately: Boolean, source: Source, user: User) {
+    val event = PrisonerRestrictionClosedCustomEvent(prisonerNumber, prisonerRestrictionDetails, closedImmediately, source, user)
     telemetryService.track(event)
   }
 }
