@@ -75,7 +75,7 @@ generic-service:
     SENTRY_TRACES_SAMPLE_RATE: "0.05"
     SENTRY_IGNORED_EXCEPTIONS_FOR_TYPE: "org.apache.catalina.connector.ClientAbortException,org.springframework.web.servlet.resource.NoResourceFoundException,org.springframework.web.context.request.async.AsyncRequestNotUsableException,jakarta.persistence.EntityNotFoundException,uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicatePersonException,uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicateRelationshipException,uk.gov.justice.digital.hmpps.personalrelationships.exception.DuplicateEmailException,uk.gov.justice.digital.hmpps.personalrelationships.exception.InvalidReferenceCodeGroupException,uk.gov.justice.digital.hmpps.personalrelationships.exception.RelationshipCannotBeRemovedDueToDependencyException,org.springframework.transaction.CannotCreateTransactionException"
     APPLICATIONINSIGHTS_STATSBEAT_DISABLED: "true"
-    JAVA_TOOL_OPTIONS: "$(JAVA_PROXY_TOOL_OPTIONS) -XX:+ExitOnOutOfMemoryError -XX:MaxRAMPercentage=50.0"
+    JAVA_TOOL_OPTIONS: "$(JAVA_PROXY_TOOL_OPTIONS) -XX:+ExitOnOutOfMemoryError -XX:MaxRAMPercentage=50.0 -XX:-UseBASE64Intrinsics"
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:
